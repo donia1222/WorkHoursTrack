@@ -1,74 +1,209 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Alert, StyleSheet, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import * as Location from 'expo-location';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import Loading from '../components/Loading';
+import MapLocation from '../components/MapLocation';
+import OnboardingScreen from '../screens/OnboardingScreen';
+import Header from '../components/Header';
+import ProfileModal from '../components/ProfileModal';
+import SideMenu from '../components/SideMenu';
+import TimerScreen from '../screens/TimerScreen';
+import ReportsScreen from '../screens/ReportsScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import CalendarScreen from '../screens/CalendarScreen';
+import WelcomeModal from '../components/WelcomeModal';
+import { NavigationProvider, useNavigation, ScreenName } from '../context/NavigationContext';
+import { OnboardingService } from '../services/OnboardingService';
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+function AppContent() {
+  const [location, setLocation] = useState<Location.LocationObjectCoords | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const { currentScreen, navigateTo } = useNavigation();
+
+  useEffect(() => {
+    // Verificar si ya se mostró el onboarding
+    AsyncStorage.getItem('onboardingSeen').then((value) => {
+      setShowOnboarding(value !== 'true'); // true = ya visto
+    });
+  }, []);
+
+  useEffect(() => {
+    // Verificar si debe mostrar welcome modal después del onboarding inicial
+    const checkWelcomeModal = async () => {
+      if (showOnboarding === false) {
+        const hasCompleted = await OnboardingService.hasCompletedOnboarding();
+        if (!hasCompleted) {
+          setShowWelcomeModal(true);
+        }
+      }
+    };
+    checkWelcomeModal();
+  }, [showOnboarding]);
+
+  useEffect(() => {
+    if (showOnboarding === false) {
+      (async () => {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+
+        if (status !== 'granted') {
+          setErrorMsg('Permiso denegado para acceder a la ubicación.');
+          Alert.alert('Error', 'Necesitas permitir el acceso a la ubicación.');
+          return;
+        }
+
+        const loc = await Location.getCurrentPositionAsync({});
+        setLocation(loc.coords);
+      })();
+    }
+  }, [showOnboarding]);
+
+  const handleNavigate = (screen: string) => {
+    navigateTo(screen as ScreenName);
+  };
+
+  const handleWelcomeModalClose = async () => {
+    setShowWelcomeModal(false);
+    await OnboardingService.markOnboardingComplete();
+  };
+
+  const renderCurrentScreen = () => {
+    if (!location && currentScreen === 'mapa') {
+      return <Loading message="Obteniendo ubicación actual..." />;
+    }
+
+    switch (currentScreen) {
+      case 'mapa':
+        return location ? <MapLocation location={location} onNavigate={handleNavigate} /> : <Loading message="Obteniendo ubicación actual..." />;
+      case 'timer':
+        return <TimerScreen onNavigate={handleNavigate} />;
+      case 'reports':
+        return <ReportsScreen onNavigate={handleNavigate} />;
+      case 'calendar':
+        return <CalendarScreen onNavigate={handleNavigate} />;
+      case 'settings':
+        return <SettingsScreen onNavigate={handleNavigate} />;
+      default:
+        return location ? <MapLocation location={location} /> : null;
+    }
+  };
+
+  const getScreenTitle = () => {
+    switch (currentScreen) {
+      case 'mapa':
+        return 'Trabajos';
+      case 'timer':
+        return 'Timer';
+      case 'reports':
+        return 'Reportes';
+      case 'calendar':
+        return 'Calendario';
+      case 'settings':
+        return 'Configuración';
+      default:
+        return 'Trabajos';
+    }
+  };
+
+  if (showOnboarding === null) {
+    return <Loading message="Cargando..." />;
+  }
+
+  if (showOnboarding) {
+    return (
+      <OnboardingScreen
+        onDone={async () => {
+          await AsyncStorage.setItem('onboardingSeen', 'true');
+          setShowOnboarding(false);
+        }}
+      />
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <>
+        <Header 
+          title={getScreenTitle()} 
+          onProfilePress={() => setShowProfile(true)}
+          onMenuPress={() => setShowMenu(true)}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <View style={styles.center}>
+          <Text>{errorMsg}</Text>
+        </View>
+        <ProfileModal visible={showProfile} onClose={() => setShowProfile(false)} />
+        <SideMenu 
+          visible={showMenu} 
+          onClose={() => setShowMenu(false)} 
+          onMenuToggle={() => setShowMenu(!showMenu)}
+          onNavigate={handleNavigate}
+        />
+        <WelcomeModal
+          visible={showWelcomeModal}
+          onClose={handleWelcomeModalClose}
+        />
+      </>
+    );
+  }
+
+  // Para pantallas que no son mapa, renderizar directamente
+  if (currentScreen !== 'mapa') {
+    return (
+      <>
+        {renderCurrentScreen()}
+        <WelcomeModal
+          visible={showWelcomeModal}
+          onClose={handleWelcomeModalClose}
+        />
+      </>
+    );
+  }
+
+  // Para pantalla de mapa, usar el layout original
+  return (
+    <View style={styles.container}>
+      <Header 
+        title={getScreenTitle()} 
+        onProfilePress={() => setShowProfile(true)}
+        onMenuPress={() => setShowMenu(true)}
+      />
+      {renderCurrentScreen()}
+      <ProfileModal visible={showProfile} onClose={() => setShowProfile(false)} />
+      <SideMenu 
+        visible={showMenu} 
+        onClose={() => setShowMenu(false)} 
+        onMenuToggle={() => setShowMenu(!showMenu)}
+        onNavigate={handleNavigate}
+      />
+      <WelcomeModal
+        visible={showWelcomeModal}
+        onClose={handleWelcomeModalClose}
+      />
+    </View>
+  );
+}
+
+export default function Index() {
+  return (
+    <NavigationProvider>
+      <AppContent />
+    </NavigationProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
   },
 });

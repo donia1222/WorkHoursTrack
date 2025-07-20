@@ -1,0 +1,278 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  SafeAreaView,
+  ScrollView,
+} from 'react-native';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import { BlurView } from 'expo-blur';
+import { Theme } from '../constants/Theme';
+import { Job } from '../types/WorkTypes';
+import { JobService } from '../services/JobService';
+import JobStatisticsModal from './JobStatisticsModal';
+
+interface JobSelectorModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onJobSelect: (job: Job) => void;
+  title: string;
+  subtitle: string;
+}
+
+export default function JobSelectorModal({ 
+  visible, 
+  onClose, 
+  onJobSelect, 
+  title, 
+  subtitle 
+}: JobSelectorModalProps) {
+  const [jobs, setJobs] = useState<Job[]>([]);
+  
+  const [loading, setLoading] = useState(false);
+  const [showStatistics, setShowStatistics] = useState(false);
+  const [selectedJobForStats, setSelectedJobForStats] = useState<Job | null>(null);
+
+  useEffect(() => {
+    if (visible) {
+      loadJobs();
+    }
+  }, [visible]);
+
+  const loadJobs = async () => {
+    setLoading(true);
+    try {
+      const loadedJobs = await JobService.getJobs();
+      setJobs(loadedJobs.filter(job => job.isActive));
+    } catch (error) {
+      console.error('Error loading jobs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleJobSelect = (job: Job) => {
+    onJobSelect(job);
+    onClose();
+  };
+
+  const handleShowStatistics = (job: Job, event: any) => {
+    event.stopPropagation();
+    setSelectedJobForStats(job);
+    setShowStatistics(true);
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <SafeAreaView style={[styles.container, { backgroundColor: Theme.colors.background }]}>
+        <View style={[styles.header, { borderBottomColor: Theme.colors.border }]}>
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <IconSymbol size={24} name="xmark" color={Theme.colors.primary} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: Theme.colors.text }]}>{title}</Text>
+          <View style={styles.placeholder} />
+        </View>
+
+        <View style={styles.content}>
+          <BlurView intensity={95} tint="light" style={[styles.infoCard, { backgroundColor: Theme.colors.surface }]}>
+            <Text style={[styles.subtitle, { color: Theme.colors.textSecondary }]}>{subtitle}</Text>
+          </BlurView>
+
+          {loading ? (
+            <BlurView intensity={95} tint="light" style={[styles.loadingCard, { backgroundColor: Theme.colors.surface }]}>
+              <IconSymbol size={32} name="gear" color={Theme.colors.textSecondary} />
+              <Text style={[styles.loadingText, { color: Theme.colors.textSecondary }]}>Cargando trabajos...</Text>
+            </BlurView>
+          ) : jobs.length === 0 ? (
+            <BlurView intensity={95} tint="light" style={[styles.emptyCard, { backgroundColor: Theme.colors.surface }]}>
+              <IconSymbol size={32} name="calendar" color={Theme.colors.textTertiary} />
+              <Text style={[styles.emptyText, { color: Theme.colors.textSecondary }]}>No tienes trabajos activos</Text>
+              <Text style={[styles.emptySubtext, { color: Theme.colors.textTertiary }]}>
+                Agrega un trabajo desde la pantalla principal para continuar
+              </Text>
+            </BlurView>
+          ) : (
+            <ScrollView style={styles.jobsList} showsVerticalScrollIndicator={false}>
+              {jobs.map((job) => (
+                <TouchableOpacity
+                  key={job.id}
+                  style={styles.jobCard}
+                  onPress={() => handleJobSelect(job)}
+                >
+                  <BlurView intensity={90} tint="light" style={[styles.jobCardInner, { backgroundColor: Theme.colors.surface }]}>
+                    <View style={styles.jobInfo}>
+                      <View style={[styles.jobColorDot, { backgroundColor: job.color }]} />
+                      <View style={styles.jobDetails}>
+                        <Text style={[styles.jobName, { color: Theme.colors.text }]}>{job.name}</Text>
+                        {job.company && (
+                          <Text style={[styles.jobCompany, { color: Theme.colors.textSecondary }]}>{job.company}</Text>
+                        )}
+                        <View style={styles.jobMeta}>
+                          {job.schedule && (
+                            <Text style={[styles.jobMetaText, { color: Theme.colors.textTertiary }]}>
+                              {job.schedule.startTime} - {job.schedule.endTime}
+                            </Text>
+                          )}
+                          {job.salary && job.salary.amount > 0 && (
+                            <Text style={[styles.jobMetaText, { color: Theme.colors.textTertiary }]}>
+                              • {job.salary.amount} {job.salary.currency}
+                              /{job.salary.type === 'hourly' ? 'h' : job.salary.type === 'monthly' ? 'mes' : 'año'}
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+                    </View>
+                    <View style={styles.jobActions}>
+                      <TouchableOpacity 
+                        style={styles.statsButton}
+                        onPress={(event) => handleShowStatistics(job, event)}
+                      >
+                        <IconSymbol size={16} name="chart.bar.fill" color={Theme.colors.primary} />
+                      </TouchableOpacity>
+                      <IconSymbol size={16} name="chevron.right" color={Theme.colors.primary} />
+                    </View>
+                  </BlurView>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+      </SafeAreaView>
+      
+      <JobStatisticsModal
+        visible={showStatistics}
+        onClose={() => {
+          setShowStatistics(false);
+          setSelectedJobForStats(null);
+        }}
+        job={selectedJobForStats}
+      />
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+  },
+  closeButton: {
+    padding: 12,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  placeholder: {
+    width: 40,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  infoCard: {
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  loadingCard: {
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    
+  },
+  loadingText: {
+    fontSize: 16,
+    marginTop: 12,
+  },
+  emptyCard: {
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    
+  },
+  emptyText: {
+    fontSize: 18,
+    marginTop: 12,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  jobsList: {
+    flex: 1,
+  },
+  jobCard: {
+    marginBottom: 16,
+  },
+  jobCardInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    borderRadius: 16,
+    
+  },
+  jobInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  jobColorDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 16,
+  },
+  jobDetails: {
+    flex: 1,
+  },
+  jobName: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  jobCompany: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  jobMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  jobMetaText: {
+    fontSize: 12,
+    marginRight: 12,
+  },
+  jobActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  statsButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+});
