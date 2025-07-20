@@ -1,6 +1,43 @@
-# Welcome to your Expo app 👋
+# Geolocation & Work Time Tracking App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This is a mobile application built with [Expo](https://expo.dev) that combines geolocation functionality with work time tracking, designed to help workers efficiently manage and record their working hours.
+
+## What does the app do?
+
+### Main Features:
+
+**🕒 Work Time Management:**
+- Real-time timer to record working hours
+- Ability to pause, resume, and finish work sessions
+- Automatic calculation of worked hours (rounded to 0.5h)
+- Automatic overtime detection (more than 8 hours)
+- Session notes recording for each work period
+
+**🗺️ Geolocation:**
+- Real-time map integration for location tracking
+- Geofencing functionality to define work areas
+- Foreground and background location permissions
+- Support for jobs with specific locations
+
+**💼 Job Management:**
+- Create and manage multiple jobs/projects
+- Configure hourly rates, schedules, and work days
+- Assign colors and descriptions to each job
+- Contact information for each client/company
+- Billing configuration and tax notes
+
+**📊 Tracking & Reports:**
+- Calendar to visualize worked days
+- Different day types: work, free, vacation, sick
+- Statistics and worked hours reports
+- Complete work session history
+
+**⚙️ Additional Features:**
+- Multi-language interface (i18n)
+- Automatic theme (light/dark)
+- Push notifications
+- Onboarding for new users
+- Customizable settings
 
 ## Get started
 
