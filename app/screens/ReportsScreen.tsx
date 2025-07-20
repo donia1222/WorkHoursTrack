@@ -36,7 +36,9 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [workDays, setWorkDays] = useState<WorkDay[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
+  const [selectedJobId, setSelectedJobId] = useState<string | 'all'>('all');
   const [periodStats, setPeriodStats] = useState<PeriodStats | null>(null);
+  const [visibleRecentDays, setVisibleRecentDays] = useState<number>(6);
   const { handleBack } = useBackNavigation();
 
   const screenWidth = Dimensions.get('window').width;
@@ -49,7 +51,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     if (workDays.length > 0 && jobs.length > 0) {
       calculatePeriodStats();
     }
-  }, [workDays, jobs, selectedPeriod]);
+  }, [workDays, jobs, selectedPeriod, selectedJobId]);
 
   const loadData = async () => {
     try {
@@ -81,10 +83,15 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         break;
     }
 
-    const periodWorkDays = workDays.filter(day => {
+    let periodWorkDays = workDays.filter(day => {
       const dayDate = new Date(day.date);
       return dayDate >= startDate && dayDate <= now;
     });
+
+    // Filter by selected job if not "all"
+    if (selectedJobId !== 'all') {
+      periodWorkDays = periodWorkDays.filter(day => day.jobId === selectedJobId);
+    }
 
     const totalHours = periodWorkDays.reduce((sum, day) => sum + day.hours, 0);
     const totalDays = periodWorkDays.length;
@@ -93,20 +100,42 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     const avgHoursPerDay = totalDays > 0 ? totalHours / totalDays : 0;
 
     // Job breakdown
-    const jobStats = jobs.map(job => {
-      const jobWorkDays = periodWorkDays.filter(day => day.jobId === job.id);
-      const jobHours = jobWorkDays.reduce((sum, day) => sum + day.hours, 0);
-      const jobDays = jobWorkDays.length;
-      const percentage = totalHours > 0 ? (jobHours / totalHours) * 100 : 0;
+    let jobStats: Array<{
+      job: Job;
+      hours: number;
+      days: number;
+      percentage: number;
+    }>;
+    
+    if (selectedJobId === 'all') {
+      jobStats = jobs.map(job => {
+        const jobWorkDays = periodWorkDays.filter(day => day.jobId === job.id);
+        const jobHours = jobWorkDays.reduce((sum, day) => sum + day.hours, 0);
+        const jobDays = jobWorkDays.length;
+        const percentage = totalHours > 0 ? (jobHours / totalHours) * 100 : 0;
 
-      return {
-        job,
-        hours: jobHours,
-        days: jobDays,
-        percentage,
-      };
-    }).filter(stat => stat.hours > 0)
-      .sort((a, b) => b.hours - a.hours);
+        return {
+          job,
+          hours: jobHours,
+          days: jobDays,
+          percentage,
+        };
+      }).filter(stat => stat.hours > 0)
+        .sort((a, b) => b.hours - a.hours);
+    } else {
+      // When filtering by specific job, show only that job with 100% percentage
+      const selectedJob = jobs.find(job => job.id === selectedJobId);
+      if (selectedJob && totalHours > 0) {
+        jobStats = [{
+          job: selectedJob,
+          hours: totalHours,
+          days: totalDays,
+          percentage: 100,
+        }];
+      } else {
+        jobStats = [];
+      }
+    }
 
     setPeriodStats({
       totalHours,
@@ -129,9 +158,32 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   };
 
   const getRecentWorkDays = () => {
-    return workDays
+    let filteredWorkDays = workDays;
+    
+    // Filter by selected job if not "all"
+    if (selectedJobId !== 'all') {
+      filteredWorkDays = workDays.filter(day => day.jobId === selectedJobId);
+    }
+    
+    return filteredWorkDays
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 10);
+      .slice(0, visibleRecentDays);
+  };
+
+  const getAllRecentWorkDays = () => {
+    let filteredWorkDays = workDays;
+    
+    // Filter by selected job if not "all"
+    if (selectedJobId !== 'all') {
+      filteredWorkDays = workDays.filter(day => day.jobId === selectedJobId);
+    }
+    
+    return filteredWorkDays
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  };
+
+  const handleLoadMore = () => {
+    setVisibleRecentDays(prev => prev + 6);
   };
 
   const formatDate = (dateString: string) => {
@@ -165,6 +217,53 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Job selector */}
+        {jobs.length > 1 && (
+          <BlurView intensity={95} tint="light" style={styles.jobSelector}>
+            <Text style={styles.selectorTitle}>Filtrar por trabajo</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.jobScrollView}>
+              <View style={styles.jobButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.jobButton,
+                    selectedJobId === 'all' && styles.jobButtonActive,
+                  ]}
+                  onPress={() => setSelectedJobId('all')}
+                >
+                  <Text
+                    style={[
+                      styles.jobButtonText,
+                      selectedJobId === 'all' && styles.jobButtonTextActive,
+                    ]}
+                  >
+                    Todos
+                  </Text>
+                </TouchableOpacity>
+                {jobs.map((job) => (
+                  <TouchableOpacity
+                    key={job.id}
+                    style={[
+                      styles.jobButton,
+                      selectedJobId === job.id && styles.jobButtonActive,
+                    ]}
+                    onPress={() => setSelectedJobId(job.id)}
+                  >
+                    <View style={[styles.jobButtonDot, { backgroundColor: job.color }]} />
+                    <Text
+                      style={[
+                        styles.jobButtonText,
+                        selectedJobId === job.id && styles.jobButtonTextActive,
+                      ]}
+                    >
+                      {job.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </BlurView>
+        )}
+
         {/* Period selector */}
         <BlurView intensity={95} tint="light" style={styles.periodSelector}>
           <Text style={styles.selectorTitle}>Período de análisis</Text>
@@ -229,7 +328,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         {periodStats && periodStats.jobBreakdown.length > 0 && (
           <BlurView intensity={95} tint="light" style={styles.jobBreakdownCard}>
             <Text style={styles.cardTitle}>Distribución por trabajo</Text>
-            {periodStats.jobBreakdown.map((stat, index) => (
+            {periodStats.jobBreakdown.map((stat) => (
               <View key={stat.job.id} style={styles.jobStatRow}>
                 <View style={styles.jobStatInfo}>
                   <View style={[styles.jobColorBar, { backgroundColor: stat.job.color }]} />
@@ -260,26 +359,39 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         <BlurView intensity={95} tint="light" style={styles.recentCard}>
           <Text style={styles.cardTitle}>Actividad reciente</Text>
           {getRecentWorkDays().length > 0 ? (
-            getRecentWorkDays().map((day) => {
-              const job = jobs.find(j => j.id === day.jobId);
-              return (
-                <View key={day.id} style={styles.recentItem}>
-                  <View style={styles.recentLeft}>
-                    <View style={[styles.recentDot, { backgroundColor: job?.color || Theme.colors.primary }]} />
-                    <View>
-                      <Text style={styles.recentDate}>{formatDate(day.date)}</Text>
-                      <Text style={styles.recentJob}>{job?.name || 'Trabajo'}</Text>
+            <>
+              {getRecentWorkDays().map((day) => {
+                const job = jobs.find(j => j.id === day.jobId);
+                return (
+                  <View key={day.id} style={styles.recentItem}>
+                    <View style={styles.recentLeft}>
+                      <View style={[styles.recentDot, { backgroundColor: job?.color || Theme.colors.primary }]} />
+                      <View>
+                        <Text style={styles.recentDate}>{formatDate(day.date)}</Text>
+                        <Text style={styles.recentJob}>{job?.name || 'Trabajo'}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.recentRight}>
+                      <Text style={styles.recentHours}>{day.hours}h</Text>
+                      {day.overtime && (
+                        <Text style={styles.recentOvertime}>OT</Text>
+                      )}
                     </View>
                   </View>
-                  <View style={styles.recentRight}>
-                    <Text style={styles.recentHours}>{day.hours}h</Text>
-                    {day.overtime && (
-                      <Text style={styles.recentOvertime}>OT</Text>
-                    )}
-                  </View>
-                </View>
-              );
-            })
+                );
+              })}
+              {getAllRecentWorkDays().length > visibleRecentDays && (
+                <TouchableOpacity
+                  style={styles.loadMoreButton}
+                  onPress={handleLoadMore}
+                >
+                  <Text style={styles.loadMoreText}>
+                    Ver más ({getAllRecentWorkDays().length - visibleRecentDays} restantes)
+                  </Text>
+                  <IconSymbol size={16} name="chevron.down" color={Theme.colors.primary} />
+                </TouchableOpacity>
+              )}
+            </>
           ) : (
             <View style={styles.emptyState}>
               <IconSymbol size={32} name="calendar" color={Theme.colors.textSecondary} />
@@ -367,6 +479,50 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 16,
+  },
+  jobSelector: {
+    marginTop: 16,
+    marginBottom: 8,
+    borderRadius: 16,
+    padding: 20,
+    backgroundColor: Theme.colors.surface,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
+  },
+  jobScrollView: {
+    marginHorizontal: -4,
+  },
+  jobButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 4,
+  },
+  jobButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: Theme.colors.separator,
+    gap: 6,
+  },
+  jobButtonActive: {
+    backgroundColor: Theme.colors.primary,
+    borderColor: Theme.colors.primary,
+  },
+  jobButtonDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  jobButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Theme.colors.text,
+  },
+  jobButtonTextActive: {
+    color: '#FFFFFF',
   },
   periodSelector: {
     marginVertical: 16,
@@ -584,6 +740,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+  loadMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.separator,
+    gap: 6,
+  },
+  loadMoreText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Theme.colors.primary,
   },
   actionsContainer: {
     marginVertical: 20,

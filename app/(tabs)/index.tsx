@@ -10,11 +10,12 @@ import OnboardingScreen from '../screens/OnboardingScreen';
 import Header from '../components/Header';
 import ProfileModal from '../components/ProfileModal';
 import SideMenu from '../components/SideMenu';
+
 import TimerScreen from '../screens/TimerScreen';
 import ReportsScreen from '../screens/ReportsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CalendarScreen from '../screens/CalendarScreen';
-import WelcomeModal from '../components/WelcomeModal';
+
 import { NavigationProvider, useNavigation, ScreenName } from '../context/NavigationContext';
 import { OnboardingService } from '../services/OnboardingService';
 
@@ -97,7 +98,13 @@ function AppContent() {
   const getScreenTitle = () => {
     switch (currentScreen) {
       case 'mapa':
-        return 'Trabajos';
+        return (
+          <View style={styles.workTrackTitle}>
+            <IconSymbol size={24} name="clock.fill" color="#34C759" />
+            <Text style={[styles.workText, { color: '#007AFF' }]}>Work</Text>
+            <Text style={[styles.trackText, { color: '#34C759' }]}>Track</Text>
+          </View>
+        );
       case 'timer':
         return 'Timer';
       case 'reports':
@@ -107,7 +114,13 @@ function AppContent() {
       case 'settings':
         return 'Configuración';
       default:
-        return 'Trabajos';
+        return (
+          <View style={styles.workTrackTitle}>
+            <IconSymbol size={24} name="clock.fill" color="#34C759" />
+            <Text style={[styles.workText, { color: '#007AFF' }]}>Work</Text>
+            <Text style={[styles.trackText, { color: '#34C759' }]}>Track</Text>
+          </View>
+        );
     }
   };
 
@@ -144,10 +157,8 @@ function AppContent() {
           onMenuToggle={() => setShowMenu(!showMenu)}
           onNavigate={handleNavigate}
         />
-        <WelcomeModal
-          visible={showWelcomeModal}
-          onClose={handleWelcomeModalClose}
-        />
+
+   
       </>
     );
   }
@@ -157,10 +168,7 @@ function AppContent() {
     return (
       <>
         {renderCurrentScreen()}
-        <WelcomeModal
-          visible={showWelcomeModal}
-          onClose={handleWelcomeModalClose}
-        />
+      
       </>
     );
   }
@@ -181,10 +189,8 @@ function AppContent() {
         onMenuToggle={() => setShowMenu(!showMenu)}
         onNavigate={handleNavigate}
       />
-      <WelcomeModal
-        visible={showWelcomeModal}
-        onClose={handleWelcomeModalClose}
-      />
+
+   
     </View>
   );
 }
@@ -205,5 +211,23 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  workTrackTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  titleIcon: {
+    marginRight: 4,
+  },
+  workText: {
+    fontSize: 28,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+  },
+  trackText: {
+    fontSize: 28,
+    fontWeight: '700',
+    letterSpacing: -0.5,
   },
 });

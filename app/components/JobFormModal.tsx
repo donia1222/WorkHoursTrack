@@ -32,6 +32,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     name: '',
     company: '',
     address: '',
+    street: '',
+    city: '',
+    postalCode: '',
     hourlyRate: 0,
     currency: 'EUR',
     color: DEFAULT_COLORS[0],
@@ -76,6 +79,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     if (editingJob) {
       setFormData({
         ...editingJob,
+        street: editingJob.street || '',
+        city: editingJob.city || '',
+        postalCode: editingJob.postalCode || '',
         salary: editingJob.salary || {
           type: 'hourly',
           amount: editingJob.hourlyRate || 0,
@@ -103,6 +109,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         name: '',
         company: '',
         address: '',
+        street: '',
+        city: '',
+        postalCode: '',
         hourlyRate: 0,
         currency: 'EUR',
         color: DEFAULT_COLORS[0],
@@ -144,10 +153,20 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     }
 
     try {
+      // Combine address fields into full address
+      const addressParts = [];
+      if (formData.street?.trim()) addressParts.push(formData.street.trim());
+      if (formData.city?.trim()) addressParts.push(formData.city.trim());
+      if (formData.postalCode?.trim()) addressParts.push(formData.postalCode.trim());
+      const fullAddress = addressParts.join(', ');
+
       const jobData: Omit<Job, 'id' | 'createdAt'> = {
         name: formData.name.trim(),
         company: formData.company?.trim() || '',
-        address: formData.address?.trim() || '',
+        address: fullAddress || formData.address?.trim() || '',
+        street: formData.street?.trim() || '',
+        city: formData.city?.trim() || '',
+        postalCode: formData.postalCode?.trim() || '',
         hourlyRate: Number(formData.hourlyRate) || 0,
         currency: formData.currency || 'EUR',
         color: formData.color || DEFAULT_COLORS[0],
@@ -223,7 +242,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       });
 
       if (addressData) {
-        // Build address string
+        // Build full address string
         const addressParts = [];
         if (addressData.name) addressParts.push(addressData.name);
         if (addressData.street) addressParts.push(addressData.street);
@@ -234,8 +253,18 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
         const detectedAddress = addressParts.join(', ');
 
-        // Update form data
+        // Build street address (street + number)
+        const streetParts = [];
+        if (addressData.street) streetParts.push(addressData.street);
+        if (addressData.streetNumber) streetParts.push(addressData.streetNumber);
+        const streetAddress = streetParts.join(' ');
+
+        // Update form data with separated fields
         updateFormData('address', detectedAddress);
+        updateFormData('street', streetAddress);
+        updateFormData('city', addressData.city || '');
+        updateFormData('postalCode', addressData.postalCode || '');
+        
         updateNestedData('location', 'address', detectedAddress);
         updateNestedData('location', 'latitude', currentLocation.coords.latitude);
         updateNestedData('location', 'longitude', currentLocation.coords.longitude);
@@ -302,38 +331,61 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Dirección</Text>
-          <View style={styles.addressInputContainer}>
-            <TextInput
-              style={[styles.input, styles.addressInput]}
-              value={formData.address}
-              onChangeText={(value) => updateFormData('address', value)}
-              placeholder="Ej: Calle Mayor 123, Madrid"
-              placeholderTextColor={Theme.colors.textTertiary}
-            />
+          <View style={styles.addressHeaderContainer}>
+            <Text style={styles.label}>Dirección</Text>
             <TouchableOpacity
               style={[
-                styles.detectLocationButton,
-                isDetectingLocation && styles.detectLocationButtonLoading
+                styles.autoFillButton,
+                isDetectingLocation && styles.autoFillButtonLoading
               ]}
               onPress={detectCurrentLocation}
               disabled={isDetectingLocation}
             >
               <IconSymbol 
-                size={20} 
+                size={18} 
                 name={isDetectingLocation ? "gear" : "location.fill"} 
-                color={isDetectingLocation ? Theme.colors.textSecondary : Theme.colors.primary} 
+                color="#FFFFFF"
               />
-              {!isDetectingLocation && (
-                <Text style={styles.detectLocationText}>Detectar</Text>
-              )}
+              <Text style={styles.autoFillText}>
+                {isDetectingLocation ? 'Detectando...' : 'Autorrellenar'}
+              </Text>
             </TouchableOpacity>
           </View>
-          {isDetectingLocation && (
-            <Text style={styles.detectingText}>
-              Detectando tu ubicación actual...
-            </Text>
-          )}
+          
+          <View style={styles.addressRow}>
+            <View style={[styles.addressField, { flex: 2 }]}>
+              <Text style={styles.subLabel}>Calle</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.street}
+                onChangeText={(value) => updateFormData('street', value)}
+                placeholder="Calle Ejemplo 123"
+                placeholderTextColor={Theme.colors.textTertiary}
+              />
+            </View>
+            <View style={[styles.addressField, { flex: 1 }]}>
+              <Text style={styles.subLabel}>Código Postal</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.postalCode}
+                onChangeText={(value) => updateFormData('postalCode', value)}
+                placeholder="28001"
+                placeholderTextColor={Theme.colors.textTertiary}
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+          
+          <View style={styles.addressField}>
+            <Text style={styles.subLabel}>Ciudad</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.city}
+              onChangeText={(value) => updateFormData('city', value)}
+              placeholder="Madrid"
+              placeholderTextColor={Theme.colors.textTertiary}
+            />
+          </View>
         </View>
 
         <View style={styles.inputGroup}>
@@ -872,6 +924,56 @@ const styles = StyleSheet.create({
     color: Theme.colors.primary,
     marginLeft: Theme.spacing.xs,
     fontWeight: '600',
+  },
+  addressHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Theme.spacing.md,
+  },
+  autoFillButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: Theme.colors.primary,
+    borderRadius: 12,
+    gap: 6,
+    shadowColor: Theme.colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+    minWidth: 120,
+    justifyContent: 'center',
+  },
+  autoFillButtonLoading: {
+    backgroundColor: Theme.colors.textSecondary,
+    shadowColor: Theme.colors.textSecondary,
+    shadowOpacity: 0.2,
+  },
+  autoFillText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  addressRow: {
+    flexDirection: 'row',
+    gap: Theme.spacing.md,
+    marginBottom: Theme.spacing.md,
+  },
+  addressField: {
+    flex: 1,
+  },
+  subLabel: {
+
+    color: Theme.colors.textSecondary,
+    fontWeight: '600',
+    marginBottom: Theme.spacing.xs,
   },
   detectingText: {
     ...Theme.typography.caption2,

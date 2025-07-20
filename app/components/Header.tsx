@@ -4,7 +4,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
 
 interface HeaderProps {
-  title: string;
+  title: string | React.ReactNode;
   onProfilePress: () => void;
   onMenuPress?: () => void;
   onBackPress?: () => void;
@@ -31,7 +31,11 @@ export default function Header({ title, onProfilePress, onMenuPress, onBackPress
           )}
           
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>{title}</Text>
+            {typeof title === 'string' ? (
+              <Text style={styles.title}>{title}</Text>
+            ) : (
+              title
+            )}
             <View style={styles.titleUnderline} />
           </View>
           

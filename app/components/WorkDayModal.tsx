@@ -135,7 +135,7 @@ export default function WorkDayModal({
               onPress={handleSave}
               style={styles.saveButton}
             >
-              <IconSymbol size={24} name="checkmark" color={Theme.colors.primary} />
+              <IconSymbol size={20} name="checkmark" color="#FFFFFF" />
             </TouchableOpacity>
             <View style={styles.headerText}>
               <View style={styles.titleContainer}>
@@ -241,10 +241,10 @@ export default function WorkDayModal({
                   <View 
                     style={[
                       styles.summaryJobColor, 
-                      { backgroundColor: DAY_TYPES[dayType].color }
+                      { backgroundColor: dayType && DAY_TYPES[dayType] ? DAY_TYPES[dayType].color : '#000000' }
                     ]} 
                   />
-                  <Text style={styles.summaryValue}>{DAY_TYPES[dayType].label}</Text>
+                  <Text style={styles.summaryValue}>{dayType && DAY_TYPES[dayType] ? DAY_TYPES[dayType].label : 'Desconocido'}</Text>
                 </View>
               </View>
               {dayType === 'work' && selectedJob && (
@@ -343,8 +343,21 @@ const styles = StyleSheet.create({
     textTransform: 'capitalize',
   },
   saveButton: {
-    padding: Theme.spacing.sm,
-    marginLeft: -Theme.spacing.sm,
+    padding: 8,
+    marginRight: 16,
+    backgroundColor: Theme.colors.primary,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,

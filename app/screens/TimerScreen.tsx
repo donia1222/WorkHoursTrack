@@ -236,7 +236,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                 {formatTime(elapsedTime)}
               </Text>
               <Text style={styles.timerHours}>
-                ≈ {getSessionHours()}h {getSessionHours() > 8 && '(overtime)'}
+                ≈ {getSessionHours()}h{getSessionHours() > 8 ? ' (overtime)' : ''}
               </Text>
             </View>
 

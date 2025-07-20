@@ -3,6 +3,9 @@ export interface Job {
   name: string;
   company?: string;
   address?: string;
+  street?: string;
+  city?: string;
+  postalCode?: string;
   hourlyRate?: number;
   currency?: string;
   color: string;

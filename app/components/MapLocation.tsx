@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MapView, { Marker } from 'react-native-maps';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, Modal } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
 import { Job } from '../types/WorkTypes';
@@ -63,6 +63,11 @@ export default function MapLocation({ location, onNavigate }: Props) {
     }
 
     if (action === 'delete') {
+      if (!job) {
+        Alert.alert('Error', 'No se ha seleccionado ningún trabajo');
+        return;
+      }
+      
       Alert.alert(
         'Eliminar trabajo',
         `¿Estás seguro de que quieres eliminar "${job.name}"? Esto también eliminará todos los registros de tiempo asociados.`,
@@ -88,16 +93,17 @@ export default function MapLocation({ location, onNavigate }: Props) {
       return;
     }
     
-    setSelectedJob(null);
-    
     switch (action) {
       case 'timer':
+        setSelectedJob(null);
         navigateTo('timer', job);
         break;
       case 'calendar':
         navigateTo('calendar', job);
+        setSelectedJob(null);
         break;
       case 'edit':
+        setSelectedJob(null);
         handleEditJob(job);
         break;
     }
@@ -211,22 +217,29 @@ export default function MapLocation({ location, onNavigate }: Props) {
       )}
 
       {/* Job action modal */}
-      {selectedJob && (
+      <Modal
+        visible={selectedJob !== null}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSelectedJob(null)}
+      >
         <View style={styles.actionModal}>
           <TouchableOpacity 
             style={styles.actionModalBackdrop}
             onPress={() => setSelectedJob(null)}
           />
           <BlurView intensity={95} tint="light" style={styles.actionModalContent}>
-            <View style={styles.actionModalHeader}>
-              <View style={[styles.actionModalColorDot, { backgroundColor: selectedJob.color }]} />
-              <View style={styles.actionModalInfo}>
-                <Text style={styles.actionModalTitle}>{selectedJob.name}</Text>
-                {selectedJob.company && (
-                  <Text style={styles.actionModalSubtitle}>{selectedJob.company}</Text>
-                )}
-              </View>
-            </View>
+            {selectedJob && (
+              <>
+                <View style={styles.actionModalHeader}>
+                  <View style={[styles.actionModalColorDot, { backgroundColor: selectedJob.color }]} />
+                  <View style={styles.actionModalInfo}>
+                    <Text style={styles.actionModalTitle}>{selectedJob.name}</Text>
+                    {selectedJob.company && (
+                      <Text style={styles.actionModalSubtitle}>{selectedJob.company}</Text>
+                    )}
+                  </View>
+                </View>
 
             <View style={styles.actionModalButtons}>
               <TouchableOpacity
@@ -280,15 +293,17 @@ export default function MapLocation({ location, onNavigate }: Props) {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={styles.actionModalCancelButton}
-              onPress={() => setSelectedJob(null)}
-            >
-              <Text style={styles.actionModalCancelText}>Cancelar</Text>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionModalCancelButton}
+                  onPress={() => setSelectedJob(null)}
+                >
+                  <Text style={styles.actionModalCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </BlurView>
         </View>
-      )}
+      </Modal>
 
       {/* Floating Add Button */}
       <TouchableOpacity style={styles.floatingAddButton} onPress={handleAddJob}>
@@ -546,6 +561,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 1000,
+    elevation: 1000,
   },
   actionModalBackdrop: {
     position: 'absolute',
@@ -554,14 +571,17 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 999,
+    elevation: 999,
   },
   actionModalContent: {
     borderRadius: 16,
     margin: 20,
     padding: 20,
     backgroundColor: '#FFFFFF',
-    
     minWidth: 280,
+    zIndex: 1001,
+    elevation: 1001,
   },
   actionModalHeader: {
     flexDirection: 'row',

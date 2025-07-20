@@ -29,6 +29,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   const [showWorkDayModal, setShowWorkDayModal] = useState(false);
   const [editingWorkDay, setEditingWorkDay] = useState<WorkDay | undefined>();
   const [preselectedJobId, setPreselectedJobId] = useState<string | undefined>();
+  const [selectedJobId, setSelectedJobId] = useState<string | 'all'>('all');
   const { handleBack } = useBackNavigation();
   const { selectedJob, setSelectedJob } = useNavigation();
 
@@ -40,6 +41,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   useEffect(() => {
     if (selectedJob) {
       setPreselectedJobId(selectedJob.id);
+      setSelectedJobId(selectedJob.id);
       // Clear the selected job after using it
       setSelectedJob(null);
     }
@@ -96,16 +98,34 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   const getMarkedDates = () => {
     const marked: any = {};
 
-    workDays.forEach(workDay => {
+    // Filter workDays by selected job if not "all"
+    // When filtering, show only work days from selected job + all non-work days
+    const filteredWorkDays = selectedJobId !== 'all'
+      ? workDays.filter(wd => {
+          if (wd.type === 'work') {
+            return wd.jobId === selectedJobId;
+          }
+          // Always show non-work days (free, vacation, sick)
+          return true;
+        })
+      : workDays;
+
+    filteredWorkDays.forEach(workDay => {
       let color: string;
       
-      if (workDay.type === 'work' && workDay.jobId) {
-        const job = jobs.find(j => j.id === workDay.jobId);
-        color = job?.color || Theme.colors.primary;
-      } else if (workDay.type && DAY_TYPES[workDay.type]) {
-        color = DAY_TYPES[workDay.type].color;
+      // Safety check for undefined or null type
+      if (!workDay.type) {
+        color = '#000000'; // Black for undefined/null types
+      } else if (workDay.type === 'work') {
+        color = '#30D158'; // Green for work days
+      } else if (workDay.type === 'free') {
+        color = '#007AFF'; // Blue for free days
+      } else if (workDay.type === 'vacation') {
+        color = '#FF9500'; // Yellow for vacation
+      } else if (workDay.type === 'sick') {
+        color = '#FF3B30'; // Red for sick days
       } else {
-        color = Theme.colors.primary; // Fallback color
+        color = '#000000'; // Black for others
       }
 
       marked[workDay.date] = {
@@ -121,7 +141,20 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
 
   const getMonthStats = () => {
     const monthKey = currentMonth.toISOString().slice(0, 7);
-    const monthWorkDays = workDays.filter(day => 
+    
+    // Filter workDays by selected job if not "all"
+    // When filtering, show only work days from selected job + all non-work days
+    const filteredWorkDays = selectedJobId !== 'all'
+      ? workDays.filter(wd => {
+          if (wd.type === 'work') {
+            return wd.jobId === selectedJobId;
+          }
+          // Always show non-work days (free, vacation, sick)
+          return true;
+        })
+      : workDays;
+    
+    const monthWorkDays = filteredWorkDays.filter(day => 
       day.date.startsWith(monthKey)
     );
 
@@ -169,9 +202,13 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           <View style={styles.headerText}>
             <View style={styles.titleContainer}>
               <IconSymbol size={20} name="calendar" color={Theme.colors.primary} />
-              <Text style={styles.headerTitle}>Mi Calendario</Text>
+              <Text style={styles.headerTitle}>
+                {selectedJobId !== 'all' ? `${jobs.find(j => j.id === selectedJobId)?.name} - Calendario` : 'Mi Calendario'}
+              </Text>
             </View>
-            <Text style={styles.headerSubtitle}>Días trabajados y estadísticas</Text>
+            <Text style={styles.headerSubtitle}>
+              {selectedJobId !== 'all' ? `Días trabajados en ${jobs.find(j => j.id === selectedJobId)?.name}` : 'Días trabajados y estadísticas'}
+            </Text>
           </View>
           <TouchableOpacity 
             onPress={handleBack}
@@ -183,6 +220,53 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Job selector */}
+        {jobs.length > 1 && (
+          <BlurView intensity={95} tint="light" style={styles.jobSelector}>
+            <Text style={styles.selectorTitle}>Filtrar por trabajo</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.jobScrollView}>
+              <View style={styles.jobButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.jobButton,
+                    selectedJobId === 'all' && styles.jobButtonActive,
+                  ]}
+                  onPress={() => setSelectedJobId('all')}
+                >
+                  <Text
+                    style={[
+                      styles.jobButtonText,
+                      selectedJobId === 'all' && styles.jobButtonTextActive,
+                    ]}
+                  >
+                    Todos
+                  </Text>
+                </TouchableOpacity>
+                {jobs.map((job) => (
+                  <TouchableOpacity
+                    key={job.id}
+                    style={[
+                      styles.jobButton,
+                      selectedJobId === job.id && styles.jobButtonActive,
+                    ]}
+                    onPress={() => setSelectedJobId(job.id)}
+                  >
+                    <View style={[styles.jobButtonDot, { backgroundColor: job.color }]} />
+                    <Text
+                      style={[
+                        styles.jobButtonText,
+                        selectedJobId === job.id && styles.jobButtonTextActive,
+                      ]}
+                    >
+                      {job.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </BlurView>
+        )}
+
         <Calendar
           style={styles.calendar}
           onDayPress={handleDayPress}
@@ -211,6 +295,11 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
             textDayFontSize: 16,
             textMonthFontSize: 18,
             textDayHeaderFontSize: 14,
+            dotStyle: {
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+            },
           }}
         />
 
@@ -270,7 +359,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         </BlurView>
 
         {/* Jobs breakdown */}
-        {Object.keys(stats.jobStats).length > 0 && (
+        {Object.keys(stats.jobStats).length > 0 && selectedJobId === 'all' && (
           <BlurView 
             intensity={95} 
             tint={Theme.colors.surface === '#FFFFFF' ? 'light' : 'dark'} 
@@ -394,6 +483,57 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
+  jobSelector: {
+    marginTop: 16,
+    marginBottom: 8,
+    borderRadius: 16,
+    padding: 20,
+    backgroundColor: Theme.colors.surface,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
+  },
+  selectorTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 16,
+    textAlign: 'center',
+    color: Theme.colors.text,
+  },
+  jobScrollView: {
+    marginHorizontal: -4,
+  },
+  jobButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 4,
+  },
+  jobButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: Theme.colors.separator,
+    gap: 6,
+  },
+  jobButtonActive: {
+    backgroundColor: Theme.colors.primary,
+    borderColor: Theme.colors.primary,
+  },
+  jobButtonDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  jobButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Theme.colors.text,
+  },
+  jobButtonTextActive: {
+    color: '#FFFFFF',
+  },
   calendar: {
     marginVertical: 20,
     borderRadius: 16,
@@ -452,9 +592,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     marginRight: 8,
   },
   legendText: {
