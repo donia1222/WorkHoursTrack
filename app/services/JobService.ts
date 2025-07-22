@@ -12,14 +12,12 @@ export class JobService {
       if (data) {
         return JSON.parse(data);
       } else {
-        // Initialize with default job
-        const defaultJobs = [DEFAULT_JOB];
-        await this.saveJobs(defaultJobs);
-        return defaultJobs;
+        // Return empty array - user should create their own jobs
+        return [];
       }
     } catch (error) {
       console.error('Error loading jobs:', error);
-      return [DEFAULT_JOB];
+      return [];
     }
   }
 

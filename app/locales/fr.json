@@ -1,0 +1,431 @@
+{
+  "common": {
+    "no_jobs_title": "Aucun Emploi Configuré",
+    "no_jobs_message": "Vous devez créer au moins un emploi avant de pouvoir utiliser le minuteur, le calendrier ou les rapports. Commencez par configurer votre premier emploi.",
+    "create_first_job": "Créer Premier Emploi"
+  },
+  "preferences": {
+    "title": "Préférences",
+    "subtitle": "Personnalisez votre expérience",
+    "appearance": {
+      "title": "Apparence",
+      "description": "Personnalisez le thème visuel de l'application",
+       "auto": "Auto",
+      "light": "Clair",
+      "dark": "Sombre"
+    },
+    "language": {
+      "title": "Langue",
+      "description": "Sélectionnez la langue de l'application",
+      "default": "Langue par défaut",
+      "change_to": "Changer pour {{language}}"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Configurez les notifications que vous souhaitez recevoir",
+      "general": "Notifications générales",
+      "general_desc": "Activer toutes les notifications",
+      "schedule": "Rappels d'horaire",
+      "schedule_desc": "Alertes d'entrée et de sortie",
+      "location": "Localisation",
+      "location_desc": "Alertes basées sur la géolocalisation"
+    }
+  },
+  "settings": {
+    "title": "Configuration",
+    "subtitle": "Gestion des emplois et préférences",
+    "jobs": {
+      "title": "Gestion des emplois",
+      "description": "Configurez vos emplois avec horaires, tarifs et facturation",
+      "my_jobs": "Mes emplois",
+      "my_jobs_desc": "Ajouter, modifier et configurer les emplois"
+    },
+    "work_config": {
+      "title": "Configuration de travail",
+      "schedules": "Horaires standards",
+      "schedules_desc": "Configurer les horaires par défaut",
+      "locations": "Lieux de travail",
+      "locations_desc": "Gérer les sites et le géofencing"
+    },
+    "financial_config": {
+      "title": "Configuration financière",
+      "rates": "Tarifs et salaires",
+      "rates_desc": "Configurer les tarifs horaires et salaires",
+      "billing": "Facturation",
+      "billing_desc": "Configurer la facturation automatique"
+    },
+    "app_config": {
+      "title": "Configuration de l'app",
+      "preferences": "Préférences générales",
+      "preferences_desc": "Notifications, langue, thème",
+      "how_it_works": "Comment ça marche",
+      "how_it_works_desc": "Tutoriel et guide d'utilisation",
+      "help": "Aide et support",
+      "help_desc": "FAQ, contact, conditions"
+    },
+    "quick_stats": {
+      "title": "Résumé rapide",
+      "active_jobs": "Emplois actifs",
+      "this_month": "Ce mois-ci",
+      "earnings": "Revenus"
+    }
+  },
+  "edit": {
+    "schedule": {
+      "title": "Modifier les horaires",
+      "subtitle": "Sélectionnez un emploi pour configurer les horaires, jours ouvrables et pauses"
+    },
+    "location": {
+      "title": "Modifier les emplacements",
+      "subtitle": "Sélectionnez un emploi pour configurer son emplacement et géofencing"
+    },
+    "financial": {
+      "title": "Modifier les tarifs et salaires",
+      "subtitle": "Sélectionnez un emploi pour configurer les salaires et tarifs horaires"
+    },
+    "billing": {
+      "title": "Modifier la facturation",
+      "subtitle": "Sélectionnez un emploi pour configurer la facturation automatique"
+    }
+  },
+  "maps": {
+    "you_are_here": "Vous êtes ici",
+    "add_job": "Ajouter un emploi",
+    "add_job_desc": "Configurez votre premier emploi pour commencer",
+    "start_timer": "Démarrer le chronomètre",
+    "view_calendar": "Voir le calendrier",
+    "view_statistics": "Voir les statistiques",
+    "edit_job": "Modifier l'emploi",
+    "delete_job": "Supprimer l'emploi",
+    "cancel": "Annuler",
+    "delete_confirm_title": "Supprimer l'emploi",
+    "delete_confirm_message": "Êtes-vous sûr de vouloir supprimer \"{{jobName}}\" ? Cela supprimera aussi tous les enregistrements de temps associés.",
+    "delete_confirm_button": "Supprimer",
+    "delete_success": "Emploi supprimé avec succès",
+    "delete_error": "Impossible de supprimer l'emploi",
+    "no_job_selected": "Aucun emploi sélectionné",
+    "success": "Succès"
+  },
+  "timer": {
+    "title": "Chronomètre",
+    "active_session": "Session active",
+    "ready_to_work": "Prêt à travailler",
+    "session_notes": "Notes de session",
+    "notes_placeholder": "Ajouter des notes sur le travail effectué...",
+    "notes_hint": "Les notes seront sauvegardées avec l'enregistrement de temps",
+    "quick_actions": "Actions rapides",
+    "tips": "Conseils",
+    "calendar": "Calendrier",
+    "break": "Pause",
+    "start": "Démarrer",
+    "pause": "Pause",
+    "resume": "Reprendre",
+    "stop": "Arrêter",
+    "overtime": "heures supplémentaires",
+    "select_job_error": "Veuillez sélectionner un emploi avant de commencer",
+    "start_timer_error": "Impossible de démarrer le chronomètre",
+    "session_saved": "Session sauvegardée : {{hours}} heures",
+    "save_error": "Impossible de sauvegarder la session",
+    "load_jobs_error": "Impossible de charger les emplois"
+  },
+  "reports": {
+    "title": "Rapports",
+    "subtitle": "Analyse du temps de travail",
+    "filter_by_job": "Filtrer par emploi",
+    "all_jobs": "Tous",
+    "analysis_period": "Période d'analyse",
+    "week": "Semaine",
+    "month": "Mois",
+    "year": "Année",
+    "last_7_days": "7 derniers jours",
+    "this_month": "Ce mois-ci",
+    "this_year": "Cette année",
+    "total_hours": "Total d'heures",
+    "worked_days": "Jours travaillés",
+    "average_per_day": "Moyenne/jour",
+    "overtime_hours": "{{hours}}h supplémentaires",
+    "job_distribution": "Répartition par emploi",
+    "recent_activity": "Activité récente",
+    "no_records": "Aucun enregistrement pour le moment",
+    "add_time": "Ajouter du temps",
+    "view_calendar": "Voir le calendrier",
+    "start_timer": "Démarrer le chronomètre",
+    "load_more": "Charger plus ({{remaining}} restants)",
+    "ot": "HS"
+  },
+  "calendar": {
+    "title": "Mon Calendrier",
+    "title_filtered": "{{jobName}} - Calendrier",
+    "subtitle": "Jours travaillés et statistiques",
+    "subtitle_filtered": "Jours travaillés dans {{jobName}}",
+    "filter_by_job": "Filtrer par emploi",
+    "all_jobs": "Tous",
+    "month_stats": "Statistiques du mois",
+    "worked_days": "Jours travaillés",
+    "total_hours": "Heures totales",
+    "overtime_days": "Jours supplémentaires",
+    "other_days": "Autres jours",
+    "free_days": "Libres",
+    "vacation_days": "Vacances",
+    "sick_days": "Maladie",
+    "by_job": "Par emploi",
+    "day_types": "Types de jours",
+    "work_day": "Jour de travail",
+    "free_day": "Jour libre",
+    "vacation_day": "Vacances",
+    "sick_day": "Jour de maladie",
+    "tap_to_register": "Touchez n'importe quel jour pour enregistrer",
+    "view_detailed_reports": "Voir les rapports détaillés",
+    "save_workday_error": "Impossible de sauvegarder le jour de travail",
+    "delete_workday_error": "Impossible de supprimer le jour de travail"
+  },
+  "job_selector": {
+    "title": "Sélectionner l'emploi",
+    "subtitle_single": "{{count}} emploi disponible",
+    "subtitle_multiple": "{{count}} emplois disponibles",
+    "default_hours": "{{hours}}h par défaut",
+    "hourly_rate": "• {{rate}} {{currency}}/h",
+    "add_job": "Ajouter\nemploi",
+    "loading": "Chargement des emplois...",
+    "no_jobs": "Vous n'avez aucun emploi actif",
+    "no_jobs_subtitle": "Ajoutez un emploi depuis l'écran principal pour continuer",
+    "time_periods": {
+      "hour": "h",
+      "month": "mois",
+      "year": "an"
+    }
+  },
+  "navigation": {
+    "back_to": "Retour à {{screen}}",
+    "screens": {
+      "mapa": "Carte",
+      "timer": "Timer",
+      "reports": "Rapports",
+      "calendar": "Calendrier",
+      "settings": "Paramètres"
+    },
+    "back": "Retour",
+    "home": "Accueil"
+  },
+  "job_form": {
+    "title_edit": "Éditer l'emploi",
+    "title_new": "Nouvel emploi",
+    "save": "Sauvegarder",
+    "tabs": {
+      "basic": "Base",
+      "schedule": "Horaire", 
+      "financial": "Financier",
+      "billing": "Facturation"
+    },
+    "basic": {
+      "title": "Informations de base",
+      "name": "Nom de l'emploi",
+      "name_required": "*",
+      "name_placeholder": "Ex: Développeur Frontend",
+      "company": "Entreprise",
+      "company_placeholder": "Ex: Tech Solutions SARL",
+      "address": "Adresse",
+      "street": "Rue",
+      "street_placeholder": "123 Rue de l'Exemple",
+      "postal_code": "Code postal",
+      "postal_code_placeholder": "75001",
+      "city": "Ville",
+      "city_placeholder": "Paris",
+      "description": "Description",
+      "description_placeholder": "Décrivez les responsabilités de l'emploi...",
+      "color": "Couleur d'identification",
+      "active": "Emploi actif",
+      "detecting": "Détection...",
+      "auto_fill": "Remplissage automatique"
+    },
+    "contact": {
+      "title": "Contact",
+      "person": "Personne de contact",
+      "person_placeholder": "Ex: Marie Dupont",
+      "email": "E-mail", 
+      "email_placeholder": "marie.dupont@entreprise.fr",
+      "phone": "Téléphone",
+      "phone_placeholder": "+33 1 23 45 67 89"
+    },
+    "schedule": {
+      "title": "Horaire standard",
+      "start_time": "Heure de début",
+      "start_time_placeholder": "09:00",
+      "end_time": "Heure de fin",
+      "end_time_placeholder": "17:00",
+      "default_hours": "Heures par défaut",
+      "default_hours_placeholder": "8",
+      "break_time": "Temps de pause (minutes)",
+      "break_time_placeholder": "60",
+      "split_shift": "Horaire coupé",
+      "split_shift_desc": "Activer pour travailler en deux périodes séparées",
+      "second_start_time": "Deuxième heure de début",
+      "second_start_time_placeholder": "15:00",
+      "second_end_time": "Deuxième heure de fin",
+      "second_end_time_placeholder": "19:00",
+      "work_days": "Jours de travail",
+      "days": ["D", "L", "M", "M", "J", "V", "S"],
+      "auto_schedule": "Planification automatique",
+      "auto_schedule_desc": "Ajouter automatiquement les jours de travail au calendrier"
+    },
+    "financial": {
+      "title": "Configuration salariale",
+      "salary_type": "Type de salaire",
+      "hourly": "Horaire",
+      "monthly": "Mensuel",
+      "annual": "Annuel",
+      "amount": "Montant",
+      "amount_placeholder": "0",
+      "currency": "Devise",
+      "currency_placeholder": "EUR",
+      "hourly_rate": "Tarif horaire (pour facturation)",
+      "hourly_rate_placeholder": "0"
+    },
+    "billing": {
+      "title": "Configuration de facturation",
+      "enabled": "Facturation activée",
+      "invoice_prefix": "Préfixe de facture",
+      "invoice_prefix_placeholder": "FACT",
+      "tax_rate": "Taux de taxe (%)",
+      "tax_rate_placeholder": "20",
+      "notes": "Notes de facturation",
+      "notes_placeholder": "Conditions de paiement, informations supplémentaires..."
+    },
+    "location": {
+      "title": "Géolocalisation",
+      "address": "Adresse spécifique",
+      "address_placeholder": "Lieu de travail exact",
+      "radius": "Rayon de geofencing (mètres)",
+      "radius_placeholder": "100"
+    },
+    "errors": {
+      "name_required": "Le nom de l'emploi est requis",
+      "save_error": "Impossible de sauvegarder l'emploi"
+    },
+    "location_detection": {
+      "permission_title": "Autorisations requises",
+      "permission_message": "Nous avons besoin d'accès à votre localisation pour détecter automatiquement l'adresse.",
+      "detected_title": "Localisation détectée",
+      "detected_message": "Adresse détectée : {{address}}",
+      "error_title": "Erreur",
+      "error_address": "Impossible d'obtenir l'adresse de votre localisation actuelle.",
+      "error_location": "Impossible de détecter votre localisation. Veuillez vérifier que le GPS est activé."
+    }
+  },
+  "jobs_management": {
+    "title": "Mes Emplois",
+    "subtitle": "Gérez vos emplois et projets",
+    "active_jobs": "Emplois actifs ({{count}})",
+    "inactive_jobs": "Emplois inactifs ({{count}})",
+    "no_active_jobs": "Vous n'avez pas d'emplois actifs",
+    "add_job": "Ajouter un emploi",
+    "default_hours": "{{hours}}h par défaut",
+    "per_hour": "h",
+    "per_month": "mois", 
+    "per_year": "année",
+    "billing_enabled": "Facturation activée",
+    "billing_rate": "{{rate}} {{currency}}/h (facturation)",
+    "delete": {
+      "title": "Supprimer l'emploi",
+      "message": "Êtes-vous sûr de vouloir supprimer \"{{jobName}}\" ? Cela supprimera aussi tous les enregistrements de temps associés.",
+      "cancel": "Annuler",
+      "confirm": "Supprimer",
+      "success": "Emploi supprimé avec succès",
+      "error": "Impossible de supprimer l'emploi"
+    },
+    "update_error": "Impossible de mettre à jour le statut de l'emploi"
+  },
+  "help_support": {
+    "title": "Aide & Support",
+    "subtitle": "FAQ, contact et ressources",
+    "faq": {
+      "title": "Questions Fréquemment Posées",
+      "description": "Trouvez des réponses aux questions les plus courantes",
+      "categories": {
+        "all": "Toutes",
+        "general": "Général",
+        "time": "Temps",
+        "billing": "Facturation",
+        "technical": "Technique"
+      },
+      "questions": {
+        "how_to_start": {
+          "question": "Comment commencer à utiliser l'app ?",
+          "answer": "Pour commencer, allez dans Paramètres > Mes Emplois et ajoutez votre premier emploi. Définissez les horaires, la localisation et les tarifs. Vous pourrez ensuite commencer à enregistrer le temps depuis l'écran principal."
+        },
+        "record_time": {
+          "question": "Comment enregistrer mon temps de travail ?",
+          "answer": "Depuis l'écran principal, sélectionnez votre emploi et appuyez sur le bouton démarrer. L'app commencera automatiquement à suivre votre temps. Appuyez sur arrêter quand vous avez fini."
+        },
+        "edit_records": {
+          "question": "Puis-je modifier mes enregistrements de temps ?",
+          "answer": "Oui, allez au calendrier et sélectionnez n'importe quel jour pour voir vos enregistrements. Vous pouvez modifier l'heure d'entrée, de sortie et ajouter des notes."
+        },
+        "geolocation": {
+          "question": "Comment fonctionne la géolocalisation ?",
+          "answer": "L'app utilise votre localisation pour vérifier que vous êtes sur votre lieu de travail. Vous pouvez configurer un rayon de tolérance dans les paramètres de chaque emploi."
+        },
+        "billing_setup": {
+          "question": "Comment configurer la facturation ?",
+          "answer": "Dans chaque emploi, allez à l'onglet \"Facturation\" et définissez votre tarif horaire. L'app calculera automatiquement vos revenus basés sur le temps travaillé."
+        },
+        "data_security": {
+          "question": "Mes données sont-elles sécurisées ?",
+          "answer": "Toutes vos données sont stockées localement sur votre appareil. Nous n'envoyons pas d'informations personnelles à des serveurs externes."
+        },
+        "export_data": {
+          "question": "Puis-je exporter mes données ?",
+          "answer": "Nous ajouterons bientôt la fonctionnalité d'exportation PDF et Excel pour vos enregistrements de temps."
+        },
+        "location_issues": {
+          "question": "Pourquoi la localisation ne fonctionne-t-elle pas ?",
+          "answer": "Vérifiez que vous avez accordé les autorisations de localisation à l'app. Allez dans Paramètres de l'appareil > Confidentialité > Localisation et activez les autorisations."
+        }
+      }
+    },
+    "contact": {
+      "title": "Contact & Support",
+      "description": "Vous ne trouvez pas ce que vous cherchez ? Contactez-nous",
+      "email": "Envoyer un Email",
+      "email_address": "support@geolocalizacion-app.com",
+      "whatsapp": "WhatsApp",
+      "whatsapp_number": "+33 1 23 45 67 89",
+      "schedule": "Heures de Support",
+      "schedule_hours": "Lun - Ven : 9h00 - 18h00"
+    },
+    "legal": {
+      "title": "Légal & Confidentialité",
+      "terms": "Conditions de Service",
+      "terms_description": "Conditions d'utilisation de l'application",
+      "privacy": "Politique de Confidentialité",
+      "privacy_description": "Comment nous gérons vos données",
+      "version": "Version 1.0.0",
+      "last_update": "Dernière mise à jour : Juillet 2025"
+    }
+  },
+  "side_menu": {
+    "title": "Navigation",
+    "menu_items": {
+      "mapa": {
+        "title": "Travail",
+        "description": "Position actuelle"
+      },
+      "timer": {
+        "title": "Timer",
+        "description": "Suivi du temps"
+      },
+      "reports": {
+        "title": "Rapports",
+        "description": "Statistiques"
+      },
+      "calendar": {
+        "title": "Calendrier",
+        "description": "Jours de travail"
+      },
+      "settings": {
+        "title": "Paramètres",
+        "description": "Préférences"
+      }
+    }
+  }
+}

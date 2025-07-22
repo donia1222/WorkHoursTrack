@@ -1,0 +1,498 @@
+{
+  "common": {
+    "no_jobs_title": "No Jobs Configured",
+    "no_jobs_message": "You need to create at least one job before you can use the timer, calendar, or reports. Start by setting up your first job.",
+    "create_first_job": "Create First Job"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "subtitle": "Customize your experience",
+    "appearance": {
+      "title": "Appearance",
+      "description": "Customize the visual theme of the application",
+       "auto": "Auto",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "language": {
+      "title": "Language",
+      "description": "Select the application language",
+      "default": "Default language",
+      "change_to": "Change to {{language}}"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Configure which notifications you want to receive",
+      "general": "General Notifications",
+      "general_desc": "Enable all notifications",
+      "schedule": "Schedule Reminders",
+      "schedule_desc": "Check-in and check-out alerts",
+      "location": "Location",
+      "location_desc": "Geolocation-based alerts"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Job management and preferences",
+    "jobs": {
+      "title": "Job Management",
+      "description": "Configure your jobs with schedules, rates and billing",
+      "my_jobs": "My Jobs",
+      "my_jobs_desc": "Add, edit and configure jobs"
+    },
+    "work_config": {
+      "title": "Work Configuration",
+      "schedules": "Standard Schedules",
+      "schedules_desc": "Configure default schedules",
+      "locations": "Work Locations",
+      "locations_desc": "Manage sites and geofencing"
+    },
+    "financial_config": {
+      "title": "Financial Configuration",
+      "rates": "Rates and Salaries",
+      "rates_desc": "Configure hourly rates and salaries",
+      "billing": "Billing",
+      "billing_desc": "Configure automatic billing"
+    },
+    "app_config": {
+      "title": "App Configuration",
+      "preferences": "General Preferences",
+      "preferences_desc": "Notifications, language, theme",
+      "how_it_works": "How It Works",
+      "how_it_works_desc": "Tutorial and usage guide",
+      "help": "Help & Support",
+      "help_desc": "FAQ, contact, terms"
+    },
+    "quick_stats": {
+      "title": "Quick Summary",
+      "active_jobs": "Active jobs",
+      "this_month": "This month",
+      "earnings": "Earnings"
+    }
+  },
+  "edit": {
+    "schedule": {
+      "title": "Edit Schedules",
+      "subtitle": "Select a job to configure schedules, working days and breaks"
+    },
+    "location": {
+      "title": "Edit Locations",
+      "subtitle": "Select a job to configure its location and geofencing"
+    },
+    "financial": {
+      "title": "Edit Rates and Salaries",
+      "subtitle": "Select a job to configure salaries and hourly rates"
+    },
+    "billing": {
+      "title": "Edit Billing",
+      "subtitle": "Select a job to configure automatic billing"
+    }
+  },
+  "maps": {
+    "you_are_here": "You are here",
+    "add_job": "Add Job",
+    "add_job_desc": "Set up your first job to get started",
+    "start_timer": "Start Timer",
+    "view_calendar": "View Calendar",
+    "view_statistics": "View Statistics",
+    "edit_job": "Edit Job",
+    "delete_job": "Delete Job",
+    "cancel": "Cancel",
+    "delete_confirm_title": "Delete job",
+    "delete_confirm_message": "Are you sure you want to delete \"{{jobName}}\"? This will also delete all associated time records.",
+    "delete_confirm_button": "Delete",
+    "delete_success": "Job deleted successfully",
+    "delete_error": "Could not delete job",
+    "no_job_selected": "No job selected",
+    "success": "Success"
+  },
+  "timer": {
+    "title": "Timer",
+    "active_session": "Active session",
+    "ready_to_work": "Ready to work",
+    "session_notes": "Session notes",
+    "notes_placeholder": "Add notes about the work performed...",
+    "notes_hint": "Notes will be saved with the time record",
+    "quick_actions": "Quick actions",
+    "tips": "Tips",
+    "calendar": "Calendar",
+    "break": "Break",
+    "start": "Start",
+    "pause": "Pause",
+    "resume": "Resume",
+    "stop": "Stop",
+    "overtime": "overtime",
+    "select_job_error": "Please select a job before starting",
+    "start_timer_error": "Could not start timer",
+    "session_saved": "Session saved: {{hours}} hours",
+    "save_error": "Could not save session",
+    "load_jobs_error": "Could not load jobs"
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Work time analysis",
+    "filter_by_job": "Filter by job",
+    "all_jobs": "All",
+    "analysis_period": "Analysis period",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year",
+    "last_7_days": "Last 7 days",
+    "this_month": "This month",
+    "this_year": "This year",
+    "total_hours": "Total hours",
+    "worked_days": "Days worked",
+    "average_per_day": "Average/day",
+    "overtime_hours": "{{hours}}h overtime",
+    "job_distribution": "Job distribution",
+    "recent_activity": "Recent activity",
+    "no_records": "No records yet",
+    "add_time": "Add time",
+    "view_calendar": "View calendar",
+    "start_timer": "Start timer",
+    "load_more": "Load more ({{remaining}} remaining)",
+    "ot": "OT"
+  },
+  "calendar": {
+    "title": "My Calendar",
+    "title_filtered": "{{jobName}} - Calendar",
+    "subtitle": "Work days and statistics",
+    "subtitle_filtered": "Work days in {{jobName}}",
+    "filter_by_job": "Filter by job",
+    "all_jobs": "All",
+    "month_stats": "Month statistics",
+    "worked_days": "Work days",
+    "total_hours": "Total hours",
+    "overtime_days": "Overtime days",
+    "other_days": "Other days",
+    "free_days": "Free",
+    "vacation_days": "Vacation",
+    "sick_days": "Sick",
+    "by_job": "By job",
+    "day_types": "Day types",
+    "work_day": "Work day",
+    "free_day": "Free day",
+    "vacation_day": "Vacation",
+    "sick_day": "Sick day",
+    "tap_to_register": "Tap any day to register",
+    "view_detailed_reports": "View detailed reports",
+    "save_workday_error": "Could not save work day",
+    "delete_workday_error": "Could not delete work day"
+  },
+  "job_selector": {
+    "title": "Select job",
+    "subtitle_single": "{{count}} job available",
+    "subtitle_multiple": "{{count}} jobs available",
+    "default_hours": "{{hours}}h default",
+    "hourly_rate": "• {{rate}} {{currency}}/h",
+    "add_job": "Add\njob",
+    "loading": "Loading jobs...",
+    "no_jobs": "You have no active jobs",
+    "no_jobs_subtitle": "Add a job from the main screen to continue",
+    "time_periods": {
+      "hour": "h",
+      "month": "month",
+      "year": "year"
+    }
+  },
+  "onboarding": {
+    "steps": {
+      "jobs": {
+        "title": "Manage Your Jobs",
+        "description": "Create and organize all your jobs with detailed information, schedules, rates and locations."
+      },
+      "timer": {
+        "title": "Track Your Time",
+        "description": "Use the timer to measure work hours or register manually in the calendar."
+      },
+      "location": {
+        "title": "Locate on the Map",
+        "description": "See your jobs on the map, navigate to their locations and manage everything from one place."
+      },
+      "reports": {
+        "title": "Analyze Statistics",
+        "description": "Review detailed reports, job statistics and export your data when you need it."
+      }
+    },
+    "step_counter": "{{current}} of {{total}}",
+    "navigation": {
+      "previous": "Previous",
+      "next": "Next",
+      "start": "Start",
+      "allow_location": "Allow Location",
+      "skip": "Skip"
+    },
+    "location": {
+      "permission_notice": "To use this function we'll need access to your location",
+      "permission_title": "Location Permissions",
+      "permission_message": "Location permissions are necessary to show your jobs on the map and navigate to locations. You can enable permissions later in the app settings.",
+      "permission_understood": "Understood"
+    },
+    "features": {
+      "title": "Main Features",
+      "smart_timer": "Automatic timer with smart rounding",
+      "visual_calendar": "Visual calendar with day types",
+      "interactive_map": "Interactive map with locations",
+      "detailed_stats": "Detailed statistics and reports",
+      "data_export": "Data export"
+    },
+    "tips": {
+      "title": "💡 Quick Tips",
+      "long_press": "Long press elements for more options",
+      "share_stats": "Share your statistics from any modal",
+      "swipe_close": "Swipe down to close modals"
+    }
+  },
+  "welcome": {
+    "title": "Welcome!",
+    "subtitle": "Learn how to use the app in {{steps}} steps"
+  },
+  "navigation": {
+    "back_to": "Back to {{screen}}",
+    "screens": {
+      "mapa": "Map",
+      "timer": "Timer",
+      "reports": "Reports",
+      "calendar": "Calendar", 
+      "settings": "Settings"
+    },
+    "back": "Back",
+    "home": "Home"
+  },
+  "job_form": {
+    "title_edit": "Edit Job",
+    "title_new": "New Job",
+    "save": "Save",
+    "tabs": {
+      "basic": "Basic",
+      "schedule": "Schedule", 
+      "financial": "Financial",
+      "billing": "Billing"
+    },
+    "basic": {
+      "title": "Basic Information",
+      "name": "Job name",
+      "name_required": "*",
+      "name_placeholder": "E.g: Frontend Developer",
+      "company": "Company",
+      "company_placeholder": "E.g: Tech Solutions Inc.",
+      "address": "Address",
+      "street": "Street",
+      "street_placeholder": "Example Street 123",
+      "postal_code": "Postal Code",
+      "postal_code_placeholder": "10001",
+      "city": "City",
+      "city_placeholder": "New York",
+      "description": "Description",
+      "description_placeholder": "Describe job responsibilities...",
+      "color": "Identification color",
+      "active": "Active job",
+      "detecting": "Detecting...",
+      "auto_fill": "Auto-fill"
+    },
+    "contact": {
+      "title": "Contact",
+      "person": "Contact person",
+      "person_placeholder": "E.g: Anna Garcia",
+      "email": "Email",
+      "email_placeholder": "anna.garcia@company.com",
+      "phone": "Phone",
+      "phone_placeholder": "+1 555 123 456"
+    },
+    "schedule": {
+      "title": "Standard Schedule",
+      "start_time": "Start time",
+      "start_time_placeholder": "09:00",
+      "end_time": "End time", 
+      "end_time_placeholder": "17:00",
+      "default_hours": "Default hours",
+      "default_hours_placeholder": "8",
+      "break_time": "Break time (minutes)",
+      "break_time_placeholder": "60",
+      "split_shift": "Split shift",
+      "split_shift_desc": "Enable to work in two separate periods",
+      "second_start_time": "Second start time",
+      "second_start_time_placeholder": "15:00",
+      "second_end_time": "Second end time",
+      "second_end_time_placeholder": "19:00",
+      "work_days": "Work days",
+      "days": ["S", "M", "T", "W", "T", "F", "S"],
+      "auto_schedule": "Auto scheduling",
+      "auto_schedule_desc": "Automatically add work days to calendar"
+    },
+    "financial": {
+      "title": "Salary Configuration",
+      "salary_type": "Salary type",
+      "hourly": "Hourly",
+      "monthly": "Monthly",
+      "annual": "Annual",
+      "amount": "Amount",
+      "amount_placeholder": "0",
+      "currency": "Currency",
+      "currency_placeholder": "USD",
+      "hourly_rate": "Hourly rate (for billing)",
+      "hourly_rate_placeholder": "0"
+    },
+    "billing": {
+      "title": "Billing Configuration",
+      "enabled": "Billing enabled",
+      "invoice_prefix": "Invoice prefix",
+      "invoice_prefix_placeholder": "INV",
+      "tax_rate": "Tax rate (%)",
+      "tax_rate_placeholder": "21",
+      "notes": "Billing notes",
+      "notes_placeholder": "Payment terms, additional information..."
+    },
+    "location": {
+      "title": "Geolocation",
+      "address": "Specific address",
+      "address_placeholder": "Exact work location",
+      "radius": "Geofencing radius (meters)",
+      "radius_placeholder": "100"
+    },
+    "errors": {
+      "name_required": "Job name is required",
+      "save_error": "Could not save job"
+    },
+    "auto_schedule": {
+      "applied_title": "Schedule Applied",
+      "applied_success": "Added {{workDays}} work days and {{freeDays}} free days automatically.",
+      "applied_conflicts": "Added {{workDays}} work days and {{freeDays}} free days. Detected {{conflicts}} schedule conflicts.",
+      "error_title": "Error",
+      "error_message": "Could not apply automatic scheduling. The job was saved successfully.",
+      "view_calendar": "View Calendar",
+      "disable_title": "Clear automatic schedule?",
+      "disable_message": "Disabling automatic scheduling will remove all auto-generated days from the calendar. Do you want to continue?",
+      "disable_cancel": "Cancel",
+      "disable_confirm": "Remove days",
+      "cleared_title": "Days removed",
+      "cleared_message": "All auto-generated days have been removed from the calendar.",
+      "clear_error": "Could not remove auto-generated days."
+    },
+    "location_detection": {
+      "permission_title": "Permissions Required",
+      "permission_message": "We need access to your location to automatically detect the address.",
+      "detected_title": "Location Detected",
+      "detected_message": "Address detected: {{address}}",
+      "error_title": "Error",
+      "error_address": "Could not get address from your current location.",
+      "error_location": "Could not detect your location. Please verify GPS is enabled."
+    }
+  },
+  "jobs_management": {
+    "title": "My Jobs",
+    "subtitle": "Manage your jobs and projects", 
+    "active_jobs": "Active jobs ({{count}})",
+    "inactive_jobs": "Inactive jobs ({{count}})",
+    "no_active_jobs": "You have no active jobs",
+    "add_job": "Add job",
+    "default_hours": "{{hours}}h default",
+    "per_hour": "h",
+    "per_month": "month",
+    "per_year": "year", 
+    "billing_enabled": "Billing enabled",
+    "billing_rate": "{{rate}} {{currency}}/h (billing)",
+    "delete": {
+      "title": "Delete job",
+      "message": "Are you sure you want to delete \"{{jobName}}\"? This will also delete all associated time records.",
+      "cancel": "Cancel",
+      "confirm": "Delete", 
+      "success": "Job deleted successfully",
+      "error": "Could not delete job"
+    },
+    "update_error": "Could not update job status"
+  },
+  "help_support": {
+    "title": "Help & Support",
+    "subtitle": "FAQ, contact and resources", 
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "description": "Find answers to the most common questions",
+      "categories": {
+        "all": "All",
+        "general": "General",
+        "time": "Time",
+        "billing": "Billing",
+        "technical": "Technical"
+      },
+      "questions": {
+        "how_to_start": {
+          "question": "How do I start using the app?",
+          "answer": "To begin, go to Settings > My Jobs and add your first job. Set up schedules, location and rates. Then you can start tracking time from the main screen."
+        },
+        "record_time": {
+          "question": "How do I record my work time?",
+          "answer": "From the main screen, select your job and press the start button. The app will automatically track your time. Press stop when you're finished."
+        },
+        "edit_records": {
+          "question": "Can I edit my time records?",
+          "answer": "Yes, go to the calendar and select any day to view your records. You can edit entry time, exit time and add notes."
+        },
+        "geolocation": {
+          "question": "How does geolocation work?",
+          "answer": "The app uses your location to verify you're at your workplace. You can configure a tolerance radius in each job's settings."
+        },
+        "billing_setup": {
+          "question": "How do I set up billing?",
+          "answer": "In each job, go to the \"Billing\" tab and set your hourly rate. The app will automatically calculate your earnings based on time worked."
+        },
+        "data_security": {
+          "question": "Is my data secure?",
+          "answer": "All your data is stored locally on your device. We don't send personal information to external servers."
+        },
+        "export_data": {
+          "question": "Can I export my data?",
+          "answer": "We're coming soon with PDF and Excel export functionality for your time records."
+        },
+        "location_issues": {
+          "question": "Why isn't location working?",
+          "answer": "Verify you've granted location permissions to the app. Go to Device Settings > Privacy > Location and enable permissions."
+        }
+      }
+    },
+    "contact": {
+      "title": "Contact & Support",
+      "description": "Can't find what you're looking for? Contact us",
+      "email": "Send Email",
+      "email_address": "support@geolocalizacion-app.com", 
+      "whatsapp": "WhatsApp",
+      "whatsapp_number": "+1 555 123 456",
+      "schedule": "Support Hours",
+      "schedule_hours": "Mon - Fri: 9:00 AM - 6:00 PM"
+    },
+    "legal": {
+      "title": "Legal & Privacy",
+      "terms": "Terms of Service",
+      "terms_description": "Application usage conditions",
+      "privacy": "Privacy Policy",
+      "privacy_description": "How we handle your data", 
+      "version": "Version 1.0.0",
+      "last_update": "Last update: July 2025"
+    }
+  },
+  "side_menu": {
+    "title": "Navigation",
+    "menu_items": {
+      "mapa": {
+        "title": "Work",
+        "description": "Current location"
+      },
+      "timer": {
+        "title": "Timer",
+        "description": "Time tracking"
+      },
+      "reports": {
+        "title": "Reports",
+        "description": "Statistics"
+      },
+      "calendar": {
+        "title": "Calendar",
+        "description": "Work days"
+      },
+      "settings": {
+        "title": "Settings",
+        "description": "Preferences"
+      }
+    }
+  }
+}

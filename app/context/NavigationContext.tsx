@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Job } from '../types/WorkTypes';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export type ScreenName = 'mapa' | 'timer' | 'reports' | 'calendar' | 'settings';
 
@@ -92,6 +93,7 @@ export function useNavigation() {
 // Hook for getting the appropriate back action
 export function useBackNavigation() {
   const { navigateBack, canGoBack, getPreviousScreen } = useNavigation();
+  const { t } = useLanguage();
 
   const handleBack = () => {
     if (canGoBack()) {
@@ -104,22 +106,10 @@ export function useBackNavigation() {
 
   const getBackButtonLabel = () => {
     const previousScreen = getPreviousScreen();
-    if (!previousScreen) return 'Inicio';
+    if (!previousScreen) return t('navigation.home');
 
-    switch (previousScreen) {
-      case 'mapa':
-        return 'Mapa';
-      case 'timer':
-        return 'Timer';
-      case 'reports':
-        return 'Reportes';
-      case 'calendar':
-        return 'Calendario';
-      case 'settings':
-        return 'Configuración';
-      default:
-        return 'Atrás';
-    }
+    const screenKey = `navigation.screens.${previousScreen}`;
+    return t(screenKey);
   };
 
   return {

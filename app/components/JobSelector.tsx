@@ -10,6 +10,9 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
 import { BlurView } from 'expo-blur';
 import { Job } from '../types/WorkTypes';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { useHapticFeedback } from '../hooks/useHapticFeedback';
 
 interface JobSelectorProps {
   jobs: Job[];
@@ -26,14 +29,21 @@ export default function JobSelector({
   onAddJob,
   showAddButton = true 
 }: JobSelectorProps) {
+  const { t } = useLanguage();
+  const { colors, isDark } = useTheme();
+  const { triggerHaptic } = useHapticFeedback();
   const activeJobs = jobs.filter(job => job.isActive);
+  const styles = getStyles(colors, isDark);
 
   return (
-    <BlurView intensity={95} tint="light" style={styles.container}>
+    <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Seleccionar trabajo</Text>
+        <Text style={styles.title}>{t('job_selector.title')}</Text>
         <Text style={styles.subtitle}>
-          {activeJobs.length} trabajo{activeJobs.length !== 1 ? 's' : ''} disponible{activeJobs.length !== 1 ? 's' : ''}
+          {activeJobs.length === 1 
+            ? t('job_selector.subtitle_single', { count: activeJobs.length })
+            : t('job_selector.subtitle_multiple', { count: activeJobs.length })
+          }
         </Text>
       </View>
 
@@ -50,7 +60,7 @@ export default function JobSelector({
               styles.jobCard,
               selectedJobId === job.id && styles.jobCardSelected
             ]}
-            onPress={() => onJobSelect(job.id)}
+            onPress={() => { triggerHaptic('selection'); onJobSelect(job.id); }}
           >
             <View style={styles.jobCardInner}>
               <View 
@@ -87,7 +97,7 @@ export default function JobSelector({
                       selectedJobId === job.id && styles.jobHoursSelected
                     ]}
                   >
-                    {job.defaultHours}h por defecto
+                    {t('job_selector.default_hours', { hours: job.defaultHours })}
                   </Text>
                   {job.hourlyRate && job.hourlyRate > 0 && (
                     <Text 
@@ -96,7 +106,7 @@ export default function JobSelector({
                         selectedJobId === job.id && styles.jobRateSelected
                       ]}
                     >
-                      • {job.hourlyRate} {job.currency || 'EUR'}/h
+                      {t('job_selector.hourly_rate', { rate: job.hourlyRate, currency: job.currency || 'EUR' })}
                     </Text>
                   )}
                 </View>
@@ -117,18 +127,18 @@ export default function JobSelector({
         {showAddButton && onAddJob && (
           <TouchableOpacity
             style={styles.addJobCard}
-            onPress={onAddJob}
+            onPress={() => { triggerHaptic('light'); onAddJob(); }}
           >
             <View style={styles.addJobCardInner}>
               <View style={styles.addJobIcon}>
                 <IconSymbol 
-                  size={24} 
+                  size={22} 
                   name="plus" 
-                  color={Theme.colors.primary} 
+                  color="#FFFFFF" 
                 />
               </View>
               <Text style={styles.addJobText}>
-                Agregar{'\n'}trabajo
+                {t('job_selector.add_job')}
               </Text>
             </View>
           </TouchableOpacity>
@@ -138,7 +148,7 @@ export default function JobSelector({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   container: {
     borderRadius: Theme.borderRadius.lg,
     padding: Theme.spacing.lg,
@@ -150,12 +160,12 @@ const styles = StyleSheet.create({
   },
   title: {
     ...Theme.typography.headline,
-    color: Theme.colors.text,
+    color: colors.text,
     marginBottom: Theme.spacing.xs,
   },
   subtitle: {
     ...Theme.typography.footnote,
-    color: Theme.colors.textSecondary,
+    color: colors.textSecondary,
   },
   scrollView: {
     marginHorizontal: -Theme.spacing.xs,
@@ -192,28 +202,28 @@ const styles = StyleSheet.create({
   },
   jobName: {
     ...Theme.typography.headline,
-    color: Theme.colors.text,
+    color: colors.text,
     marginBottom: Theme.spacing.xs,
     fontWeight: '600',
   },
   jobNameSelected: {
-    color: Theme.colors.primary,
+    color: colors.primary,
   },
   jobCompany: {
     ...Theme.typography.footnote,
-    color: Theme.colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: Theme.spacing.xs,
   },
   jobCompanySelected: {
-    color: Theme.colors.textSecondary,
+    color: colors.textSecondary,
   },
   jobHours: {
     ...Theme.typography.caption2,
-    color: Theme.colors.textTertiary,
+    color: colors.textTertiary,
     fontWeight: '500',
   },
   jobHoursSelected: {
-    color: Theme.colors.primary,
+    color: colors.primary,
   },
   jobDetails: {
     flexDirection: 'row',
@@ -221,11 +231,11 @@ const styles = StyleSheet.create({
   },
   jobRate: {
     ...Theme.typography.caption2,
-    color: Theme.colors.textTertiary,
+    color: colors.textTertiary,
     fontWeight: '500',
   },
   jobRateSelected: {
-    color: Theme.colors.primary,
+    color: colors.primary,
   },
   selectedIndicator: {
     position: 'absolute',
@@ -234,7 +244,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: Theme.colors.success,
+    backgroundColor: colors.success,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -245,26 +255,27 @@ const styles = StyleSheet.create({
   addJobCardInner: {
     borderRadius: Theme.borderRadius.md,
     padding: Theme.spacing.md,
-    backgroundColor: `${Theme.colors.primary}10`,
+    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.2)' : 'rgba(0, 122, 255, 0.1)',
     borderWidth: 2,
-    borderColor: `${Theme.colors.primary}30`,
+    borderColor: isDark ? 'rgba(0, 122, 255, 0.4)' : 'rgba(0, 122, 255, 0.3)',
     borderStyle: 'dashed',
     minHeight: 100,
     justifyContent: 'center',
     alignItems: 'center',
   },
   addJobIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: `${Theme.colors.primary}20`,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Theme.spacing.sm,
+    ...Theme.shadows.small,
   },
   addJobText: {
     ...Theme.typography.footnote,
-    color: Theme.colors.primary,
+    color: colors.primary,
     textAlign: 'center',
     fontWeight: '600',
   },

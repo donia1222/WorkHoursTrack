@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Alert, StyleSheet, Text, TouchableOpacity, SafeAreaView } from 'react-native';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 
 import Loading from '../components/Loading';
@@ -12,12 +13,26 @@ import ProfileModal from '../components/ProfileModal';
 import SideMenu from '../components/SideMenu';
 
 import TimerScreen from '../screens/TimerScreen';
-import ReportsScreen from '../screens/ReportsScreen';
+import EnhancedReportsScreen from '../screens/EnhancedReportsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 
 import { NavigationProvider, useNavigation, ScreenName } from '../context/NavigationContext';
 import { OnboardingService } from '../services/OnboardingService';
+
+// Componente con animaciones suaves para transiciones
+const ScreenWrapper = ({ children, screenKey }: { children: React.ReactNode; screenKey: string }) => {
+  return (
+    <Animated.View 
+      key={screenKey}
+      entering={FadeIn.duration(300)}
+      exiting={FadeOut.duration(200)}
+      style={{ flex: 1 }}
+    >
+      {children}
+    </Animated.View>
+  );
+};
 
 function AppContent() {
   const [location, setLocation] = useState<Location.LocationObjectCoords | null>(null);
@@ -65,9 +80,18 @@ function AppContent() {
     }
   }, [showOnboarding]);
 
-  const handleNavigate = (screen: string) => {
-    navigateTo(screen as ScreenName);
+  const handleNavigate = (screen: string, options?: any) => {
+    if (screen === 'jobs-management') {
+      // Special handling for jobs management - navigate to settings and open jobs modal
+      navigateTo('settings');
+      // We'll need to pass this information to SettingsScreen
+      setNavigationOptions({ openJobsModal: true, ...options });
+    } else {
+      navigateTo(screen as ScreenName);
+    }
   };
+
+  const [navigationOptions, setNavigationOptions] = useState<any>(null);
 
   const handleWelcomeModalClose = async () => {
     setShowWelcomeModal(false);
@@ -81,17 +105,41 @@ function AppContent() {
 
     switch (currentScreen) {
       case 'mapa':
-        return location ? <MapLocation location={location} onNavigate={handleNavigate} /> : <Loading message="Obteniendo ubicación actual..." />;
+        return (
+          <ScreenWrapper screenKey="mapa">
+            {location ? <MapLocation location={location} onNavigate={handleNavigate} /> : <Loading message="Obteniendo ubicación actual..." />}
+          </ScreenWrapper>
+        );
       case 'timer':
-        return <TimerScreen onNavigate={handleNavigate} />;
+        return (
+          <ScreenWrapper screenKey="timer">
+            <TimerScreen onNavigate={handleNavigate} />
+          </ScreenWrapper>
+        );
       case 'reports':
-        return <ReportsScreen onNavigate={handleNavigate} />;
+        return (
+          <ScreenWrapper screenKey="reports">
+            <EnhancedReportsScreen onNavigate={handleNavigate} />
+          </ScreenWrapper>
+        );
       case 'calendar':
-        return <CalendarScreen onNavigate={handleNavigate} />;
+        return (
+          <ScreenWrapper screenKey="calendar">
+            <CalendarScreen onNavigate={handleNavigate} />
+          </ScreenWrapper>
+        );
       case 'settings':
-        return <SettingsScreen onNavigate={handleNavigate} />;
+        return (
+          <ScreenWrapper screenKey="settings">
+            <SettingsScreen onNavigate={handleNavigate} navigationOptions={navigationOptions} onNavigationHandled={() => setNavigationOptions(null)} />
+          </ScreenWrapper>
+        );
       default:
-        return location ? <MapLocation location={location} /> : null;
+        return location ? (
+          <ScreenWrapper screenKey="default">
+            <MapLocation location={location} />
+          </ScreenWrapper>
+        ) : null;
     }
   };
 

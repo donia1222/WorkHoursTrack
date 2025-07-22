@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
+import { useTheme, ThemeColors } from '../contexts/ThemeContext';
+import { useHapticFeedback } from '../hooks/useHapticFeedback';
 
 interface HeaderProps {
   title: string | React.ReactNode;
@@ -11,53 +13,13 @@ interface HeaderProps {
   showBackButton?: boolean;
 }
 
-export default function Header({ title, onProfilePress, onMenuPress, onBackPress, showBackButton }: HeaderProps) {
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <BlurView intensity={95} tint="extraLight" style={styles.blurContainer}>
-        <View style={styles.container}>
-          {showBackButton && onBackPress ? (
-            <TouchableOpacity onPress={onBackPress} style={styles.backButton}>
-              <View style={styles.backButtonInner}>
-                <IconSymbol size={20} name="chevron.left" color="#FFFFFF" />
-              </View>
-            </TouchableOpacity>
-          ) : onMenuPress ? (
-            <TouchableOpacity onPress={onMenuPress} style={styles.profileButton}>
-     
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.spacer} />
-          )}
-          
-          <View style={styles.titleContainer}>
-            {typeof title === 'string' ? (
-              <Text style={styles.title}>{title}</Text>
-            ) : (
-              title
-            )}
-            <View style={styles.titleUnderline} />
-          </View>
-          
-          <TouchableOpacity  onPress={onMenuPress} style={styles.profileButton}>
-             <View style={styles.menuButtonInner}>
-               <IconSymbol size={20} name="line.3.horizontal" color="#FFFFFF" />
-            </View>
-          </TouchableOpacity>
-        </View>
-      </BlurView>
-    </SafeAreaView>
-  );
-}
-
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   safeArea: {
-    backgroundColor: '#f7f7f7ff',
+    backgroundColor: colors.background,
   },
   blurContainer: {
-
-
     elevation: 3,
+    
   },
   container: {
     flexDirection: 'row',
@@ -74,10 +36,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#34C759',
+    backgroundColor: colors.success,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#34C759',
+    shadowColor: colors.success,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -94,10 +56,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FF9500',
+    backgroundColor: colors.warning,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#FF9500',
+    shadowColor: colors.warning,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -111,18 +73,17 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     flex: 1,
-
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#1C1C1E',
+    color: colors.text,
     letterSpacing: -0.5,
   },
   titleUnderline: {
     width: 30,
     height: 3,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     borderRadius: 2,
     marginTop: 4,
   },
@@ -133,10 +94,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#007AFF',
+    shadowColor: colors.primary,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -146,3 +107,47 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
 });
+
+export default function Header({ title, onProfilePress, onMenuPress, onBackPress, showBackButton }: HeaderProps) {
+  const { colors, isDark } = useTheme();
+  const { triggerHaptic } = useHapticFeedback();
+  const styles = getStyles(colors, isDark);
+  
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <BlurView intensity={95} tint={isDark ? "dark" : "extraLight"} style={styles.blurContainer}>
+        <View style={styles.container}>
+          {showBackButton && onBackPress ? (
+            <TouchableOpacity onPress={() => { triggerHaptic('light'); onBackPress(); }} style={styles.backButton}>
+              <View style={styles.backButtonInner}>
+                <IconSymbol size={20} name="chevron.left" color="#FFFFFF" />
+              </View>
+            </TouchableOpacity>
+          ) : onMenuPress ? (
+            <TouchableOpacity onPress={() => { triggerHaptic('light'); onMenuPress(); }} style={styles.profileButton}>
+     
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.spacer} />
+          )}
+          
+          <View style={styles.titleContainer}>
+            {typeof title === 'string' ? (
+              <Text style={styles.title}>{title}</Text>
+            ) : (
+              title
+            )}
+            <View style={styles.titleUnderline} />
+          </View>
+          
+          <TouchableOpacity onPress={() => { triggerHaptic('light'); onMenuPress?.(); }} style={styles.profileButton}>
+             <View style={styles.menuButtonInner}>
+               <IconSymbol size={20} name="line.3.horizontal" color="#FFFFFF" />
+            </View>
+          </TouchableOpacity>
+        </View>
+      </BlurView>
+    </SafeAreaView>
+  );
+}
+

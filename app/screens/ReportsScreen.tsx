@@ -8,15 +8,33 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
+import {
+  LineChart,
+  BarChart,
+  PieChart,
+  ContributionGraph,
+  StackedBarChart
+} from 'react-native-chart-kit';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming,
+  withSpring,
+  FadeIn,
+  SlideInUp
+} from 'react-native-reanimated';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
+import NoJobsWarning from '../components/NoJobsWarning';
 import { Job, WorkDay } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import { useBackNavigation } from '../context/NavigationContext';
 import { Theme } from '../constants/Theme';
+import { useTheme, ThemeColors } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface ReportsScreenProps {
-  onNavigate: (screen: string) => void;
+  onNavigate: (screen: string, options?: any) => void;
 }
 
 interface PeriodStats {
@@ -32,7 +50,397 @@ interface PeriodStats {
   }>;
 }
 
+const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  backButton: {
+    padding: 8,
+    marginLeft: -8,
+  },
+  headerText: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerTitle: {
+    fontSize: 16, 
+    fontWeight: "600",
+    marginBottom: 2,
+    color: colors.text,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  placeholder: {
+    width: 40,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  jobSelector: {
+    marginTop: 16,
+    marginBottom: 8,
+    borderRadius: 16,
+    padding: 20,
+    backgroundColor: colors.surface,
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8, 
+    elevation: 4,
+  },
+  jobScrollView: {
+    marginHorizontal: -4,
+  },
+  jobButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 4,
+  },
+  jobButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: colors.separator,
+    gap: 6,
+  },
+  jobButtonActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  jobButtonDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  jobButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  jobButtonTextActive: {
+    color: '#FFFFFF',
+  },
+  periodSelector: {
+    marginVertical: 16,
+    borderRadius: 16,
+    padding: 20,
+    backgroundColor: colors.surface,
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8, 
+    elevation: 4,
+  },
+  selectorTitle: {
+    fontSize: 16, 
+    fontWeight: "600",
+    marginBottom: 16,
+    textAlign: 'center',
+    color: colors.text,
+  },
+  periodButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  periodButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+  },
+  periodButtonBorder: {
+    borderColor: colors.separator,
+  },
+  periodButtonActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  periodButtonText: {
+    fontSize: 14,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  periodButtonTextColor: {
+    color: colors.text,
+  },
+  periodButtonTextActive: {
+    color: '#FFFFFF',
+  },
+  statsCard: {
+    marginVertical: 16,
+    borderRadius: 16,
+    padding: 20,
+    backgroundColor: colors.surface,
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8, 
+    elevation: 4,
+  },
+  statsTitle: {
+    fontSize: 20, 
+    fontWeight: "600",
+    marginBottom: 16,
+    textAlign: 'center',
+    color: colors.text,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statNumber: {
+    fontSize: 22,
+    fontWeight: '600',
+    marginTop: 4,
+    marginBottom: 4,
+    color: colors.text,
+  },
+  statLabel: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: colors.textSecondary,
+  },
+  overtimeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.separator,
+  },
+  overtimeText: {
+    fontSize: 16,
+    marginLeft: 4,
+    fontWeight: '600',
+    color: colors.warning,
+  },
+  jobBreakdownCard: {
+    marginVertical: 16,
+    borderRadius: 16,
+    padding: 20,
+    backgroundColor: colors.surface,
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8, 
+    elevation: 4,
+  },
+  cardTitle: {
+    fontSize: 16, 
+    fontWeight: "600",
+    marginBottom: 16,
+    color: colors.text,
+  },
+  jobStatRow: {
+    marginBottom: 16,
+  },
+  jobStatInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  jobColorBar: {
+    width: 4,
+    height: 40,
+    borderRadius: 2,
+    marginRight: 8,
+  },
+  jobStatDetails: {
+    flex: 1,
+  },
+  jobStatName: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+    color: colors.text,
+  },
+  jobStatHours: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  progressBarContainer: {
+    height: 6,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(128, 128, 128, 0.2)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  recentCard: {
+    marginVertical: 16,
+    borderRadius: 16,
+    padding: 20,
+    backgroundColor: colors.surface,
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8, 
+    elevation: 4,
+  },
+  recentItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.separator,
+  },
+  recentLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  recentDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  recentDate: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+    textTransform: 'capitalize',
+    color: colors.text,
+  },
+  recentJob: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  recentRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  recentHours: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  recentOvertime: {
+    fontSize: 12,
+    fontWeight: '700',
+    backgroundColor: 'rgba(255, 149, 0, 0.2)',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 3,
+    color: colors.warning,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  emptyText: {
+    fontSize: 16,
+    marginTop: 8,
+    marginBottom: 16,
+    color: colors.textSecondary,
+  },
+  addButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+  },
+  addButtonText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  loadMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.separator,
+    gap: 6,
+  },
+  loadMoreText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  actionsContainer: {
+    marginVertical: 20,
+    marginBottom: 24,
+    gap: 16,
+  },
+  actionButton: {
+    marginVertical: 4,
+  },
+  actionButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.05, 
+    shadowRadius: 4, 
+    elevation: 2,
+  },
+  actionButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    flex: 1,
+    marginLeft: 16,
+    color: colors.text,
+  },
+  chartContainer: {
+    alignItems: 'center',
+    marginVertical: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  detailedBreakdown: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.separator,
+  },
+});
+
 export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
+  const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [workDays, setWorkDays] = useState<WorkDay[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
@@ -40,6 +448,8 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const [periodStats, setPeriodStats] = useState<PeriodStats | null>(null);
   const [visibleRecentDays, setVisibleRecentDays] = useState<number>(6);
   const { handleBack } = useBackNavigation();
+  
+  const styles = getStyles(colors, isDark);
 
   const screenWidth = Dimensions.get('window').width;
 
@@ -64,6 +474,32 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     } catch (error) {
       console.error('Error loading data:', error);
     }
+  };
+
+  // Preparar datos para el gráfico de torta
+  const preparePieChartData = () => {
+    if (!periodStats || periodStats.jobBreakdown.length === 0) return [];
+    
+    return periodStats.jobBreakdown.map((stat) => ({
+      name: stat.job.name.length > 10 ? stat.job.name.substring(0, 10) + '...' : stat.job.name,
+      population: stat.hours,
+      color: stat.job.color,
+      legendFontColor: colors.text,
+      legendFontSize: 12,
+    }));
+  };
+
+  // Configuración del gráfico
+  const chartConfig = {
+    backgroundColor: colors.background,
+    backgroundGradientFrom: colors.background,
+    backgroundGradientTo: colors.background,
+    decimalPlaces: 1,
+    color: (opacity = 1) => `rgba(81, 150, 244, ${opacity})`,
+    labelColor: (opacity = 1) => colors.text,
+    style: {
+      borderRadius: 16,
+    },
   };
 
   const calculatePeriodStats = () => {
@@ -149,11 +585,11 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const getPeriodLabel = () => {
     switch (selectedPeriod) {
       case 'week':
-        return 'Últimos 7 días';
+        return t('reports.last_7_days');
       case 'month':
-        return 'Este mes';
+        return t('reports.this_month');
       case 'year':
-        return 'Este año';
+        return t('reports.this_year');
     }
   };
 
@@ -195,6 +631,10 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     });
   };
 
+  const handleCreateJob = () => {
+    onNavigate('jobs-management', { openAddModal: true });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -202,25 +642,29 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           <View style={styles.placeholder} />
           <View style={styles.headerText}>
             <View style={styles.titleContainer}>
-              <IconSymbol size={20} name="doc.text.fill" color={Theme.colors.primary} />
-              <Text style={styles.headerTitle}>Reportes</Text>
+              <IconSymbol size={26} name="doc.text.fill" color={colors.primary} />
+              <Text style={styles.headerTitle}>{t('reports.title')}</Text>
             </View>
-            <Text style={styles.headerSubtitle}>Análisis de tiempo trabajado</Text>
+            <Text style={styles.headerSubtitle}>{t('reports.subtitle')}</Text>
           </View>
           <TouchableOpacity 
             onPress={handleBack}
             style={styles.backButton}
           >
-            <IconSymbol size={24} name="xmark" color={Theme.colors.primary} />
+            <IconSymbol size={24} name="xmark" color={colors.primary} />
           </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {jobs.length === 0 ? (
+          <NoJobsWarning onCreateJob={handleCreateJob} />
+        ) : (
+          <>
         {/* Job selector */}
         {jobs.length > 1 && (
-          <BlurView intensity={95} tint="light" style={styles.jobSelector}>
-            <Text style={styles.selectorTitle}>Filtrar por trabajo</Text>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.jobSelector}>
+            <Text style={styles.selectorTitle}>{t('reports.filter_by_job')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.jobScrollView}>
               <View style={styles.jobButtons}>
                 <TouchableOpacity
@@ -236,7 +680,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                       selectedJobId === 'all' && styles.jobButtonTextActive,
                     ]}
                   >
-                    Todos
+                    {t('reports.all_jobs')}
                   </Text>
                 </TouchableOpacity>
                 {jobs.map((job) => (
@@ -265,8 +709,8 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         )}
 
         {/* Period selector */}
-        <BlurView intensity={95} tint="light" style={styles.periodSelector}>
-          <Text style={styles.selectorTitle}>Período de análisis</Text>
+        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.periodSelector}>
+          <Text style={styles.selectorTitle}>{t('reports.analysis_period')}</Text>
           <View style={styles.periodButtons}>
             {(['week', 'month', 'year'] as const).map((period) => (
               <TouchableOpacity
@@ -285,7 +729,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                     selectedPeriod === period && styles.periodButtonTextActive,
                   ]}
                 >
-                  {period === 'week' ? 'Semana' : period === 'month' ? 'Mes' : 'Año'}
+                  {period === 'week' ? t('reports.week') : period === 'month' ? t('reports.month') : t('reports.year')}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -294,70 +738,106 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
         {/* Main stats */}
         {periodStats && (
-          <BlurView intensity={95} tint="light" style={styles.statsCard}>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.statsCard}>
             <Text style={styles.statsTitle}>{getPeriodLabel()}</Text>
             <View style={styles.statsGrid}>
               <View style={styles.statItem}>
-                <IconSymbol size={24} name="clock.fill" color={Theme.colors.success} />
+                <IconSymbol size={24} name="clock.fill" color={colors.success} />
                 <Text style={styles.statNumber}>{periodStats.totalHours.toFixed(1)}h</Text>
-                <Text style={styles.statLabel}>Total horas</Text>
+                <Text style={styles.statLabel}>{t('reports.total_hours')}</Text>
               </View>
               <View style={styles.statItem}>
-                <IconSymbol size={24} name="calendar" color={Theme.colors.primary} />
+                <IconSymbol size={24} name="calendar" color={colors.primary} />
                 <Text style={styles.statNumber}>{periodStats.totalDays}</Text>
-                <Text style={styles.statLabel}>Días trabajados</Text>
+                <Text style={styles.statLabel}>{t('reports.worked_days')}</Text>
               </View>
               <View style={styles.statItem}>
-                <IconSymbol size={24} name="chart.bar.fill" color={Theme.colors.warning} />
+                <IconSymbol size={24} name="chart.bar.fill" color={colors.warning} />
                 <Text style={styles.statNumber}>{periodStats.avgHoursPerDay.toFixed(1)}h</Text>
-                <Text style={styles.statLabel}>Promedio/día</Text>
+                <Text style={styles.statLabel}>{t('reports.average_per_day')}</Text>
               </View>
             </View>
             {periodStats.overtimeHours > 0 && (
               <View style={styles.overtimeInfo}>
-                <IconSymbol size={20} name="clock.fill" color={Theme.colors.warning} />
+                <IconSymbol size={20} name="clock.fill" color={colors.warning} />
                 <Text style={styles.overtimeText}>
-                  {periodStats.overtimeHours.toFixed(1)}h de overtime
+                  {t('reports.overtime_hours', { hours: periodStats.overtimeHours.toFixed(1) })}
                 </Text>
               </View>
             )}
           </BlurView>
         )}
 
-        {/* Job breakdown */}
+        {/* Job breakdown with animated pie chart */}
         {periodStats && periodStats.jobBreakdown.length > 0 && (
-          <BlurView intensity={95} tint="light" style={styles.jobBreakdownCard}>
-            <Text style={styles.cardTitle}>Distribución por trabajo</Text>
-            {periodStats.jobBreakdown.map((stat) => (
-              <View key={stat.job.id} style={styles.jobStatRow}>
-                <View style={styles.jobStatInfo}>
-                  <View style={[styles.jobColorBar, { backgroundColor: stat.job.color }]} />
-                  <View style={styles.jobStatDetails}>
-                    <Text style={styles.jobStatName}>{stat.job.name}</Text>
-                    <Text style={styles.jobStatHours}>
-                      {stat.hours.toFixed(1)}h • {stat.days} días • {stat.percentage.toFixed(1)}%
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.progressBarContainer}>
-                  <View 
-                    style={[
-                      styles.progressBar, 
-                      { 
-                        width: `${stat.percentage}%`,
-                        backgroundColor: stat.job.color,
-                      }
-                    ]} 
+          <Animated.View 
+            entering={FadeIn.duration(600).delay(300)}
+            style={{ marginVertical: 16 }}
+          >
+            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.jobBreakdownCard}>
+              <Text style={styles.cardTitle}>{t('reports.job_distribution')}</Text>
+              
+              {/* Pie Chart */}
+              {preparePieChartData().length > 0 && (
+                <Animated.View 
+                  entering={SlideInUp.duration(800).delay(500)}
+                  style={styles.chartContainer}
+                >
+                  <PieChart
+                    data={preparePieChartData()}
+                    width={Dimensions.get('window').width - 60}
+                    height={220}
+                    chartConfig={chartConfig}
+                    accessor="population"
+                    backgroundColor="transparent"
+                    paddingLeft="15"
+                    center={[10, 10]}
+                    hasLegend={true}
                   />
-                </View>
+                </Animated.View>
+              )}
+
+              {/* Detailed breakdown */}
+              <View style={styles.detailedBreakdown}>
+                {periodStats.jobBreakdown.map((stat, index) => (
+                  <Animated.View 
+                    key={stat.job.id} 
+                    entering={FadeIn.duration(400).delay(700 + index * 100)}
+                    style={styles.jobStatRow}
+                  >
+                    <View style={styles.jobStatInfo}>
+                      <View style={[styles.jobColorBar, { backgroundColor: stat.job.color }]} />
+                      <View style={styles.jobStatDetails}>
+                        <Text style={styles.jobStatName}>{stat.job.name}</Text>
+                        <Text style={styles.jobStatHours}>
+                          {stat.hours.toFixed(1)}h • {stat.days} días • {stat.percentage.toFixed(1)}%
+                        </Text>
+                      </View>
+                    </View>
+                    <Animated.View 
+                      entering={SlideInUp.duration(500).delay(800 + index * 100)}
+                      style={styles.progressBarContainer}
+                    >
+                      <View 
+                        style={[
+                          styles.progressBar, 
+                          { 
+                            width: `${stat.percentage}%`,
+                            backgroundColor: stat.job.color,
+                          }
+                        ]} 
+                      />
+                    </Animated.View>
+                  </Animated.View>
+                ))}
               </View>
-            ))}
-          </BlurView>
+            </BlurView>
+          </Animated.View>
         )}
 
         {/* Recent activity */}
-        <BlurView intensity={95} tint="light" style={styles.recentCard}>
-          <Text style={styles.cardTitle}>Actividad reciente</Text>
+        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.recentCard}>
+          <Text style={styles.cardTitle}>{t('reports.recent_activity')}</Text>
           {getRecentWorkDays().length > 0 ? (
             <>
               {getRecentWorkDays().map((day) => {
@@ -365,16 +845,16 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                 return (
                   <View key={day.id} style={styles.recentItem}>
                     <View style={styles.recentLeft}>
-                      <View style={[styles.recentDot, { backgroundColor: job?.color || Theme.colors.primary }]} />
+                      <View style={[styles.recentDot, { backgroundColor: job?.color || colors.primary }]} />
                       <View>
                         <Text style={styles.recentDate}>{formatDate(day.date)}</Text>
-                        <Text style={styles.recentJob}>{job?.name || 'Trabajo'}</Text>
+                        <Text style={styles.recentJob}>{job?.name || t('settings.jobs.title')}</Text>
                       </View>
                     </View>
                     <View style={styles.recentRight}>
                       <Text style={styles.recentHours}>{day.hours}h</Text>
                       {day.overtime && (
-                        <Text style={styles.recentOvertime}>OT</Text>
+                        <Text style={styles.recentOvertime}>{t('reports.ot')}</Text>
                       )}
                     </View>
                   </View>
@@ -386,21 +866,21 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                   onPress={handleLoadMore}
                 >
                   <Text style={styles.loadMoreText}>
-                    Ver más ({getAllRecentWorkDays().length - visibleRecentDays} restantes)
+                    {t('reports.load_more', { remaining: getAllRecentWorkDays().length - visibleRecentDays })}
                   </Text>
-                  <IconSymbol size={16} name="chevron.down" color={Theme.colors.primary} />
+                  <IconSymbol size={16} name="chevron.down" color={colors.primary} />
                 </TouchableOpacity>
               )}
             </>
           ) : (
             <View style={styles.emptyState}>
-              <IconSymbol size={32} name="calendar" color={Theme.colors.textSecondary} />
-              <Text style={styles.emptyText}>No hay registros aún</Text>
+              <IconSymbol size={32} name="calendar" color={colors.textSecondary} />
+              <Text style={styles.emptyText}>{t('reports.no_records')}</Text>
               <TouchableOpacity
                 style={styles.addButton}
                 onPress={() => onNavigate('calendar')}
               >
-                <Text style={styles.addButtonText}>Agregar tiempo</Text>
+                <Text style={styles.addButtonText}>{t('reports.add_time')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -412,10 +892,10 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
             style={styles.actionButton}
             onPress={() => onNavigate('calendar')}
           >
-            <BlurView intensity={90} tint="light" style={styles.actionButtonInner}>
-              <IconSymbol size={24} name="calendar" color={Theme.colors.primary} />
-              <Text style={styles.actionButtonText}>Ver calendario</Text>
-              <IconSymbol size={16} name="arrow.right" color={Theme.colors.primary} />
+            <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.actionButtonInner}>
+              <IconSymbol size={24} name="calendar" color={colors.primary} />
+              <Text style={styles.actionButtonText}>{t('reports.view_calendar')}</Text>
+              <IconSymbol size={16} name="arrow.right" color={colors.primary} />
             </BlurView>
           </TouchableOpacity>
 
@@ -423,362 +903,17 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
             style={styles.actionButton}
             onPress={() => onNavigate('timer')}
           >
-            <BlurView intensity={90} tint="light" style={styles.actionButtonInner}>
-              <IconSymbol size={24} name="clock.fill" color={Theme.colors.success} />
-              <Text style={styles.actionButtonText}>Iniciar timer</Text>
-              <IconSymbol size={16} name="arrow.right" color={Theme.colors.success} />
+            <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.actionButtonInner}>
+              <IconSymbol size={24} name="clock.fill" color={colors.success} />
+              <Text style={styles.actionButtonText}>{t('reports.start_timer')}</Text>
+              <IconSymbol size={16} name="arrow.right" color={colors.success} />
             </BlurView>
           </TouchableOpacity>
         </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  header: {
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.border,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerText: {
-    flex: 1,
-    alignItems: 'flex-start',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  headerTitle: {
-    fontSize: 16, fontWeight: "600",
-    marginBottom: 2,
-    color: Theme.colors.text,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: Theme.colors.textSecondary,
-  },
-  placeholder: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  jobSelector: {
-    marginTop: 16,
-    marginBottom: 8,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: Theme.colors.surface,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
-  },
-  jobScrollView: {
-    marginHorizontal: -4,
-  },
-  jobButtons: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 4,
-  },
-  jobButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    borderWidth: 1,
-    borderColor: Theme.colors.separator,
-    gap: 6,
-  },
-  jobButtonActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  jobButtonDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  jobButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Theme.colors.text,
-  },
-  jobButtonTextActive: {
-    color: '#FFFFFF',
-  },
-  periodSelector: {
-    marginVertical: 16,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: Theme.colors.surface,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
-  },
-  selectorTitle: {
-    fontSize: 16, fontWeight: "600",
-    marginBottom: 16,
-    textAlign: 'center',
-    color: Theme.colors.text,
-  },
-  periodButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  periodButton: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    borderWidth: 1,
-  },
-  periodButtonBorder: {
-    borderColor: Theme.colors.separator,
-  },
-  periodButtonActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  periodButtonText: {
-    fontSize: 14,
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  periodButtonTextColor: {
-    color: Theme.colors.text,
-  },
-  periodButtonTextActive: {
-    color: '#FFFFFF',
-  },
-  statsCard: {
-    marginVertical: 16,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: Theme.colors.surface,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
-  },
-  statsTitle: {
-    fontSize: 20, fontWeight: "600",
-    marginBottom: 16,
-    textAlign: 'center',
-    color: Theme.colors.text,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statNumber: {
-    fontSize: 22,
-    fontWeight: '600',
-    marginTop: 4,
-    marginBottom: 4,
-    color: Theme.colors.text,
-  },
-  statLabel: {
-    fontSize: 14,
-    textAlign: 'center',
-    color: Theme.colors.textSecondary,
-  },
-  overtimeInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.separator,
-  },
-  overtimeText: {
-    fontSize: 16,
-    marginLeft: 4,
-    fontWeight: '600',
-    color: Theme.colors.warning,
-  },
-  jobBreakdownCard: {
-    marginVertical: 16,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: Theme.colors.surface,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
-  },
-  cardTitle: {
-    fontSize: 16, fontWeight: "600",
-    marginBottom: 16,
-    color: Theme.colors.text,
-  },
-  jobStatRow: {
-    marginBottom: 16,
-  },
-  jobStatInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  jobColorBar: {
-    width: 4,
-    height: 40,
-    borderRadius: 2,
-    marginRight: 8,
-  },
-  jobStatDetails: {
-    flex: 1,
-  },
-  jobStatName: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-    color: Theme.colors.text,
-  },
-  jobStatHours: {
-    fontSize: 14,
-    color: Theme.colors.textSecondary,
-  },
-  progressBarContainer: {
-    height: 6,
-    backgroundColor: 'rgba(128, 128, 128, 0.2)',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressBar: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  recentCard: {
-    marginVertical: 16,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: Theme.colors.surface,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
-  },
-  recentItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.separator,
-  },
-  recentLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  recentDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  recentDate: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-    textTransform: 'capitalize',
-    color: Theme.colors.text,
-  },
-  recentJob: {
-    fontSize: 14,
-    color: Theme.colors.textSecondary,
-  },
-  recentRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  recentHours: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Theme.colors.text,
-  },
-  recentOvertime: {
-    fontSize: 12,
-    fontWeight: '700',
-    backgroundColor: 'rgba(255, 149, 0, 0.2)',
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: 3,
-    color: Theme.colors.warning,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 24,
-  },
-  emptyText: {
-    fontSize: 16,
-    marginTop: 8,
-    marginBottom: 16,
-    color: Theme.colors.textSecondary,
-  },
-  addButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 12,
-    backgroundColor: Theme.colors.primary,
-  },
-  addButtonText: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  loadMoreButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.separator,
-    gap: 6,
-  },
-  loadMoreText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Theme.colors.primary,
-  },
-  actionsContainer: {
-    marginVertical: 20,
-    marginBottom: 24,
-    gap: 16,
-  },
-  actionButton: {
-    marginVertical: 4,
-  },
-  actionButtonInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 20,
-    borderRadius: 16,
-    backgroundColor: Theme.colors.surface,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
-  },
-  actionButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    flex: 1,
-    marginLeft: 16,
-    color: Theme.colors.text,
-  },
-});

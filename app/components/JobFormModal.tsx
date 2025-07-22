@@ -14,9 +14,12 @@ import {
 import * as Location from 'expo-location';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
+import { useTheme, ThemeColors } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { BlurView } from 'expo-blur';
 import { Job, DEFAULT_COLORS } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
+import { AutoScheduleService } from '../services/AutoScheduleService';
 
 interface JobFormModalProps {
   visible: boolean;
@@ -24,10 +27,325 @@ interface JobFormModalProps {
   editingJob?: Job | null;
   onSave: () => void;
   initialTab?: 'basic' | 'schedule' | 'financial' | 'billing';
+  onNavigateToCalendar?: () => void; // Optional callback to navigate to calendar
 }
 
-export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic' }: JobFormModalProps) {
+
+const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.separator,
+  },
+  closeButton: {
+    padding: Theme.spacing.sm,
+  },
+  headerTitle: {
+    ...Theme.typography.headline,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  saveButton: {
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    backgroundColor: colors.primary,
+    borderRadius: Theme.borderRadius.md,
+  },
+  saveButtonText: {
+    ...Theme.typography.footnote,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  tabsContainer: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.separator,
+    backgroundColor: colors.surface,
+  },
+  tab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    marginHorizontal: Theme.spacing.xs,
+    borderRadius: Theme.borderRadius.md,
+  },
+  tabActive: {
+    backgroundColor: `${colors.primary}15`,
+  },
+  tabText: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    marginLeft: Theme.spacing.xs,
+  },
+  tabTextActive: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  content: {
+    flex: 1,
+  },
+  tabContent: {
+    flex: 1,
+    padding: Theme.spacing.md,
+  },
+  section: {
+    marginBottom: Theme.spacing.md,
+    borderRadius: Theme.borderRadius.lg,
+    padding: Theme.spacing.lg,
+    ...Theme.shadows.small,
+  },
+  sectionTitle: {
+    ...Theme.typography.headline,
+    color: colors.text,
+    marginBottom: Theme.spacing.md,
+    fontWeight: '600',
+  },
+  inputGroup: {
+    marginBottom: Theme.spacing.md,
+  },
+  label: {
+    ...Theme.typography.footnote,
+    color: colors.text,
+    marginBottom: Theme.spacing.xs,
+    fontWeight: '600',
+  },
+  input: {
+    ...Theme.typography.body,
+    color: colors.text,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
+    borderRadius: Theme.borderRadius.md,
+    padding: Theme.spacing.md,
+    borderWidth: 1,
+    borderColor: colors.separator,
+  },
+  addressInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.sm,
+  },
+  addressInput: {
+    flex: 1,
+  },
+  detectLocationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    backgroundColor: `${colors.primary}15`,
+    borderRadius: Theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: `${colors.primary}30`,
+    minWidth: 80,
+    justifyContent: 'center',
+  },
+  detectLocationButtonLoading: {
+    backgroundColor: `${colors.textSecondary}15`,
+    borderColor: `${colors.textSecondary}30`,
+  },
+  detectLocationText: {
+    ...Theme.typography.footnote,
+    color: colors.primary,
+    marginLeft: Theme.spacing.xs,
+    fontWeight: '600',
+  },
+  addressHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Theme.spacing.md,
+  },
+  autoFillButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    gap: 6,
+    shadowColor: colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+    minWidth: 120,
+    justifyContent: 'center',
+  },
+  autoFillButtonLoading: {
+    backgroundColor: colors.textSecondary,
+    shadowColor: colors.textSecondary,
+    shadowOpacity: 0.2,
+  },
+  autoFillText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  addressRow: {
+    flexDirection: 'row',
+    gap: Theme.spacing.md,
+    marginBottom: Theme.spacing.md,
+  },
+  addressField: {
+    flex: 1,
+  },
+  subLabel: {
+    ...Theme.typography.caption2,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    marginBottom: Theme.spacing.xs,
+  },
+  detectingText: {
+    ...Theme.typography.caption2,
+    color: colors.textSecondary,
+    marginTop: Theme.spacing.xs,
+    fontStyle: 'italic',
+  },
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  row: {
+    flexDirection: 'row',
+    gap: Theme.spacing.md,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  colorPicker: {
+    flexDirection: 'row',
+    marginTop: Theme.spacing.xs,
+  },
+  colorOption: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: Theme.spacing.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  colorOptionSelected: {
+    borderColor: '#FFFFFF',
+    transform: [{ scale: 1.1 }],
+  },
+  segmentedControl: {
+    flexDirection: 'row',
+    backgroundColor: colors.separator,
+    borderRadius: Theme.borderRadius.md,
+    padding: 2,
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: Theme.spacing.sm,
+    paddingHorizontal: Theme.spacing.md,
+    borderRadius: Theme.borderRadius.sm,
+    alignItems: 'center',
+  },
+  segmentButtonActive: {
+    backgroundColor: isDark ? colors.surface : '#FFFFFF',
+    ...Theme.shadows.small,
+  },
+  segmentText: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+  },
+  segmentTextActive: {
+    color: colors.text,
+    fontWeight: '600',
+  },
+  workDaysContainer: {
+    flexDirection: 'row',
+    gap: Theme.spacing.xs,
+    marginTop: Theme.spacing.xs,
+  },
+  workDayButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.separator,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  workDayButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  workDayText: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  workDayTextActive: {
+    color: '#FFFFFF',
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Theme.spacing.lg,
+  },
+  switchContent: {
+    flex: 1,
+    marginRight: Theme.spacing.md,
+  },
+  switchLabel: {
+    ...Theme.typography.callout,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  switchDescription: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+  switch: {
+    width: 50,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.separator,
+    padding: 2,
+    justifyContent: 'center',
+  },
+  switchActive: {
+    backgroundColor: colors.primary,
+  },
+  switchThumb: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  switchThumbActive: {
+    transform: [{ translateX: 20 }],
+  },
+});
+
+export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar }: JobFormModalProps) {
+  const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [previousAutoSchedule, setPreviousAutoSchedule] = useState<boolean | undefined>(undefined);
+
   const [formData, setFormData] = useState<Partial<Job>>({
     name: '',
     company: '',
@@ -54,6 +372,10 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       endTime: '17:00',
       workDays: [1, 2, 3, 4, 5], // Monday to Friday
       breakTime: 60,
+      hasSplitShift: false,
+      secondStartTime: '15:00',
+      secondEndTime: '19:00',
+      autoSchedule: false,
     },
     billing: {
       enabled: false,
@@ -68,6 +390,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   });
 
   const [currentTab, setCurrentTab] = useState<'basic' | 'schedule' | 'financial' | 'billing'>(initialTab);
+  
+  const styles = getStyles(colors, isDark);
 
   useEffect(() => {
     if (visible) {
@@ -76,7 +400,21 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   }, [visible, initialTab]);
 
   useEffect(() => {
+    let scheduleToUse;
+    
     if (editingJob) {
+      scheduleToUse = {
+        startTime: '09:00',
+        endTime: '17:00',
+        workDays: [1, 2, 3, 4, 5],
+        breakTime: 60,
+        hasSplitShift: false,
+        secondStartTime: '15:00',
+        secondEndTime: '19:00',
+        autoSchedule: false,
+        ...editingJob.schedule,
+      };
+      
       setFormData({
         ...editingJob,
         street: editingJob.street || '',
@@ -87,12 +425,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           amount: editingJob.hourlyRate || 0,
           currency: editingJob.currency || 'EUR',
         },
-        schedule: editingJob.schedule || {
-          startTime: '09:00',
-          endTime: '17:00',
-          workDays: [1, 2, 3, 4, 5],
-          breakTime: 60,
-        },
+        schedule: scheduleToUse,
         billing: editingJob.billing || {
           enabled: false,
           invoicePrefix: 'INV',
@@ -126,12 +459,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           amount: 0,
           currency: 'EUR',
         },
-        schedule: {
-          startTime: '09:00',
-          endTime: '17:00',
-          workDays: [1, 2, 3, 4, 5],
-          breakTime: 60,
-        },
+        schedule: scheduleToUse,
         billing: {
           enabled: false,
           invoicePrefix: 'INV',
@@ -144,11 +472,65 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         },
       });
     }
+    
+    // Initialize previous autoSchedule value
+    setPreviousAutoSchedule(scheduleToUse?.autoSchedule || false);
   }, [editingJob, visible]);
+
+  // Track changes in autoSchedule to clean up when disabled
+  useEffect(() => {
+    const currentAutoSchedule = formData.schedule?.autoSchedule;
+    
+    // If we have an editing job and autoSchedule was enabled but now disabled
+    if (editingJob && 
+        previousAutoSchedule === true && 
+        currentAutoSchedule === false) {
+      
+      // Show confirmation dialog before clearing
+      Alert.alert(
+        t('job_form.auto_schedule.disable_title'),
+        t('job_form.auto_schedule.disable_message'),
+        [
+          { 
+            text: t('job_form.auto_schedule.disable_cancel'), 
+            style: 'cancel',
+            onPress: () => {
+              // Revert the autoSchedule back to true
+              updateNestedData('schedule', 'autoSchedule', true);
+            }
+          },
+          { 
+            text: t('job_form.auto_schedule.disable_confirm'),
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await AutoScheduleService.clearAutoSchedule(editingJob.id);
+                Alert.alert(
+                  t('job_form.auto_schedule.cleared_title'),
+                  t('job_form.auto_schedule.cleared_message')
+                );
+              } catch (error) {
+                console.error('Error clearing auto schedule:', error);
+                Alert.alert(
+                  t('job_form.auto_schedule.error_title'),
+                  t('job_form.auto_schedule.clear_error')
+                );
+                // Revert on error too
+                updateNestedData('schedule', 'autoSchedule', true);
+              }
+            }
+          }
+        ]
+      );
+    }
+    
+    // Update previous value
+    setPreviousAutoSchedule(currentAutoSchedule);
+  }, [formData.schedule?.autoSchedule, editingJob, t, previousAutoSchedule]);
 
   const handleSave = async () => {
     if (!formData.name?.trim()) {
-      Alert.alert('Error', 'El nombre del trabajo es obligatorio');
+      Alert.alert(t('job_form.errors.error_title'), t('job_form.errors.name_required'));
       return;
     }
 
@@ -182,17 +564,93 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         location: formData.location,
       };
 
+      let savedJob: Job;
       if (editingJob) {
         await JobService.updateJob(editingJob.id, jobData);
+        savedJob = { ...editingJob, ...jobData };
       } else {
-        await JobService.addJob(jobData);
+        savedJob = await JobService.addJob(jobData);
+      }
+
+      // Handle auto scheduling if enabled
+      if (formData.schedule?.autoSchedule && savedJob) {
+        try {
+          const result = await AutoScheduleService.applyAutoSchedule(savedJob);
+          
+          // Show confirmation with conflicts if any
+          if (result.conflicts.length > 0) {
+            Alert.alert(
+              t('job_form.auto_schedule.applied_title'),
+              t('job_form.auto_schedule.applied_conflicts', {
+                workDays: result.generatedDays.length.toString(),
+                freeDays: result.freeDays.length.toString(),
+                conflicts: result.conflicts.length.toString()
+              }),
+              [
+                { 
+                  text: 'OK', 
+                  style: 'cancel',
+                  onPress: () => {
+                    onSave();
+                    onClose();
+                  }
+                },
+                { 
+                  text: t('job_form.auto_schedule.view_calendar'), 
+                  onPress: () => {
+                    onSave();
+                    onClose();
+                    setTimeout(() => {
+                      onNavigateToCalendar?.();
+                    }, 300);
+                  }
+                }
+              ]
+            );
+          } else {
+            Alert.alert(
+              t('job_form.auto_schedule.applied_title'),
+              t('job_form.auto_schedule.applied_success', {
+                workDays: result.generatedDays.length.toString(),
+                freeDays: result.freeDays.length.toString()
+              }),
+              [
+                { 
+                  text: 'OK', 
+                  style: 'cancel',
+                  onPress: () => {
+                    onSave();
+                    onClose();
+                  }
+                },
+                { 
+                  text: t('job_form.auto_schedule.view_calendar'), 
+                  onPress: () => {
+                    onSave();
+                    onClose();
+                    setTimeout(() => {
+                      onNavigateToCalendar?.();
+                    }, 300);
+                  }
+                }
+              ]
+            );
+            return; // Exit early when showing alert with calendar navigation
+          }
+        } catch (error) {
+          console.error('Error applying auto schedule:', error);
+          Alert.alert(
+            t('job_form.auto_schedule.error_title'),
+            t('job_form.auto_schedule.error_message')
+          );
+        }
       }
 
       onSave();
       onClose();
     } catch (error) {
       console.error('Error saving job:', error);
-      Alert.alert('Error', 'No se pudo guardar el trabajo');
+      Alert.alert(t('job_form.errors.error_title'), t('job_form.errors.save_error'));
     }
   };
 
@@ -222,9 +680,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       
       if (status !== 'granted') {
         Alert.alert(
-          'Permisos necesarios',
-          'Necesitamos acceso a tu ubicación para detectar la dirección automáticamente.',
-          [{ text: 'OK' }]
+          t('job_form.location_detection.permission_title'),
+          t('job_form.location_detection.permission_message')
         );
         setIsDetectingLocation(false);
         return;
@@ -270,23 +727,20 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         updateNestedData('location', 'longitude', currentLocation.coords.longitude);
 
         Alert.alert(
-          'Ubicación detectada',
-          `Se ha detectado la dirección: ${detectedAddress}`,
-          [{ text: 'OK' }]
+          t('job_form.location_detection.detected_title'),
+          t('job_form.location_detection.detected_message', { address: detectedAddress })
         );
       } else {
         Alert.alert(
-          'Error',
-          'No se pudo obtener la dirección de tu ubicación actual.',
-          [{ text: 'OK' }]
+          t('job_form.location_detection.error_title'),
+          t('job_form.location_detection.error_address')
         );
       }
     } catch (error) {
       console.error('Error detecting location:', error);
       Alert.alert(
-        'Error',
-        'No se pudo detectar tu ubicación. Verifica que tengas GPS activado.',
-        [{ text: 'OK' }]
+        t('job_form.location_detection.error_title'),
+        t('job_form.location_detection.error_location')
       );
     } finally {
       setIsDetectingLocation(false);
@@ -305,34 +759,34 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
   const renderBasicTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <BlurView intensity={95} tint="light" style={styles.section}>
-        <Text style={styles.sectionTitle}>Información Básica</Text>
+      <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('job_form.basic.title')}</Text>
         
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Nombre del trabajo *</Text>
+          <Text style={styles.label}>{t('job_form.basic.name')} {t('job_form.basic.name_required')}</Text>
           <TextInput
             style={styles.input}
             value={formData.name}
             onChangeText={(value) => updateFormData('name', value)}
-            placeholder="Ej: Desarrollador Frontend"
-            placeholderTextColor={Theme.colors.textTertiary}
+            placeholder={t('job_form.basic.name_placeholder')}
+            placeholderTextColor={colors.textTertiary}
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Empresa</Text>
+          <Text style={styles.label}>{t('job_form.basic.company')}</Text>
           <TextInput
             style={styles.input}
             value={formData.company}
             onChangeText={(value) => updateFormData('company', value)}
-            placeholder="Ej: Tech Solutions S.L."
-            placeholderTextColor={Theme.colors.textTertiary}
+            placeholder={t('job_form.basic.company_placeholder')}
+            placeholderTextColor={colors.textTertiary}
           />
         </View>
 
         <View style={styles.inputGroup}>
           <View style={styles.addressHeaderContainer}>
-            <Text style={styles.label}>Dirección</Text>
+            <Text style={styles.label}>{t('job_form.basic.address')}</Text>
             <TouchableOpacity
               style={[
                 styles.autoFillButton,
@@ -347,66 +801,66 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 color="#FFFFFF"
               />
               <Text style={styles.autoFillText}>
-                {isDetectingLocation ? 'Detectando...' : 'Autorrellenar'}
+                {isDetectingLocation ? t('job_form.basic.detecting') : t('job_form.basic.auto_fill')}
               </Text>
             </TouchableOpacity>
           </View>
           
           <View style={styles.addressRow}>
             <View style={[styles.addressField, { flex: 2 }]}>
-              <Text style={styles.subLabel}>Calle</Text>
+              <Text style={styles.subLabel}>{t('job_form.basic.street')}</Text>
               <TextInput
                 style={styles.input}
                 value={formData.street}
                 onChangeText={(value) => updateFormData('street', value)}
-                placeholder="Calle Ejemplo 123"
-                placeholderTextColor={Theme.colors.textTertiary}
+                placeholder={t('job_form.basic.street_placeholder')}
+                placeholderTextColor={colors.textTertiary}
               />
             </View>
             <View style={[styles.addressField, { flex: 1 }]}>
-              <Text style={styles.subLabel}>Código Postal</Text>
+              <Text style={styles.subLabel}>{t('job_form.basic.postal_code')}</Text>
               <TextInput
                 style={styles.input}
                 value={formData.postalCode}
                 onChangeText={(value) => updateFormData('postalCode', value)}
-                placeholder="28001"
-                placeholderTextColor={Theme.colors.textTertiary}
+                placeholder={t('job_form.basic.postal_code_placeholder')}
+                placeholderTextColor={colors.textTertiary}
                 keyboardType="numeric"
               />
             </View>
           </View>
           
           <View style={styles.addressField}>
-            <Text style={styles.subLabel}>Ciudad</Text>
+            <Text style={styles.subLabel}>{t('job_form.basic.city')}</Text>
             <TextInput
               style={styles.input}
               value={formData.city}
               onChangeText={(value) => updateFormData('city', value)}
-              placeholder="Madrid"
-              placeholderTextColor={Theme.colors.textTertiary}
+              placeholder={t('job_form.basic.city_placeholder')}
+              placeholderTextColor={colors.textTertiary}
             />
           </View>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Descripción</Text>
+          <Text style={styles.label}>{t('job_form.basic.description')}</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
             value={formData.description}
             onChangeText={(value) => updateFormData('description', value)}
-            placeholder="Describe las responsabilidades del trabajo..."
-            placeholderTextColor={Theme.colors.textTertiary}
+            placeholder={t('job_form.basic.description_placeholder')}
+            placeholderTextColor={colors.textTertiary}
             multiline
             numberOfLines={3}
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Color identificativo</Text>
+          <Text style={styles.label}>{t('job_form.basic.color')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorPicker}>
-            {DEFAULT_COLORS.map((color) => (
+            {DEFAULT_COLORS.map((color, index) => (
               <TouchableOpacity
-                key={color}
+                key={`color-${index}`}
                 style={[
                   styles.colorOption,
                   { backgroundColor: color },
@@ -424,52 +878,52 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
         <View style={styles.inputGroup}>
           <View style={styles.switchRow}>
-            <Text style={styles.label}>Trabajo activo</Text>
+            <Text style={styles.label}>{t('job_form.basic.active')}</Text>
             <Switch
               value={formData.isActive}
               onValueChange={(value) => updateFormData('isActive', value)}
-              trackColor={{ false: Theme.colors.separator, true: Theme.colors.primary }}
+              trackColor={{ false: colors.separator, true: colors.primary }}
               thumbColor="#FFFFFF"
             />
           </View>
         </View>
       </BlurView>
 
-      <BlurView intensity={95} tint="light" style={styles.section}>
-        <Text style={styles.sectionTitle}>Contacto</Text>
+      <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('job_form.contact.title')}</Text>
         
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Persona de contacto</Text>
+          <Text style={styles.label}>{t('job_form.contact.person')}</Text>
           <TextInput
             style={styles.input}
             value={formData.contactPerson}
             onChangeText={(value) => updateFormData('contactPerson', value)}
-            placeholder="Ej: Ana García"
-            placeholderTextColor={Theme.colors.textTertiary}
+            placeholder={t('job_form.contact.person_placeholder')}
+            placeholderTextColor={colors.textTertiary}
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Email</Text>
+          <Text style={styles.label}>{t('job_form.contact.email')}</Text>
           <TextInput
             style={styles.input}
             value={formData.contactEmail}
             onChangeText={(value) => updateFormData('contactEmail', value)}
-            placeholder="ana.garcia@empresa.com"
-            placeholderTextColor={Theme.colors.textTertiary}
+            placeholder={t('job_form.contact.email_placeholder')}
+            placeholderTextColor={colors.textTertiary}
             keyboardType="email-address"
             autoCapitalize="none"
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Teléfono</Text>
+          <Text style={styles.label}>{t('job_form.contact.phone')}</Text>
           <TextInput
             style={styles.input}
             value={formData.contactPhone}
             onChangeText={(value) => updateFormData('contactPhone', value)}
-            placeholder="+34 600 123 456"
-            placeholderTextColor={Theme.colors.textTertiary}
+            placeholder={t('job_form.contact.phone_placeholder')}
+            placeholderTextColor={colors.textTertiary}
             keyboardType="phone-pad"
           />
         </View>
@@ -479,61 +933,102 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
   const renderScheduleTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <BlurView intensity={95} tint="light" style={styles.section}>
-        <Text style={styles.sectionTitle}>Horario Estándar</Text>
+      <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('job_form.schedule.title')}</Text>
         
         <View style={styles.row}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Hora de inicio</Text>
+            <Text style={styles.label}>{t('job_form.schedule.start_time')}</Text>
             <TextInput
               style={styles.input}
               value={formData.schedule?.startTime}
               onChangeText={(value) => updateNestedData('schedule', 'startTime', value)}
-              placeholder="09:00"
-              placeholderTextColor={Theme.colors.textTertiary}
+              placeholder={t('job_form.schedule.start_time_placeholder')}
+              placeholderTextColor={colors.textTertiary}
             />
           </View>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Hora de fin</Text>
+            <Text style={styles.label}>{t('job_form.schedule.end_time')}</Text>
             <TextInput
               style={styles.input}
               value={formData.schedule?.endTime}
               onChangeText={(value) => updateNestedData('schedule', 'endTime', value)}
-              placeholder="17:00"
-              placeholderTextColor={Theme.colors.textTertiary}
+              placeholder={t('job_form.schedule.end_time_placeholder')}
+              placeholderTextColor={colors.textTertiary}
             />
           </View>
         </View>
 
+        {/* Split Shift Section */}
+        <View style={styles.switchContainer}>
+          <View style={styles.switchContent}>
+            <Text style={styles.switchLabel}>{t('job_form.schedule.split_shift')}</Text>
+            <Text style={styles.switchDescription}>{t('job_form.schedule.split_shift_desc')}</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.switch, formData.schedule?.hasSplitShift && styles.switchActive]}
+            onPress={() => updateNestedData('schedule', 'hasSplitShift', !formData.schedule?.hasSplitShift)}
+          >
+            <View style={[styles.switchThumb, formData.schedule?.hasSplitShift && styles.switchThumbActive]} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Second shift times - only show if split shift is enabled */}
+        {formData.schedule?.hasSplitShift && (
+          <View style={styles.row}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.schedule.second_start_time')}</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.schedule?.secondStartTime}
+                onChangeText={(value) => updateNestedData('schedule', 'secondStartTime', value)}
+                placeholder={t('job_form.schedule.second_start_time_placeholder')}
+                placeholderTextColor={colors.textTertiary}
+              />
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.schedule.second_end_time')}</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.schedule?.secondEndTime}
+                onChangeText={(value) => updateNestedData('schedule', 'secondEndTime', value)}
+                placeholder={t('job_form.schedule.second_end_time_placeholder')}
+                placeholderTextColor={colors.textTertiary}
+              />
+            </View>
+          </View>
+        )}
+
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Horas por defecto</Text>
+          <Text style={styles.label}>{t('job_form.schedule.default_hours')}</Text>
           <TextInput
             style={styles.input}
             value={String(formData.defaultHours)}
             onChangeText={(value) => updateFormData('defaultHours', Number(value) || 0)}
-            placeholder="8"
-            placeholderTextColor={Theme.colors.textTertiary}
+            placeholder={t('job_form.schedule.default_hours_placeholder')}
+            placeholderTextColor={colors.textTertiary}
             keyboardType="numeric"
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Tiempo de descanso (minutos)</Text>
+          <Text style={styles.label}>{t('job_form.schedule.break_time')}</Text>
           <TextInput
             style={styles.input}
             value={String(formData.schedule?.breakTime || 0)}
             onChangeText={(value) => updateNestedData('schedule', 'breakTime', Number(value) || 0)}
-            placeholder="60"
-            placeholderTextColor={Theme.colors.textTertiary}
+            placeholder={t('job_form.schedule.break_time_placeholder')}
+            placeholderTextColor={colors.textTertiary}
             keyboardType="numeric"
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Días laborables</Text>
+          <Text style={styles.label}>{t('job_form.schedule.work_days')}</Text>
           <View style={styles.workDaysContainer}>
-            {['D', 'L', 'M', 'X', 'J', 'V', 'S'].map((day, index) => (
+            {(t('job_form.schedule.days') as unknown as string[]).map((day: string, index: number) => (
               <TouchableOpacity
                 key={index}
                 style={[
@@ -554,22 +1049,36 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             ))}
           </View>
         </View>
+
+        {/* Auto Schedule Section */}
+        <View style={styles.switchContainer}>
+          <View style={styles.switchContent}>
+            <Text style={styles.switchLabel}>{t('job_form.schedule.auto_schedule')}</Text>
+            <Text style={styles.switchDescription}>{t('job_form.schedule.auto_schedule_desc')}</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.switch, formData.schedule?.autoSchedule && styles.switchActive]}
+            onPress={() => updateNestedData('schedule', 'autoSchedule', !formData.schedule?.autoSchedule)}
+          >
+            <View style={[styles.switchThumb, formData.schedule?.autoSchedule && styles.switchThumbActive]} />
+          </TouchableOpacity>
+        </View>
       </BlurView>
     </ScrollView>
   );
 
   const renderFinancialTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <BlurView intensity={95} tint="light" style={styles.section}>
-        <Text style={styles.sectionTitle}>Configuración Salarial</Text>
+      <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('job_form.financial.title')}</Text>
         
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Tipo de sueldo</Text>
+          <Text style={styles.label}>{t('job_form.financial.salary_type')}</Text>
           <View style={styles.segmentedControl}>
             {[
-              { key: 'hourly', label: 'Por hora' },
-              { key: 'monthly', label: 'Mensual' },
-              { key: 'annual', label: 'Anual' },
+              { key: 'hourly', label: t('job_form.financial.hourly') },
+              { key: 'monthly', label: t('job_form.financial.monthly') },
+              { key: 'annual', label: t('job_form.financial.annual') },
             ].map((option) => (
               <TouchableOpacity
                 key={option.key}
@@ -594,37 +1103,37 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
         <View style={styles.row}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Cantidad</Text>
+            <Text style={styles.label}>{t('job_form.financial.amount')}</Text>
             <TextInput
               style={styles.input}
               value={String(formData.salary?.amount || 0)}
               onChangeText={(value) => updateNestedData('salary', 'amount', Number(value) || 0)}
-              placeholder="0"
-              placeholderTextColor={Theme.colors.textTertiary}
+              placeholder={t('job_form.financial.amount_placeholder')}
+              placeholderTextColor={colors.textTertiary}
               keyboardType="numeric"
             />
           </View>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Moneda</Text>
+            <Text style={styles.label}>{t('job_form.financial.currency')}</Text>
             <TextInput
               style={styles.input}
               value={formData.salary?.currency}
               onChangeText={(value) => updateNestedData('salary', 'currency', value)}
-              placeholder="EUR"
-              placeholderTextColor={Theme.colors.textTertiary}
+              placeholder={t('job_form.financial.currency_placeholder')}
+              placeholderTextColor={colors.textTertiary}
             />
           </View>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Tarifa por hora (para facturación)</Text>
+          <Text style={styles.label}>{t('job_form.financial.hourly_rate')}</Text>
           <TextInput
             style={styles.input}
             value={String(formData.hourlyRate || 0)}
             onChangeText={(value) => updateFormData('hourlyRate', Number(value) || 0)}
-            placeholder="0"
-            placeholderTextColor={Theme.colors.textTertiary}
+            placeholder={t('job_form.financial.hourly_rate_placeholder')}
+            placeholderTextColor={colors.textTertiary}
             keyboardType="numeric"
           />
         </View>
@@ -634,16 +1143,16 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
   const renderBillingTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <BlurView intensity={95} tint="light" style={styles.section}>
-        <Text style={styles.sectionTitle}>Configuración de Facturación</Text>
+      <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('job_form.billing.title')}</Text>
         
         <View style={styles.inputGroup}>
           <View style={styles.switchRow}>
-            <Text style={styles.label}>Facturación habilitada</Text>
+            <Text style={styles.label}>{t('job_form.billing.enabled')}</Text>
             <Switch
               value={formData.billing?.enabled}
               onValueChange={(value) => updateNestedData('billing', 'enabled', value)}
-              trackColor={{ false: Theme.colors.separator, true: Theme.colors.primary }}
+              trackColor={{ false: colors.separator, true: colors.primary }}
               thumbColor="#FFFFFF"
             />
           </View>
@@ -652,36 +1161,36 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         {formData.billing?.enabled && (
           <>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Prefijo de factura</Text>
+              <Text style={styles.label}>{t('job_form.billing.invoice_prefix')}</Text>
               <TextInput
                 style={styles.input}
                 value={formData.billing?.invoicePrefix}
                 onChangeText={(value) => updateNestedData('billing', 'invoicePrefix', value)}
-                placeholder="INV"
-                placeholderTextColor={Theme.colors.textTertiary}
+                placeholder={t('job_form.billing.invoice_prefix_placeholder')}
+                placeholderTextColor={colors.textTertiary}
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Tasa de impuestos (%)</Text>
+              <Text style={styles.label}>{t('job_form.billing.tax_rate')}</Text>
               <TextInput
                 style={styles.input}
                 value={String(formData.billing?.taxRate || 0)}
                 onChangeText={(value) => updateNestedData('billing', 'taxRate', Number(value) || 0)}
-                placeholder="21"
-                placeholderTextColor={Theme.colors.textTertiary}
+                placeholder={t('job_form.billing.tax_rate_placeholder')}
+                placeholderTextColor={colors.textTertiary}
                 keyboardType="numeric"
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Notas para facturación</Text>
+              <Text style={styles.label}>{t('job_form.billing.notes')}</Text>
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={formData.billing?.notes}
                 onChangeText={(value) => updateNestedData('billing', 'notes', value)}
-                placeholder="Términos de pago, información adicional..."
-                placeholderTextColor={Theme.colors.textTertiary}
+                placeholder={t('job_form.billing.notes_placeholder')}
+                placeholderTextColor={colors.textTertiary}
                 multiline
                 numberOfLines={3}
               />
@@ -690,18 +1199,18 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         )}
       </BlurView>
 
-      <BlurView intensity={95} tint="light" style={styles.section}>
-        <Text style={styles.sectionTitle}>Geolocalización</Text>
+      <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('job_form.location.title')}</Text>
         
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Dirección específica</Text>
+          <Text style={styles.label}>{t('job_form.location.address')}</Text>
           <View style={styles.addressInputContainer}>
             <TextInput
               style={[styles.input, styles.addressInput]}
               value={formData.location?.address}
               onChangeText={(value) => updateNestedData('location', 'address', value)}
-              placeholder="Dirección exacta del trabajo"
-              placeholderTextColor={Theme.colors.textTertiary}
+              placeholder={t('job_form.location.address_placeholder')}
+              placeholderTextColor={colors.textTertiary}
             />
             <TouchableOpacity
               style={[
@@ -714,23 +1223,23 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               <IconSymbol 
                 size={20} 
                 name={isDetectingLocation ? "gear" : "location.fill"} 
-                color={isDetectingLocation ? Theme.colors.textSecondary : Theme.colors.success} 
+                color={isDetectingLocation ? colors.textSecondary : colors.success} 
               />
               {!isDetectingLocation && (
-                <Text style={[styles.detectLocationText, { color: Theme.colors.success }]}>GPS</Text>
+                <Text style={[styles.detectLocationText, { color: colors.success }]}>GPS</Text>
               )}
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Radio de geofencing (metros)</Text>
+          <Text style={styles.label}>{t('job_form.location.radius')}</Text>
           <TextInput
             style={styles.input}
             value={String(formData.location?.radius || 100)}
             onChangeText={(value) => updateNestedData('location', 'radius', Number(value) || 100)}
-            placeholder="100"
-            placeholderTextColor={Theme.colors.textTertiary}
+            placeholder={t('job_form.location.radius_placeholder')}
+            placeholderTextColor={colors.textTertiary}
             keyboardType="numeric"
           />
         </View>
@@ -739,10 +1248,10 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   );
 
   const tabs = [
-    { key: 'basic', label: 'Básico', icon: 'gear' },
-    { key: 'schedule', label: 'Horario', icon: 'clock.fill' },
-    { key: 'financial', label: 'Financiero', icon: 'dollarsign.circle.fill' },
-    { key: 'billing', label: 'Facturación', icon: 'chart.bar.fill' },
+    { key: 'basic', label: t('job_form.tabs.basic'), icon: 'gear' },
+    { key: 'schedule', label: t('job_form.tabs.schedule'), icon: 'clock.fill' },
+    { key: 'financial', label: t('job_form.tabs.financial'), icon: 'dollarsign.circle.fill' },
+    { key: 'billing', label: t('job_form.tabs.billing'), icon: 'chart.bar.fill' },
   ] as const;
 
   return (
@@ -750,13 +1259,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <IconSymbol size={24} name="xmark" color={Theme.colors.primary} />
+            <IconSymbol size={24} name="xmark" color={colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>
-            {editingJob ? 'Editar Trabajo' : 'Nuevo Trabajo'}
+            {editingJob ? t('job_form.title_edit') : t('job_form.title_new')}
           </Text>
           <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-            <Text style={styles.saveButtonText}>Guardar</Text>
+            <Text style={styles.saveButtonText}>{t('job_form.save')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -774,7 +1283,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 <IconSymbol
                   size={20}
                   name={tab.icon as any}
-                  color={currentTab === tab.key ? Theme.colors.primary : Theme.colors.textSecondary}
+                  color={currentTab === tab.key ? colors.primary : colors.textSecondary}
                 />
                 <Text
                   style={[
@@ -800,265 +1309,3 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Theme.spacing.lg,
-    paddingVertical: Theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.separator,
-  },
-  closeButton: {
-    padding: Theme.spacing.sm,
-  },
-  headerTitle: {
-    ...Theme.typography.headline,
-    color: Theme.colors.text,
-    fontWeight: '600',
-  },
-  saveButton: {
-    paddingHorizontal: Theme.spacing.md,
-    paddingVertical: Theme.spacing.sm,
-    backgroundColor: Theme.colors.primary,
-    borderRadius: Theme.borderRadius.md,
-  },
-  saveButtonText: {
-    ...Theme.typography.footnote,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  tabsContainer: {
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.separator,
-    backgroundColor: Theme.colors.surface,
-  },
-  tab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Theme.spacing.md,
-    paddingVertical: Theme.spacing.sm,
-    marginHorizontal: Theme.spacing.xs,
-    borderRadius: Theme.borderRadius.md,
-  },
-  tabActive: {
-    backgroundColor: `${Theme.colors.primary}15`,
-  },
-  tabText: {
-    ...Theme.typography.footnote,
-    color: Theme.colors.textSecondary,
-    marginLeft: Theme.spacing.xs,
-  },
-  tabTextActive: {
-    color: Theme.colors.primary,
-    fontWeight: '600',
-  },
-  content: {
-    flex: 1,
-  },
-  tabContent: {
-    flex: 1,
-    padding: Theme.spacing.md,
-  },
-  section: {
-    marginBottom: Theme.spacing.md,
-    borderRadius: Theme.borderRadius.lg,
-    padding: Theme.spacing.lg,
-    ...Theme.shadows.small,
-  },
-  sectionTitle: {
-    ...Theme.typography.headline,
-    color: Theme.colors.text,
-    marginBottom: Theme.spacing.md,
-    fontWeight: '600',
-  },
-  inputGroup: {
-    marginBottom: Theme.spacing.md,
-  },
-  label: {
-    ...Theme.typography.footnote,
-    color: Theme.colors.text,
-    marginBottom: Theme.spacing.xs,
-    fontWeight: '600',
-  },
-  input: {
-    ...Theme.typography.body,
-    color: Theme.colors.text,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    borderRadius: Theme.borderRadius.md,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.separator,
-  },
-  addressInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.sm,
-  },
-  addressInput: {
-    flex: 1,
-  },
-  detectLocationButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Theme.spacing.md,
-    paddingVertical: Theme.spacing.sm,
-    backgroundColor: `${Theme.colors.primary}15`,
-    borderRadius: Theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: `${Theme.colors.primary}30`,
-    minWidth: 80,
-    justifyContent: 'center',
-  },
-  detectLocationButtonLoading: {
-    backgroundColor: `${Theme.colors.textSecondary}15`,
-    borderColor: `${Theme.colors.textSecondary}30`,
-  },
-  detectLocationText: {
-    ...Theme.typography.footnote,
-    color: Theme.colors.primary,
-    marginLeft: Theme.spacing.xs,
-    fontWeight: '600',
-  },
-  addressHeaderContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Theme.spacing.md,
-  },
-  autoFillButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: Theme.colors.primary,
-    borderRadius: 12,
-    gap: 6,
-    shadowColor: Theme.colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-    minWidth: 120,
-    justifyContent: 'center',
-  },
-  autoFillButtonLoading: {
-    backgroundColor: Theme.colors.textSecondary,
-    shadowColor: Theme.colors.textSecondary,
-    shadowOpacity: 0.2,
-  },
-  autoFillText: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
-  addressRow: {
-    flexDirection: 'row',
-    gap: Theme.spacing.md,
-    marginBottom: Theme.spacing.md,
-  },
-  addressField: {
-    flex: 1,
-  },
-  subLabel: {
-
-    color: Theme.colors.textSecondary,
-    fontWeight: '600',
-    marginBottom: Theme.spacing.xs,
-  },
-  detectingText: {
-    ...Theme.typography.caption2,
-    color: Theme.colors.textSecondary,
-    marginTop: Theme.spacing.xs,
-    fontStyle: 'italic',
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  row: {
-    flexDirection: 'row',
-    gap: Theme.spacing.md,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  colorPicker: {
-    flexDirection: 'row',
-    marginTop: Theme.spacing.xs,
-  },
-  colorOption: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginRight: Theme.spacing.sm,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  colorOptionSelected: {
-    borderColor: '#FFFFFF',
-    transform: [{ scale: 1.1 }],
-  },
-  segmentedControl: {
-    flexDirection: 'row',
-    backgroundColor: Theme.colors.separator,
-    borderRadius: Theme.borderRadius.md,
-    padding: 2,
-  },
-  segmentButton: {
-    flex: 1,
-    paddingVertical: Theme.spacing.sm,
-    paddingHorizontal: Theme.spacing.md,
-    borderRadius: Theme.borderRadius.sm,
-    alignItems: 'center',
-  },
-  segmentButtonActive: {
-    backgroundColor: '#FFFFFF',
-    ...Theme.shadows.small,
-  },
-  segmentText: {
-    ...Theme.typography.footnote,
-    color: Theme.colors.textSecondary,
-  },
-  segmentTextActive: {
-    color: Theme.colors.text,
-    fontWeight: '600',
-  },
-  workDaysContainer: {
-    flexDirection: 'row',
-    gap: Theme.spacing.xs,
-    marginTop: Theme.spacing.xs,
-  },
-  workDayButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Theme.colors.separator,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  workDayButtonActive: {
-    backgroundColor: Theme.colors.primary,
-  },
-  workDayText: {
-    ...Theme.typography.footnote,
-    color: Theme.colors.textSecondary,
-    fontWeight: '600',
-  },
-  workDayTextActive: {
-    color: '#FFFFFF',
-  },
-});

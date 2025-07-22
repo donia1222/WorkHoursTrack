@@ -1,0 +1,433 @@
+{
+  "common": {
+    "no_jobs_title": "Keine Jobs Konfiguriert",
+    "no_jobs_message": "Sie müssen mindestens einen Job erstellen, bevor Sie den Timer, Kalender oder Berichte verwenden können. Beginnen Sie mit der Einrichtung Ihres ersten Jobs.",
+    "create_first_job": "Ersten Job Erstellen"
+  },
+  "preferences": {
+    "title": "Einstellungen",
+    "subtitle": "Passen Sie Ihre Erfahrung an",
+    "appearance": {
+      "title": "Erscheinungsbild",
+      "description": "Passen Sie das visuelle Thema der Anwendung an",
+       "auto": "Auto",
+      "light": "Hell",
+      "dark": "Dunkel"
+    },
+    "language": {
+      "title": "Sprache",
+      "description": "Wählen Sie die Anwendungssprache",
+      "default": "Standardsprache",
+      "change_to": "Wechseln zu {{language}}"
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "description": "Konfigurieren Sie, welche Benachrichtigungen Sie erhalten möchten",
+      "general": "Allgemeine Benachrichtigungen",
+      "general_desc": "Alle Benachrichtigungen aktivieren",
+      "schedule": "Zeitplan-Erinnerungen",
+      "schedule_desc": "Ein- und Auscheck-Benachrichtigungen",
+      "location": "Standort",
+      "location_desc": "Standortbasierte Benachrichtigungen"
+    }
+  },
+  "settings": {
+    "title": "Konfiguration",
+    "subtitle": "Arbeitsverwaltung und Einstellungen",
+    "jobs": {
+      "title": "Arbeitsverwaltung",
+      "description": "Konfigurieren Sie Ihre Arbeitsplätze mit Zeitplänen, Tarifen und Abrechnung",
+      "my_jobs": "Meine Arbeitsplätze",
+      "my_jobs_desc": "Arbeitsplätze hinzufügen, bearbeiten und konfigurieren"
+    },
+    "work_config": {
+      "title": "Arbeitskonfiguration",
+      "schedules": "Standard-Zeitpläne",
+      "schedules_desc": "Standard-Zeitpläne konfigurieren",
+      "locations": "Arbeitsplätze",
+      "locations_desc": "Standorte und Geofencing verwalten"
+    },
+    "financial_config": {
+      "title": "Finanzielle Konfiguration",
+      "rates": "Tarife und Gehälter",
+      "rates_desc": "Stundensätze und Gehälter konfigurieren",
+      "billing": "Abrechnung",
+      "billing_desc": "Automatische Abrechnung konfigurieren"
+    },
+    "app_config": {
+      "title": "App-Konfiguration",
+      "preferences": "Allgemeine Einstellungen",
+      "preferences_desc": "Benachrichtigungen, Sprache, Design",
+      "how_it_works": "Wie es funktioniert",
+      "how_it_works_desc": "Tutorial und Nutzungsanleitung",
+      "help": "Hilfe & Support",
+      "help_desc": "FAQ, Kontakt, Bedingungen"
+    },
+    "quick_stats": {
+      "title": "Schnelle Zusammenfassung",
+      "active_jobs": "Aktive Arbeitsplätze",
+      "this_month": "Diesen Monat",
+      "earnings": "Einnahmen"
+    }
+  },
+  "edit": {
+    "schedule": {
+      "title": "Zeitpläne bearbeiten",
+      "subtitle": "Wählen Sie einen Arbeitsplatz aus, um Zeitpläne, Arbeitstage und Pausen zu konfigurieren"
+    },
+    "location": {
+      "title": "Standorte bearbeiten",
+      "subtitle": "Wählen Sie einen Arbeitsplatz aus, um seinen Standort und Geofencing zu konfigurieren"
+    },
+    "financial": {
+      "title": "Tarife und Gehälter bearbeiten",
+      "subtitle": "Wählen Sie einen Arbeitsplatz aus, um Gehälter und Stundensätze zu konfigurieren"
+    },
+    "billing": {
+      "title": "Abrechnung bearbeiten",
+      "subtitle": "Wählen Sie einen Arbeitsplatz aus, um die automatische Abrechnung zu konfigurieren"
+    }
+  },
+  "maps": {
+    "you_are_here": "Sie sind hier",
+    "add_job": "Arbeit hinzufügen",
+    "add_job_desc": "Richten Sie Ihre erste Arbeit ein, um zu beginnen",
+    "start_timer": "Timer starten",
+    "view_calendar": "Kalender anzeigen",
+    "view_statistics": "Statistiken anzeigen",
+    "edit_job": "Arbeit bearbeiten",
+    "delete_job": "Arbeit löschen",
+    "cancel": "Abbrechen",
+    "delete_confirm_title": "Arbeit löschen",
+    "delete_confirm_message": "Sind Sie sicher, dass Sie \"{{jobName}}\" löschen möchten? Dies löscht auch alle zugehörigen Zeitaufzeichnungen.",
+    "delete_confirm_button": "Löschen",
+    "delete_success": "Arbeit erfolgreich gelöscht",
+    "delete_error": "Arbeit konnte nicht gelöscht werden",
+    "no_job_selected": "Keine Arbeit ausgewählt",
+    "success": "Erfolg"
+  },
+  "timer": {
+    "title": "Timer",
+    "active_session": "Aktive Sitzung",
+    "ready_to_work": "Bereit zu arbeiten",
+    "session_notes": "Sitzungsnotizen",
+    "notes_placeholder": "Notizen zur geleisteten Arbeit hinzufügen...",
+    "notes_hint": "Notizen werden mit dem Zeitprotokoll gespeichert",
+    "quick_actions": "Schnelle Aktionen",
+    "tips": "Tipps",
+    "calendar": "Kalender",
+    "break": "Pause",
+    "start": "Starten",
+    "pause": "Pausieren",
+    "resume": "Fortsetzen",
+    "stop": "Stoppen",
+    "overtime": "Überstunden",
+    "select_job_error": "Bitte wählen Sie eine Arbeit vor dem Start",
+    "start_timer_error": "Timer konnte nicht gestartet werden",
+    "session_saved": "Sitzung gespeichert: {{hours}} Stunden",
+    "save_error": "Sitzung konnte nicht gespeichert werden",
+    "load_jobs_error": "Arbeiten konnten nicht geladen werden"
+  },
+  "reports": {
+    "title": "Berichte",
+    "subtitle": "Arbeitszeitanalyse",
+    "filter_by_job": "Nach Arbeit filtern",
+    "all_jobs": "Alle",
+    "analysis_period": "Analysezeitraum",
+    "week": "Woche",
+    "month": "Monat",
+    "year": "Jahr",
+    "last_7_days": "Letzten 7 Tage",
+    "this_month": "Dieser Monat",
+    "this_year": "Dieses Jahr",
+    "total_hours": "Gesamtstunden",
+    "worked_days": "Arbeitstage",
+    "average_per_day": "Durchschnitt/Tag",
+    "overtime_hours": "{{hours}}h Überstunden",
+    "job_distribution": "Arbeitsverteilung",
+    "recent_activity": "Letzte Aktivität",
+    "no_records": "Noch keine Aufzeichnungen",
+    "add_time": "Zeit hinzufügen",
+    "view_calendar": "Kalender anzeigen",
+    "start_timer": "Timer starten",
+    "load_more": "Mehr laden ({{remaining}} verbleibend)",
+    "ot": "ÜS"
+  },
+  "calendar": {
+    "title": "Mein Kalender",
+    "title_filtered": "{{jobName}} - Kalender",
+    "subtitle": "Arbeitstage und Statistiken",
+    "subtitle_filtered": "Arbeitstage in {{jobName}}",
+    "filter_by_job": "Nach Arbeit filtern",
+    "all_jobs": "Alle",
+    "month_stats": "Monatsstatistiken",
+    "worked_days": "Arbeitstage",
+    "total_hours": "Gesamtstunden",
+    "overtime_days": "Überstundentage",
+    "other_days": "Andere Tage",
+    "free_days": "Frei",
+    "vacation_days": "Urlaub",
+    "sick_days": "Krank",
+    "by_job": "Nach Arbeit",
+    "day_types": "Tagtypen",
+    "work_day": "Arbeitstag",
+    "free_day": "Freier Tag",
+    "vacation_day": "Urlaub",
+    "sick_day": "Krankheitstag",
+    "tap_to_register": "Tippen Sie auf einen Tag zum Registrieren",
+    "view_detailed_reports": "Detaillierte Berichte anzeigen",
+    "save_workday_error": "Arbeitstag konnte nicht gespeichert werden",
+    "delete_workday_error": "Arbeitstag konnte nicht gelöscht werden"
+  },
+  
+  "navigation": {
+    "back_to": "Zurück zu {{screen}}",
+    "screens": {
+      "mapa": "Karte",
+      "timer": "Timer",
+      "reports": "Berichte",
+      "calendar": "Kalender",
+      "settings": "Einstellungen"
+    },
+    "back": "Zurück",
+    "home": "Startseite"
+  },
+  "job_form": {
+    "title_edit": "Arbeit bearbeiten",
+    "title_new": "Neue Arbeit",
+    "save": "Speichern",
+    "tabs": {
+      "basic": "Grundlagen",
+      "schedule": "Zeitplan", 
+      "financial": "Finanziell",
+      "billing": "Abrechnung"
+    },
+    "basic": {
+      "title": "Grundinformationen",
+      "name": "Arbeitsname",
+      "name_required": "*",
+      "name_placeholder": "Z.B: Frontend-Entwickler",
+      "company": "Unternehmen",
+      "company_placeholder": "Z.B: Tech Solutions GmbH",
+      "address": "Adresse",
+      "street": "Straße",
+      "street_placeholder": "Beispielstraße 123",
+      "postal_code": "Postleitzahl",
+      "postal_code_placeholder": "10115",
+      "city": "Stadt",
+      "city_placeholder": "Berlin",
+      "description": "Beschreibung",
+      "description_placeholder": "Beschreiben Sie die Arbeitsverantwortlichkeiten...",
+      "color": "Identifikationsfarbe",
+      "active": "Aktive Arbeit",
+      "detecting": "Erkennung...",
+      "auto_fill": "Auto-Ausfüllen"
+    },
+    "contact": {
+      "title": "Kontakt",
+      "person": "Kontaktperson",
+      "person_placeholder": "Z.B: Anna Schmidt",
+      "email": "E-Mail", 
+      "email_placeholder": "anna.schmidt@firma.de",
+      "phone": "Telefon",
+      "phone_placeholder": "+49 30 123 456"
+    },
+    "schedule": {
+      "title": "Standard-Zeitplan",
+      "start_time": "Startzeit",
+      "start_time_placeholder": "09:00",
+      "end_time": "Endzeit",
+      "end_time_placeholder": "17:00",
+      "default_hours": "Standard-Stunden",
+      "default_hours_placeholder": "8",
+      "break_time": "Pausenzeit (Minuten)",
+      "break_time_placeholder": "60",
+      "split_shift": "Geteilte Schicht",
+      "split_shift_desc": "Aktivieren für Arbeit in zwei getrennten Zeiträumen",
+      "second_start_time": "Zweite Startzeit",
+      "second_start_time_placeholder": "15:00",
+      "second_end_time": "Zweite Endzeit",
+      "second_end_time_placeholder": "19:00",
+      "work_days": "Arbeitstage",
+      "days": ["S", "M", "D", "M", "D", "F", "S"],
+      "auto_schedule": "Automatische Terminplanung",
+      "auto_schedule_desc": "Arbeitstage automatisch zum Kalender hinzufügen"
+    },
+    "financial": {
+      "title": "Gehaltskonfiguration",
+      "salary_type": "Gehaltsart",
+      "hourly": "Stündlich",
+      "monthly": "Monatlich",
+      "annual": "Jährlich",
+      "amount": "Betrag",
+      "amount_placeholder": "0",
+      "currency": "Währung",
+      "currency_placeholder": "EUR",
+      "hourly_rate": "Stundensatz (für Abrechnung)",
+      "hourly_rate_placeholder": "0"
+    },
+    "billing": {
+      "title": "Abrechnungskonfiguration",
+      "enabled": "Abrechnung aktiviert",
+      "invoice_prefix": "Rechnungspräfix",
+      "invoice_prefix_placeholder": "RG",
+      "tax_rate": "Steuersatz (%)",
+      "tax_rate_placeholder": "19",
+      "notes": "Abrechnungsnotizen",
+      "notes_placeholder": "Zahlungsbedingungen, zusätzliche Informationen..."
+    },
+    "location": {
+      "title": "Geolokalisierung",
+      "address": "Spezifische Adresse",
+      "address_placeholder": "Exakter Arbeitsort",
+      "radius": "Geofencing-Radius (Meter)",
+      "radius_placeholder": "100"
+    },
+    "errors": {
+      "error_title": "Fehler",
+      "name_required": "Arbeitsname ist erforderlich",
+      "save_error": "Arbeit konnte nicht gespeichert werden"
+    },
+    "location_detection": {
+      "permission_title": "Berechtigungen erforderlich",
+      "permission_message": "Wir benötigen Zugriff auf Ihren Standort, um die Adresse automatisch zu erkennen.",
+      "detected_title": "Standort erkannt",
+      "detected_message": "Adresse erkannt: {{address}}",
+      "error_title": "Fehler",
+      "error_address": "Adresse konnte von Ihrem aktuellen Standort nicht ermittelt werden.",
+      "error_location": "Ihr Standort konnte nicht erkannt werden. Bitte überprüfen Sie, ob GPS aktiviert ist."
+    }
+  },
+  "jobs_management": {
+    "title": "Meine Arbeitsplätze",
+    "subtitle": "Verwalten Sie Ihre Jobs und Projekte",
+    "active_jobs": "Aktive Arbeitsplätze ({{count}})",
+    "inactive_jobs": "Inaktive Arbeitsplätze ({{count}})",
+    "no_active_jobs": "Sie haben keine aktiven Arbeitsplätze",
+    "add_job": "Arbeitsplatz hinzufügen",
+    "default_hours": "{{hours}}h Standard",
+    "per_hour": "h",
+    "per_month": "Monat", 
+    "per_year": "Jahr",
+    "billing_enabled": "Abrechnung aktiviert",
+    "billing_rate": "{{rate}} {{currency}}/h (Abrechnung)",
+    "delete": {
+      "title": "Arbeitsplatz löschen",
+      "message": "Sind Sie sicher, dass Sie \"{{jobName}}\" löschen möchten? Dies wird auch alle zugehörigen Zeitaufzeichnungen löschen.",
+      "cancel": "Abbrechen",
+      "confirm": "Löschen",
+      "success": "Arbeitsplatz erfolgreich gelöscht",
+      "error": "Arbeitsplatz konnte nicht gelöscht werden"
+    },
+    "update_error": "Arbeitsplatzstatus konnte nicht aktualisiert werden"
+  },
+  "help_support": {
+    "title": "Hilfe & Support",
+    "subtitle": "FAQ, Kontakt und Ressourcen",
+    "faq": {
+      "title": "Häufig gestellte Fragen",
+      "description": "Finden Sie Antworten auf die häufigsten Fragen",
+      "categories": {
+        "all": "Alle",
+        "general": "Allgemein",
+        "time": "Zeit",
+        "billing": "Abrechnung",
+        "technical": "Technisch"
+      },
+      "questions": {
+        "how_to_start": {
+          "question": "Wie fange ich an, die App zu verwenden?",
+          "answer": "Gehen Sie zuerst zu Einstellungen > Meine Arbeitsplätze und fügen Sie Ihren ersten Job hinzu. Richten Sie Zeitpläne, Standort und Tarife ein. Dann können Sie mit der Zeiterfassung vom Hauptbildschirm aus beginnen."
+        },
+        "record_time": {
+          "question": "Wie erfasse ich meine Arbeitszeit?",
+          "answer": "Wählen Sie auf dem Hauptbildschirm Ihren Job aus und drücken Sie die Start-Taste. Die App verfolgt automatisch Ihre Zeit. Drücken Sie Stopp, wenn Sie fertig sind."
+        },
+        "edit_records": {
+          "question": "Kann ich meine Zeitaufzeichnungen bearbeiten?",
+          "answer": "Ja, gehen Sie zum Kalender und wählen Sie einen beliebigen Tag aus, um Ihre Aufzeichnungen zu sehen. Sie können Eingangszeit, Ausgangszeit bearbeiten und Notizen hinzufügen."
+        },
+        "geolocation": {
+          "question": "Wie funktioniert die Geolokalisierung?",
+          "answer": "Die App verwendet Ihren Standort, um zu überprüfen, ob Sie an Ihrem Arbeitsplatz sind. Sie können einen Toleranzradius in den Einstellungen jedes Jobs konfigurieren."
+        },
+        "billing_setup": {
+          "question": "Wie richte ich die Abrechnung ein?",
+          "answer": "Gehen Sie in jedem Job zum Tab \"Abrechnung\" und legen Sie Ihren Stundensatz fest. Die App berechnet automatisch Ihre Einnahmen basierend auf der gearbeiteten Zeit."
+        },
+        "data_security": {
+          "question": "Sind meine Daten sicher?",
+          "answer": "Alle Ihre Daten werden lokal auf Ihrem Gerät gespeichert. Wir senden keine persönlichen Informationen an externe Server."
+        },
+        "export_data": {
+          "question": "Kann ich meine Daten exportieren?",
+          "answer": "Wir werden bald PDF- und Excel-Exportfunktionalität für Ihre Zeitaufzeichnungen hinzufügen."
+        },
+        "location_issues": {
+          "question": "Warum funktioniert die Standortbestimmung nicht?",
+          "answer": "Überprüfen Sie, ob Sie der App Standortberechtigungen erteilt haben. Gehen Sie zu Geräteeinstellungen > Datenschutz > Standort und aktivieren Sie die Berechtigungen."
+        }
+      }
+    },
+    "contact": {
+      "title": "Kontakt & Support",
+      "description": "Finden Sie nicht, was Sie suchen? Kontaktieren Sie uns",
+      "email": "E-Mail senden",
+      "email_address": "support@geolocalizacion-app.com",
+      "whatsapp": "WhatsApp",
+      "whatsapp_number": "+49 30 123 456",
+      "schedule": "Support-Zeiten",
+      "schedule_hours": "Mo - Fr: 9:00 - 18:00 Uhr"
+    },
+    "legal": {
+      "title": "Rechtliches & Datenschutz",
+      "terms": "Nutzungsbedingungen",
+      "terms_description": "Anwendungsnutzungsbedingungen",
+      "privacy": "Datenschutzrichtlinie",
+      "privacy_description": "Wie wir mit Ihren Daten umgehen",
+      "version": "Version 1.0.0",
+      "last_update": "Letztes Update: Juli 2025"
+    }
+  },
+  "side_menu": {
+    "title": "Navigation",
+    "menu_items": {
+      "mapa": {
+        "title": "Arbeit",
+        "description": "Aktuelle Position"
+      },
+      "timer": {
+        "title": "Timer",
+        "description": "Zeiterfassung"
+      },
+      "reports": {
+        "title": "Berichte",
+        "description": "Statistiken"
+      },
+      "calendar": {
+        "title": "Kalender",
+        "description": "Arbeitstage"
+      },
+      "settings": {
+        "title": "Einstellungen",
+        "description": "Präferenzen"
+      }
+    }
+  },
+  "job_selector": {
+    "title": "Arbeit auswählen",
+    "subtitle_single": "{{count}} Arbeit verfügbar",
+    "subtitle_multiple": "{{count}} Arbeiten verfügbar",
+    "default_hours": "{{hours}}h Standard",
+    "hourly_rate": "• {{rate}} {{currency}}/h",
+    "add_job": "Arbeit\nhinzufügen",
+    "loading": "Lade Arbeitsplätze...",
+    "no_jobs": "Sie haben keine aktiven Arbeitsplätze",
+    "no_jobs_subtitle": "Fügen Sie einen Arbeitsplatz vom Hauptbildschirm hinzu, um fortzufahren",
+    "time_periods": {
+      "hour": "h",
+      "month": "Monat",
+      "year": "Jahr"
+    }
+  }
+}

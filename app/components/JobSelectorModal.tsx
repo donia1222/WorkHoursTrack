@@ -11,6 +11,8 @@ import {
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
 import { Theme } from '../constants/Theme';
+import { useTheme, ThemeColors } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Job } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import JobStatisticsModal from './JobStatisticsModal';
@@ -30,6 +32,8 @@ export default function JobSelectorModal({
   title, 
   subtitle 
 }: JobSelectorModalProps) {
+  const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
   const [jobs, setJobs] = useState<Job[]>([]);
   
   const [loading, setLoading] = useState(false);
@@ -67,31 +71,31 @@ export default function JobSelectorModal({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView style={[styles.container, { backgroundColor: Theme.colors.background }]}>
-        <View style={[styles.header, { borderBottomColor: Theme.colors.border }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <IconSymbol size={24} name="xmark" color={Theme.colors.primary} />
+            <IconSymbol size={24} name="xmark" color={colors.primary} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: Theme.colors.text }]}>{title}</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{title}</Text>
           <View style={styles.placeholder} />
         </View>
 
         <View style={styles.content}>
-          <BlurView intensity={95} tint="light" style={[styles.infoCard, { backgroundColor: Theme.colors.surface }]}>
-            <Text style={[styles.subtitle, { color: Theme.colors.textSecondary }]}>{subtitle}</Text>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.infoCard, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
           </BlurView>
 
           {loading ? (
-            <BlurView intensity={95} tint="light" style={[styles.loadingCard, { backgroundColor: Theme.colors.surface }]}>
-              <IconSymbol size={32} name="gear" color={Theme.colors.textSecondary} />
-              <Text style={[styles.loadingText, { color: Theme.colors.textSecondary }]}>Cargando trabajos...</Text>
+            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.loadingCard, { backgroundColor: colors.surface }]}>
+              <IconSymbol size={32} name="gear" color={colors.textSecondary} />
+              <Text style={[styles.loadingText, { color: colors.textSecondary }]}>{t('job_selector.loading')}</Text>
             </BlurView>
           ) : jobs.length === 0 ? (
-            <BlurView intensity={95} tint="light" style={[styles.emptyCard, { backgroundColor: Theme.colors.surface }]}>
-              <IconSymbol size={32} name="calendar" color={Theme.colors.textTertiary} />
-              <Text style={[styles.emptyText, { color: Theme.colors.textSecondary }]}>No tienes trabajos activos</Text>
-              <Text style={[styles.emptySubtext, { color: Theme.colors.textTertiary }]}>
-                Agrega un trabajo desde la pantalla principal para continuar
+            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
+              <IconSymbol size={32} name="calendar" color={colors.textTertiary} />
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('job_selector.no_jobs')}</Text>
+              <Text style={[styles.emptySubtext, { color: colors.textTertiary }]}>
+                {t('job_selector.no_jobs_subtitle')}
               </Text>
             </BlurView>
           ) : (
@@ -102,24 +106,24 @@ export default function JobSelectorModal({
                   style={styles.jobCard}
                   onPress={() => handleJobSelect(job)}
                 >
-                  <BlurView intensity={90} tint="light" style={[styles.jobCardInner, { backgroundColor: Theme.colors.surface }]}>
+                  <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={[styles.jobCardInner, { backgroundColor: colors.surface }]}>
                     <View style={styles.jobInfo}>
                       <View style={[styles.jobColorDot, { backgroundColor: job.color }]} />
                       <View style={styles.jobDetails}>
-                        <Text style={[styles.jobName, { color: Theme.colors.text }]}>{job.name}</Text>
+                        <Text style={[styles.jobName, { color: colors.text }]}>{job.name}</Text>
                         {job.company && (
-                          <Text style={[styles.jobCompany, { color: Theme.colors.textSecondary }]}>{job.company}</Text>
+                          <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{job.company}</Text>
                         )}
                         <View style={styles.jobMeta}>
                           {job.schedule && (
-                            <Text style={[styles.jobMetaText, { color: Theme.colors.textTertiary }]}>
+                            <Text style={[styles.jobMetaText, { color: colors.textTertiary }]}>
                               {job.schedule.startTime} - {job.schedule.endTime}
                             </Text>
                           )}
                           {job.salary && job.salary.amount > 0 && (
-                            <Text style={[styles.jobMetaText, { color: Theme.colors.textTertiary }]}>
+                            <Text style={[styles.jobMetaText, { color: colors.textTertiary }]}>
                               • {job.salary.amount} {job.salary.currency}
-                              /{job.salary.type === 'hourly' ? 'h' : job.salary.type === 'monthly' ? 'mes' : 'año'}
+                              /{job.salary.type === 'hourly' ? t('job_selector.time_periods.hour') : job.salary.type === 'monthly' ? t('job_selector.time_periods.month') : t('job_selector.time_periods.year')}
                             </Text>
                           )}
                         </View>
@@ -130,9 +134,9 @@ export default function JobSelectorModal({
                         style={styles.statsButton}
                         onPress={(event) => handleShowStatistics(job, event)}
                       >
-                        <IconSymbol size={16} name="chart.bar.fill" color={Theme.colors.primary} />
+                        <IconSymbol size={16} name="chart.bar.fill" color={colors.primary} />
                       </TouchableOpacity>
-                      <IconSymbol size={16} name="chevron.right" color={Theme.colors.primary} />
+                      <IconSymbol size={16} name="chevron.right" color={colors.primary} />
                     </View>
                   </BlurView>
                 </TouchableOpacity>

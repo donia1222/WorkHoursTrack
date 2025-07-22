@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
+import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { BlurView } from 'expo-blur';
 import { Job, WorkDay } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
@@ -40,14 +41,170 @@ interface JobStatistics {
   };
 }
 
+const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.separator,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.lg,
+  },
+  closeButton: {
+    padding: Theme.spacing.sm,
+    marginRight: -Theme.spacing.sm,
+  },
+  headerText: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    ...Theme.typography.headline,
+    color: colors.text,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: Theme.spacing.sm,
+  },
+  headerActionButton: {
+    padding: Theme.spacing.sm,
+    borderRadius: Theme.borderRadius.sm,
+    backgroundColor: `${colors.primary}15`,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingTop: Theme.spacing.lg,
+  },
+  jobInfoCard: {
+    borderRadius: Theme.borderRadius.lg,
+    padding: Theme.spacing.lg,
+    marginBottom: Theme.spacing.lg,
+    ...Theme.shadows.small,
+  },
+  jobHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  jobColorDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    marginRight: Theme.spacing.md,
+  },
+  jobInfo: {
+    flex: 1,
+  },
+  jobName: {
+    ...Theme.typography.title3,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  jobCompany: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+  },
+  loadingCard: {
+    borderRadius: Theme.borderRadius.lg,
+    padding: Theme.spacing.xl,
+    alignItems: 'center',
+    ...Theme.shadows.small,
+  },
+  loadingText: {
+    ...Theme.typography.callout,
+    color: colors.textSecondary,
+    marginTop: Theme.spacing.sm,
+  },
+  statisticsContainer: {
+    flex: 1,
+  },
+  statsSection: {
+    borderRadius: Theme.borderRadius.lg,
+    padding: Theme.spacing.lg,
+    marginBottom: Theme.spacing.lg,
+    ...Theme.shadows.small,
+  },
+  sectionTitle: {
+    ...Theme.typography.headline,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: Theme.spacing.md,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  statItem: {
+    alignItems: 'center',
+    width: '48%',
+    marginBottom: Theme.spacing.md,
+  },
+  statValue: {
+    ...Theme.typography.title2,
+    color: colors.text,
+    fontWeight: '700',
+    marginTop: Theme.spacing.xs,
+    marginBottom: Theme.spacing.xs,
+  },
+  statLabel: {
+    ...Theme.typography.caption2,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  infoList: {
+    gap: Theme.spacing.sm,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  infoText: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    marginLeft: Theme.spacing.sm,
+    flex: 1,
+  },
+  emptyCard: {
+    borderRadius: Theme.borderRadius.lg,
+    padding: Theme.spacing.xl,
+    alignItems: 'center',
+    ...Theme.shadows.small,
+  },
+  emptyText: {
+    ...Theme.typography.headline,
+    color: colors.textSecondary,
+    marginTop: Theme.spacing.sm,
+    marginBottom: Theme.spacing.sm,
+    textAlign: 'center',
+  },
+  emptySubtext: {
+    ...Theme.typography.footnote,
+    color: colors.textTertiary,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+});
+
 export default function JobStatisticsModal({ 
   visible, 
   onClose, 
   job 
 }: JobStatisticsModalProps) {
+  const { colors, isDark } = useTheme();
   const [statistics, setStatistics] = useState<JobStatistics | null>(null);
   const [loading, setLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  
+  const styles = getStyles(colors, isDark);
 
   useEffect(() => {
     if (visible && job) {
@@ -302,25 +459,25 @@ Generado por Mi App de Trabajos`;
                 style={styles.headerActionButton}
                 disabled={!statistics || loading}
               >
-                <IconSymbol size={20} name="square.and.arrow.up" color={Theme.colors.primary} />
+                <IconSymbol size={20} name="square.and.arrow.up" color={colors.primary} />
               </TouchableOpacity>
               <TouchableOpacity 
                 onPress={handleExportData}
                 style={styles.headerActionButton}
                 disabled={!statistics || loading || isExporting}
               >
-                <IconSymbol size={20} name="doc.on.doc" color={Theme.colors.primary} />
+                <IconSymbol size={20} name="doc.on.doc" color={colors.primary} />
               </TouchableOpacity>
             </View>
             <View style={styles.headerText} />
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <IconSymbol size={24} name="xmark" color={Theme.colors.primary} />
+              <IconSymbol size={24} name="xmark" color={colors.primary} />
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={styles.content}>
-          <BlurView intensity={95} tint="light" style={styles.jobInfoCard}>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.jobInfoCard}>
             <View style={styles.jobHeader}>
               <View style={[styles.jobColorDot, { backgroundColor: job.color }]} />
               <View style={styles.jobInfo}>
@@ -333,34 +490,34 @@ Generado por Mi App de Trabajos`;
           </BlurView>
 
           {loading ? (
-            <BlurView intensity={95} tint="light" style={styles.loadingCard}>
-              <IconSymbol size={32} name="gear" color={Theme.colors.textSecondary} />
+            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.loadingCard}>
+              <IconSymbol size={32} name="gear" color={colors.textSecondary} />
               <Text style={styles.loadingText}>Calculando estadísticas...</Text>
             </BlurView>
           ) : statistics ? (
             <ScrollView style={styles.statisticsContainer} showsVerticalScrollIndicator={false}>
               {/* Overview Section */}
-              <BlurView intensity={95} tint="light" style={styles.statsSection}>
+              <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.statsSection}>
                 <Text style={styles.sectionTitle}>Resumen General</Text>
                 <View style={styles.statsGrid}>
                   <View style={styles.statItem}>
-                    <IconSymbol size={20} name="clock.fill" color={Theme.colors.primary} />
+                    <IconSymbol size={20} name="clock.fill" color={colors.primary} />
                     <Text style={styles.statValue}>{formatHours(statistics.totalHours)}</Text>
                     <Text style={styles.statLabel}>Total trabajadas</Text>
                   </View>
                   <View style={styles.statItem}>
-                    <IconSymbol size={20} name="calendar" color={Theme.colors.success} />
+                    <IconSymbol size={20} name="calendar" color={colors.success} />
                     <Text style={styles.statValue}>{statistics.workDaysByType.work}</Text>
                     <Text style={styles.statLabel}>Días trabajados</Text>
                   </View>
                   <View style={styles.statItem}>
-                    <IconSymbol size={20} name="chart.bar.fill" color={Theme.colors.warning} />
+                    <IconSymbol size={20} name="chart.bar.fill" color={colors.warning} />
                     <Text style={styles.statValue}>{formatHours(statistics.avgHoursPerDay)}</Text>
                     <Text style={styles.statLabel}>Promedio/día</Text>
                   </View>
                   {statistics.totalEarnings > 0 && (
                     <View style={styles.statItem}>
-                      <IconSymbol size={20} name="dollarsign.circle.fill" color={Theme.colors.success} />
+                      <IconSymbol size={20} name="dollarsign.circle.fill" color={colors.success} />
                       <Text style={styles.statValue}>{formatCurrency(statistics.totalEarnings)}</Text>
                       <Text style={styles.statLabel}>Total ganado</Text>
                     </View>
@@ -369,22 +526,22 @@ Generado por Mi App de Trabajos`;
               </BlurView>
 
               {/* This Month Section */}
-              <BlurView intensity={95} tint="light" style={styles.statsSection}>
+              <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.statsSection}>
                 <Text style={styles.sectionTitle}>Este Mes</Text>
                 <View style={styles.statsGrid}>
                   <View style={styles.statItem}>
-                    <IconSymbol size={20} name="clock.fill" color={Theme.colors.primary} />
+                    <IconSymbol size={20} name="clock.fill" color={colors.primary} />
                     <Text style={styles.statValue}>{formatHours(statistics.thisMonthHours)}</Text>
                     <Text style={styles.statLabel}>Horas trabajadas</Text>
                   </View>
                   <View style={styles.statItem}>
-                    <IconSymbol size={20} name="calendar" color={Theme.colors.success} />
+                    <IconSymbol size={20} name="calendar" color={colors.success} />
                     <Text style={styles.statValue}>{statistics.thisMonthDays}</Text>
                     <Text style={styles.statLabel}>Días trabajados</Text>
                   </View>
                   {statistics.thisMonthEarnings > 0 && (
                     <View style={styles.statItem}>
-                      <IconSymbol size={20} name="dollarsign.circle.fill" color={Theme.colors.success} />
+                      <IconSymbol size={20} name="dollarsign.circle.fill" color={colors.success} />
                       <Text style={styles.statValue}>{formatCurrency(statistics.thisMonthEarnings)}</Text>
                       <Text style={styles.statLabel}>Ganado este mes</Text>
                     </View>
@@ -393,40 +550,40 @@ Generado por Mi App de Trabajos`;
               </BlurView>
 
               {/* Additional Info Section */}
-              <BlurView intensity={95} tint="light" style={styles.statsSection}>
+              <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.statsSection}>
                 <Text style={styles.sectionTitle}>Información Adicional</Text>
                 <View style={styles.infoList}>
                   {statistics.overtimeDays > 0 && (
                     <View style={styles.infoItem}>
-                      <IconSymbol size={16} name="exclamationmark.triangle.fill" color={Theme.colors.warning} />
+                      <IconSymbol size={16} name="exclamationmark.triangle.fill" color={colors.warning} />
                       <Text style={styles.infoText}>{statistics.overtimeDays} días con horas extra</Text>
                     </View>
                   )}
                   
                   {statistics.workDaysByType.vacation > 0 && (
                     <View style={styles.infoItem}>
-                      <IconSymbol size={16} name="sun.max.fill" color={Theme.colors.warning} />
+                      <IconSymbol size={16} name="sun.max.fill" color={colors.warning} />
                       <Text style={styles.infoText}>{statistics.workDaysByType.vacation} días de vacaciones</Text>
                     </View>
                   )}
                   
                   {statistics.workDaysByType.sick > 0 && (
                     <View style={styles.infoItem}>
-                      <IconSymbol size={16} name="cross.fill" color={Theme.colors.error} />
+                      <IconSymbol size={16} name="cross.fill" color={colors.error} />
                       <Text style={styles.infoText}>{statistics.workDaysByType.sick} días de enfermedad</Text>
                     </View>
                   )}
                   
                   {statistics.workDaysByType.free > 0 && (
                     <View style={styles.infoItem}>
-                      <IconSymbol size={16} name="calendar" color={Theme.colors.primary} />
+                      <IconSymbol size={16} name="calendar" color={colors.primary} />
                       <Text style={styles.infoText}>{statistics.workDaysByType.free} días libres</Text>
                     </View>
                   )}
                   
                   {statistics.lastWorkDay && (
                     <View style={styles.infoItem}>
-                      <IconSymbol size={16} name="clock.arrow.circlepath" color={Theme.colors.textSecondary} />
+                      <IconSymbol size={16} name="clock.arrow.circlepath" color={colors.textSecondary} />
                       <Text style={styles.infoText}>Último día trabajado: {statistics.lastWorkDay}</Text>
                     </View>
                   )}
@@ -434,8 +591,8 @@ Generado por Mi App de Trabajos`;
               </BlurView>
             </ScrollView>
           ) : (
-            <BlurView intensity={95} tint="light" style={styles.emptyCard}>
-              <IconSymbol size={32} name="chart.bar" color={Theme.colors.textTertiary} />
+            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.emptyCard}>
+              <IconSymbol size={32} name="chart.bar" color={colors.textTertiary} />
               <Text style={styles.emptyText}>No hay datos suficientes</Text>
               <Text style={styles.emptySubtext}>
                 Registra algunas horas de trabajo para ver estadísticas
@@ -448,155 +605,3 @@ Generado por Mi App de Trabajos`;
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  header: {
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.separator,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Theme.spacing.lg,
-    paddingVertical: Theme.spacing.lg,
-  },
-  closeButton: {
-    padding: Theme.spacing.sm,
-    marginRight: -Theme.spacing.sm,
-  },
-  headerText: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    ...Theme.typography.headline,
-    color: Theme.colors.text,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: Theme.spacing.sm,
-  },
-  headerActionButton: {
-    padding: Theme.spacing.sm,
-    borderRadius: Theme.borderRadius.sm,
-    backgroundColor: `${Theme.colors.primary}15`,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: Theme.spacing.lg,
-    paddingTop: Theme.spacing.lg,
-  },
-  jobInfoCard: {
-    borderRadius: Theme.borderRadius.lg,
-    padding: Theme.spacing.lg,
-    marginBottom: Theme.spacing.lg,
-    ...Theme.shadows.small,
-  },
-  jobHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  jobColorDot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    marginRight: Theme.spacing.md,
-  },
-  jobInfo: {
-    flex: 1,
-  },
-  jobName: {
-    ...Theme.typography.title3,
-    color: Theme.colors.text,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  jobCompany: {
-    ...Theme.typography.footnote,
-    color: Theme.colors.textSecondary,
-  },
-  loadingCard: {
-    borderRadius: Theme.borderRadius.lg,
-    padding: Theme.spacing.xl,
-    alignItems: 'center',
-    ...Theme.shadows.small,
-  },
-  loadingText: {
-    ...Theme.typography.callout,
-    color: Theme.colors.textSecondary,
-    marginTop: Theme.spacing.sm,
-  },
-  statisticsContainer: {
-    flex: 1,
-  },
-  statsSection: {
-    borderRadius: Theme.borderRadius.lg,
-    padding: Theme.spacing.lg,
-    marginBottom: Theme.spacing.lg,
-    ...Theme.shadows.small,
-  },
-  sectionTitle: {
-    ...Theme.typography.headline,
-    color: Theme.colors.text,
-    fontWeight: '600',
-    marginBottom: Theme.spacing.md,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  statItem: {
-    alignItems: 'center',
-    width: '48%',
-    marginBottom: Theme.spacing.md,
-  },
-  statValue: {
-    ...Theme.typography.title2,
-    color: Theme.colors.text,
-    fontWeight: '700',
-    marginTop: Theme.spacing.xs,
-    marginBottom: Theme.spacing.xs,
-  },
-  statLabel: {
-    ...Theme.typography.caption2,
-    color: Theme.colors.textSecondary,
-    textAlign: 'center',
-  },
-  infoList: {
-    gap: Theme.spacing.sm,
-  },
-  infoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  infoText: {
-    ...Theme.typography.footnote,
-    color: Theme.colors.textSecondary,
-    marginLeft: Theme.spacing.sm,
-    flex: 1,
-  },
-  emptyCard: {
-    borderRadius: Theme.borderRadius.lg,
-    padding: Theme.spacing.xl,
-    alignItems: 'center',
-    ...Theme.shadows.small,
-  },
-  emptyText: {
-    ...Theme.typography.headline,
-    color: Theme.colors.textSecondary,
-    marginTop: Theme.spacing.sm,
-    marginBottom: Theme.spacing.sm,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    ...Theme.typography.footnote,
-    color: Theme.colors.textTertiary,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-});

@@ -12,16 +12,301 @@ import { Calendar, DateData } from 'react-native-calendars';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
 import WorkDayModal from '../components/WorkDayModal';
+import NoJobsWarning from '../components/NoJobsWarning';
 import { Job, WorkDay, WorkDayWithJob, DAY_TYPES } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import { useBackNavigation, useNavigation } from '../context/NavigationContext';
-import { Theme } from '../constants/Theme';
+import { useTheme, ThemeColors } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface CalendarScreenProps {
-  onNavigate?: (screen: string) => void;
+  onNavigate?: (screen: string, options?: any) => void;
 }
 
+const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  backButton: {
+    padding: 8,
+    marginLeft: -8,
+  },
+  headerText: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 2,
+    color: colors.text,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  placeholder: {
+    width: 40,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  jobSelector: {
+    marginTop: 16,
+    marginBottom: 8,
+    borderRadius: 16,
+    padding: 20,
+    backgroundColor: colors.surface,
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8, 
+    elevation: 4,
+  },
+  selectorTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 16,
+    textAlign: 'center',
+    color: colors.text,
+  },
+  jobScrollView: {
+    marginHorizontal: -4,
+  },
+  jobButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 4,
+  },
+  jobButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: colors.separator,
+    gap: 6,
+  },
+  jobButtonActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  jobButtonDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  jobButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  jobButtonTextActive: {
+    color: '#FFFFFF',
+  },
+  calendar: {
+    marginVertical: 20,
+    borderRadius: 16,
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8, 
+    elevation: 4,
+  },
+  statsCard: {
+    marginVertical: 16,
+    borderRadius: 16,
+    padding: 20,
+    backgroundColor: colors.surface,
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8, 
+    elevation: 4,
+  },
+  statsTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statNumber: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  legendCard: {
+    marginVertical: 16,
+    borderRadius: 16,
+    padding: 20,
+    backgroundColor: colors.surface,
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.05, 
+    shadowRadius: 4, 
+    elevation: 2,
+  },
+  legendTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 16,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  legendDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  legendText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  actionButton: {
+    marginVertical: 20,
+    marginBottom: 24,
+  },
+  actionButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.05, 
+    shadowRadius: 4, 
+    elevation: 2,
+  },
+  actionButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    flex: 1,
+    marginLeft: 16,
+  },
+  jobsStatsCard: {
+    marginVertical: 16,
+    borderRadius: 16,
+    padding: 20,
+    backgroundColor: colors.surface,
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8, 
+    elevation: 4,
+  },
+  jobStatRow: {
+    marginBottom: 8,
+  },
+  jobStatInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  jobStatColor: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  jobStatText: {
+    flex: 1,
+  },
+  jobStatName: {
+    fontSize: 16,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  jobStatDetails: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  dayTypeBreakdown: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.separator,
+  },
+  breakdownTitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 8,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  dayTypeGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  dayTypeItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  dayTypeNumber: {
+    fontSize: 16,
+    color: colors.text,
+    marginTop: 4,
+    marginBottom: 2,
+    fontWeight: '600',
+  },
+  dayTypeLabel: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  legendSeparator: {
+    height: 1,
+    backgroundColor: colors.separator,
+    marginVertical: 8,
+  },
+});
+
 export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
+  const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
   const [workDays, setWorkDays] = useState<WorkDay[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -32,6 +317,8 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   const [selectedJobId, setSelectedJobId] = useState<string | 'all'>('all');
   const { handleBack } = useBackNavigation();
   const { selectedJob, setSelectedJob } = useNavigation();
+  
+  const styles = getStyles(colors, isDark);
 
   useEffect(() => {
     loadData();
@@ -79,7 +366,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
       await loadData();
     } catch (error) {
       console.error('Error saving work day:', error);
-      Alert.alert('Error', 'No se pudo guardar el día de trabajo');
+      Alert.alert('Error', t('calendar.save_workday_error'));
     }
   };
 
@@ -90,7 +377,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         await loadData();
       } catch (error) {
         console.error('Error deleting work day:', error);
-        Alert.alert('Error', 'No se pudo eliminar el día de trabajo');
+        Alert.alert('Error', t('calendar.delete_workday_error'));
       }
     }
   };
@@ -194,6 +481,10 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
 
   const stats = getMonthStats();
 
+  const handleCreateJob = () => {
+    onNavigate && onNavigate('jobs-management', { openAddModal: true });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -201,29 +492,39 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           <View style={styles.placeholder} />
           <View style={styles.headerText}>
             <View style={styles.titleContainer}>
-              <IconSymbol size={20} name="calendar" color={Theme.colors.primary} />
+              <IconSymbol size={26} name="calendar" color={colors.primary} />
               <Text style={styles.headerTitle}>
-                {selectedJobId !== 'all' ? `${jobs.find(j => j.id === selectedJobId)?.name} - Calendario` : 'Mi Calendario'}
+                {selectedJobId !== 'all' 
+                  ? t('calendar.title_filtered', { jobName: jobs.find(j => j.id === selectedJobId)?.name })
+                  : t('calendar.title')
+                }
               </Text>
             </View>
             <Text style={styles.headerSubtitle}>
-              {selectedJobId !== 'all' ? `Días trabajados en ${jobs.find(j => j.id === selectedJobId)?.name}` : 'Días trabajados y estadísticas'}
+              {selectedJobId !== 'all' 
+                ? t('calendar.subtitle_filtered', { jobName: jobs.find(j => j.id === selectedJobId)?.name })
+                : t('calendar.subtitle')
+              }
             </Text>
           </View>
           <TouchableOpacity 
             onPress={handleBack}
             style={styles.backButton}
           >
-            <IconSymbol size={24} name="xmark" color={Theme.colors.primary} />
+            <IconSymbol size={24} name="xmark" color={colors.primary} />
           </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {jobs.length === 0 ? (
+          <NoJobsWarning onCreateJob={handleCreateJob} />
+        ) : (
+          <>
         {/* Job selector */}
         {jobs.length > 1 && (
-          <BlurView intensity={95} tint="light" style={styles.jobSelector}>
-            <Text style={styles.selectorTitle}>Filtrar por trabajo</Text>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.jobSelector}>
+            <Text style={styles.selectorTitle}>{t('calendar.filter_by_job')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.jobScrollView}>
               <View style={styles.jobButtons}>
                 <TouchableOpacity
@@ -239,7 +540,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
                       selectedJobId === 'all' && styles.jobButtonTextActive,
                     ]}
                   >
-                    Todos
+                    {t('calendar.all_jobs')}
                   </Text>
                 </TouchableOpacity>
                 {jobs.map((job) => (
@@ -273,19 +574,19 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           onMonthChange={(month: any) => setCurrentMonth(new Date(month.timestamp))}
           markedDates={getMarkedDates()}
           theme={{
-            backgroundColor: Theme.colors.surface,
-            calendarBackground: Theme.colors.surface,
-            textSectionTitleColor: Theme.colors.textSecondary,
-            selectedDayBackgroundColor: Theme.colors.primary,
+            backgroundColor: colors.surface,
+            calendarBackground: colors.surface,
+            textSectionTitleColor: colors.textSecondary,
+            selectedDayBackgroundColor: colors.primary,
             selectedDayTextColor: '#ffffff',
-            todayTextColor: Theme.colors.primary,
-            dayTextColor: Theme.colors.text,
-            textDisabledColor: Theme.colors.textSecondary,
-            dotColor: Theme.colors.primary,
+            todayTextColor: colors.primary,
+            dayTextColor: colors.text,
+            textDisabledColor: colors.textSecondary,
+            dotColor: colors.primary,
             selectedDotColor: '#ffffff',
-            arrowColor: Theme.colors.primary,
-            monthTextColor: Theme.colors.text,
-            indicatorColor: Theme.colors.primary,
+            arrowColor: colors.primary,
+            monthTextColor: colors.text,
+            indicatorColor: colors.primary,
             textDayFontFamily: 'System',
             textMonthFontFamily: 'System',
             textDayHeaderFontFamily: 'System',
@@ -305,52 +606,52 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
 
         <BlurView 
           intensity={95} 
-          tint={Theme.colors.surface === '#FFFFFF' ? 'light' : 'dark'} 
+          tint={isDark ? "dark" : "light"} 
           style={styles.statsCard}
         >
-          <Text style={styles.statsTitle}>Estadísticas del mes</Text>
+          <Text style={styles.statsTitle}>{t('calendar.month_stats')}</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
-              <IconSymbol size={24} name="clock.fill" color={Theme.colors.success} />
+              <IconSymbol size={24} name="clock.fill" color={colors.success} />
               <Text style={styles.statNumber}>{stats.workDays}</Text>
-              <Text style={styles.statLabel}>Días trabajados</Text>
+              <Text style={styles.statLabel}>{t('calendar.worked_days')}</Text>
             </View>
             <View style={styles.statItem}>
-              <IconSymbol size={24} name="clock.fill" color={Theme.colors.success} />
+              <IconSymbol size={24} name="clock.fill" color={colors.success} />
               <Text style={styles.statNumber}>{stats.totalHours}h</Text>
-              <Text style={styles.statLabel}>Horas totales</Text>
+              <Text style={styles.statLabel}>{t('calendar.total_hours')}</Text>
             </View>
             <View style={styles.statItem}>
-              <IconSymbol size={24} name="chart.bar.fill" color={Theme.colors.warning} />
+              <IconSymbol size={24} name="chart.bar.fill" color={colors.warning} />
               <Text style={styles.statNumber}>{stats.overtimeDays}</Text>
-              <Text style={styles.statLabel}>Días overtime</Text>
+              <Text style={styles.statLabel}>{t('calendar.overtime_days')}</Text>
             </View>
           </View>
           
           {/* Day type breakdown */}
           {(stats.freeDays > 0 || stats.vacationDays > 0 || stats.sickDays > 0) && (
             <View style={styles.dayTypeBreakdown}>
-              <Text style={styles.breakdownTitle}>Otros días</Text>
+              <Text style={styles.breakdownTitle}>{t('calendar.other_days')}</Text>
               <View style={styles.dayTypeGrid}>
                 {stats.freeDays > 0 && (
                   <View style={styles.dayTypeItem}>
                     <IconSymbol size={16} name="calendar" color={DAY_TYPES.free.color} />
                     <Text style={styles.dayTypeNumber}>{stats.freeDays}</Text>
-                    <Text style={styles.dayTypeLabel}>Libres</Text>
+                    <Text style={styles.dayTypeLabel}>{t('calendar.free_days')}</Text>
                   </View>
                 )}
                 {stats.vacationDays > 0 && (
                   <View style={styles.dayTypeItem}>
                     <IconSymbol size={16} name="sun.max.fill" color={DAY_TYPES.vacation.color} />
                     <Text style={styles.dayTypeNumber}>{stats.vacationDays}</Text>
-                    <Text style={styles.dayTypeLabel}>Vacaciones</Text>
+                    <Text style={styles.dayTypeLabel}>{t('calendar.vacation_days')}</Text>
                   </View>
                 )}
                 {stats.sickDays > 0 && (
                   <View style={styles.dayTypeItem}>
                     <IconSymbol size={16} name="cross.fill" color={DAY_TYPES.sick.color} />
                     <Text style={styles.dayTypeNumber}>{stats.sickDays}</Text>
-                    <Text style={styles.dayTypeLabel}>Enfermedad</Text>
+                    <Text style={styles.dayTypeLabel}>{t('calendar.sick_days')}</Text>
                   </View>
                 )}
               </View>
@@ -362,10 +663,10 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         {Object.keys(stats.jobStats).length > 0 && selectedJobId === 'all' && (
           <BlurView 
             intensity={95} 
-            tint={Theme.colors.surface === '#FFFFFF' ? 'light' : 'dark'} 
+            tint={isDark ? "dark" : "light"} 
             style={styles.jobsStatsCard}
           >
-            <Text style={styles.statsTitle}>Por trabajo</Text>
+            <Text style={styles.statsTitle}>{t('calendar.by_job')}</Text>
             {Object.values(stats.jobStats).map(({ job, days, hours }) => (
               <View key={job.id} style={styles.jobStatRow}>
                 <View style={styles.jobStatInfo}>
@@ -380,30 +681,30 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           </BlurView>
         )}
 
-        <BlurView intensity={95} tint="light" style={styles.legendCard}>
-          <Text style={styles.legendTitle}>Tipos de días</Text>
+        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.legendCard}>
+          <Text style={styles.legendTitle}>{t('calendar.day_types')}</Text>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.work.color }]} />
-            <Text style={styles.legendText}>Día trabajado</Text>
+            <Text style={styles.legendText}>{t('calendar.work_day')}</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.free.color }]} />
-            <Text style={styles.legendText}>Día libre</Text>
+            <Text style={styles.legendText}>{t('calendar.free_day')}</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.vacation.color }]} />
-            <Text style={styles.legendText}>Vacaciones</Text>
+            <Text style={styles.legendText}>{t('calendar.vacation_day')}</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.sick.color }]} />
-            <Text style={styles.legendText}>Día de enfermedad</Text>
+            <Text style={styles.legendText}>{t('calendar.sick_day')}</Text>
           </View>
           
           <View style={styles.legendSeparator} />
           
           <View style={styles.legendItem}>
-            <IconSymbol size={16} name="plus" color={Theme.colors.primary} />
-            <Text style={styles.legendText}>Toca cualquier día para registrar</Text>
+            <IconSymbol size={16} name="plus" color={colors.primary} />
+            <Text style={styles.legendText}>{t('calendar.tap_to_register')}</Text>
           </View>
         </BlurView>
 
@@ -411,12 +712,14 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           style={styles.actionButton}
           onPress={() => onNavigate && onNavigate('reports')}
         >
-          <BlurView intensity={90} tint="light" style={styles.actionButtonInner}>
-            <IconSymbol size={24} name="chart.bar.fill" color={Theme.colors.primary} />
-            <Text style={styles.actionButtonText}>Ver reportes detallados</Text>
-            <IconSymbol size={16} name="arrow.right" color={Theme.colors.primary} />
+          <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.actionButtonInner}>
+            <IconSymbol size={24} name="chart.bar.fill" color={colors.primary} />
+            <Text style={styles.actionButtonText}>{t('calendar.view_detailed_reports')}</Text>
+            <IconSymbol size={16} name="arrow.right" color={colors.primary} />
           </BlurView>
         </TouchableOpacity>
+          </>
+        )}
       </ScrollView>
 
       <WorkDayModal
@@ -437,259 +740,3 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  header: {
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.border,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerText: {
-    flex: 1,
-    alignItems: 'flex-start',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 2,
-    color: Theme.colors.text,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: Theme.colors.textSecondary,
-  },
-  placeholder: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  jobSelector: {
-    marginTop: 16,
-    marginBottom: 8,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: Theme.colors.surface,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
-  },
-  selectorTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 16,
-    textAlign: 'center',
-    color: Theme.colors.text,
-  },
-  jobScrollView: {
-    marginHorizontal: -4,
-  },
-  jobButtons: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 4,
-  },
-  jobButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    borderWidth: 1,
-    borderColor: Theme.colors.separator,
-    gap: 6,
-  },
-  jobButtonActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  jobButtonDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  jobButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Theme.colors.text,
-  },
-  jobButtonTextActive: {
-    color: '#FFFFFF',
-  },
-  calendar: {
-    marginVertical: 20,
-    borderRadius: 16,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
-  },
-  statsCard: {
-    marginVertical: 16,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: Theme.colors.surface,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
-  },
-  statsTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: Theme.colors.text,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statNumber: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: Theme.colors.text,
-    marginTop: 4,
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: Theme.colors.textSecondary,
-    textAlign: 'center',
-  },
-  legendCard: {
-    marginVertical: 16,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: Theme.colors.surface,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
-  },
-  legendTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Theme.colors.text,
-    marginBottom: 16,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  legendDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginRight: 8,
-  },
-  legendText: {
-    fontSize: 16,
-    color: Theme.colors.textSecondary,
-  },
-  actionButton: {
-    marginVertical: 20,
-    marginBottom: 24,
-  },
-  actionButtonInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 20,
-    borderRadius: 16,
-    backgroundColor: Theme.colors.surface,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
-  },
-  actionButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Theme.colors.text,
-    flex: 1,
-    marginLeft: 16,
-  },
-  jobsStatsCard: {
-    marginVertical: 16,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: Theme.colors.surface,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
-  },
-  jobStatRow: {
-    marginBottom: 8,
-  },
-  jobStatInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  jobStatColor: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginRight: 8,
-  },
-  jobStatText: {
-    flex: 1,
-  },
-  jobStatName: {
-    fontSize: 16,
-    color: Theme.colors.text,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  jobStatDetails: {
-    fontSize: 14,
-    color: Theme.colors.textSecondary,
-  },
-  dayTypeBreakdown: {
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.separator,
-  },
-  breakdownTitle: {
-    fontSize: 14,
-    color: Theme.colors.textSecondary,
-    marginBottom: 8,
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  dayTypeGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  dayTypeItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  dayTypeNumber: {
-    fontSize: 16,
-    color: Theme.colors.text,
-    marginTop: 4,
-    marginBottom: 2,
-    fontWeight: '600',
-  },
-  dayTypeLabel: {
-    fontSize: 12,
-    color: Theme.colors.textSecondary,
-    textAlign: 'center',
-  },
-  legendSeparator: {
-    height: 1,
-    backgroundColor: Theme.colors.separator,
-    marginVertical: 8,
-  },
-});

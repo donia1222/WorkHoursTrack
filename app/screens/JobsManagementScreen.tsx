@@ -12,6 +12,9 @@ import {
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
+import { useTheme, ThemeColors } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { BlurView } from 'expo-blur';
 import { Job, DEFAULT_COLORS } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
@@ -20,258 +23,18 @@ import JobFormModal from '../components/JobFormModal';
 interface JobsManagementScreenProps {
   onNavigate?: (screen: string) => void;
   onClose?: () => void;
+  openAddModal?: boolean;
 }
 
-export default function JobsManagementScreen({ onNavigate, onClose }: JobsManagementScreenProps) {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editingJob, setEditingJob] = useState<Job | null>(null);
-
-  useEffect(() => {
-    loadJobs();
-  }, []);
-
-  const loadJobs = async () => {
-    try {
-      const loadedJobs = await JobService.getJobs();
-      setJobs(loadedJobs);
-    } catch (error) {
-      console.error('Error loading jobs:', error);
-    }
-  };
-
-  const handleAddJob = () => {
-    setEditingJob(null);
-    setShowAddModal(true);
-  };
-
-  const handleEditJob = (job: Job) => {
-    setEditingJob(job);
-    setShowAddModal(true);
-  };
-
-  const handleDeleteJob = (job: Job) => {
-    Alert.alert(
-      'Eliminar trabajo',
-      `¿Estás seguro de que quieres eliminar "${job.name}"? Esto también eliminará todos los registros de tiempo asociados.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await JobService.deleteJob(job.id);
-              await loadJobs();
-              Alert.alert('Éxito', 'Trabajo eliminado correctamente');
-            } catch (error) {
-              console.error('Error deleting job:', error);
-              Alert.alert('Error', 'No se pudo eliminar el trabajo');
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const handleToggleActive = async (job: Job) => {
-    try {
-      await JobService.updateJob(job.id, { isActive: !job.isActive });
-      await loadJobs();
-    } catch (error) {
-      console.error('Error toggling job status:', error);
-      Alert.alert('Error', 'No se pudo actualizar el estado del trabajo');
-    }
-  };
-
-  const activeJobs = jobs.filter(job => job.isActive);
-  const inactiveJobs = jobs.filter(job => !job.isActive);
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <TouchableOpacity 
-            onPress={handleAddJob}
-            style={styles.addButton}
-          >
-            <IconSymbol size={24} name="plus" color={Theme.colors.primary} />
-          </TouchableOpacity>
-          <View style={styles.headerText}>
-            <View style={styles.titleContainer}>
-              <IconSymbol size={20} name="briefcase.fill" color={Theme.colors.primary} />
-              <Text style={styles.headerTitle}>Mis Trabajos</Text>
-            </View>
-            <Text style={styles.headerSubtitle}>Gestiona tus trabajos y proyectos</Text>
-          </View>
-          <TouchableOpacity 
-            onPress={onClose}
-            style={styles.closeButton}
-          >
-            <IconSymbol size={24} name="xmark" color={Theme.colors.primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Active jobs */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Trabajos activos ({activeJobs.length})</Text>
-          {activeJobs.length > 0 ? (
-            activeJobs.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                onEdit={() => handleEditJob(job)}
-                onDelete={() => handleDeleteJob(job)}
-                onToggleActive={() => handleToggleActive(job)}
-              />
-            ))
-          ) : (
-            <BlurView intensity={95} tint="light" style={styles.emptyCard}>
-              <IconSymbol size={32} name="calendar" color={Theme.colors.textTertiary} />
-              <Text style={styles.emptyText}>No tienes trabajos activos</Text>
-              <TouchableOpacity style={styles.emptyButton} onPress={handleAddJob}>
-                <Text style={styles.emptyButtonText}>Agregar trabajo</Text>
-              </TouchableOpacity>
-            </BlurView>
-          )}
-        </View>
-
-        {/* Inactive jobs */}
-        {inactiveJobs.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Trabajos inactivos ({inactiveJobs.length})</Text>
-            {inactiveJobs.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                onEdit={() => handleEditJob(job)}
-                onDelete={() => handleDeleteJob(job)}
-                onToggleActive={() => handleToggleActive(job)}
-                isInactive
-              />
-            ))}
-          </View>
-        )}
-      </ScrollView>
-
-      <JobFormModal
-        visible={showAddModal}
-        editingJob={editingJob}
-        onClose={() => {
-          setShowAddModal(false);
-          setEditingJob(null);
-        }}
-        onSave={async () => {
-          await loadJobs();
-          setShowAddModal(false);
-          setEditingJob(null);
-        }}
-      />
-    </SafeAreaView>
-  );
-}
-
-interface JobCardProps {
-  job: Job;
-  onEdit: () => void;
-  onDelete: () => void;
-  onToggleActive: () => void;
-  isInactive?: boolean;
-}
-
-function JobCard({ job, onEdit, onDelete, onToggleActive, isInactive }: JobCardProps) {
-  return (
-    <BlurView intensity={95} tint="light" style={[styles.jobCard, isInactive && styles.inactiveCard]}>
-      <View style={styles.jobCardHeader}>
-        <View style={styles.jobInfo}>
-          <View style={[styles.jobColorIndicator, { backgroundColor: job.color }]} />
-          <View style={styles.jobMainInfo}>
-            <Text style={[styles.jobName, isInactive && styles.inactiveText]}>{job.name}</Text>
-            {job.company && (
-              <Text style={[styles.jobCompany, isInactive && styles.inactiveText]}>{job.company}</Text>
-            )}
-          </View>
-        </View>
-        <View style={styles.jobActions}>
-          <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
-            <IconSymbol size={18} name="gear" color={Theme.colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={onToggleActive}>
-            <IconSymbol 
-              size={18} 
-              name={isInactive ? "play.fill" : "pause.fill"} 
-              color={isInactive ? Theme.colors.success : Theme.colors.warning} 
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={onDelete}>
-            <IconSymbol size={18} name="xmark" color={Theme.colors.error} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={styles.jobDetails}>
-        <View style={styles.jobDetailRow}>
-          <IconSymbol size={16} name="clock.fill" color={Theme.colors.textSecondary} />
-          <Text style={styles.jobDetailText}>{job.defaultHours}h por defecto</Text>
-        </View>
-        
-        {job.salary && job.salary.amount > 0 && (
-          <View style={styles.jobDetailRow}>
-            <IconSymbol size={16} name="dollarsign.circle.fill" color={Theme.colors.success} />
-            <Text style={styles.jobDetailText}>
-              {job.salary.amount} {job.salary.currency}/{job.salary.type === 'hourly' ? 'h' : job.salary.type === 'monthly' ? 'mes' : 'año'}
-            </Text>
-          </View>
-        )}
-        
-        {job.schedule && (
-          <View style={styles.jobDetailRow}>
-            <IconSymbol size={16} name="clock.fill" color={Theme.colors.primary} />
-            <Text style={styles.jobDetailText}>
-              {job.schedule.startTime} - {job.schedule.endTime}
-            </Text>
-          </View>
-        )}
-        
-        {job.billing?.enabled && (
-          <View style={styles.jobDetailRow}>
-            <IconSymbol size={16} name="chart.bar.fill" color={Theme.colors.warning} />
-            <Text style={styles.jobDetailText}>Facturación habilitada</Text>
-          </View>
-        )}
-        
-        {job.hourlyRate && job.hourlyRate > 0 && (
-          <View style={styles.jobDetailRow}>
-            <IconSymbol size={16} name="chart.bar.fill" color={Theme.colors.textSecondary} />
-            <Text style={styles.jobDetailText}>
-              {job.hourlyRate} {job.currency || 'EUR'}/h (facturación)
-            </Text>
-          </View>
-        )}
-        
-        {job.location?.address && (
-          <View style={styles.jobDetailRow}>
-            <IconSymbol size={16} name="location.fill" color={Theme.colors.textSecondary} />
-            <Text style={styles.jobDetailText} numberOfLines={1}>{job.location.address}</Text>
-          </View>
-        )}
-      </View>
-    </BlurView>
-  );
-}
-
-
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Theme.colors.background,
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: '#FFFFFF',
+ 
     borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.separator,
+    borderBottomColor: colors.separator,
   },
   headerContent: {
     flexDirection: 'row',
@@ -287,6 +50,7 @@ const styles = StyleSheet.create({
   headerText: {
     flex: 1,
     alignItems: 'flex-start',
+    marginLeft: Theme.spacing.md,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -295,15 +59,20 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...Theme.typography.headline,
-    color: Theme.colors.text,
+    color: colors.text,
     marginBottom: 2,
   },
   headerSubtitle: {
     ...Theme.typography.footnote,
-    color: Theme.colors.textSecondary,
+    color: colors.textSecondary,
   },
   addButton: {
-    padding: Theme.spacing.sm,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginLeft: -Theme.spacing.sm,
   },
   content: {
@@ -315,7 +84,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...Theme.typography.headline,
-    color: Theme.colors.text,
+    color: colors.text,
     marginBottom: Theme.spacing.md,
     fontWeight: '600',
   },
@@ -350,13 +119,13 @@ const styles = StyleSheet.create({
   },
   jobName: {
     ...Theme.typography.headline,
-    color: Theme.colors.text,
+    color: colors.text,
     fontWeight: '600',
     marginBottom: 2,
   },
   jobCompany: {
     ...Theme.typography.footnote,
-    color: Theme.colors.textSecondary,
+    color: colors.textSecondary,
   },
   inactiveText: {
     opacity: 0.7,
@@ -368,7 +137,7 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: Theme.spacing.sm,
     borderRadius: Theme.borderRadius.sm,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
   },
   jobDetails: {
     gap: Theme.spacing.xs,
@@ -379,7 +148,7 @@ const styles = StyleSheet.create({
   },
   jobDetailText: {
     ...Theme.typography.footnote,
-    color: Theme.colors.textSecondary,
+    color: colors.textSecondary,
     marginLeft: Theme.spacing.xs,
     flex: 1,
   },
@@ -391,14 +160,14 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...Theme.typography.callout,
-    color: Theme.colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: Theme.spacing.sm,
     marginBottom: Theme.spacing.md,
   },
   emptyButton: {
     paddingHorizontal: Theme.spacing.lg,
     paddingVertical: Theme.spacing.sm,
-    backgroundColor: Theme.colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: Theme.borderRadius.md,
   },
   emptyButtonText: {
@@ -407,3 +176,261 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+export default function JobsManagementScreen({ onNavigate, onClose, openAddModal = false }: JobsManagementScreenProps) {
+  const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
+  const { triggerHaptic } = useHapticFeedback();
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [showAddModal, setShowAddModal] = useState(openAddModal);
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
+  
+  const styles = getStyles(colors, isDark);
+
+  useEffect(() => {
+    loadJobs();
+  }, []);
+
+  useEffect(() => {
+    if (openAddModal) {
+      setShowAddModal(true);
+    }
+  }, [openAddModal]);
+
+  const loadJobs = async () => {
+    try {
+      const loadedJobs = await JobService.getJobs();
+      setJobs(loadedJobs);
+    } catch (error) {
+      console.error('Error loading jobs:', error);
+    }
+  };
+
+  const handleAddJob = () => {
+    setEditingJob(null);
+    setShowAddModal(true);
+  };
+
+  const handleEditJob = (job: Job) => {
+    setEditingJob(job);
+    setShowAddModal(true);
+  };
+
+  const handleDeleteJob = (job: Job) => {
+    Alert.alert(
+      t('jobs_management.delete.title'),
+      t('jobs_management.delete.message', { jobName: job.name }),
+      [
+        { text: t('jobs_management.delete.cancel'), style: 'cancel' },
+        {
+          text: t('jobs_management.delete.confirm'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await JobService.deleteJob(job.id);
+              await loadJobs();
+              Alert.alert(t('maps.success'), t('jobs_management.delete.success'));
+            } catch (error) {
+              console.error('Error deleting job:', error);
+              Alert.alert(t('job_form.errors.error_title'), t('jobs_management.delete.error'));
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleToggleActive = async (job: Job) => {
+    try {
+      await JobService.updateJob(job.id, { isActive: !job.isActive });
+      await loadJobs();
+    } catch (error) {
+      console.error('Error toggling job status:', error);
+      Alert.alert(t('job_form.errors.error_title'), t('jobs_management.update_error'));
+    }
+  };
+
+  const activeJobs = jobs.filter(job => job.isActive);
+  const inactiveJobs = jobs.filter(job => !job.isActive);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <TouchableOpacity 
+            onPress={() => { triggerHaptic('light'); handleAddJob(); }}
+            style={styles.addButton}
+          >
+            <IconSymbol size={20} name="plus" color="#FFFFFF" />
+          </TouchableOpacity>
+          <View style={styles.headerText}>
+            <View style={styles.titleContainer}>
+              <IconSymbol size={20} name="briefcase.fill" color={colors.primary} />
+              <Text style={styles.headerTitle}>{t('jobs_management.title')}</Text>
+            </View>
+            <Text style={styles.headerSubtitle}>{t('jobs_management.subtitle')}</Text>
+          </View>
+          <TouchableOpacity 
+            onPress={() => { triggerHaptic('light'); onClose?.(); }}
+            style={styles.closeButton}
+          >
+            <IconSymbol size={24} name="xmark" color={colors.primary} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Active jobs */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('jobs_management.active_jobs', { count: activeJobs.length.toString() })}</Text>
+          {activeJobs.length > 0 ? (
+            activeJobs.map((job) => (
+              <JobCard
+                key={job.id}
+                job={job}
+                onEdit={() => handleEditJob(job)}
+                onDelete={() => handleDeleteJob(job)}
+                onToggleActive={() => handleToggleActive(job)}
+              />
+            ))
+          ) : (
+            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.emptyCard}>
+              <IconSymbol size={32} name="calendar" color={colors.textTertiary} />
+              <Text style={styles.emptyText}>{t('jobs_management.no_active_jobs')}</Text>
+              <TouchableOpacity style={styles.emptyButton} onPress={() => { triggerHaptic('light'); handleAddJob(); }}>
+                <Text style={styles.emptyButtonText}>{t('jobs_management.add_job')}</Text>
+              </TouchableOpacity>
+            </BlurView>
+          )}
+        </View>
+
+        {/* Inactive jobs */}
+        {inactiveJobs.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('jobs_management.inactive_jobs', { count: inactiveJobs.length.toString() })}</Text>
+            {inactiveJobs.map((job) => (
+              <JobCard
+                key={job.id}
+                job={job}
+                onEdit={() => handleEditJob(job)}
+                onDelete={() => handleDeleteJob(job)}
+                onToggleActive={() => handleToggleActive(job)}
+                isInactive
+              />
+            ))}
+          </View>
+        )}
+      </ScrollView>
+
+      <JobFormModal
+        visible={showAddModal}
+        editingJob={editingJob}
+        onClose={() => {
+          setShowAddModal(false);
+          setEditingJob(null);
+        }}
+        onSave={async () => {
+          await loadJobs();
+          setShowAddModal(false);
+          setEditingJob(null);
+        }}
+        onNavigateToCalendar={() => onNavigate?.('calendar')}
+      />
+    </SafeAreaView>
+  );
+}
+
+interface JobCardProps {
+  job: Job;
+  onEdit: () => void;
+  onDelete: () => void;
+  onToggleActive: () => void;
+  isInactive?: boolean;
+}
+
+function JobCard({ job, onEdit, onDelete, onToggleActive, isInactive }: JobCardProps) {
+  const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
+  const styles = getStyles(colors, isDark);
+  
+  return (
+    <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.jobCard, isInactive && styles.inactiveCard]}>
+      <View style={styles.jobCardHeader}>
+        <View style={styles.jobInfo}>
+          <View style={[styles.jobColorIndicator, { backgroundColor: job.color }]} />
+          <View style={styles.jobMainInfo}>
+            <Text style={[styles.jobName, isInactive && styles.inactiveText]}>{job.name}</Text>
+            {job.company && (
+              <Text style={[styles.jobCompany, isInactive && styles.inactiveText]}>{job.company}</Text>
+            )}
+          </View>
+        </View>
+        <View style={styles.jobActions}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => { triggerHaptic('light'); onEdit(); }}>
+            <IconSymbol size={18} name="gear" color={colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton} onPress={() => { triggerHaptic('medium'); onToggleActive(); }}>
+            <IconSymbol 
+              size={18} 
+              name={isInactive ? "play.fill" : "pause.fill"} 
+              color={isInactive ? colors.success : colors.warning} 
+            />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton} onPress={() => { triggerHaptic('warning'); onDelete(); }}>
+            <IconSymbol size={18} name="xmark" color={colors.error} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.jobDetails}>
+        <View style={styles.jobDetailRow}>
+          <IconSymbol size={16} name="clock.fill" color={colors.textSecondary} />
+          <Text style={styles.jobDetailText}>{t('jobs_management.default_hours', { hours: job.defaultHours.toString() })}</Text>
+        </View>
+        
+        {job.salary && job.salary.amount > 0 && (
+          <View style={styles.jobDetailRow}>
+            <IconSymbol size={16} name="dollarsign.circle.fill" color={colors.success} />
+            <Text style={styles.jobDetailText}>
+              {job.salary.amount} {job.salary.currency}/{job.salary.type === 'hourly' ? t('jobs_management.per_hour') : job.salary.type === 'monthly' ? t('jobs_management.per_month') : t('jobs_management.per_year')}
+            </Text>
+          </View>
+        )}
+        
+        {job.schedule && (
+          <View style={styles.jobDetailRow}>
+            <IconSymbol size={16} name="clock.fill" color={colors.primary} />
+            <Text style={styles.jobDetailText}>
+              {job.schedule.startTime} - {job.schedule.endTime}
+            </Text>
+          </View>
+        )}
+        
+        {job.billing?.enabled && (
+          <View style={styles.jobDetailRow}>
+            <IconSymbol size={16} name="chart.bar.fill" color={colors.warning} />
+            <Text style={styles.jobDetailText}>{t('jobs_management.billing_enabled')}</Text>
+          </View>
+        )}
+        
+        {job.hourlyRate && job.hourlyRate > 0 && (
+          <View style={styles.jobDetailRow}>
+            <IconSymbol size={16} name="chart.bar.fill" color={colors.textSecondary} />
+            <Text style={styles.jobDetailText}>
+              {t('jobs_management.billing_rate', { rate: job.hourlyRate, currency: job.currency || 'EUR' })}
+            </Text>
+          </View>
+        )}
+        
+        {job.location?.address && (
+          <View style={styles.jobDetailRow}>
+            <IconSymbol size={16} name="location.fill" color={colors.textSecondary} />
+            <Text style={styles.jobDetailText} numberOfLines={1}>{job.location.address}</Text>
+          </View>
+        )}
+      </View>
+    </BlurView>
+  );
+}
+
+
