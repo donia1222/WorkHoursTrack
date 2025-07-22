@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -39,6 +40,8 @@ export default function JobSelectorModal({
   const [loading, setLoading] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
   const [selectedJobForStats, setSelectedJobForStats] = useState<Job | null>(null);
+  
+  const styles = getStyles(colors, isDark);
 
   useEffect(() => {
     if (visible) {
@@ -74,24 +77,42 @@ export default function JobSelectorModal({
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <IconSymbol size={24} name="xmark" color={colors.primary} />
+            <IconSymbol size={28} name="xmark" color={colors.primary} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>{title}</Text>
+          <Text style={styles.headerTitle}>{title}</Text>
           <View style={styles.placeholder} />
         </View>
 
         <View style={styles.content}>
-          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.infoCard, { backgroundColor: colors.surface }]}>
+          <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.infoCard}>
+            <LinearGradient
+              colors={isDark ? ['rgba(0, 122, 255, 0.12)', 'rgba(0, 122, 255, 0.04)'] : ['rgba(0, 122, 255, 0.08)', 'rgba(0, 122, 255, 0.02)']}
+              style={styles.infoCardGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
           </BlurView>
 
           {loading ? (
-            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.loadingCard, { backgroundColor: colors.surface }]}>
+            <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.loadingCard}>
+              <LinearGradient
+                colors={isDark ? ['rgba(142, 142, 147, 0.1)', 'rgba(142, 142, 147, 0.03)'] : ['rgba(142, 142, 147, 0.06)', 'rgba(142, 142, 147, 0.02)']}
+                style={styles.loadingCardGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
               <IconSymbol size={32} name="gear" color={colors.textSecondary} />
               <Text style={[styles.loadingText, { color: colors.textSecondary }]}>{t('job_selector.loading')}</Text>
             </BlurView>
           ) : jobs.length === 0 ? (
-            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
+            <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.emptyCard}>
+              <LinearGradient
+                colors={isDark ? ['rgba(255, 59, 48, 0.1)', 'rgba(255, 59, 48, 0.03)'] : ['rgba(255, 59, 48, 0.06)', 'rgba(255, 59, 48, 0.02)']}
+                style={styles.emptyCardGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
               <IconSymbol size={32} name="calendar" color={colors.textTertiary} />
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('job_selector.no_jobs')}</Text>
               <Text style={[styles.emptySubtext, { color: colors.textTertiary }]}>
@@ -106,7 +127,13 @@ export default function JobSelectorModal({
                   style={styles.jobCard}
                   onPress={() => handleJobSelect(job)}
                 >
-                  <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={[styles.jobCardInner, { backgroundColor: colors.surface }]}>
+                  <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.jobCardInner}>
+                    <LinearGradient
+                      colors={isDark ? ['rgba(34, 197, 94, 0.08)', 'rgba(34, 197, 94, 0.02)'] : ['rgba(34, 197, 94, 0.05)', 'rgba(34, 197, 94, 0.015)']}
+                      style={styles.jobCardGradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    />
                     <View style={styles.jobInfo}>
                       <View style={[styles.jobColorDot, { backgroundColor: job.color }]} />
                       <View style={styles.jobDetails}>
@@ -158,7 +185,7 @@ export default function JobSelectorModal({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -166,51 +193,124 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
     borderBottomWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   closeButton: {
-    padding: 12,
+    padding: 16,
+    borderRadius: 20,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    textShadowColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   placeholder: {
     width: 40,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
   infoCard: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    
+    borderRadius: 24,
+    padding: 28,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    shadowColor: colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  infoCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
   },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 22,
+    color: colors.textSecondary,
+    position: 'relative',
+    zIndex: 1,
   },
   loadingCard: {
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 24,
+    padding: 28,
     alignItems: 'center',
-    
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    shadowColor: colors.textSecondary,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  loadingCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
   },
   loadingText: {
     fontSize: 16,
     marginTop: 12,
   },
   emptyCard: {
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 24,
+    padding: 28,
     alignItems: 'center',
-    
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    shadowColor: colors.error,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  emptyCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
   },
   emptyText: {
     fontSize: 18,
@@ -233,9 +333,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 20,
-    borderRadius: 16,
-    
+    padding: 28,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    shadowColor: colors.success,
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 12,
+    overflow: 'hidden',
+  },
+  jobCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
   },
   jobInfo: {
     flexDirection: 'row',
@@ -243,10 +361,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   jobColorDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginRight: 16,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    marginRight: 20,
+    borderWidth: 2,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   jobDetails: {
     flex: 1,
@@ -275,8 +403,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   statsButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.2)' : 'rgba(0, 122, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(0, 122, 255, 0.3)' : 'rgba(0, 122, 255, 0.2)',
+    shadowColor: colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
 });

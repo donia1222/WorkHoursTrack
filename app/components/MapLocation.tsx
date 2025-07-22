@@ -3,6 +3,7 @@ import MapView, { Marker } from 'react-native-maps';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, Modal } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Job } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import JobFormModal from '../components/JobFormModal';
@@ -235,18 +236,39 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     pointerEvents: 'auto',
   },
   mainActionCardInner: {
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 24,
+    padding: 28,
     alignItems: 'center',
     position: 'relative',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    overflow: 'hidden',
+  },
+  mainActionCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
   },
   mainActionIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+    shadowColor: colors.success,
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
   },
   mainActionTitle: {
     fontSize: 20,
@@ -315,21 +337,56 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   jobButtonInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: isDark ? 0.1 : 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
   jobButtonColorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 12,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 16,
+    borderWidth: 2,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   jobButtonText: {
     fontSize: 16,
     color: colors.text,
     fontWeight: '600',
     flex: 1,
+  },
+  jobButtonActive: {
+    transform: [{ scale: 1.02 }],
+  },
+  jobButtonContent: {
+    flex: 1,
+  },
+  jobButtonTextActive: {
+    color: colors.success,
+  },
+  jobStatusText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2,
+    fontWeight: '500',
   },
   jobsOverlay: {
     position: 'absolute',
@@ -439,13 +496,22 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     elevation: 999,
   },
   actionModalContent: {
-    borderRadius: 16,
+    borderRadius: 28,
     margin: 20,
-    padding: 20,
+    padding: 24,
     backgroundColor: colors.surface,
-    minWidth: 280,
+    minWidth: 300,
     zIndex: 1001,
     elevation: 1001,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 20,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 25,
   },
   actionModalHeader: {
     flexDirection: 'row',
@@ -478,8 +544,18 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   actionModalButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
+    padding: 18,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   actionModalButtonText: {
     fontSize: 16,
@@ -498,46 +574,61 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   floatingAddButton: {
     position: 'absolute',
-    bottom: 24,
-    right: 20,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    elevation: 8,
+    bottom: 32,
+    right: 24,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    elevation: 12,
     shadowColor: colors.primary,
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 8,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
   },
   floatingAddButtonInner: {
     flex: 1,
-    borderRadius: 32,
+    borderRadius: 36,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.primary,
-    borderWidth: 2,
-    borderColor: colors.surface,
+    borderWidth: 3,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.8)',
+    overflow: 'hidden',
+  },
+  fabGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 36,
   },
   successIconBg: {
-    backgroundColor: 'rgba(52, 199, 89, 0.2)',
+    backgroundColor: 'rgba(52, 199, 89, 0.25)',
+    borderWidth: 2,
+    borderColor: 'rgba(52, 199, 89, 0.3)',
   },
   successButtonBg: {
-    backgroundColor: 'rgba(52, 199, 89, 0.15)',
+    backgroundColor: 'rgba(52, 199, 89, 0.18)',
+    borderColor: 'rgba(52, 199, 89, 0.25)',
   },
   primaryButtonBg: {
-    backgroundColor: 'rgba(0, 122, 255, 0.15)',
+    backgroundColor: 'rgba(0, 122, 255, 0.18)',
+    borderColor: 'rgba(0, 122, 255, 0.25)',
   },
   warningButtonBg: {
-    backgroundColor: 'rgba(255, 149, 0, 0.15)',
+    backgroundColor: 'rgba(255, 149, 0, 0.18)',
+    borderColor: 'rgba(255, 149, 0, 0.25)',
   },
   secondaryButtonBg: {
     backgroundColor: 'rgba(142, 142, 147, 0.15)',
+    borderColor: 'rgba(142, 142, 147, 0.2)',
   },
   errorButtonBg: {
     backgroundColor: 'rgba(255, 59, 48, 0.15)',
+    borderColor: 'rgba(255, 59, 48, 0.25)',
   },
 });
 
@@ -553,12 +644,18 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [showStatistics, setShowStatistics] = useState(false);
   const [selectedJobForStats, setSelectedJobForStats] = useState<Job | null>(null);
+  const [activeTimerJobId, setActiveTimerJobId] = useState<string | null>(null);
   const mapRef = useRef<MapView>(null);
   
   const styles = getStyles(colors, isDark);
 
   useEffect(() => {
     loadJobs();
+    checkActiveTimer();
+    
+    // Check active timer every 30 seconds
+    const interval = setInterval(checkActiveTimer, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadJobs = async () => {
@@ -568,6 +665,125 @@ export default function MapLocation({ location, onNavigate }: Props) {
     } catch (error) {
       console.error('Error loading jobs:', error);
     }
+  };
+
+  const checkActiveTimer = async () => {
+    try {
+      const activeSession = await JobService.getActiveSession();
+      setActiveTimerJobId(activeSession?.jobId || null);
+    } catch (error) {
+      console.error('Error checking active timer:', error);
+    }
+  };
+
+  const isJobCurrentlyActive = (job: Job): boolean => {
+    return activeTimerJobId === job.id;
+  };
+
+  const getJobScheduleStatus = (job: Job): string | null => {
+    if (!job.schedule || !job.schedule.workDays?.length) return null;
+
+    const now = new Date();
+    const currentDay = now.getDay();
+    const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
+    const workDays = job.schedule.workDays;
+    const startTime = job.schedule.startTime;
+    const endTime = job.schedule.endTime;
+    const secondStartTime = job.schedule.secondStartTime;
+    const secondEndTime = job.schedule.secondEndTime;
+
+    // Check if currently in work hours (don't show next shift if currently working)
+    if (workDays.includes(currentDay)) {
+      if (startTime && endTime && isTimeInRange(currentTime, startTime, endTime)) {
+        return null; // Currently should be working
+      }
+      if (job.schedule.hasSplitShift && secondStartTime && secondEndTime && 
+          isTimeInRange(currentTime, secondStartTime, secondEndTime)) {
+        return null; // Currently should be working (second shift)
+      }
+    }
+
+    // Find the next work shift (could be today or future days)
+    const nextShift = findNextWorkShift(workDays, startTime, secondStartTime, job.schedule.hasSplitShift);
+    
+    if (nextShift) {
+      if (nextShift.isToday) {
+        return `${t('maps.next_shift')} ${nextShift.time}`;
+      } else {
+        return `${t('maps.next_shift')} ${getDayName(nextShift.day)} ${nextShift.time}`;
+      }
+    }
+
+    return null;
+  };
+
+  const isTimeInRange = (currentTime: string, startTime: string, endTime: string): boolean => {
+    return currentTime >= startTime && currentTime <= endTime;
+  };
+
+  const findNextWorkShift = (workDays: number[], startTime?: string, secondStartTime?: string, hasSplitShift?: boolean): {
+    day: number;
+    time: string;
+    isToday: boolean;
+  } | null => {
+    const now = new Date();
+    const today = now.getDay();
+    const currentTime = now.toTimeString().slice(0, 5);
+    
+    // First, check if there are upcoming shifts TODAY
+    if (workDays.includes(today)) {
+      // Check main shift
+      if (startTime && currentTime < startTime) {
+        return {
+          day: today,
+          time: startTime,
+          isToday: true
+        };
+      }
+      
+      // Check second shift (if split shift is enabled)
+      if (hasSplitShift && secondStartTime && currentTime < secondStartTime) {
+        return {
+          day: today,
+          time: secondStartTime,
+          isToday: true
+        };
+      }
+    }
+    
+    // Find next work day (tomorrow onwards)
+    for (let i = 1; i <= 7; i++) {
+      const nextDay = (today + i) % 7;
+      if (workDays.includes(nextDay)) {
+        // Return the main start time for the next work day
+        const nextTime = startTime || '09:00';
+        return {
+          day: nextDay,
+          time: nextTime,
+          isToday: false
+        };
+      }
+    }
+    
+    return null;
+  };
+
+  const findNextWorkDay = (workDays: number[]): number | null => {
+    const today = new Date().getDay();
+    
+    // Find next work day in the same week
+    for (let i = 1; i <= 7; i++) {
+      const nextDay = (today + i) % 7;
+      if (workDays.includes(nextDay)) {
+        return nextDay;
+      }
+    }
+    return null;
+  };
+
+  const getDayName = (dayNumber: number): string => {
+    const days = t('maps.days') as unknown as string[];
+    return days[dayNumber] || '';
   };
 
 
@@ -708,9 +924,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
               style={styles.mainActionCard}
               onPress={handleAddJob}
             >
-              <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.mainActionCardInner}>
+              <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.mainActionCardInner}>
                 <View style={[styles.mainActionIcon, styles.successIconBg]}>
-                  <IconSymbol size={32} name="plus" color={colors.success} />
+                  <IconSymbol size={36} name="plus" color={colors.success} />
                 </View>
                 <Text style={styles.mainActionTitle}>{t('maps.add_job')}</Text>
                 <Text style={styles.mainActionDescription}>
@@ -726,21 +942,38 @@ export default function MapLocation({ location, onNavigate }: Props) {
       {jobs.length > 0 && (
         <View style={styles.jobButtonsOverlay}>
           <View style={styles.jobButtonsContainer}>
-            {jobs.map((job) => (
-              <TouchableOpacity
-                key={job.id}
-                style={styles.jobButton}
-                onPress={() => handleJobPress(job)}
-              >
-                <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.jobButtonInner}>
-                  <View style={[styles.jobButtonColorDot, { backgroundColor: job.color }]} />
-                  <Text style={styles.jobButtonText} numberOfLines={1}>
-                    {job.name}
-                  </Text>
-                  <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
-                </BlurView>
-              </TouchableOpacity>
-            ))}
+            {jobs.map((job) => {
+              const isActive = isJobCurrentlyActive(job);
+              const scheduleStatus = getJobScheduleStatus(job);
+              
+              return (
+                <TouchableOpacity
+                  key={job.id}
+                  style={[styles.jobButton, isActive && styles.jobButtonActive]}
+                  onPress={() => handleJobPress(job)}
+                >
+                  <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.jobButtonInner}>
+                    <View style={[styles.jobButtonColorDot, { backgroundColor: job.color }]} />
+                    <View style={styles.jobButtonContent}>
+                      <Text style={[styles.jobButtonText, isActive && styles.jobButtonTextActive]} numberOfLines={1}>
+                        {job.name}
+                      </Text>
+                      {isActive && (
+                        <Text style={styles.jobStatusText}>
+                          {t('maps.working_now')}
+                        </Text>
+                      )}
+                      {!isActive && scheduleStatus && (
+                        <Text style={styles.jobStatusText}>
+                          {scheduleStatus}
+                        </Text>
+                      )}
+                    </View>
+                    <IconSymbol size={18} name="chevron.right" color={colors.textSecondary} />
+                  </BlurView>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
       )}
@@ -757,7 +990,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
             style={styles.actionModalBackdrop}
             onPress={() => setSelectedJob(null)}
           />
-          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.actionModalContent}>
+          <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.actionModalContent}>
             {selectedJob && (
               <>
                 <View style={styles.actionModalHeader}>
@@ -838,7 +1071,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
       {jobs.length > 0 && (
         <TouchableOpacity style={styles.floatingAddButton} onPress={() => { triggerHaptic('light'); handleAddJob(); }}>
           <View style={styles.floatingAddButtonInner}>
-            <IconSymbol size={28} name="plus" color="#FFFFFF" />
+            <LinearGradient
+              colors={['#007AFF', '#0056CC', '#003D99']}
+              style={styles.fabGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
+            <IconSymbol size={32} name="plus" color="#FFFFFF" />
           </View>
         </TouchableOpacity>
       )}

@@ -104,6 +104,9 @@
     "delete_success": "Arbeit erfolgreich gelöscht",
     "delete_error": "Arbeit konnte nicht gelöscht werden",
     "no_job_selected": "Keine Arbeit ausgewählt",
+    "working_now": "Arbeitet jetzt",
+    "next_shift": "Nächste Schicht",
+    "days": ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
     "success": "Erfolg"
   },
   "timer": {
@@ -125,6 +128,7 @@
     "select_job_error": "Bitte wählen Sie eine Arbeit vor dem Start",
     "start_timer_error": "Timer konnte nicht gestartet werden",
     "session_saved": "Sitzung gespeichert: {{hours}} Stunden",
+    "session_added_to_existing": "{{sessionHours}}h zum Tag hinzugefügt. Gesamt: {{totalHours}}h",
     "save_error": "Sitzung konnte nicht gespeichert werden",
     "load_jobs_error": "Arbeiten konnten nicht geladen werden"
   },
@@ -159,7 +163,20 @@
     "cancel": "Abbrechen",
     "select_dates": "Daten auswählen",
     "date_range_title": "Datumsbereich",
-    "from_to_dates": "Vom {{fromDate}} bis {{toDate}}"
+    "from_to_dates": "Vom {{fromDate}} bis {{toDate}}",
+    "export_pdf": "PDF exportieren",
+    "export_all_jobs": "Alle Arbeiten exportieren",
+    "export_job": "{{jobName}} exportieren",
+    "generating_pdf": "PDF wird generiert...",
+    "pdf_generated": "PDF erfolgreich generiert",
+    "pdf_error": "Fehler beim Generieren des PDFs",
+    "pdf_title": "Arbeitsbericht",
+    "analysis_date": "Analysedatum",
+    "days": "Tage",
+    "work": "Arbeit",
+    "statistics_section": "Statistiken",
+    "breakdown_by_job": "Aufschlüsselung nach Arbeit",
+    "recent_activity_section": "Letzte Aktivität"
   },
   "calendar": {
     "title": "Mein Kalender",

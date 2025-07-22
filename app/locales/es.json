@@ -104,6 +104,9 @@
     "delete_success": "Trabajo eliminado correctamente",
     "delete_error": "No se pudo eliminar el trabajo",
     "no_job_selected": "No se ha seleccionado ningún trabajo",
+    "working_now": "Trabajando ahora",
+    "next_shift": "Próximo turno",
+    "days": ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
     "success": "Éxito"
   },
   "timer": {
@@ -125,6 +128,7 @@
     "select_job_error": "Por favor selecciona un trabajo antes de comenzar",
     "start_timer_error": "No se pudo iniciar el timer",
     "session_saved": "Sesión guardada: {{hours}} horas",
+    "session_added_to_existing": "Agregado {{sessionHours}}h al día. Total: {{totalHours}}h",
     "save_error": "No se pudo guardar la sesión",
     "load_jobs_error": "No se pudieron cargar los trabajos"
   },
@@ -165,7 +169,14 @@
     "export_job": "Exportar {{jobName}}",
     "generating_pdf": "Generando PDF...",
     "pdf_generated": "PDF generado correctamente",
-    "pdf_error": "Error al generar PDF"
+    "pdf_error": "Error al generar PDF",
+    "pdf_title": "Reporte de Trabajo",
+    "analysis_date": "Fecha del análisis",
+    "days": "días",
+    "work": "Trabajo",
+    "statistics_section": "Estadísticas",
+    "breakdown_by_job": "Desglose por trabajo",
+    "recent_activity_section": "Actividad Reciente"
   },
   "calendar": {
     "title": "Mi Calendario",

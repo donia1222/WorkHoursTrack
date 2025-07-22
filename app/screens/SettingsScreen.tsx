@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import JobsManagementScreen from './JobsManagementScreen';
 import PreferencesScreen from './PreferencesScreen';
 import HelpSupportScreen from './HelpSupportScreen';
@@ -68,18 +69,28 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     paddingHorizontal: 16,
   },
   sectionCard: {
-    marginVertical: 12,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: colors.surface,
-    shadowColor: '#000',
+    marginVertical: 16,
+    borderRadius: 24,
+    padding: 28,
+    shadowColor: colors.primary,
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 8,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    overflow: 'hidden',
+  },
+  sectionCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
   },
   sectionTitle: {
     fontSize: 20,
@@ -301,10 +312,16 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Jobs Management Section */}
         <BlurView 
-          intensity={95} 
+          intensity={98} 
           tint={isDark ? "dark" : "light"} 
           style={styles.sectionCard}
         >
+          <LinearGradient
+            colors={isDark ? ['rgba(0, 122, 255, 0.15)', 'rgba(0, 122, 255, 0.05)'] : ['rgba(0, 122, 255, 0.1)', 'rgba(0, 122, 255, 0.03)']}
+            style={styles.sectionCardGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
           <Text style={styles.sectionTitle}>{t('settings.jobs.title')}</Text>
           <Text style={styles.sectionDescription}>
             {t('settings.jobs.description')}
@@ -327,10 +344,16 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
 
         {/* Work Configuration Section */}
         <BlurView 
-          intensity={95} 
+          intensity={98} 
           tint={isDark ? "dark" : "light"} 
           style={styles.sectionCard}
         >
+          <LinearGradient
+            colors={isDark ? ['rgba(34, 197, 94, 0.12)', 'rgba(34, 197, 94, 0.04)'] : ['rgba(34, 197, 94, 0.08)', 'rgba(34, 197, 94, 0.02)']}
+            style={styles.sectionCardGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
           <Text style={styles.sectionTitle}>{t('settings.work_config.title')}</Text>
           
           <TouchableOpacity 
@@ -364,10 +387,16 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
 
         {/* Financial Configuration Section */}
         <BlurView 
-          intensity={95} 
+          intensity={98} 
           tint={isDark ? "dark" : "light"} 
           style={styles.sectionCard}
         >
+          <LinearGradient
+            colors={isDark ? ['rgba(255, 149, 0, 0.12)', 'rgba(255, 149, 0, 0.04)'] : ['rgba(255, 149, 0, 0.08)', 'rgba(255, 149, 0, 0.02)']}
+            style={styles.sectionCardGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
           <Text style={styles.sectionTitle}>{t('settings.financial_config.title')}</Text>
           
           <TouchableOpacity 
@@ -401,10 +430,16 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
 
         {/* App Configuration Section */}
         <BlurView 
-          intensity={95} 
+          intensity={98} 
           tint={isDark ? "dark" : "light"} 
           style={styles.sectionCard}
         >
+          <LinearGradient
+            colors={isDark ? ['rgba(142, 142, 147, 0.1)', 'rgba(142, 142, 147, 0.03)'] : ['rgba(142, 142, 147, 0.06)', 'rgba(142, 142, 147, 0.02)']}
+            style={styles.sectionCardGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
           <Text style={styles.sectionTitle}>{t('settings.app_config.title')}</Text>
           
           <TouchableOpacity 
@@ -452,11 +487,17 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
 
         {/* Quick Stats */}
         <BlurView 
-          intensity={95} 
+          intensity={98} 
           tint={isDark ? "dark" : "light"} 
-          style={styles.statsCard}
+          style={styles.sectionCard}
         >
-          <Text style={styles.statsTitle}>{t('settings.quick_stats.title')}</Text>
+          <LinearGradient
+            colors={isDark ? ['rgba(255, 59, 48, 0.1)', 'rgba(255, 59, 48, 0.03)'] : ['rgba(255, 59, 48, 0.06)', 'rgba(255, 59, 48, 0.02)']}
+            style={styles.sectionCardGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
+          <Text style={styles.sectionTitle}>{t('settings.quick_stats.title')}</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
               <IconSymbol size={20} name="chart.bar.fill" color={colors.primary} />

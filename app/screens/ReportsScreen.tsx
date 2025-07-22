@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Job, WorkDay } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import { useBackNavigation } from '../context/NavigationContext';
@@ -142,7 +143,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   
   const { handleBack } = useBackNavigation();
   const { colors, isDark } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const styles = getStyles(colors, isDark);
   
   // Animation values
@@ -170,8 +171,9 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     ]).start();
   }, [fadeAnim, slideAnim]);
 
+
   useEffect(() => {
-    if (workDays.length > 0 && jobs.length > 0) {
+    if (workDays.length > 0) {
       calculatePeriodStats();
     }
   }, [workDays, jobs, selectedPeriod, selectedJobId, fromDate, toDate]);
@@ -213,19 +215,28 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
 
+    // Filter by date range
     let periodWorkDays = workDays.filter(day => {
       const dayDate = new Date(day.date);
-      return dayDate >= startDate && dayDate <= endDate;
+      // Fix date comparison - add one day to endDate to include today
+      const endDatePlusOne = new Date(endDate);
+      endDatePlusOne.setDate(endDate.getDate() + 1);
+      return dayDate >= startDate && dayDate < endDatePlusOne;
     });
 
-    // Filter by selected job if not "all"
+    // Filter ONLY work days (like CalendarScreen does)
+    const workDaysOnly = periodWorkDays.filter(day => day.type === 'work');
+
+    // Filter by selected job if not "all" 
+    let filteredWorkDays = workDaysOnly;
     if (selectedJobId !== 'all') {
-      periodWorkDays = periodWorkDays.filter(day => day.jobId === selectedJobId);
+      filteredWorkDays = workDaysOnly.filter(day => day.jobId === selectedJobId);
     }
 
-    const totalHours = periodWorkDays.reduce((sum, day) => sum + day.hours, 0);
-    const totalDays = periodWorkDays.length;
-    const overtimeHours = periodWorkDays.reduce((sum, day) => 
+    // Calculate totals
+    const totalHours = filteredWorkDays.reduce((sum, day) => sum + day.hours, 0);
+    const totalDays = filteredWorkDays.length;
+    const overtimeHours = filteredWorkDays.reduce((sum, day) => 
       sum + (day.overtime ? day.hours - 8 : 0), 0);
     const avgHoursPerDay = totalDays > 0 ? totalHours / totalDays : 0;
 
@@ -295,11 +306,12 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   };
 
   const getRecentWorkDays = () => {
-    let filteredWorkDays = workDays;
+    // Filter only work days first (like CalendarScreen)
+    let filteredWorkDays = workDays.filter(day => day.type === 'work');
     
     // Filter by selected job if not "all"
     if (selectedJobId !== 'all') {
-      filteredWorkDays = workDays.filter(day => day.jobId === selectedJobId);
+      filteredWorkDays = filteredWorkDays.filter(day => day.jobId === selectedJobId);
     }
     
     return filteredWorkDays
@@ -308,11 +320,12 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   };
 
   const getAllRecentWorkDays = () => {
-    let filteredWorkDays = workDays;
+    // Filter only work days first (like CalendarScreen)
+    let filteredWorkDays = workDays.filter(day => day.type === 'work');
     
     // Filter by selected job if not "all"
     if (selectedJobId !== 'all') {
-      filteredWorkDays = workDays.filter(day => day.jobId === selectedJobId);
+      filteredWorkDays = filteredWorkDays.filter(day => day.jobId === selectedJobId);
     }
     
     return filteredWorkDays
@@ -414,15 +427,18 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     if (!periodStats) return '';
 
     const selectedJob = selectedJobId === 'all' ? null : jobs.find(job => job.id === selectedJobId);
-    const jobName = selectedJob ? selectedJob.name : 'Todos los trabajos';
+    const jobName = selectedJob ? selectedJob.name : t('reports.all_jobs');
     const periodLabel = getPeriodLabel();
+    
+    // Get recent activity for PDF
+    const recentDays = getAllRecentWorkDays().slice(0, 10); // Max 10 recent days
 
     return `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="utf-8">
-      <title>Reporte de Tiempo - ${jobName}</title>
+      <title>${t('reports.pdf_title')} - ${jobName}</title>
       <style>
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -518,11 +534,42 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           text-align: center;
           font-weight: 600;
         }
+        .activity-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 15px;
+          border-bottom: 1px solid #E5E5EA;
+          background-color: #F9F9F9;
+          margin-bottom: 4px;
+          border-radius: 6px;
+        }
+        .activity-date {
+          font-weight: 600;
+          color: #1C1C1E;
+          margin-bottom: 2px;
+        }
+        .activity-job {
+          font-size: 12px;
+          color: #8E8E93;
+        }
+        .activity-hours {
+          font-weight: 600;
+          color: #007AFF;
+        }
+        .activity-overtime {
+          background-color: #FF9500;
+          color: white;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-size: 10px;
+          margin-left: 4px;
+        }
       </style>
     </head>
     <body>
       <div class="header">
-        <div class="title">📊 Reporte de Tiempo</div>
+        <div class="title">📊 ${t('reports.pdf_title')}</div>
         <div class="subtitle">${jobName}</div>
         <div class="period">${periodLabel}</div>
       </div>
@@ -530,40 +577,66 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       <div class="stats-grid">
         <div class="stat-item">
           <div class="stat-number">${periodStats.totalHours.toFixed(1)}h</div>
-          <div class="stat-label">Total Horas</div>
+          <div class="stat-label">${t('reports.total_hours')}</div>
         </div>
         <div class="stat-item">
           <div class="stat-number">${periodStats.totalDays}</div>
-          <div class="stat-label">Días Trabajados</div>
+          <div class="stat-label">${t('reports.worked_days')}</div>
         </div>
         <div class="stat-item">
           <div class="stat-number">${periodStats.avgHoursPerDay.toFixed(1)}h</div>
-          <div class="stat-label">Promedio/Día</div>
+          <div class="stat-label">${t('reports.average_per_day')}</div>
         </div>
       </div>
 
       ${periodStats.overtimeHours > 0 ? `
         <div class="overtime">
-          ⏰ ${periodStats.overtimeHours.toFixed(1)} horas de overtime
+          ⏰ ${t('reports.overtime_hours', { hours: periodStats.overtimeHours.toFixed(1) })}
         </div>
       ` : ''}
 
       ${periodStats.jobBreakdown.length > 1 ? `
         <div class="section">
-          <div class="section-title">Distribución por Trabajo</div>
+          <div class="section-title">${t('reports.job_distribution')}</div>
           ${periodStats.jobBreakdown.map(stat => `
             <div class="job-item">
               <div>
                 <div class="job-name">${stat.job.name}</div>
-                <div class="job-stats">${stat.hours.toFixed(1)}h • ${stat.days} días • ${stat.percentage.toFixed(1)}%</div>
+                <div class="job-stats">${stat.hours.toFixed(1)}h • ${stat.days} ${t('reports.days')} • ${stat.percentage.toFixed(1)}%</div>
               </div>
             </div>
           `).join('')}
         </div>
       ` : ''}
 
+      ${recentDays.length > 0 ? `
+        <div class="section">
+          <div class="section-title">${t('reports.recent_activity')}</div>
+          ${recentDays.map(day => {
+            const job = jobs.find(j => j.id === day.jobId);
+            const formattedDate = new Date(day.date).toLocaleDateString(language === 'es' ? 'es-ES' : language === 'de' ? 'de-DE' : 'en-US', {
+              weekday: 'short',
+              month: 'short', 
+              day: 'numeric'
+            });
+            return `
+              <div class="activity-item">
+                <div>
+                  <div class="activity-date">${formattedDate}</div>
+                  <div class="activity-job">${job?.name || t('reports.work')}</div>
+                </div>
+                <div>
+                  <span class="activity-hours">${day.hours}h</span>
+                  ${day.overtime ? '<span class="activity-overtime">OT</span>' : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      ` : ''}
+
       <div class="footer">
-        Generado el ${new Date().toLocaleDateString('es-ES', { 
+        ${t('reports.analysis_date')}: ${new Date().toLocaleDateString(language === 'es' ? 'es-ES' : language === 'de' ? 'de-DE' : 'en-US', { 
           year: 'numeric', 
           month: 'long', 
           day: 'numeric',
@@ -583,7 +656,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           <View style={styles.placeholder} />
           <View style={styles.headerText}>
             <View style={styles.titleContainer}>
-              <IconSymbol size={20} name="doc.text.fill" color={colors.primary} />
+              <IconSymbol size={26} name="doc.text.fill" color={colors.primary} />
               <Text style={styles.headerTitle}>{t('reports.title')}</Text>
             </View>
             <Text style={styles.headerSubtitle}>{t('reports.subtitle')}</Text>
@@ -716,7 +789,13 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         {/* Main stats */}
         {periodStats && (
           <Animated.View style={[{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.modernStatsCard}>
+            <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.modernStatsCard}>
+              <LinearGradient
+                colors={isDark ? ['rgba(0, 122, 255, 0.15)', 'rgba(0, 122, 255, 0.05)'] : ['rgba(0, 122, 255, 0.1)', 'rgba(0, 122, 255, 0.03)']}
+                style={styles.modernStatsCardGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
               <Text style={styles.statsTitle}>{getPeriodLabel()}</Text>
               <View style={styles.statsGrid}>
                 <View style={styles.modernStatItem}>
@@ -771,7 +850,13 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
         {/* Job breakdown */}
         {periodStats && periodStats.jobBreakdown.length > 0 && (
-          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.jobBreakdownCard}>
+          <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.jobBreakdownCard}>
+            <LinearGradient
+              colors={isDark ? ['rgba(255, 149, 0, 0.12)', 'rgba(255, 149, 0, 0.04)'] : ['rgba(255, 149, 0, 0.08)', 'rgba(255, 149, 0, 0.02)']}
+              style={styles.jobBreakdownCardGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
             <Text style={styles.cardTitle}>{t('reports.job_distribution')}</Text>
             {periodStats.jobBreakdown.map((stat) => (
               <View key={stat.job.id} style={styles.jobStatRow}>
@@ -801,7 +886,13 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         )}
 
         {/* Recent activity */}
-        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.recentCard}>
+        <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.recentCard}>
+          <LinearGradient
+            colors={isDark ? ['rgba(142, 142, 147, 0.1)', 'rgba(142, 142, 147, 0.03)'] : ['rgba(142, 142, 147, 0.06)', 'rgba(142, 142, 147, 0.02)']}
+            style={styles.recentCardGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
           <Text style={styles.cardTitle}>{t('reports.recent_activity')}</Text>
           {getRecentWorkDays().length > 0 ? (
             <>
@@ -1117,11 +1208,25 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
   },
   modernStatsCard: {
-    marginVertical: 16,
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: colors.surface,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 6,
+    marginVertical: 20,
+    borderRadius: 28,
+    padding: 32,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    overflow: 'hidden',
+  },
+  modernStatsCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 28,
   },
   statsTitle: {
     fontSize: 20, fontWeight: "600",
@@ -1143,13 +1248,20 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     paddingVertical: 8,
   },
   statIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.06)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   statNumber: {
     fontSize: 22,
@@ -1191,11 +1303,25 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: colors.warning,
   },
   jobBreakdownCard: {
-    marginVertical: 16,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: colors.surface,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
+    marginVertical: 20,
+    borderRadius: 24,
+    padding: 28,
+    shadowColor: colors.warning,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 14,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+    overflow: 'hidden',
+  },
+  jobBreakdownCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
   },
   cardTitle: {
     fontSize: 16, fontWeight: "600",
@@ -1240,11 +1366,25 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderRadius: 3,
   },
   recentCard: {
-    marginVertical: 16,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: colors.surface,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
+    marginVertical: 20,
+    borderRadius: 24,
+    padding: 28,
+    shadowColor: colors.textSecondary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+    overflow: 'hidden',
+  },
+  recentCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
   },
   recentItem: {
     flexDirection: 'row',

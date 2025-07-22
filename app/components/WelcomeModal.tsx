@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -239,6 +239,13 @@ export default function WelcomeModal({ visible, onClose }: WelcomeModalProps) {
   const screenWidth = Dimensions.get('window').width;
   
   const styles = getStyles(colors, isDark);
+
+  // Reset to first step when modal opens
+  useEffect(() => {
+    if (visible) {
+      setCurrentStep(0);
+    }
+  }, [visible]);
 
   const handleNext = () => {
     if (currentStep < onboardingSteps.length - 1) {

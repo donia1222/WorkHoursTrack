@@ -19,6 +19,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import JobSelector from '../components/JobSelector';
 import NoJobsWarning from '../components/NoJobsWarning';
 import { Job, WorkDay } from '../types/WorkTypes';
@@ -95,18 +96,28 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginVertical: 12,
   },
   timerCard: {
-    marginVertical: 12,
-    borderRadius: 16,
-    padding: 24,
-    backgroundColor: colors.surface,
-    shadowColor: '#000',
+    marginVertical: 16,
+    borderRadius: 24,
+    padding: 32,
+    shadowColor: colors.primary,
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 8,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    overflow: 'hidden',
+  },
+  timerCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
   },
   timerContent: {
     alignItems: 'center',
@@ -116,11 +127,14 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginBottom: 20,
   },
   timerTime: {
-    fontSize: 48,
-    fontWeight: '300',
+    fontSize: 56,
+    fontWeight: '200',
     fontFamily: 'System',
-    marginBottom: 4,
+    marginBottom: 8,
     color: colors.text,
+    textShadowColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   timerHours: {
     fontSize: 20,
@@ -129,16 +143,29 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   activeJobInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
+    marginBottom: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 16,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
   },
   jobColorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   activeJobName: {
     fontSize: 16,
@@ -155,17 +182,28 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   controlButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 4,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 2,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.8)',
+    overflow: 'hidden',
+  },
+  controlButtonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 20,
   },
   startButton: {
     minWidth: 120,
@@ -188,18 +226,28 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: '#FFFFFF',
   },
   notesCard: {
-    marginVertical: 12,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: colors.surface,
-    shadowColor: '#000',
+    marginVertical: 16,
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: colors.textSecondary,
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+    overflow: 'hidden',
+  },
+  notesCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 20,
   },
   notesTitle: {
     fontSize: 16,
@@ -452,16 +500,53 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
 
     try {
       const hours = getSessionHours();
-      const workDay: Omit<WorkDay, 'id' | 'createdAt' | 'updatedAt'> = {
-        date: new Date().toISOString().split('T')[0],
-        jobId: activeSession.jobId,
-        hours: hours,
-        notes: notes,
-        overtime: hours > 8,
-        type: 'work',
-      };
+      const today = new Date().toISOString().split('T')[0];
+      console.log(`Stopping timer - Elapsed time: ${elapsedTime}s, Hours: ${hours}`);
+      
+      // Check if there's already a work day for this date and job
+      const allWorkDays = await JobService.getWorkDays();
+      const existingWorkDay = allWorkDays.find(day => 
+        day.date === today && 
+        day.jobId === activeSession.jobId && 
+        day.type === 'work'
+      );
+      
+      if (existingWorkDay) {
+        // Update existing work day - add hours
+        const updatedHours = existingWorkDay.hours + hours;
+        const combinedNotes = existingWorkDay.notes && notes 
+          ? `${existingWorkDay.notes}\n---\n${notes}` 
+          : existingWorkDay.notes || notes;
+          
+        const updatedWorkDay: Omit<WorkDay, 'id' | 'createdAt' | 'updatedAt'> = {
+          date: today,
+          jobId: activeSession.jobId,
+          hours: updatedHours,
+          notes: combinedNotes,
+          overtime: updatedHours > 8,
+          type: 'work',
+        };
+        
+        await JobService.updateWorkDay(existingWorkDay.id, updatedWorkDay);
+        Alert.alert(t('maps.success'), t('timer.session_added_to_existing', { 
+          sessionHours: hours, 
+          totalHours: updatedHours 
+        }));
+      } else {
+        // Create new work day
+        const workDay: Omit<WorkDay, 'id' | 'createdAt' | 'updatedAt'> = {
+          date: today,
+          jobId: activeSession.jobId,
+          hours: hours,
+          notes: notes,
+          overtime: hours > 8,
+          type: 'work',
+        };
 
-      await JobService.addWorkDay(workDay);
+        await JobService.addWorkDay(workDay);
+        Alert.alert(t('maps.success'), t('timer.session_saved', { hours }));
+      }
+      
       await JobService.clearActiveSession();
       
       setActiveSession(null);
@@ -469,7 +554,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       setElapsedTime(0);
       setNotes('');
       
-      Alert.alert(t('maps.success'), t('timer.session_saved', { hours }));
     } catch (error) {
       console.error('Error stopping timer:', error);
       Alert.alert('Error', t('timer.save_error'));
@@ -489,7 +573,9 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   };
 
   const getSessionHours = () => {
-    return Math.round((elapsedTime / 3600) * 100) / 100; // Precise hours with 2 decimal places
+    const hours = elapsedTime / 3600; // Convert seconds to hours
+    // Ensure we always save at least 0.01 hours (36 seconds) for any session
+    return Math.max(0.01, Math.round(hours * 100) / 100);
   };
 
   const currentSelectedJob = jobs.find(job => job.id === selectedJobId);
@@ -538,10 +624,16 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
             )}
 
         <BlurView 
-          intensity={95} 
+          intensity={98} 
           tint={isDark ? "dark" : "light"} 
           style={styles.timerCard}
         >
+          <LinearGradient
+            colors={isDark ? ['rgba(0, 122, 255, 0.12)', 'rgba(0, 122, 255, 0.04)'] : ['rgba(0, 122, 255, 0.08)', 'rgba(0, 122, 255, 0.02)']}
+            style={styles.timerCardGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
           <View style={styles.timerContent}>
             <Animated.View style={[styles.timerDisplay, animatedTimerStyle]}>
               <Animated.Text style={[styles.timerTime, animatedTimeTextStyle]}>
@@ -566,7 +658,13 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                   onPress={() => { triggerHaptic('heavy'); startTimer(); }}
                   disabled={!selectedJobId}
                 >
-                  <IconSymbol size={20} name="play.fill" color="#FFFFFF" />
+                  <LinearGradient
+                    colors={['#34C759', '#28A745', '#20874C']}
+                    style={styles.controlButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  />
+                  <IconSymbol size={24} name="play.fill" color="#FFFFFF" />
                   <Text style={styles.controlButtonText}>{t('timer.start')}</Text>
                 </TouchableOpacity>
               ) : (
@@ -577,7 +675,13 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                         style={[styles.controlButton, styles.pauseButton]}
                         onPress={() => { triggerHaptic('medium'); pauseTimer(); }}
                       >
-                        <IconSymbol size={20} name="pause.fill" color="#FFFFFF" />
+                        <LinearGradient
+                          colors={['#FF9500', '#E6820C', '#CC7300']}
+                          style={styles.controlButtonGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        />
+                        <IconSymbol size={24} name="pause.fill" color="#FFFFFF" />
                         <Text style={styles.controlButtonText}>{t('timer.pause')}</Text>
                       </TouchableOpacity>
                     </Animated.View>
@@ -587,7 +691,13 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                         style={[styles.controlButton, styles.resumeButton]}
                         onPress={() => { triggerHaptic('medium'); resumeTimer(); }}
                       >
-                        <IconSymbol size={20} name="play.fill" color="#FFFFFF" />
+                        <LinearGradient
+                          colors={['#34C759', '#28A745', '#20874C']}
+                          style={styles.controlButtonGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        />
+                        <IconSymbol size={24} name="play.fill" color="#FFFFFF" />
                         <Text style={styles.controlButtonText}>{t('timer.resume')}</Text>
                       </TouchableOpacity>
                     </Animated.View>
@@ -597,7 +707,13 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                     style={[styles.controlButton, styles.stopButton]}
                     onPress={() => { triggerHaptic('heavy'); stopTimer(); }}
                   >
-                    <IconSymbol size={20} name="stop.fill" color="#FFFFFF" />
+                    <LinearGradient
+                      colors={['#FF3B30', '#E6241A', '#CC1F16']}
+                      style={styles.controlButtonGradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    />
+                    <IconSymbol size={24} name="stop.fill" color="#FFFFFF" />
                     <Text style={styles.controlButtonText}>{t('timer.stop')}</Text>
                   </TouchableOpacity>
                 </View>
@@ -607,10 +723,16 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         </BlurView>
 
         <BlurView 
-          intensity={95} 
+          intensity={98} 
           tint={isDark ? "dark" : "light"} 
           style={styles.notesCard}
         >
+          <LinearGradient
+            colors={isDark ? ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.03)'] : ['rgba(142, 142, 147, 0.05)', 'rgba(142, 142, 147, 0.02)']}
+            style={styles.notesCardGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
           <Text style={styles.notesTitle}>{t('timer.session_notes')}</Text>
           <TextInput
             style={styles.notesInput}

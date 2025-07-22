@@ -11,6 +11,7 @@ import {
 import { Calendar, DateData } from 'react-native-calendars';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import WorkDayModal from '../components/WorkDayModal';
 import NoJobsWarning from '../components/NoJobsWarning';
 import { Job, WorkDay, WorkDayWithJob, DAY_TYPES } from '../types/WorkTypes';
@@ -70,16 +71,26 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     paddingHorizontal: 16,
   },
   jobSelector: {
-    marginTop: 16,
-    marginBottom: 8,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: colors.surface,
-    shadowColor: "#000", 
-    shadowOffset: { width: 0, height: 2 }, 
-    shadowOpacity: 0.1, 
-    shadowRadius: 8, 
-    elevation: 4,
+    marginTop: 20,
+    marginBottom: 12,
+    borderRadius: 24,
+    padding: 28,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 8 }, 
+    shadowOpacity: 0.25, 
+    shadowRadius: 16, 
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    overflow: 'hidden',
+  },
+  jobSelectorGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
   },
   selectorTitle: {
     fontSize: 16,
@@ -134,15 +145,25 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     elevation: 4,
   },
   statsCard: {
-    marginVertical: 16,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: colors.surface,
-    shadowColor: "#000", 
-    shadowOffset: { width: 0, height: 2 }, 
-    shadowOpacity: 0.1, 
-    shadowRadius: 8, 
-    elevation: 4,
+    marginVertical: 20,
+    borderRadius: 28,
+    padding: 32,
+    shadowColor: colors.warning,
+    shadowOffset: { width: 0, height: 8 }, 
+    shadowOpacity: 0.25, 
+    shadowRadius: 16, 
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    overflow: 'hidden',
+  },
+  statsCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 28,
   },
   statsTitle: {
     fontSize: 20,
@@ -172,15 +193,25 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     textAlign: 'center',
   },
   legendCard: {
-    marginVertical: 16,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: colors.surface,
-    shadowColor: "#000", 
-    shadowOffset: { width: 0, height: 1 }, 
-    shadowOpacity: 0.05, 
-    shadowRadius: 4, 
-    elevation: 2,
+    marginVertical: 20,
+    borderRadius: 24,
+    padding: 28,
+    shadowColor: colors.textSecondary,
+    shadowOffset: { width: 0, height: 6 }, 
+    shadowOpacity: 0.18, 
+    shadowRadius: 14, 
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+    overflow: 'hidden',
+  },
+  legendCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
   },
   legendTitle: {
     fontSize: 16,
@@ -523,7 +554,13 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           <>
         {/* Job selector */}
         {jobs.length > 1 && (
-          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.jobSelector}>
+          <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.jobSelector}>
+            <LinearGradient
+              colors={isDark ? ['rgba(0, 122, 255, 0.12)', 'rgba(0, 122, 255, 0.04)'] : ['rgba(0, 122, 255, 0.08)', 'rgba(0, 122, 255, 0.02)']}
+              style={styles.jobSelectorGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
             <Text style={styles.selectorTitle}>{t('calendar.filter_by_job')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.jobScrollView}>
               <View style={styles.jobButtons}>
@@ -605,10 +642,16 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         />
 
         <BlurView 
-          intensity={95} 
+          intensity={98} 
           tint={isDark ? "dark" : "light"} 
           style={styles.statsCard}
         >
+          <LinearGradient
+            colors={isDark ? ['rgba(255, 149, 0, 0.12)', 'rgba(255, 149, 0, 0.04)'] : ['rgba(255, 149, 0, 0.08)', 'rgba(255, 149, 0, 0.02)']}
+            style={styles.statsCardGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
           <Text style={styles.statsTitle}>{t('calendar.month_stats')}</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
@@ -681,7 +724,13 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           </BlurView>
         )}
 
-        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.legendCard}>
+        <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.legendCard}>
+          <LinearGradient
+            colors={isDark ? ['rgba(142, 142, 147, 0.1)', 'rgba(142, 142, 147, 0.03)'] : ['rgba(142, 142, 147, 0.06)', 'rgba(142, 142, 147, 0.02)']}
+            style={styles.legendCardGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
           <Text style={styles.legendTitle}>{t('calendar.day_types')}</Text>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.work.color }]} />

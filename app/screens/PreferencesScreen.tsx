@@ -237,11 +237,7 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
               <Text style={[styles.themeText, themeMode === 'auto' && styles.themeTextActive]}>
                 {t('preferences.appearance.auto')}
               </Text>
-              {themeMode === 'auto' && (
-                <View style={styles.selectedIndicator}>
-                  <IconSymbol size={16} name="checkmark" color="#FFFFFF" />
-                </View>
-              )}
+     
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -254,11 +250,7 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
               <Text style={[styles.themeText, themeMode === 'light' && styles.themeTextActive]}>
                 {t('preferences.appearance.light')}
               </Text>
-              {themeMode === 'light' && (
-                <View style={styles.selectedIndicator}>
-                  <IconSymbol size={16} name="checkmark" color="#FFFFFF" />
-                </View>
-              )}
+       
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -271,11 +263,7 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
               <Text style={[styles.themeText, themeMode === 'dark' && styles.themeTextActive]}>
                 {t('preferences.appearance.dark')}
               </Text>
-              {themeMode === 'dark' && (
-                <View style={styles.selectedIndicator}>
-                  <IconSymbol size={16} name="checkmark" color="#FFFFFF" />
-                </View>
-              )}
+      
             </TouchableOpacity>
           </View>
         </BlurView>
