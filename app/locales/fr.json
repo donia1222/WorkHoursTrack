@@ -151,7 +151,15 @@
     "view_calendar": "Voir le calendrier",
     "start_timer": "Démarrer le chronomètre",
     "load_more": "Charger plus ({{remaining}} restants)",
-    "ot": "HS"
+    "ot": "HS",
+    "custom_range": "Plage personnalisée",
+    "from_date": "De",
+    "to_date": "À",
+    "apply_range": "Appliquer la plage",
+    "cancel": "Annuler",
+    "select_dates": "Sélectionner les dates",
+    "date_range_title": "Plage de dates",
+    "from_to_dates": "Du {{fromDate}} au {{toDate}}"
   },
   "calendar": {
     "title": "Mon Calendrier",
@@ -299,6 +307,7 @@
       "radius_placeholder": "100"
     },
     "errors": {
+      "error_title": "Erreur",
       "name_required": "Le nom de l'emploi est requis",
       "save_error": "Impossible de sauvegarder l'emploi"
     },

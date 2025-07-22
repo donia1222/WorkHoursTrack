@@ -151,7 +151,15 @@
     "view_calendar": "Kalender anzeigen",
     "start_timer": "Timer starten",
     "load_more": "Mehr laden ({{remaining}} verbleibend)",
-    "ot": "ÜS"
+    "ot": "ÜS",
+    "custom_range": "Benutzerdefinierter Bereich",
+    "from_date": "Von",
+    "to_date": "Bis",
+    "apply_range": "Bereich anwenden",
+    "cancel": "Abbrechen",
+    "select_dates": "Daten auswählen",
+    "date_range_title": "Datumsbereich",
+    "from_to_dates": "Vom {{fromDate}} bis {{toDate}}"
   },
   "calendar": {
     "title": "Mein Kalender",

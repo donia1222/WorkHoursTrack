@@ -151,7 +151,15 @@
     "view_calendar": "Vedi calendario",
     "start_timer": "Avvia timer",
     "load_more": "Carica altro ({{remaining}} rimanenti)",
-    "ot": "ST"
+    "ot": "ST",
+    "custom_range": "Intervallo personalizzato",
+    "from_date": "Da",
+    "to_date": "A",
+    "apply_range": "Applica intervallo",
+    "cancel": "Annulla",
+    "select_dates": "Seleziona date",
+    "date_range_title": "Intervallo date",
+    "from_to_dates": "Dal {{fromDate}} al {{toDate}}"
   },
   "calendar": {
     "title": "Il Mio Calendario",
@@ -299,6 +307,7 @@
       "radius_placeholder": "100"
     },
     "errors": {
+      "error_title": "Errore",
       "name_required": "Il nome del lavoro è obbligatorio",
       "save_error": "Impossibile salvare il lavoro"
     },

@@ -151,7 +151,21 @@
     "view_calendar": "View calendar",
     "start_timer": "Start timer",
     "load_more": "Load more ({{remaining}} remaining)",
-    "ot": "OT"
+    "ot": "OT",
+    "custom_range": "Custom range",
+    "from_date": "From",
+    "to_date": "To",
+    "apply_range": "Apply range",
+    "cancel": "Cancel",
+    "select_dates": "Select dates",
+    "date_range_title": "Date range",
+    "from_to_dates": "From {{fromDate}} to {{toDate}}",
+    "export_pdf": "Export PDF",
+    "export_all_jobs": "Export all jobs",
+    "export_job": "Export {{jobName}}",
+    "generating_pdf": "Generating PDF...",
+    "pdf_generated": "PDF generated successfully",
+    "pdf_error": "Error generating PDF"
   },
   "calendar": {
     "title": "My Calendar",
@@ -351,6 +365,7 @@
       "radius_placeholder": "100"
     },
     "errors": {
+      "error_title": "Error",
       "name_required": "Job name is required",
       "save_error": "Could not save job"
     },

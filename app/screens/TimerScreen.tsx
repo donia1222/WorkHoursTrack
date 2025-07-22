@@ -489,7 +489,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   };
 
   const getSessionHours = () => {
-    return Math.round(elapsedTime / 1800) * 0.5; // Round to nearest 0.5 hour
+    return Math.round((elapsedTime / 3600) * 100) / 100; // Precise hours with 2 decimal places
   };
 
   const currentSelectedJob = jobs.find(job => job.id === selectedJobId);

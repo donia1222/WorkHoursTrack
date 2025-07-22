@@ -13,7 +13,7 @@ import ProfileModal from '../components/ProfileModal';
 import SideMenu from '../components/SideMenu';
 
 import TimerScreen from '../screens/TimerScreen';
-import EnhancedReportsScreen from '../screens/EnhancedReportsScreen';
+import EnhancedReportsScreen from '../screens/ReportsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 

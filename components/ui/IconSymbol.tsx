@@ -35,6 +35,9 @@ const MAPPING = {
   'person.circle.fill': 'account-circle',
   'questionmark.circle': 'help',
   'dollarsign.circle.fill': 'monetization-on',
+  'doc.text.fill': 'description',
+  'chevron.down': 'expand-more',
+  'square.and.arrow.up': 'share',
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],

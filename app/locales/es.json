@@ -151,7 +151,21 @@
     "view_calendar": "Ver calendario",
     "start_timer": "Iniciar timer",
     "load_more": "Ver más ({{remaining}} restantes)",
-    "ot": "OT"
+    "ot": "OT",
+    "custom_range": "Rango personalizado",
+    "from_date": "Desde",
+    "to_date": "Hasta",
+    "apply_range": "Aplicar rango",
+    "cancel": "Cancelar",
+    "select_dates": "Seleccionar fechas",
+    "date_range_title": "Rango de fechas",
+    "from_to_dates": "Del {{fromDate}} al {{toDate}}",
+    "export_pdf": "Exportar PDF",
+    "export_all_jobs": "Exportar todos los trabajos",
+    "export_job": "Exportar {{jobName}}",
+    "generating_pdf": "Generando PDF...",
+    "pdf_generated": "PDF generado correctamente",
+    "pdf_error": "Error al generar PDF"
   },
   "calendar": {
     "title": "Mi Calendario",
@@ -351,6 +365,7 @@
       "radius_placeholder": "100"
     },
     "errors": {
+      "error_title": "Error",
       "name_required": "El nombre del trabajo es obligatorio",
       "save_error": "No se pudo guardar el trabajo"
     },
