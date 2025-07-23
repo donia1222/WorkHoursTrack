@@ -406,8 +406,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     elevation: 4,
   },
   autoTimerSetupHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+
     marginBottom: 12,
     marginLeft: Theme.spacing.md,
     gap: 10,
@@ -415,7 +414,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   autoTimerSetupTitle: {
     ...Theme.typography.headline,
     color: colors.text,
-    fontWeight: '600',
+    fontWeight: '400',
+    textAlign: 'center',
   },
   autoTimerSetupDescription: {
     ...Theme.typography.footnote,
@@ -1150,27 +1150,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           </Text>
         </BlurView>
 
-        <BlurView 
-          intensity={95} 
-          tint={isDark ? "dark" : "light"} 
-          style={styles.quickActions}
-        >
-          <Text style={styles.quickActionsTitle}>{t('timer.quick_actions')}</Text>
-          <View style={styles.quickActionButtons}>
-            <TouchableOpacity style={styles.quickActionButton}>
-              <IconSymbol size={16} name="lightbulb.fill" color={colors.warning} />
-              <Text style={styles.quickActionText}>{t('timer.tips')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.quickActionButton}>
-              <IconSymbol size={16} name="calendar" color={colors.primary} />
-              <Text style={styles.quickActionText}>{t('timer.calendar')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.quickActionButton}>
-              <IconSymbol size={16} name="pause.fill" color={colors.textSecondary} />
-              <Text style={styles.quickActionText}>{t('timer.break')}</Text>
-            </TouchableOpacity>
-          </View>
-        </BlurView>
           </>
         )}
       </ScrollView>
