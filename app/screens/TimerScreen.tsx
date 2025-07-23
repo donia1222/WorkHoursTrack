@@ -24,6 +24,7 @@ import JobSelector from '../components/JobSelector';
 import NoJobsWarning from '../components/NoJobsWarning';
 import { Job, WorkDay } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
+import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
 import { useBackNavigation, useNavigation } from '../context/NavigationContext';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
@@ -182,9 +183,9 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   controlButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -220,7 +221,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     backgroundColor: colors.error,
   },
   controlButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     marginLeft: 4,
     color: '#FFFFFF',
@@ -306,6 +307,136 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginTop: 4,
     color: colors.textSecondary,
   },
+  autoTimerStatusContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  autoTimerStatusCard: {
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  autoTimerStatusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 10,
+  },
+  autoTimerStatusTitle: {
+    ...Theme.typography.headline,
+    color: colors.text,
+    flex: 1,
+    fontWeight: '600',
+  },
+  autoTimerStatusMessage: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    marginBottom: 12,
+  },
+  cancelAutoTimerButton: {
+    padding: 4,
+    borderRadius: 12,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+  },
+  autoTimerProgressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  autoTimerProgressBar: {
+    flex: 1,
+    height: 6,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  autoTimerProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  autoTimerCountdown: {
+    ...Theme.typography.caption2,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    minWidth: 30,
+    textAlign: 'center',
+  },
+  floatingAutoTimerButton: {
+    position: 'absolute',
+    top: 120,
+    right: 16,
+    zIndex: 1000,
+  },
+  floatingButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    gap: 10,
+    minWidth: 120,
+    justifyContent: 'center',
+  },
+  floatingButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  autoTimerSetupCard: {
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  autoTimerSetupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    marginLeft: Theme.spacing.md,
+    gap: 10,
+  },
+  autoTimerSetupTitle: {
+    ...Theme.typography.headline,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  autoTimerSetupDescription: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  autoTimerSetupButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary + '20',
+    borderRadius: 12,
+    padding: 12,
+    gap: 8,
+  },
+  autoTimerSetupButtonText: {
+    ...Theme.typography.footnote,
+    color: colors.primary,
+    fontWeight: '600',
+  },
 });
 
 export default function TimerScreen({ onNavigate }: TimerScreenProps) {
@@ -316,8 +447,11 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [isRunning, setIsRunning] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [autoTimerElapsedTime, setAutoTimerElapsedTime] = useState(0);
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
   const [notes, setNotes] = useState('');
+  const [autoTimerStatus, setAutoTimerStatus] = useState<AutoTimerStatus | null>(null);
+  const [autoTimerService] = useState(() => AutoTimerService.getInstance());
   const { handleBack } = useBackNavigation();
   const { selectedJob, setSelectedJob } = useNavigation();
   
@@ -409,6 +543,53 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     }
   }, [selectedJob, isRunning, activeSession]);
 
+  // Initialize and manage auto timer service
+  // AutoTimer service initialization - runs only once
+  useEffect(() => {
+    const handleAutoTimerStatusChange = (status: AutoTimerStatus) => {
+      console.log('🔄 TimerScreen received AutoTimer status change:', {
+        state: status.state,
+        jobId: status.jobId,
+        jobName: status.jobName,
+        remainingTime: status.remainingTime
+      });
+      setAutoTimerStatus(status);
+    };
+
+    // Add status listener
+    autoTimerService.addStatusListener(handleAutoTimerStatusChange);
+    
+    // Get current status immediately to sync with any ongoing countdown
+    const currentStatus = autoTimerService.getStatus();
+    setAutoTimerStatus(currentStatus);
+    console.log('🔄 TimerScreen: Synced with current AutoTimer status:', currentStatus.state, currentStatus.remainingTime);
+
+    // Cleanup on unmount (but don't stop the service - it should persist across screens)
+    return () => {
+      autoTimerService.removeStatusListener(handleAutoTimerStatusChange);
+    };
+  }, []); // Empty dependency array - runs only once
+
+  // Update jobs in AutoTimer service when jobs change
+  useEffect(() => {
+    const updateAutoTimerJobs = async () => {
+      if (jobs.length > 0) {
+        console.log('🔄 TimerScreen: Updating AutoTimer with jobs:', jobs.length);
+        
+        // If service is not enabled, start it; otherwise just update jobs
+        if (!autoTimerService.isServiceEnabled()) {
+          console.log('🚀 TimerScreen: Starting AutoTimer service');
+          autoTimerService.start(jobs);
+        } else {
+          console.log('🔄 TimerScreen: Service already running, just updating jobs');
+          await autoTimerService.updateJobs(jobs);
+        }
+      }
+    };
+    
+    updateAutoTimerJobs();
+  }, [jobs]);
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isRunning && activeSession) {
@@ -420,6 +601,48 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     }
     return () => clearInterval(interval);
   }, [isRunning, activeSession]);
+
+  // Calculate elapsed time for active AutoTimer
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (autoTimerStatus?.state === 'active') {
+      const updateAutoTimerElapsedTime = async () => {
+        try {
+          const activeSession = await JobService.getActiveSession();
+          if (activeSession) {
+            const startTime = new Date(activeSession.startTime);
+            const now = new Date();
+            const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+            setAutoTimerElapsedTime(elapsed);
+          }
+        } catch (error) {
+          console.error('Error calculating AutoTimer elapsed time:', error);
+        }
+      };
+
+      // Update immediately and then every second
+      updateAutoTimerElapsedTime();
+      interval = setInterval(updateAutoTimerElapsedTime, 1000);
+    } else {
+      setAutoTimerElapsedTime(0);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [autoTimerStatus?.state]);
+
+  // Reload active session when AutoTimer becomes active
+  useEffect(() => {
+    console.log('🔄 TimerScreen AutoTimer effect - state:', autoTimerStatus?.state, 'hasActiveSession:', !!activeSession);
+    if (autoTimerStatus?.state === 'active' && !activeSession) {
+      console.log('🔄 AutoTimer is now active but no activeSession, reloading session in TimerScreen');
+      loadActiveSession();
+    }
+  }, [autoTimerStatus?.state, activeSession]);
 
   const loadJobs = async () => {
     try {
@@ -440,7 +663,9 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   const loadActiveSession = async () => {
     try {
       const sessionData: StoredActiveSession | null = await JobService.getActiveSession();
+      console.log('📱 TimerScreen loadActiveSession result:', sessionData ? 'found session' : 'no session');
       if (sessionData) {
+        console.log('🔄 TimerScreen setting active session and isRunning=true for job:', sessionData.jobId);
         setActiveSession({
           ...sessionData,
           startTime: new Date(sessionData.startTime),
@@ -481,6 +706,9 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       setActiveSession(session);
       setIsRunning(true);
       setElapsedTime(0);
+      
+      // Notify auto timer service about manual start
+      autoTimerService.handleManualTimerStart(selectedJobId);
     } catch (error) {
       console.error('Error starting timer:', error);
       Alert.alert('Error', t('timer.start_timer_error'));
@@ -529,8 +757,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         
         await JobService.updateWorkDay(existingWorkDay.id, updatedWorkDay);
         Alert.alert(t('maps.success'), t('timer.session_added_to_existing', { 
-          sessionHours: hours, 
-          totalHours: updatedHours 
+          sessionHours: parseFloat(hours.toFixed(2)), 
+          totalHours: parseFloat(updatedHours.toFixed(2))
         }));
       } else {
         // Create new work day
@@ -544,7 +772,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         };
 
         await JobService.addWorkDay(workDay);
-        Alert.alert(t('maps.success'), t('timer.session_saved', { hours }));
+        Alert.alert(t('maps.success'), t('timer.session_saved', { hours: parseFloat(hours.toFixed(2)) }));
       }
       
       await JobService.clearActiveSession();
@@ -554,9 +782,36 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       setElapsedTime(0);
       setNotes('');
       
+      // Notify auto timer service about manual stop
+      autoTimerService.handleManualTimerStop();
+      
     } catch (error) {
       console.error('Error stopping timer:', error);
       Alert.alert('Error', t('timer.save_error'));
+    }
+  };
+
+  const handleStopButton = async () => {
+    if (autoTimerStatus?.state === 'active') {
+      // If auto timer is active, give user choice to stop manually
+      Alert.alert(
+        t('timer.auto_timer.manual_override'),
+        t('timer.auto_timer.manual_override_message'),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          { 
+            text: t('timer.stop'), 
+            style: 'destructive',
+            onPress: async () => {
+              await stopTimer();
+              // Set auto timer to manual mode
+              autoTimerService.setManualMode();
+            }
+          }
+        ]
+      );
+    } else {
+      await stopTimer();
     }
   };
 
@@ -572,10 +827,31 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     }
   };
 
+  const getAutoTimerMessage = (status: AutoTimerStatus): string => {
+    const messageParts = status.message.split(':');
+    const messageType = messageParts[0];
+    const minutes = messageParts[1];
+
+    switch (messageType) {
+      case 'inactive':
+        return t('timer.auto_timer.inactive');
+      case 'entering':
+        return t('timer.auto_timer.will_start', { minutes });
+      case 'active':
+        return t('timer.auto_timer.started_auto');
+      case 'leaving':
+        return t('timer.auto_timer.will_stop', { minutes });
+      case 'manual':
+        return t('timer.auto_timer.manual_override');
+      default:
+        return status.message;
+    }
+  };
+
   const getSessionHours = () => {
     const hours = elapsedTime / 3600; // Convert seconds to hours
     // Ensure we always save at least 0.01 hours (36 seconds) for any session
-    return Math.max(0.01, Math.round(hours * 100) / 100);
+    return Math.max(0.01, parseFloat(hours.toFixed(2)));
   };
 
   const currentSelectedJob = jobs.find(job => job.id === selectedJobId);
@@ -595,7 +871,13 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
               <Text style={styles.headerTitle}>{t('timer.title')}</Text>
             </View>
             <Text style={styles.headerSubtitle}>
-              {isRunning ? t('timer.active_session') : t('timer.ready_to_work')}
+              {isRunning ? 
+                (autoTimerStatus?.state === 'active' ? 
+                  t('timer.auto_timer.started_auto') : 
+                  t('timer.active_session')
+                ) : 
+                t('timer.ready_to_work')
+              }
             </Text>
           </View>
           <TouchableOpacity 
@@ -606,6 +888,123 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Auto Timer Status */}
+      {autoTimerStatus && autoTimerStatus.state !== 'inactive' && (() => {
+        const selectedJob = jobs.find(job => job.id === selectedJobId);
+        const hasLocation = selectedJob?.location?.latitude && selectedJob?.location?.longitude;
+        return hasLocation;
+      })() && (
+        <View style={styles.autoTimerStatusContainer}>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.autoTimerStatusCard}>
+
+            <View style={styles.autoTimerStatusHeader}>
+
+              <IconSymbol 
+                size={18} 
+                name={
+                  autoTimerStatus.state === 'entering' ? 'location.fill' :
+                  autoTimerStatus.state === 'active' ? 'clock.fill' :
+                  'location'
+                } 
+                color={
+                  autoTimerStatus.state === 'active' ? colors.success : 
+                  autoTimerStatus.state === 'entering' ? colors.warning : 
+                  colors.primary
+                } 
+              />
+              <Text style={styles.autoTimerStatusTitle}>
+                {autoTimerStatus.jobName || 'AutoTimer'}
+              </Text>
+
+              {autoTimerStatus.state === 'active' ? (
+                <TouchableOpacity 
+                  onPress={handleStopButton}
+                  style={[styles.cancelAutoTimerButton, { backgroundColor: colors.error + '20' }]}
+                >
+                  <IconSymbol size={16} name="stop.fill" color={colors.error} />
+                </TouchableOpacity>
+              ) : autoTimerStatus.state === 'entering' || autoTimerStatus.state === 'leaving' ? (
+                // Countdown activo: mostrar botón parar
+                <TouchableOpacity 
+                  onPress={() => {
+                    autoTimerService.cancelPendingAction();
+                  }}
+                  style={[styles.cancelAutoTimerButton, { backgroundColor: colors.warning + '20' }]}
+                >
+                  <IconSymbol size={16} name="stop.fill" color={colors.warning} />
+                </TouchableOpacity>
+              ) : autoTimerStatus.state === 'cancelled' ? (
+                // Countdown pausado: mostrar botón reanudar
+                <>
+                  {console.log('📱 TimerScreen: Showing RESUME button for cancelled AutoTimer')}
+                  <TouchableOpacity 
+                    onPress={async () => {
+                      console.log('🔄 TimerScreen: User pressed resume button');
+                      await autoTimerService.manualRestart();
+                    }}
+                    style={[styles.cancelAutoTimerButton, { backgroundColor: colors.success + '20' }]}
+                  >
+                    <IconSymbol size={16} name="play.fill" color={colors.success} />
+                  </TouchableOpacity>
+                </>
+              
+              ) : (
+                // Estado inactivo: botón para desactivar
+                <TouchableOpacity 
+                  onPress={() => {
+                    autoTimerService.setManualMode();
+                  }}
+                  style={styles.cancelAutoTimerButton}
+                >
+                  <IconSymbol size={16} name="xmark" color={colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+            </View>
+            <Text style={styles.autoTimerStatusMessage}>
+              {getAutoTimerMessage(autoTimerStatus)}
+            </Text>
+            {autoTimerStatus.remainingTime > 0 && autoTimerStatus.state !== 'active' && (
+              <View style={styles.autoTimerProgressContainer}>
+                <View style={styles.autoTimerProgressBar}>
+                  <Animated.View 
+                    style={[
+                      styles.autoTimerProgressFill,
+                      {
+                        width: `${((autoTimerStatus.totalDelayTime - autoTimerStatus.remainingTime) / autoTimerStatus.totalDelayTime) * 100}%`,
+                        backgroundColor: autoTimerStatus.state === 'entering' ? colors.warning : colors.error
+                      }
+                    ]}
+                  />
+                </View>
+                <Text style={styles.autoTimerCountdown}>
+                  {Math.ceil(autoTimerStatus.remainingTime / 60)}m
+                </Text>
+              </View>
+            )}
+          </BlurView>
+        </View>
+      )}
+
+                                     {/* Auto Timer Quick Setup */}
+            {!isRunning && !activeSession && selectedJobId && autoTimerStatus?.state !== 'active' && (
+              (() => {
+                const selectedJob = jobs.find(job => job.id === selectedJobId);
+                const hasLocation = selectedJob?.location?.latitude && selectedJob?.location?.longitude;
+                const hasAutoTimer = selectedJob?.autoTimer?.enabled;
+                
+                if (hasLocation && hasAutoTimer) {
+                  return (
+                    <View style={styles.section}>
+                      <View style={styles.autoTimerSetupHeader}>
+                        <Text style={styles.autoTimerSetupTitle}>{t('timer.auto_timer.available_title')}</Text>
+                      </View>
+                    </View>
+                  );
+                }
+                return null;
+              })()
+            )}
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {jobs.length === 0 ? (
@@ -622,6 +1021,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                 />
               </View>
             )}
+
+ 
 
         <BlurView 
           intensity={98} 
@@ -664,8 +1065,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   />
-                  <IconSymbol size={24} name="play.fill" color="#FFFFFF" />
-                  <Text style={styles.controlButtonText}>{t('timer.start')}</Text>
+                  <IconSymbol size={20} name="play.fill" color="#FFFFFF" />
+ 
                 </TouchableOpacity>
               ) : (
                 <View style={styles.activeControls}>
@@ -681,8 +1082,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}
                         />
-                        <IconSymbol size={24} name="pause.fill" color="#FFFFFF" />
-                        <Text style={styles.controlButtonText}>{t('timer.pause')}</Text>
+                        <IconSymbol size={20} name="pause.fill" color="#FFFFFF" />
+                  
                       </TouchableOpacity>
                     </Animated.View>
                   ) : (
@@ -697,15 +1098,15 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}
                         />
-                        <IconSymbol size={24} name="play.fill" color="#FFFFFF" />
-                        <Text style={styles.controlButtonText}>{t('timer.resume')}</Text>
+                        <IconSymbol size={20} name="play.fill" color="#FFFFFF" />
+      
                       </TouchableOpacity>
                     </Animated.View>
                   )}
                   
                   <TouchableOpacity
                     style={[styles.controlButton, styles.stopButton]}
-                    onPress={() => { triggerHaptic('heavy'); stopTimer(); }}
+                    onPress={() => { triggerHaptic('heavy'); handleStopButton(); }}
                   >
                     <LinearGradient
                       colors={['#FF3B30', '#E6241A', '#CC1F16']}
@@ -713,8 +1114,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                     />
-                    <IconSymbol size={24} name="stop.fill" color="#FFFFFF" />
-                    <Text style={styles.controlButtonText}>{t('timer.stop')}</Text>
+                    <IconSymbol size={20} name="stop.fill" color="#FFFFFF" />
+           
                   </TouchableOpacity>
                 </View>
               )}

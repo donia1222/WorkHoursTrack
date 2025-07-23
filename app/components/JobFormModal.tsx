@@ -26,7 +26,7 @@ interface JobFormModalProps {
   onClose: () => void;
   editingJob?: Job | null;
   onSave: () => void;
-  initialTab?: 'basic' | 'schedule' | 'financial' | 'billing';
+  initialTab?: 'basic' | 'schedule' | 'financial' | 'billing' | 'auto';
   onNavigateToCalendar?: () => void; // Optional callback to navigate to calendar
 }
 
@@ -338,6 +338,65 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   switchThumbActive: {
     transform: [{ translateX: 20 }],
   },
+  sliderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.sm,
+  },
+  unitLabel: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    minWidth: 60,
+  },
+  counterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Theme.spacing.md,
+  },
+  counterButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.15)' : 'rgba(0, 122, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(0, 122, 255, 0.3)' : 'rgba(0, 122, 255, 0.2)',
+  },
+  counterValue: {
+    alignItems: 'center',
+    minWidth: 60,
+  },
+  counterText: {
+    ...Theme.typography.title,
+    color: colors.text,
+    fontWeight: '600',
+    fontSize: 20,
+  },
+  counterUnit: {
+    ...Theme.typography.caption2,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  previewCard: {
+    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.1)' : 'rgba(0, 122, 255, 0.05)',
+    borderRadius: 12,
+    padding: Theme.spacing.md,
+    marginTop: Theme.spacing.md,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(0, 122, 255, 0.3)' : 'rgba(0, 122, 255, 0.2)',
+  },
+  previewTitle: {
+    ...Theme.typography.headline,
+    color: colors.text,
+    marginBottom: Theme.spacing.xs,
+  },
+  previewText: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
 });
 
 export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar }: JobFormModalProps) {
@@ -387,9 +446,16 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       address: '',
       radius: 100,
     },
+    autoTimer: {
+      enabled: false,
+      geofenceRadius: 100,
+      delayStart: 2,
+      delayStop: 2,
+      notifications: true,
+    },
   });
 
-  const [currentTab, setCurrentTab] = useState<'basic' | 'schedule' | 'financial' | 'billing'>(initialTab);
+  const [currentTab, setCurrentTab] = useState<'basic' | 'schedule' | 'financial' | 'billing' | 'auto'>(initialTab || 'basic');
   
   const styles = getStyles(colors, isDark);
 
@@ -435,6 +501,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         location: editingJob.location || {
           address: editingJob.address || '',
           radius: 100,
+        },
+        autoTimer: editingJob.autoTimer || {
+          enabled: false,
+          geofenceRadius: 100,
+          delayStart: 2,
+          delayStop: 2,
+          notifications: true,
         },
       });
     } else {
@@ -562,6 +635,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         schedule: formData.schedule,
         billing: formData.billing,
         location: formData.location,
+        autoTimer: formData.autoTimer,
       };
 
       let savedJob: Job;
@@ -1247,11 +1321,164 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     </ScrollView>
   );
 
+  const renderAutoTab = () => {
+    const hasAddress = () => {
+      return !!(formData.address?.trim() || 
+                formData.street?.trim() || 
+                formData.city?.trim() || 
+                formData.postalCode?.trim());
+    };
+
+    const handleAutoTimerToggle = (value: boolean) => {
+      if (value && !hasAddress()) {
+        Alert.alert(
+          t('job_form.auto_timer.address_required_title'),
+          t('job_form.auto_timer.address_required_message'),
+          [{ text: 'OK', style: 'default' }]
+        );
+        return;
+      }
+      updateNestedData('autoTimer', 'enabled', value);
+    };
+
+    return (
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('job_form.auto_timer.title')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('job_form.auto_timer.subtitle')}</Text>
+
+          <View style={styles.inputGroup}>
+            <View style={styles.switchRow}>
+              <View style={styles.switchContent}>
+                <Text style={styles.label}>{t('job_form.auto_timer.enabled')}</Text>
+                <Text style={styles.labelDescription}>{t('job_form.auto_timer.enabled_desc')}</Text>
+              </View>
+              <Switch
+                value={formData.autoTimer?.enabled || false}
+                onValueChange={handleAutoTimerToggle}
+                trackColor={{ false: colors.separator, true: colors.primary + '40' }}
+                thumbColor={formData.autoTimer?.enabled ? colors.primary : colors.textTertiary}
+              />
+            </View>
+          </View>
+
+        {formData.autoTimer?.enabled && (
+          <>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.auto_timer.geofence_radius')}</Text>
+              <Text style={styles.labelDescription}>{t('job_form.auto_timer.geofence_radius_desc')}</Text>
+              <View style={styles.sliderContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={String(formData.autoTimer?.geofenceRadius || 100)}
+                  onChangeText={(value) => updateNestedData('autoTimer', 'geofenceRadius', Math.max(50, Math.min(500, Number(value) || 100)))}
+                  keyboardType="numeric"
+                  placeholder="100"
+                  placeholderTextColor={colors.textTertiary}
+                />
+                <Text style={styles.unitLabel}>metros</Text>
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.auto_timer.delay_start')}</Text>
+              <Text style={styles.labelDescription}>{t('job_form.auto_timer.delay_start_desc')}</Text>
+              <View style={styles.counterContainer}>
+                <TouchableOpacity 
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStart || 2;
+                    const newValue = Math.max(1, currentValue - 1);
+                    updateNestedData('autoTimer', 'delayStart', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="minus" color={colors.primary} />
+                </TouchableOpacity>
+                <View style={styles.counterValue}>
+                  <Text style={styles.counterText}>{formData.autoTimer?.delayStart || 2}</Text>
+                  <Text style={styles.counterUnit}>min</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStart || 2;
+                    const newValue = Math.min(10, currentValue + 1);
+                    updateNestedData('autoTimer', 'delayStart', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="plus" color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.auto_timer.delay_stop')}</Text>
+              <Text style={styles.labelDescription}>{t('job_form.auto_timer.delay_stop_desc')}</Text>
+              <View style={styles.counterContainer}>
+                <TouchableOpacity 
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStop || 2;
+                    const newValue = Math.max(1, currentValue - 1);
+                    updateNestedData('autoTimer', 'delayStop', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="minus" color={colors.primary} />
+                </TouchableOpacity>
+                <View style={styles.counterValue}>
+                  <Text style={styles.counterText}>{formData.autoTimer?.delayStop || 2}</Text>
+                  <Text style={styles.counterUnit}>min</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStop || 2;
+                    const newValue = Math.min(10, currentValue + 1);
+                    updateNestedData('autoTimer', 'delayStop', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="plus" color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <View style={styles.switchRow}>
+                <View style={styles.switchContent}>
+                  <Text style={styles.label}>{t('job_form.auto_timer.notifications')}</Text>
+                  <Text style={styles.labelDescription}>{t('job_form.auto_timer.notifications_desc')}</Text>
+                </View>
+                <Switch
+                  value={formData.autoTimer?.notifications !== false}
+                  onValueChange={(value) => updateNestedData('autoTimer', 'notifications', value)}
+                  trackColor={{ false: colors.separator, true: colors.primary + '40' }}
+                  thumbColor={formData.autoTimer?.notifications !== false ? colors.primary : colors.textTertiary}
+                />
+              </View>
+            </View>
+
+            <View style={styles.previewCard}>
+              <Text style={styles.previewTitle}>📍 Vista Previa</Text>
+              <Text style={styles.previewText}>
+                {t('job_form.auto_timer.preview', {
+                  delayStart: formData.autoTimer?.delayStart || 2,
+                  delayStop: formData.autoTimer?.delayStop || 2
+                })}
+              </Text>
+            </View>
+          </>
+        )}
+      </BlurView>
+    </ScrollView>
+    );
+  };
+
   const tabs = [
     { key: 'basic', label: t('job_form.tabs.basic'), icon: 'gear' },
     { key: 'schedule', label: t('job_form.tabs.schedule'), icon: 'clock.fill' },
     { key: 'financial', label: t('job_form.tabs.financial'), icon: 'dollarsign.circle.fill' },
     { key: 'billing', label: t('job_form.tabs.billing'), icon: 'chart.bar.fill' },
+    { key: 'auto', label: t('job_form.tabs.auto'), icon: 'location.fill' },
   ] as const;
 
   return (
@@ -1303,6 +1530,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           {currentTab === 'schedule' && renderScheduleTab()}
           {currentTab === 'financial' && renderFinancialTab()}
           {currentTab === 'billing' && renderBillingTab()}
+          {currentTab === 'auto' && renderAutoTab()}
         </View>
       </SafeAreaView>
     </Modal>

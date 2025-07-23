@@ -92,7 +92,7 @@
     "you_are_here": "Tu sei qui",
     "add_job": "Aggiungi Lavoro",
     "add_job_desc": "Configura il tuo primo lavoro per iniziare",
-    "start_timer": "Avvia Timer",
+    "start_timer": "Timer",
     "view_calendar": "Vedi Calendario",
     "view_statistics": "Vedi Statistiche",
     "edit_job": "Modifica Lavoro",
@@ -104,7 +104,11 @@
     "delete_success": "Lavoro eliminato con successo",
     "delete_error": "Non è stato possibile eliminare il lavoro",
     "no_job_selected": "Nessun lavoro selezionato",
-    "success": "Successo"
+    "success": "Successo",
+    "in_range": "Nel raggio",
+    "out_of_range": "Fuori raggio",
+    "auto_timer_pin": "{{jobName}} (Auto)",
+    "auto_timer_status": "Timer automatico: {{status}}"
   },
   "timer": {
     "title": "Timer",
@@ -126,7 +130,26 @@
     "start_timer_error": "Non è stato possibile avviare il timer",
     "session_saved": "Sessione salvata: {{hours}} ore",
     "save_error": "Non è stato possibile salvare la sessione",
-    "load_jobs_error": "Non è stato possibile caricare i lavori"
+    "load_jobs_error": "Non è stato possibile caricare i lavori",
+    "auto_timer": {
+      "entering": "Arrivo al lavoro...",
+      "will_start": "Il timer inizierà tra {{minutes}} minuti",
+      "started_auto": "Timer avviato automaticamente",
+      "leaving": "Uscita dal lavoro...",
+      "will_stop": "Il timer si fermerà tra {{minutes}} minuti",
+      "stopped_auto": "Timer fermato automaticamente - {{hours}}h registrate",
+      "cancelled_start": "Avvio automatico annullato",
+      "cancelled_stop": "Arresto automatico annullato",
+      "manual_override": "Controllo manuale attivato",
+      "cancelled": "Annullato - premi play per riattivare",
+      "available_title": "Timer Automatico Disponibile",
+      "available_description": "Questo lavoro ha una posizione configurata. Vuoi attivare il timer automatico?",
+      "setup_button": "Configura Timer Automatico",
+      "disable_auto": "Disattiva Auto",
+      "disabled_title": "AutoTimer Disattivato",
+      "disabled_message": "Timer automatico disattivato per \"{{jobName}}\"",
+      "disable_error": "Impossibile disattivare il timer automatico"
+    }
   },
   "reports": {
     "title": "Report",
@@ -223,7 +246,8 @@
       "basic": "Base",
       "schedule": "Orario", 
       "financial": "Finanziario",
-      "billing": "Fatturazione"
+      "billing": "Fatturazione",
+      "auto": "Auto"
     },
     "basic": {
       "title": "Informazioni di base",
@@ -319,6 +343,24 @@
       "error_title": "Errore",
       "error_address": "Impossibile ottenere l'indirizzo dalla tua posizione attuale.",
       "error_location": "Impossibile rilevare la tua posizione. Verifica che il GPS sia attivato."
+    },
+    "auto_timer": {
+      "title": "Timer Automatico",
+      "subtitle": "Configura avvio/arresto automatico basato sulla posizione",
+      "enabled": "Attiva timer automatico",
+      "enabled_desc": "Il timer si avvierà/fermerà automaticamente quando arrivi/esci dal lavoro",
+      "geofence_radius": "Raggio di rilevamento (metri)",
+      "geofence_radius_desc": "Distanza dal luogo di lavoro per attivare il timer",
+      "delay_start": "Ritardo di avvio (minuti)",
+      "delay_start_desc": "Tempo di attesa prima di avviare automaticamente il timer",
+      "delay_stop": "Ritardo di arresto (minuti)",
+      "delay_stop_desc": "Tempo di attesa prima di fermare il timer quando esci",
+      "notifications": "Mostra notifiche",
+      "notifications_desc": "Notifica quando il timer automatico cambia stato",
+      "preview": "Anteprima: Si avvierà dopo {{delayStart}} min al lavoro, si fermerà {{delayStop}} min dopo essere uscito",
+      "address_required_title": "Indirizzo Richiesto",
+      "address_required_message": "Per attivare il timer automatico, devi prima aggiungere un indirizzo nella scheda 'Base'. L'indirizzo è necessario per il rilevamento automatico della posizione.",
+      "stopped_no_time": "Timer fermato - nessun tempo attivo era in corso"
     }
   },
   "jobs_management": {

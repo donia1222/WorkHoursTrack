@@ -238,9 +238,9 @@ const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     color: colors.primary,
   },
   selectedIndicator: {
-    position: 'absolute',
+
     top: Theme.spacing.sm,
-    right: Theme.spacing.sm,
+    left: Theme.spacing.sm,
     width: 24,
     height: 24,
     borderRadius: 12,

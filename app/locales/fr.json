@@ -92,7 +92,7 @@
     "you_are_here": "Vous êtes ici",
     "add_job": "Ajouter un emploi",
     "add_job_desc": "Configurez votre premier emploi pour commencer",
-    "start_timer": "Démarrer le chronomètre",
+    "start_timer": "chronomètre",
     "view_calendar": "Voir le calendrier",
     "view_statistics": "Voir les statistiques",
     "edit_job": "Modifier l'emploi",
@@ -104,7 +104,11 @@
     "delete_success": "Emploi supprimé avec succès",
     "delete_error": "Impossible de supprimer l'emploi",
     "no_job_selected": "Aucun emploi sélectionné",
-    "success": "Succès"
+    "success": "Succès",
+    "in_range": "Dans la portée",
+    "out_of_range": "Hors de portée",
+    "auto_timer_pin": "{{jobName}} (Auto)",
+    "auto_timer_status": "Minuteur automatique: {{status}}"
   },
   "timer": {
     "title": "Chronomètre",
@@ -126,7 +130,26 @@
     "start_timer_error": "Impossible de démarrer le chronomètre",
     "session_saved": "Session sauvegardée : {{hours}} heures",
     "save_error": "Impossible de sauvegarder la session",
-    "load_jobs_error": "Impossible de charger les emplois"
+    "load_jobs_error": "Impossible de charger les emplois",
+    "auto_timer": {
+      "entering": "Arrivée au travail...",
+      "will_start": "Le minuteur démarrera dans {{minutes}} minutes",
+      "started_auto": "Minuteur démarré automatiquement",
+      "leaving": "Quitter le travail...",
+      "will_stop": "Le minuteur s'arrêtera dans {{minutes}} minutes",
+      "stopped_auto": "Minuteur arrêté automatiquement - {{hours}}h enregistrées",
+      "cancelled_start": "Démarrage automatique annulé",
+      "cancelled_stop": "Arrêt automatique annulé",
+      "manual_override": "Contrôle manuel activé",
+      "cancelled": "Annulé - appuyez sur play pour réactiver",
+      "available_title": "Minuteur Automatique Disponible",
+      "available_description": "Ce travail a un emplacement configuré. Voulez-vous activer le minuteur automatique?",
+      "setup_button": "Configurer le Minuteur Automatique",
+      "disable_auto": "Désactiver Auto",
+      "disabled_title": "AutoTimer Désactivé",
+      "disabled_message": "Minuteur automatique désactivé pour \"{{jobName}}\"",
+      "disable_error": "Impossible de désactiver le minuteur automatique"
+    }
   },
   "reports": {
     "title": "Rapports",
@@ -223,7 +246,8 @@
       "basic": "Base",
       "schedule": "Horaire", 
       "financial": "Financier",
-      "billing": "Facturation"
+      "billing": "Facturation",
+      "auto": "Auto"
     },
     "basic": {
       "title": "Informations de base",
@@ -319,6 +343,24 @@
       "error_title": "Erreur",
       "error_address": "Impossible d'obtenir l'adresse de votre localisation actuelle.",
       "error_location": "Impossible de détecter votre localisation. Veuillez vérifier que le GPS est activé."
+    },
+    "auto_timer": {
+      "title": "Minuteur Automatique",
+      "subtitle": "Configurer le démarrage/arrêt automatique basé sur la localisation",
+      "enabled": "Activer le minuteur automatique",
+      "enabled_desc": "Le minuteur démarrera/s'arrêtera automatiquement quand vous arrivez/partez du travail",
+      "geofence_radius": "Rayon de détection (mètres)",
+      "geofence_radius_desc": "Distance depuis le lieu de travail pour activer le minuteur",
+      "delay_start": "Délai de démarrage (minutes)",
+      "delay_start_desc": "Temps d'attente avant de démarrer automatiquement le minuteur",
+      "delay_stop": "Délai d'arrêt (minutes)",
+      "delay_stop_desc": "Temps d'attente avant d'arrêter le minuteur en partant",
+      "notifications": "Afficher les notifications",
+      "notifications_desc": "Notifier quand le minuteur automatique change d'état",
+      "preview": "Aperçu : Démarrera après {{delayStart}} min au travail, s'arrêtera {{delayStop}} min après être parti",
+      "address_required_title": "Adresse Requise",
+      "address_required_message": "Pour activer le minuteur automatique, vous devez d'abord ajouter une adresse dans l'onglet 'De base'. L'adresse est nécessaire pour la détection automatique par localisation.",
+      "stopped_no_time": "Minuteur arrêté - aucun temps actif n'était en cours"
     }
   },
   "jobs_management": {

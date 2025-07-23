@@ -2,7 +2,8 @@
   "common": {
     "no_jobs_title": "No Jobs Configured",
     "no_jobs_message": "You need to create at least one job before you can use the timer, calendar, or reports. Start by setting up your first job.",
-    "create_first_job": "Create First Job"
+    "create_first_job": "Create First Job",
+    "cancel": "Cancel"
   },
   "preferences": {
     "title": "Preferences",
@@ -92,7 +93,7 @@
     "you_are_here": "You are here",
     "add_job": "Add Job",
     "add_job_desc": "Set up your first job to get started",
-    "start_timer": "Start Timer",
+    "start_timer": "Timer",
     "view_calendar": "View Calendar",
     "view_statistics": "View Statistics",
     "edit_job": "Edit Job",
@@ -104,7 +105,9 @@
     "delete_success": "Job deleted successfully",
     "delete_error": "Could not delete job",
     "no_job_selected": "No job selected",
-    "success": "Success"
+    "success": "Success",
+    "in_range": "In range",
+    "out_of_range": "Out of range"
   },
   "timer": {
     "title": "Timer",
@@ -126,7 +129,28 @@
     "start_timer_error": "Could not start timer",
     "session_saved": "Session saved: {{hours}} hours",
     "save_error": "Could not save session",
-    "load_jobs_error": "Could not load jobs"
+    "load_jobs_error": "Could not load jobs",
+    "auto_timer": {
+      "inactive": "No automatic activity",
+      "entering": "Arriving at work...",
+      "will_start": "Timer will start in {{minutes}} minutes",
+      "started_auto": "Timer started automatically",
+      "leaving": "Leaving work...",
+      "will_stop": "Timer will stop in {{minutes}} minutes",
+      "stopped_auto": "Timer stopped automatically - {{hours}}h recorded",
+      "cancelled_start": "Automatic start cancelled",
+      "cancelled_stop": "Automatic stop cancelled",
+      "manual_override": "Manual control activated",
+      "cancelled": "Cancelled - press play to reactivate",
+      "manual_override_message": "The automatic timer is active. Do you want to stop it manually? This will disable automatic mode.",
+      "available_title": "Automatic Timer Available",
+      "available_description": "This job has a location configured. Do you want to activate the automatic timer?",
+      "setup_button": "Configure Automatic Timer",
+      "disable_auto": "Disable Auto",
+      "disabled_title": "AutoTimer Disabled",
+      "disabled_message": "Automatic timer disabled for \"{{jobName}}\"",
+      "disable_error": "Could not disable automatic timer"
+    }
   },
   "reports": {
     "title": "Reports",
@@ -281,7 +305,8 @@
       "basic": "Basic",
       "schedule": "Schedule", 
       "financial": "Financial",
-      "billing": "Billing"
+      "billing": "Billing",
+      "auto": "Auto"
     },
     "basic": {
       "title": "Basic Information",
@@ -392,6 +417,24 @@
       "error_title": "Error",
       "error_address": "Could not get address from your current location.",
       "error_location": "Could not detect your location. Please verify GPS is enabled."
+    },
+    "auto_timer": {
+      "title": "Automatic Timer",
+      "subtitle": "Configure automatic start/stop based on location",
+      "enabled": "Enable automatic timer",
+      "enabled_desc": "Timer will start/stop automatically when you arrive/leave work",
+      "geofence_radius": "Detection radius (meters)",
+      "geofence_radius_desc": "Distance from work location to activate timer",
+      "delay_start": "Start delay (minutes)",
+      "delay_start_desc": "Wait time before automatically starting timer",
+      "delay_stop": "Stop delay (minutes)",
+      "delay_stop_desc": "Wait time before stopping timer when leaving",
+      "notifications": "Show notifications",
+      "notifications_desc": "Notify when automatic timer changes state",
+      "preview": "Preview: Will start after {{delayStart}} min at work, will stop {{delayStop}} min after leaving",
+      "address_required_title": "Address Required",
+      "address_required_message": "To enable automatic timer, you first need to add an address in the 'Basic' tab. The address is necessary for automatic location detection.",
+      "stopped_no_time": "Timer stopped - no active time was running"
     }
   },
   "jobs_management": {

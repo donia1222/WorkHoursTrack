@@ -18,7 +18,12 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 interface SettingsScreenProps {
   onNavigate: (screen: string) => void;
-  navigationOptions?: { openJobsModal?: boolean; openAddModal?: boolean } | null;
+  navigationOptions?: { 
+    openJobsModal?: boolean; 
+    openAddModal?: boolean; 
+    editJob?: Job;
+    initialTab?: 'basic' | 'schedule' | 'financial' | 'billing' | 'auto';
+  } | null;
   onNavigationHandled?: () => void;
 }
 
@@ -270,6 +275,8 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
           setOpenAddJobModal(false);
         }} 
         openAddModal={openAddJobModal}
+        editJob={navigationOptions?.editJob}
+        initialTab={navigationOptions?.initialTab}
       />
     );
   }
@@ -485,37 +492,7 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
           </TouchableOpacity>
         </BlurView>
 
-        {/* Quick Stats */}
-        <BlurView 
-          intensity={98} 
-          tint={isDark ? "dark" : "light"} 
-          style={styles.sectionCard}
-        >
-          <LinearGradient
-            colors={isDark ? ['rgba(255, 59, 48, 0.1)', 'rgba(255, 59, 48, 0.03)'] : ['rgba(255, 59, 48, 0.06)', 'rgba(255, 59, 48, 0.02)']}
-            style={styles.sectionCardGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          />
-          <Text style={styles.sectionTitle}>{t('settings.quick_stats.title')}</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <IconSymbol size={20} name="chart.bar.fill" color={colors.primary} />
-              <Text style={styles.statNumber}>3</Text>
-              <Text style={styles.statLabel}>{t('settings.quick_stats.active_jobs')}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <IconSymbol size={20} name="clock.fill" color={colors.success} />
-              <Text style={styles.statNumber}>168h</Text>
-              <Text style={styles.statLabel}>{t('settings.quick_stats.this_month')}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <IconSymbol size={20} name="dollarsign.circle.fill" color={colors.warning} />
-              <Text style={styles.statNumber}>€2,520</Text>
-              <Text style={styles.statLabel}>{t('settings.quick_stats.earnings')}</Text>
-            </View>
-          </View>
-        </BlurView>
+
       </ScrollView>
 
       {/* Job Selector Modal */}

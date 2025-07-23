@@ -46,6 +46,14 @@ export interface Job {
     longitude?: number;
     radius?: number; // meters for geofencing
   };
+  // Auto Timer Settings
+  autoTimer?: {
+    enabled: boolean; // Enable automatic timer
+    geofenceRadius: number; // Detection radius in meters (default: 100)
+    delayStart: number; // Minutes to wait before starting timer (default: 2)
+    delayStop: number; // Minutes to wait before stopping timer (default: 2)
+    notifications: boolean; // Show in-app notifications (default: true)
+  };
 }
 
 export interface WorkDay {

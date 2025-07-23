@@ -7,16 +7,15 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Modal,
-  TextInput,
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import type { IconSymbolName } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { BlurView } from 'expo-blur';
-import { Job, DEFAULT_COLORS } from '../types/WorkTypes';
+import { Job } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import JobFormModal from '../components/JobFormModal';
 
@@ -24,6 +23,8 @@ interface JobsManagementScreenProps {
   onNavigate?: (screen: string) => void;
   onClose?: () => void;
   openAddModal?: boolean;
+  editJob?: Job;
+  initialTab?: 'basic' | 'schedule' | 'financial' | 'billing' | 'auto';
 }
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
@@ -177,7 +178,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
 });
 
-export default function JobsManagementScreen({ onNavigate, onClose, openAddModal = false }: JobsManagementScreenProps) {
+export default function JobsManagementScreen({ onNavigate, onClose, openAddModal = false, editJob, initialTab }: JobsManagementScreenProps) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
   const { triggerHaptic } = useHapticFeedback();
@@ -195,7 +196,11 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
     if (openAddModal) {
       setShowAddModal(true);
     }
-  }, [openAddModal]);
+    if (editJob) {
+      setEditingJob(editJob);
+      setShowAddModal(true);
+    }
+  }, [openAddModal, editJob]);
 
   const loadJobs = async () => {
     try {
@@ -325,6 +330,7 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
       <JobFormModal
         visible={showAddModal}
         editingJob={editingJob}
+        initialTab={initialTab}
         onClose={() => {
           setShowAddModal(false);
           setEditingJob(null);
@@ -351,6 +357,7 @@ interface JobCardProps {
 function JobCard({ job, onEdit, onDelete, onToggleActive, isInactive }: JobCardProps) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
+  const { triggerHaptic } = useHapticFeedback();
   const styles = getStyles(colors, isDark);
   
   return (
@@ -372,7 +379,7 @@ function JobCard({ job, onEdit, onDelete, onToggleActive, isInactive }: JobCardP
           <TouchableOpacity style={styles.actionButton} onPress={() => { triggerHaptic('medium'); onToggleActive(); }}>
             <IconSymbol 
               size={18} 
-              name={isInactive ? "play.fill" : "pause.fill"} 
+              name={(isInactive ? "play.fill" : "pause.fill") as IconSymbolName} 
               color={isInactive ? colors.success : colors.warning} 
             />
           </TouchableOpacity>

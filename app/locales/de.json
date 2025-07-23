@@ -92,7 +92,7 @@
     "you_are_here": "Sie sind hier",
     "add_job": "Arbeit hinzufügen",
     "add_job_desc": "Richten Sie Ihre erste Arbeit ein, um zu beginnen",
-    "start_timer": "Timer starten",
+    "start_timer": "Timer",
     "view_calendar": "Kalender anzeigen",
     "view_statistics": "Statistiken anzeigen",
     "edit_job": "Arbeit bearbeiten",
@@ -105,9 +105,13 @@
     "delete_error": "Arbeit konnte nicht gelöscht werden",
     "no_job_selected": "Keine Arbeit ausgewählt",
     "working_now": "Arbeitet jetzt",
-    "next_shift": "Nächste Schicht",
+    "next_shift": "Nächste Schicht", 
     "days": ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
-    "success": "Erfolg"
+    "success": "Erfolg",
+    "auto_timer_pin": "{{jobName}} (Auto)",
+    "in_range": "Im Arbeitsbereich",
+    "out_of_range": "Außerhalb des Bereichs",
+    "auto_timer_status": "Automatischer Timer: {{status}}"
   },
   "timer": {
     "title": "Timer",
@@ -130,7 +134,26 @@
     "session_saved": "Sitzung gespeichert: {{hours}} Stunden",
     "session_added_to_existing": "{{sessionHours}}h zum Tag hinzugefügt. Gesamt: {{totalHours}}h",
     "save_error": "Sitzung konnte nicht gespeichert werden",
-    "load_jobs_error": "Arbeiten konnten nicht geladen werden"
+    "load_jobs_error": "Arbeiten konnten nicht geladen werden",
+    "auto_timer": {
+      "entering": "Ankunft am Arbeitsplatz...",
+      "will_start": "Timer startet in {{minutes}} Minuten",
+      "started_auto": "Timer automatisch gestartet",
+      "leaving": "Verlassen des Arbeitsplatzes...",
+      "will_stop": "Timer stoppt in {{minutes}} Minuten",
+      "stopped_auto": "Timer automatisch gestoppt - {{hours}}h registriert",
+      "cancelled_start": "Automatischer Start abgebrochen",
+      "cancelled_stop": "Automatischer Stopp abgebrochen",
+      "manual_override": "Manuelle Steuerung aktiviert",
+      "cancelled": "Abgebrochen - Play drücken zum Reaktivieren",
+      "available_title": "Automatischer Timer Verfügbar",
+      "available_description": "Dieser Job hat einen Standort konfiguriert. Möchten Sie den automatischen Timer aktivieren?",
+      "setup_button": "Automatischen Timer Konfigurieren",
+      "disable_auto": "Auto Deaktivieren",
+      "disabled_title": "AutoTimer Deaktiviert",
+      "disabled_message": "Automatischer Timer deaktiviert für \"{{jobName}}\"",
+      "disable_error": "Automatischer Timer konnte nicht deaktiviert werden"
+    }
   },
   "reports": {
     "title": "Berichte",
@@ -225,7 +248,8 @@
       "basic": "Grundlagen",
       "schedule": "Zeitplan", 
       "financial": "Finanziell",
-      "billing": "Abrechnung"
+      "billing": "Abrechnung",
+      "auto": "Automatisch"
     },
     "basic": {
       "title": "Grundinformationen",
@@ -321,6 +345,24 @@
       "error_title": "Fehler",
       "error_address": "Adresse konnte von Ihrem aktuellen Standort nicht ermittelt werden.",
       "error_location": "Ihr Standort konnte nicht erkannt werden. Bitte überprüfen Sie, ob GPS aktiviert ist."
+    },
+    "auto_timer": {
+      "title": "Automatischer Timer",
+      "subtitle": "Konfigurieren Sie automatisches Starten/Stoppen basierend auf Standort",
+      "enabled": "Automatischen Timer aktivieren",
+      "enabled_desc": "Timer startet/stoppt automatisch wenn Sie am Arbeitsplatz ankommen/gehen",
+      "geofence_radius": "Erkennungsradius (Meter)",
+      "geofence_radius_desc": "Entfernung vom Arbeitsplatz um Timer zu aktivieren",
+      "delay_start": "Verzögerung zum Starten (Minuten)",
+      "delay_start_desc": "Wartezeit bevor Timer automatisch startet",
+      "delay_stop": "Verzögerung zum Stoppen (Minuten)",
+      "delay_stop_desc": "Wartezeit bevor Timer beim Verlassen stoppt",
+      "notifications": "Benachrichtigungen anzeigen",
+      "notifications_desc": "Benachrichtigen wenn automatischer Timer Status ändert",
+      "preview": "Vorschau: Startet nach {{delayStart}} Min am Arbeitsplatz, stoppt {{delayStop}} Min nach Verlassen",
+      "address_required_title": "Adresse Erforderlich",
+      "address_required_message": "Um den automatischen Timer zu aktivieren, müssen Sie zuerst eine Adresse im Tab 'Grundlagen' hinzufügen. Die Adresse ist für die automatische Standorterkennung erforderlich.",
+      "stopped_no_time": "Timer gestoppt - keine aktive Zeit lief"
     }
   },
   "jobs_management": {

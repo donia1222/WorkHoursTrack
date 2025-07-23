@@ -2,7 +2,8 @@
   "common": {
     "no_jobs_title": "Sin Trabajos Configurados",
     "no_jobs_message": "Necesitas crear al menos un trabajo antes de poder usar el cronómetro, calendario o reportes. Comienza configurando tu primer trabajo.",
-    "create_first_job": "Crear Primer Trabajo"
+    "create_first_job": "Crear Primer Trabajo",
+    "cancel": "Cancelar"
   },
   "preferences": {
     "title": "Preferencias",
@@ -92,7 +93,7 @@
     "you_are_here": "Estás aquí",
     "add_job": "Agregar Trabajo",
     "add_job_desc": "Configura tu primer trabajo para comenzar",
-    "start_timer": "Iniciar Timer",
+    "start_timer": "Timer",
     "view_calendar": "Ver Calendario", 
     "view_statistics": "Ver Estadísticas",
     "edit_job": "Editar Trabajo",
@@ -106,8 +107,12 @@
     "no_job_selected": "No se ha seleccionado ningún trabajo",
     "working_now": "Trabajando ahora",
     "next_shift": "Próximo turno",
+    "in_range": "En rango de trabajo",
+    "out_of_range": "Fuera de rango",
     "days": ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
-    "success": "Éxito"
+    "success": "Éxito",
+    "auto_timer_pin": "{{jobName}} (Auto)",
+    "auto_timer_status": "Timer automático: {{status}}"
   },
   "timer": {
     "title": "Timer",
@@ -130,7 +135,28 @@
     "session_saved": "Sesión guardada: {{hours}} horas",
     "session_added_to_existing": "Agregado {{sessionHours}}h al día. Total: {{totalHours}}h",
     "save_error": "No se pudo guardar la sesión",
-    "load_jobs_error": "No se pudieron cargar los trabajos"
+    "load_jobs_error": "No se pudieron cargar los trabajos",
+    "auto_timer": {
+      "inactive": "Sin actividad automática",
+      "entering": "Llegando al trabajo...",
+      "will_start": "Timer iniciará en {{minutes}} minutos",
+      "started_auto": "Timer iniciado automáticamente",
+      "leaving": "Saliendo del trabajo...",
+      "will_stop": "Timer parará en {{minutes}} minutos", 
+      "stopped_auto": "Timer parado automáticamente - {{hours}}h registradas",
+      "cancelled_start": "Inicio automático cancelado",
+      "cancelled_stop": "Parada automática cancelada",
+      "manual_override": "Control manual activado",
+      "cancelled": "Cancelado - presiona play para reactivar",
+      "manual_override_message": "El timer automático está activo. ¿Quieres detenerlo manualmente? Esto desactivará el modo automático.",
+      "available_title": "Timer Automático Disponible",
+      "available_description": "Este trabajo tiene ubicación configurada. ¿Quieres activar el timer automático?",
+      "setup_button": "Configurar Timer Automático",
+      "disable_auto": "Desactivar Auto",
+      "disabled_title": "AutoTimer Desactivado",
+      "disabled_message": "Timer automático desactivado para \"{{jobName}}\"",
+      "disable_error": "No se pudo desactivar el timer automático"
+    }
   },
   "reports": {
     "title": "Reportes",
@@ -292,7 +318,8 @@
       "basic": "Básico",
       "schedule": "Horario", 
       "financial": "Financiero",
-      "billing": "Facturación"
+      "billing": "Facturación",
+      "auto": "Automático"
     },
     "basic": {
       "title": "Información Básica",
@@ -403,6 +430,24 @@
       "error_title": "Error",
       "error_address": "No se pudo obtener la dirección de tu ubicación actual.",
       "error_location": "No se pudo detectar tu ubicación. Verifica que tengas GPS activado."
+    },
+    "auto_timer": {
+      "title": "Timer Automático",
+      "subtitle": "Configurar inicio/parada automática basada en ubicación",
+      "enabled": "Activar timer automático",
+      "enabled_desc": "El timer iniciará/parará automáticamente cuando llegues/salgas del trabajo",
+      "geofence_radius": "Radio de detección (metros)",
+      "geofence_radius_desc": "Distancia desde la ubicación del trabajo para activar el timer",
+      "delay_start": "Retraso para iniciar (minutos)",
+      "delay_start_desc": "Tiempo de espera antes de iniciar el timer automáticamente",
+      "delay_stop": "Retraso para parar (minutos)", 
+      "delay_stop_desc": "Tiempo de espera antes de parar el timer al salir",
+      "notifications": "Mostrar notificaciones",
+      "notifications_desc": "Avisar cuando el timer automático cambie de estado",
+      "preview": "Vista previa: Se iniciará después de {{delayStart}} min en el trabajo, se parará {{delayStop}} min después de salir",
+      "address_required_title": "Dirección Requerida",
+      "address_required_message": "Para activar el timer automático, primero necesitas añadir una dirección en la pestaña 'Básico'. La dirección es necesaria para la detección automática por ubicación.",
+      "stopped_no_time": "Timer parado - no había tiempo activo"
     }
   },
   "jobs_management": {
