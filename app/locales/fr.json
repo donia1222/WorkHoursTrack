@@ -96,6 +96,8 @@
     "view_calendar": "Voir le calendrier",
     "view_statistics": "Voir les statistiques",
     "edit_job": "Modifier l'emploi",
+    "edit_job_auto_enabled": "Modifier l'emploi (Auto-Timer)",
+    "auto_timer_active": "Auto-timer actif",
     "delete_job": "Supprimer l'emploi",
     "cancel": "Annuler",
     "delete_confirm_title": "Supprimer l'emploi",
@@ -384,7 +386,8 @@
       "success": "Emploi supprimé avec succès",
       "error": "Impossible de supprimer l'emploi"
     },
-    "update_error": "Impossible de mettre à jour le statut de l'emploi"
+    "update_error": "Impossible de mettre à jour le statut de l'emploi",
+    "add_new_job_button": "Ajouter un nouvel emploi"
   },
   "help_support": {
     "title": "Aide & Support",

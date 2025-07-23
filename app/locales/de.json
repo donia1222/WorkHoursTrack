@@ -96,6 +96,8 @@
     "view_calendar": "Kalender anzeigen",
     "view_statistics": "Statistiken anzeigen",
     "edit_job": "Arbeit bearbeiten",
+    "edit_job_auto_enabled": "Arbeit bearbeiten (Auto-Timer)",
+    "auto_timer_active": "Auto-Timer aktiv",
     "delete_job": "Arbeit löschen",
     "cancel": "Abbrechen",
     "delete_confirm_title": "Arbeit löschen",
@@ -386,7 +388,8 @@
       "success": "Arbeitsplatz erfolgreich gelöscht",
       "error": "Arbeitsplatz konnte nicht gelöscht werden"
     },
-    "update_error": "Arbeitsplatzstatus konnte nicht aktualisiert werden"
+    "update_error": "Arbeitsplatzstatus konnte nicht aktualisiert werden",
+    "add_new_job_button": "Einen neuen Arbeitsplatz hinzufügen"
   },
   "help_support": {
     "title": "Hilfe & Support",

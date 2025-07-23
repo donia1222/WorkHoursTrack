@@ -97,6 +97,8 @@
     "view_calendar": "View Calendar",
     "view_statistics": "View Statistics",
     "edit_job": "Edit Job",
+    "edit_job_auto_enabled": "Edit Job (Auto-Timer)",
+    "auto_timer_active": "Auto-timer active",
     "delete_job": "Delete Job",
     "cancel": "Cancel",
     "delete_confirm_title": "Delete job",
@@ -458,7 +460,8 @@
       "success": "Job deleted successfully",
       "error": "Could not delete job"
     },
-    "update_error": "Could not update job status"
+    "update_error": "Could not update job status",
+    "add_new_job_button": "Add a new job"
   },
   "help_support": {
     "title": "Help & Support",

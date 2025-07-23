@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -30,16 +31,18 @@ export default function RootLayout() {
   }
 
   return (
-    <LanguageProvider>
-      <ThemeProvider>
-        <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="auto" />
-        </NavigationThemeProvider>
-      </ThemeProvider>
-    </LanguageProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <LanguageProvider>
+        <ThemeProvider>
+          <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            <StatusBar style="auto" />
+          </NavigationThemeProvider>
+        </ThemeProvider>
+      </LanguageProvider>
+    </GestureHandlerRootView>
   );
 }

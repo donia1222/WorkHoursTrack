@@ -97,6 +97,8 @@
     "view_calendar": "Ver Calendario", 
     "view_statistics": "Ver Estadísticas",
     "edit_job": "Editar Trabajo",
+    "edit_job_auto_enabled": "Editar Trabajo (Auto-Timer)",
+    "auto_timer_active": "Auto-timer activo",
     "delete_job": "Eliminar Trabajo",
     "cancel": "Cancelar",
     "delete_confirm_title": "Eliminar trabajo",
@@ -471,7 +473,8 @@
       "success": "Trabajo eliminado correctamente",
       "error": "No se pudo eliminar el trabajo"
     },
-    "update_error": "No se pudo actualizar el estado del trabajo"
+    "update_error": "No se pudo actualizar el estado del trabajo",
+    "add_new_job_button": "Añadir un nuevo trabajo"
   },
 
   "help_support": {

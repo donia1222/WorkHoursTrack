@@ -89,6 +89,14 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: colors.primary,
     fontWeight: '600',
   },
+  autoIndicatorDot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
   content: {
     flex: 1,
   },
@@ -369,7 +377,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     minWidth: 60,
   },
   counterText: {
-    ...Theme.typography.title,
+
     color: colors.text,
     fontWeight: '600',
     fontSize: 20,
@@ -396,6 +404,21 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     ...Theme.typography.footnote,
     color: colors.textSecondary,
     lineHeight: 18,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  sectionSubtitle: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    marginBottom: Theme.spacing.md,
+    lineHeight: 18,
+  },
+  labelDescription: {
+    ...Theme.typography.caption2,
+    color: colors.textSecondary,
+    marginTop: 2,
+    lineHeight: 16,
   },
 });
 
@@ -1476,9 +1499,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const tabs = [
     { key: 'basic', label: t('job_form.tabs.basic'), icon: 'gear' },
     { key: 'schedule', label: t('job_form.tabs.schedule'), icon: 'clock.fill' },
+    { key: 'auto', label: t('job_form.tabs.auto'), icon: 'location.fill' },
     { key: 'financial', label: t('job_form.tabs.financial'), icon: 'dollarsign.circle.fill' },
     { key: 'billing', label: t('job_form.tabs.billing'), icon: 'chart.bar.fill' },
-    { key: 'auto', label: t('job_form.tabs.auto'), icon: 'location.fill' },
   ] as const;
 
   return (
@@ -1498,30 +1521,46 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
         <View style={styles.tabsContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {tabs.map((tab) => (
-              <TouchableOpacity
-                key={tab.key}
-                style={[
-                  styles.tab,
-                  currentTab === tab.key && styles.tabActive,
-                ]}
-                onPress={() => setCurrentTab(tab.key)}
-              >
-                <IconSymbol
-                  size={20}
-                  name={tab.icon as any}
-                  color={currentTab === tab.key ? colors.primary : colors.textSecondary}
-                />
-                <Text
+            {tabs.map((tab) => {
+              const isAutoTab = tab.key === 'auto';
+              const isAutoTimerEnabled = formData.autoTimer?.enabled || false;
+              const isActive = currentTab === tab.key;
+              
+              return (
+                <TouchableOpacity
+                  key={tab.key}
                   style={[
-                    styles.tabText,
-                    currentTab === tab.key && styles.tabTextActive,
+                    styles.tab,
+                    isActive && styles.tabActive,
                   ]}
+                  onPress={() => setCurrentTab(tab.key)}
                 >
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <IconSymbol
+                    size={20}
+                    name={tab.icon as any}
+                    color={
+                      isActive 
+                        ? colors.primary 
+                        : isAutoTab && isAutoTimerEnabled 
+                          ? colors.success 
+                          : colors.textSecondary
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.tabText,
+                      isActive && styles.tabTextActive,
+                      isAutoTab && isAutoTimerEnabled && !isActive && { color: colors.success, fontWeight: '600' },
+                    ]}
+                  >
+                    {tab.label}
+                  </Text>
+                  {isAutoTab && isAutoTimerEnabled && (
+                    <View style={[styles.autoIndicatorDot, { backgroundColor: colors.success }]} />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </View>
 

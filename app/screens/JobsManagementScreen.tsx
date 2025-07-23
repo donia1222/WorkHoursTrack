@@ -67,15 +67,6 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     ...Theme.typography.footnote,
     color: colors.textSecondary,
   },
-  addButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: -Theme.spacing.sm,
-  },
   content: {
     flex: 1,
     paddingHorizontal: Theme.spacing.md,
@@ -176,6 +167,24 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
   },
+  addNewJobButton: {
+    marginTop: Theme.spacing.lg,
+    marginBottom: Theme.spacing.xl,
+    marginHorizontal: Theme.spacing.md,
+    borderRadius: Theme.borderRadius.lg,
+    padding: Theme.spacing.lg,
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Theme.spacing.sm,
+    ...Theme.shadows.medium,
+  },
+  addNewJobButtonText: {
+    ...Theme.typography.callout,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
 });
 
 export default function JobsManagementScreen({ onNavigate, onClose, openAddModal = false, editJob, initialTab }: JobsManagementScreenProps) {
@@ -262,12 +271,6 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <TouchableOpacity 
-            onPress={() => { triggerHaptic('light'); handleAddJob(); }}
-            style={styles.addButton}
-          >
-            <IconSymbol size={20} name="plus" color="#FFFFFF" />
-          </TouchableOpacity>
           <View style={styles.headerText}>
             <View style={styles.titleContainer}>
               <IconSymbol size={20} name="briefcase.fill" color={colors.primary} />
@@ -325,6 +328,17 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
             ))}
           </View>
         )}
+        
+        {/* Add New Job Button */}
+        <TouchableOpacity 
+          style={styles.addNewJobButton}
+          onPress={() => { triggerHaptic('medium'); handleAddJob(); }}
+        >
+          <IconSymbol size={24} name="plus" color="#FFFFFF" />
+          <Text style={styles.addNewJobButtonText}>
+            {t('jobs_management.add_new_job_button')}
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
 
       <JobFormModal
