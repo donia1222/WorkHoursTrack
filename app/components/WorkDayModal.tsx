@@ -16,7 +16,10 @@ import { BlurView } from 'expo-blur';
 import HourSelector from './HourSelector';
 import JobSelector from './JobSelector';
 import JobStatisticsModal from './JobStatisticsModal';
-import { Job, WorkDay, DAY_TYPES } from '../types/WorkTypes';
+import { Job, WorkDay } from '../types/WorkTypes';
+import { CalendarSyncService } from '../services/CalendarSyncService';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface WorkDayModalProps {
   visible: boolean;
@@ -39,11 +42,36 @@ export default function WorkDayModal({
   onSave,
   onDelete,
 }: WorkDayModalProps) {
+  const { t, language } = useLanguage();
   const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [hours, setHours] = useState<number>(8);
   const [notes, setNotes] = useState<string>('');
   const [dayType, setDayType] = useState<'work' | 'free' | 'vacation' | 'sick'>('work');
   const [showStatistics, setShowStatistics] = useState(false);
+
+  // Dynamic day types with translations
+  const getDayTypes = () => ({
+    work: {
+      label: t('calendar.work_day'),
+      color: '#30D158',
+      icon: 'clock.fill',
+    },
+    free: {
+      label: t('calendar.free_day'),
+      color: '#007AFF',
+      icon: 'calendar',
+    },
+    vacation: {
+      label: t('calendar.vacation_day'),
+      color: '#FF9500',
+      icon: 'sun.max.fill',
+    },
+    sick: {
+      label: t('calendar.sick_day'),
+      color: '#FF3B30',
+      icon: 'cross.fill',
+    },
+  });
 
   useEffect(() => {
     if (existingWorkDay) {
@@ -74,7 +102,7 @@ export default function WorkDayModal({
 
   const handleSave = () => {
     if (dayType === 'work' && !selectedJobId) {
-      Alert.alert('Error', 'Por favor selecciona un trabajo para días trabajados');
+      Alert.alert('Error', t('calendar.select_job_error'));
       return;
     }
 
@@ -93,12 +121,12 @@ export default function WorkDayModal({
 
   const handleDelete = () => {
     Alert.alert(
-      'Eliminar día trabajado',
-      '¿Estás seguro de que quieres eliminar este registro?',
+      t('calendar.delete_workday_title'),
+      t('calendar.delete_workday_message'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('calendar.cancel'), style: 'cancel' },
         { 
-          text: 'Eliminar', 
+          text: t('calendar.delete'), 
           style: 'destructive',
           onPress: () => {
             onDelete?.();
@@ -111,7 +139,17 @@ export default function WorkDayModal({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
+    // Get current language for locale formatting
+    const localeMap: { [key: string]: string } = {
+      'es': 'es-ES',
+      'en': 'en-US', 
+      'de': 'de-DE',
+      'fr': 'fr-FR',
+      'it': 'it-IT',
+    };
+    const locale = localeMap[language] || 'en-US';
+    
+    return date.toLocaleDateString(locale, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -120,6 +158,41 @@ export default function WorkDayModal({
   };
 
   const selectedJob = jobs.find(job => job.id === selectedJobId);
+
+  const handleSyncToCalendar = async () => {
+    if (dayType !== 'work' || !selectedJob) {
+      Alert.alert('Error', t('calendar.calendar_sync_error'));
+      return;
+    }
+
+    const tempWorkDay: WorkDay = {
+      id: 'temp',
+      date,
+      jobId: selectedJobId,
+      hours,
+      notes: notes.trim(),
+      overtime: hours > 8,
+      type: dayType,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    Alert.alert(
+      t('calendar.sync_options_title'),
+      t('calendar.sync_options_message'),
+      [
+        { text: t('calendar.cancel'), style: 'cancel' },
+        {
+          text: t('calendar.native_calendar'),
+          onPress: () => CalendarSyncService.syncWorkDayToCalendar(tempWorkDay, selectedJob)
+        },
+        {
+          text: t('calendar.ics_file'),
+          onPress: () => CalendarSyncService.shareICSFile(tempWorkDay, selectedJob)
+        }
+      ]
+    );
+  };
 
   return (
     <Modal
@@ -141,7 +214,7 @@ export default function WorkDayModal({
               <View style={styles.titleContainer}>
                 <IconSymbol size={20} name="calendar" color={Theme.colors.primary} />
                 <Text style={styles.headerTitle}>
-                  {existingWorkDay ? 'Editar día' : 'Registrar día'}
+                  {existingWorkDay ? t('calendar.edit_day') : t('calendar.register_day')}
                 </Text>
               </View>
               <Text style={styles.headerSubtitle}>
@@ -161,32 +234,35 @@ export default function WorkDayModal({
           {/* Day type selector */}
           <View style={styles.section}>
             <BlurView intensity={95} tint="light" style={styles.dayTypeContainer}>
-              <Text style={styles.dayTypeTitle}>Tipo de día</Text>
+              <Text style={styles.dayTypeTitle}>{t('calendar.day_types_title')}</Text>
               <View style={styles.dayTypeButtons}>
-                {(Object.keys(DAY_TYPES) as Array<keyof typeof DAY_TYPES>).map((type) => (
-                  <TouchableOpacity
-                    key={type}
-                    style={[
-                      styles.dayTypeButton,
-                      dayType === type && [styles.dayTypeButtonActive, { backgroundColor: DAY_TYPES[type].color }]
-                    ]}
-                    onPress={() => setDayType(type)}
-                  >
-                    <IconSymbol 
-                      size={20} 
-                      name={DAY_TYPES[type].icon as any}
-                      color={dayType === type ? '#FFFFFF' : DAY_TYPES[type].color} 
-                    />
-                    <Text 
+                {(Object.keys(getDayTypes()) as (keyof ReturnType<typeof getDayTypes>)[]).map((type) => {
+                  const dayTypes = getDayTypes();
+                  return (
+                    <TouchableOpacity
+                      key={type}
                       style={[
-                        styles.dayTypeButtonText,
-                        dayType === type && styles.dayTypeButtonTextActive
+                        styles.dayTypeButton,
+                        dayType === type && [styles.dayTypeButtonActive, { backgroundColor: dayTypes[type].color }]
                       ]}
+                      onPress={() => setDayType(type)}
                     >
-                      {DAY_TYPES[type].label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <IconSymbol 
+                        size={20} 
+                        name={dayTypes[type].icon as any}
+                        color={dayType === type ? '#FFFFFF' : dayTypes[type].color} 
+                      />
+                      <Text 
+                        style={[
+                          styles.dayTypeButtonText,
+                          dayType === type && styles.dayTypeButtonTextActive
+                        ]}
+                      >
+                        {dayTypes[type].label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </BlurView>
           </View>
@@ -215,41 +291,41 @@ export default function WorkDayModal({
 
           <View style={styles.section}>
             <BlurView intensity={95} tint="light" style={styles.notesContainer}>
-              <Text style={styles.notesLabel}>Notas (opcional)</Text>
+              <Text style={styles.notesLabel}>{t('calendar.notes_label')}</Text>
               <TextInput
                 style={styles.notesInput}
                 value={notes}
                 onChangeText={setNotes}
-                placeholder="Agrega detalles sobre este día de trabajo..."
+                placeholder={t('calendar.notes_placeholder')}
                 placeholderTextColor={Theme.colors.textTertiary}
                 multiline
                 numberOfLines={3}
                 maxLength={200}
               />
               <Text style={styles.characterCount}>
-                {notes.length}/200 caracteres
+                {t('calendar.characters_count', { count: notes.length })}
               </Text>
             </BlurView>
           </View>
 
           <View style={styles.section}>
             <BlurView intensity={95} tint="light" style={styles.summaryContainer}>
-              <Text style={styles.summaryTitle}>Resumen</Text>
+              <Text style={styles.summaryTitle}>{t('calendar.summary_title')}</Text>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Tipo:</Text>
+                <Text style={styles.summaryLabel}>{t('calendar.summary_type')}</Text>
                 <View style={styles.summaryJobInfo}>
                   <View 
                     style={[
                       styles.summaryJobColor, 
-                      { backgroundColor: dayType && DAY_TYPES[dayType] ? DAY_TYPES[dayType].color : '#000000' }
+                      { backgroundColor: getDayTypes()[dayType]?.color || '#000000' }
                     ]} 
                   />
-                  <Text style={styles.summaryValue}>{dayType && DAY_TYPES[dayType] ? DAY_TYPES[dayType].label : 'Desconocido'}</Text>
+                  <Text style={styles.summaryValue}>{getDayTypes()[dayType]?.label || 'Unknown'}</Text>
                 </View>
               </View>
               {dayType === 'work' && selectedJob && (
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Trabajo:</Text>
+                  <Text style={styles.summaryLabel}>{t('calendar.summary_job')}</Text>
                   <View style={styles.jobSummaryRow}>
                     <Text style={styles.summaryValue}>{selectedJob.name}</Text>
                     <TouchableOpacity 
@@ -263,20 +339,34 @@ export default function WorkDayModal({
               )}
               {dayType === 'work' && (
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Horas:</Text>
+                  <Text style={styles.summaryLabel}>{t('calendar.summary_hours')}</Text>
                   <Text style={styles.summaryValue}>
-                    {hours}h {hours > 8 && '(con overtime)'}
+                    {hours}h {hours > 8 && t('calendar.with_overtime')}
                   </Text>
                 </View>
               )}
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Fecha:</Text>
+                <Text style={styles.summaryLabel}>{t('calendar.summary_date')}</Text>
                 <Text style={styles.summaryValue}>
                   {formatDate(date)}
                 </Text>
               </View>
             </BlurView>
           </View>
+
+          {dayType === 'work' && selectedJob && (
+            <View style={styles.section}>
+              <TouchableOpacity
+                style={styles.syncButton}
+                onPress={handleSyncToCalendar}
+              >
+                <BlurView intensity={90} tint="light" style={styles.syncButtonInner}>
+                  <IconSymbol size={20} name="calendar.badge.plus" color={Theme.colors.success} />
+                  <Text style={styles.syncButtonText}>{t('calendar.sync_to_calendar')}</Text>
+                </BlurView>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {existingWorkDay && onDelete && (
             <View style={styles.section}>
@@ -286,7 +376,7 @@ export default function WorkDayModal({
               >
                 <BlurView intensity={90} tint="light" style={styles.deleteButtonInner}>
                   <IconSymbol size={20} name="xmark" color={Theme.colors.error} />
-                  <Text style={styles.deleteButtonText}>Eliminar registro</Text>
+                  <Text style={styles.deleteButtonText}>{t('calendar.delete_workday')}</Text>
                 </BlurView>
               </TouchableOpacity>
             </View>
@@ -429,6 +519,24 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     marginRight: Theme.spacing.xs,
+  },
+  syncButton: {
+    marginBottom: Theme.spacing.sm,
+  },
+  syncButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Theme.spacing.md,
+    borderRadius: Theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.success}30`,
+  },
+  syncButtonText: {
+    ...Theme.typography.callout,
+    color: Theme.colors.success,
+    marginLeft: Theme.spacing.sm,
+    fontWeight: '600',
   },
   deleteButton: {
     marginBottom: Theme.spacing.xl,

@@ -65,7 +65,29 @@ export class JobService {
   static async getWorkDays(): Promise<WorkDay[]> {
     try {
       const data = await AsyncStorage.getItem(WORK_DAYS_KEY);
-      return data ? JSON.parse(data) : [];
+      let workDays: WorkDay[] = data ? JSON.parse(data) : [];
+      
+      // Migration: add 'type' field to existing workDays that don't have it
+      let needsMigration = false;
+      workDays = workDays.map(day => {
+        if (!day.type) {
+          needsMigration = true;
+          return {
+            ...day,
+            type: 'work' as const, // Default to 'work' for existing entries
+            updatedAt: day.updatedAt || new Date().toISOString()
+          };
+        }
+        return day;
+      });
+      
+      // Save migrated data back to AsyncStorage
+      if (needsMigration) {
+        console.log('🔄 Migrating workDays: adding missing type field to', workDays.length, 'entries');
+        await AsyncStorage.setItem(WORK_DAYS_KEY, JSON.stringify(workDays));
+      }
+      
+      return workDays;
     } catch (error) {
       console.error('Error loading work days:', error);
       return [];

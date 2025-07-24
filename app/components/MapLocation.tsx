@@ -1781,4 +1781,3 @@ export default function MapLocation({ location, onNavigate }: Props) {
     </View>
   );
 }
-

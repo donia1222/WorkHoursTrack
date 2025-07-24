@@ -8,6 +8,7 @@ import {
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
 import { BlurView } from 'expo-blur';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface HourSelectorProps {
   hours: number;
@@ -22,6 +23,7 @@ export default function HourSelector({
   minHours = 0.5, 
   maxHours = 16 
 }: HourSelectorProps) {
+  const { t } = useLanguage();
   const decreaseHours = () => {
     const newHours = Math.max(minHours, hours - 0.5);
     onHoursChange(newHours);
@@ -64,20 +66,20 @@ export default function HourSelector({
     const status = getHoursStatus();
     switch (status) {
       case 'short':
-        return 'Jornada corta';
+        return t('calendar.short_shift');
       case 'normal':
-        return 'Jornada normal';
+        return t('calendar.normal_shift');
       case 'overtime':
-        return 'Horas extra';
+        return t('calendar.overtime_hours');
       default:
-        return 'Jornada normal';
+        return t('calendar.normal_shift');
     }
   };
 
   return (
     <BlurView intensity={95} tint="light" style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Horas trabajadas</Text>
+        <Text style={styles.title}>{t('calendar.worked_hours')}</Text>
         <Text style={[styles.status, { color: getStatusColor() }]}>
           {getStatusText()}
         </Text>
@@ -131,7 +133,7 @@ export default function HourSelector({
       </View>
 
       <View style={styles.presets}>
-        <Text style={styles.presetsLabel}>Presets rápidos:</Text>
+        <Text style={styles.presetsLabel}>{t('calendar.quick_presets')}</Text>
         <View style={styles.presetButtons}>
           {[4, 6, 8, 10, 12].map((preset) => (
             <TouchableOpacity

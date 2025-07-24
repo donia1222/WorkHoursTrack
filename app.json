@@ -11,8 +11,10 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Diese App benötigt Zugriff auf deinen Standort, um dich auf der Karte zu lokalisieren.",
-        "NSLocationAlwaysUsageDescription": "Diese App benötigt dauerhaften Standortzugriff, um Geofencing und Standortverfolgung im Hintergrund zu ermöglichen."
+        "NSLocationWhenInUseUsageDescription": "Diese App benötigt Zugriff auf deinen Standort, um dich auf der Karte zu lokalizieren.",
+        "NSLocationAlwaysUsageDescription": "Diese App benötigt dauerhaften Standortzugriff, um Geofencing und Standortverfolgung im Hintergrund zu ermöglichen.",
+        "NSCalendarsUsageDescription": "Esta app necesita acceso al calendario para sincronizar tus días de trabajo con el calendario nativo.",
+        "NSCalendarsWriteOnlyAccessUsageDescription": "Esta app necesita acceso de escritura al calendario para crear eventos de tus días de trabajo."
       },
       "bundleIdentifier": "com.tuusuario.geolocalizacionapp"
     },
@@ -24,7 +26,9 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION"
+        "ACCESS_BACKGROUND_LOCATION",
+        "READ_CALENDAR",
+        "WRITE_CALENDAR"
       ],
       "package": "com.tuusuario.geolocalizacionapp"
     },
@@ -44,7 +48,8 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "expo-calendar"
     ],
     "experiments": {
       "typedRoutes": true

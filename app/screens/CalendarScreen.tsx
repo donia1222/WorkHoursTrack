@@ -19,6 +19,7 @@ import { JobService } from '../services/JobService';
 import { useBackNavigation, useNavigation } from '../context/NavigationContext';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { CalendarSyncService } from '../services/CalendarSyncService';
 
 interface CalendarScreenProps {
   onNavigate?: (screen: string, options?: any) => void;
@@ -516,6 +517,37 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
     onNavigate && onNavigate('jobs-management', { openAddModal: true });
   };
 
+  const handleSyncCalendar = async () => {
+    try {
+      // Get current month work days (only work days)
+      const monthKey = currentMonth.toISOString().slice(0, 7);
+      const monthWorkDays = workDays.filter(day => 
+        day.date.startsWith(monthKey) && day.type === 'work'
+      );
+
+      if (monthWorkDays.length === 0) {
+        Alert.alert(t('calendar.sync_title'), t('calendar.no_work_days'));
+        return;
+      }
+
+      console.log(`Found ${monthWorkDays.length} work days to sync for month ${monthKey}`);
+
+      // Sync directly without additional confirmation
+      const syncCount = await CalendarSyncService.syncMultipleWorkDays(monthWorkDays, jobs);
+      
+      // Only show success message if sync was attempted and succeeded
+      if (syncCount > 0) {
+        Alert.alert(
+          t('calendar.sync_complete'),
+          t('calendar.sync_success', { count: syncCount })
+        );
+      }
+    } catch (error) {
+      console.error('Error syncing calendar:', error);
+      Alert.alert(t('common.error'), t('calendar.sync_error'));
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -756,6 +788,17 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
             <Text style={styles.legendText}>{t('calendar.tap_to_register')}</Text>
           </View>
         </BlurView>
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={handleSyncCalendar}
+        >
+          <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.actionButtonInner}>
+            <IconSymbol size={24} name="calendar.badge.plus" color={colors.success} />
+            <Text style={styles.actionButtonText}>{t('calendar.sync_to_phone')}</Text>
+            <IconSymbol size={16} name="arrow.right" color={colors.success} />
+          </BlurView>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.actionButton}

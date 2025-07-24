@@ -174,7 +174,8 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
   useEffect(() => {
     if (workDays.length > 0) {
-      calculatePeriodStats();
+      // ALWAYS use the function based on getRecentWorkDays that works
+      calculateStatsFromRecentActivity();
     }
   }, [workDays, jobs, selectedPeriod, selectedJobId, fromDate, toDate]);
 
@@ -189,6 +190,95 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     } catch (error) {
       console.error('Error loading data:', error);
     }
+  };
+
+  const calculateStatsFromRecentActivity = () => {
+    console.log('🎯 Using getRecentWorkDays logic that WORKS!');
+    console.log('Raw workDays loaded:', workDays.length);
+    console.log('Sample raw workDays:', workDays.slice(0, 2).map(d => ({ date: d.date, hours: d.hours, type: d.type, jobId: d.jobId })));
+    
+    // Step 1: Get the EXACT same data that getRecentWorkDays gets
+    // BUT: if type doesn't exist, treat as 'work' (for old data)
+    let baseWorkDays = workDays.filter(day => day.type === 'work' || !day.type);
+    console.log('Step 1 - Work days after type filter:', baseWorkDays.length);
+    console.log('Sample base work days:', baseWorkDays.slice(0, 2).map(d => ({ date: d.date, hours: d.hours, type: d.type })));
+    
+    // Step 2: Filter by selected job (same as getRecentWorkDays)
+    if (selectedJobId !== 'all') {
+      baseWorkDays = baseWorkDays.filter(day => day.jobId === selectedJobId);
+    }
+    console.log('Step 2 - After job filter:', baseWorkDays.length);
+    
+    // Step 3: Add date filtering for this month only
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Last day of month
+    
+    const monthWorkDays = baseWorkDays.filter(day => {
+      const dayDate = new Date(day.date);
+      return dayDate >= startOfMonth && dayDate <= endOfMonth;
+    });
+    
+    console.log('Step 3 - This month work days:', monthWorkDays.length);
+    console.log('Month range:', startOfMonth.toDateString(), 'to', endOfMonth.toDateString());
+    console.log('Sample month work days:', monthWorkDays.slice(0, 3).map(d => `${d.date}: ${d.hours}h`));
+    
+    // Step 4: Calculate totals using the SAME data structure
+    const totalHours = monthWorkDays.reduce((sum, day) => sum + (day.hours || 0), 0);
+    const totalDays = monthWorkDays.length;
+    const overtimeHours = monthWorkDays.reduce((sum, day) => 
+      sum + (day.overtime ? Math.max(0, (day.hours || 0) - 8) : 0), 0);
+    const avgHoursPerDay = totalDays > 0 ? totalHours / totalDays : 0;
+    
+    console.log('🎉 FINAL NUMBERS:', { 
+      totalHours, 
+      totalDays, 
+      avgHoursPerDay: avgHoursPerDay.toFixed(1),
+      monthWorkDaysUsed: monthWorkDays.length
+    });
+    
+    // Create job breakdown
+    let jobStats: {
+      job: Job;
+      hours: number;
+      days: number;
+      percentage: number;
+    }[] = [];
+    
+    if (selectedJobId === 'all') {
+      jobStats = jobs.map(job => {
+        const jobWorkDays = monthWorkDays.filter(day => day.jobId === job.id);
+        const jobHours = jobWorkDays.reduce((sum, day) => sum + (day.hours || 0), 0);
+        const jobDays = jobWorkDays.length;
+        const percentage = totalHours > 0 ? (jobHours / totalHours) * 100 : 0;
+
+        return {
+          job,
+          hours: jobHours,
+          days: jobDays,
+          percentage,
+        };
+      }).filter(stat => stat.hours > 0)
+        .sort((a, b) => b.hours - a.hours);
+    } else {
+      const selectedJob = jobs.find(job => job.id === selectedJobId);
+      if (selectedJob && totalHours > 0) {
+        jobStats = [{
+          job: selectedJob,
+          hours: totalHours,
+          days: totalDays,
+          percentage: 100,
+        }];
+      }
+    }
+    
+    setPeriodStats({
+      totalHours,
+      totalDays,
+      overtimeHours,
+      avgHoursPerDay,
+      jobBreakdown: jobStats,
+    });
   };
 
   const calculatePeriodStats = () => {
@@ -215,22 +305,52 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
 
+    console.log('🔍 DEBUG ReportsScreen calculatePeriodStats:');
+    console.log('Total workDays loaded:', workDays.length);
+    console.log('Selected period:', selectedPeriod);
+    console.log('Date range:', startDate.toISOString().split('T')[0], 'to', endDate.toISOString().split('T')[0]);
+    console.log('First 3 workDays dates:', workDays.slice(0, 3).map(d => ({ date: d.date, type: d.type })));
+
     // Filter by date range
     let periodWorkDays = workDays.filter(day => {
       const dayDate = new Date(day.date);
       // Fix date comparison - add one day to endDate to include today
       const endDatePlusOne = new Date(endDate);
       endDatePlusOne.setDate(endDate.getDate() + 1);
-      return dayDate >= startDate && dayDate < endDatePlusOne;
+      const isInRange = dayDate >= startDate && dayDate < endDatePlusOne;
+      
+      // Debug individual day filtering
+      if (workDays.indexOf(day) < 5) { // Only log first 5 days to avoid spam
+        console.log(`Day ${day.date}: dayDate=${dayDate.toISOString().split('T')[0]}, inRange=${isInRange}, type=${day.type}`);
+      }
+      
+      return isInRange;
     });
+
+    console.log('Period workDays after date filter:', periodWorkDays.length);
+    console.log('Sample period workDays:', periodWorkDays.slice(0, 3));
+    
+    // Check what types we have
+    const types = periodWorkDays.map(day => day.type);
+    console.log('Types found in period workDays:', types);
+    console.log('Unique types:', [...new Set(types)]);
 
     // Filter ONLY work days (like CalendarScreen does)
     const workDaysOnly = periodWorkDays.filter(day => day.type === 'work');
+    
+    // TEMP: Also try without type filter to compare
+    const allPeriodDays = periodWorkDays; // All days regardless of type
+    
+    console.log('Work days only after type filter:', workDaysOnly.length);
+    console.log('All period days (no type filter):', allPeriodDays.length);
+    console.log('Sample work days:', workDaysOnly.slice(0, 3));
+    console.log('Sample all days:', allPeriodDays.slice(0, 3));
 
     // Filter by selected job if not "all" 
-    let filteredWorkDays = workDaysOnly;
+    // TEMP: Use allPeriodDays instead of workDaysOnly to test
+    let filteredWorkDays = allPeriodDays; // Changed from workDaysOnly
     if (selectedJobId !== 'all') {
-      filteredWorkDays = workDaysOnly.filter(day => day.jobId === selectedJobId);
+      filteredWorkDays = allPeriodDays.filter(day => day.jobId === selectedJobId); // Changed from workDaysOnly
     }
 
     // Calculate totals
@@ -277,6 +397,13 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         jobStats = [];
       }
     }
+
+    // TEMP DEBUG: Show what we calculated
+    console.log('📊 FINAL CALCULATION RESULTS:');
+    console.log('totalHours:', totalHours);
+    console.log('totalDays:', totalDays);
+    console.log('filteredWorkDays used for calculation:', filteredWorkDays.length);
+    console.log('Sample filteredWorkDays:', filteredWorkDays.slice(0, 2));
 
     setPeriodStats({
       totalHours,

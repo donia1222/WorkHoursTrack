@@ -51,12 +51,22 @@
       <key>NSAllowsLocalNetworking</key>
       <true/>
     </dict>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to access your calendars</string>
+    <key>NSCalendarsUsageDescription</key>
+    <string>Esta app necesita acceso al calendario para sincronizar tus días de trabajo con el calendario nativo.</string>
+    <key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+    <string>Esta app necesita acceso de escritura al calendario para crear eventos de tus días de trabajo.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your location</string>
     <key>NSLocationAlwaysUsageDescription</key>
     <string>Diese App benötigt dauerhaften Standortzugriff, um Geofencing und Standortverfolgung im Hintergrund zu ermöglichen.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Diese App benötigt Zugriff auf deinen Standort, um dich auf der Karte zu lokalisieren.</string>
+    <string>Diese App benötigt Zugriff auf deinen Standort, um dich auf der Karte zu lokalizieren.</string>
+    <key>NSRemindersFullAccessUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to access your reminders</string>
+    <key>NSRemindersUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to access your reminders</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
@@ -67,15 +77,6 @@
     <array>
       <string>arm64</string>
     </array>
-    <key>NSLocationWhenInUseUsageDescription</key>
-<string>Esta app necesita tu ubicación para mostrar tu posición en el mapa.</string>
-<key>NSLocationAlwaysUsageDescription</key>
-<string>Esta app necesita acceso constante a tu ubicación para funciones como geofencing.</string>
-<key>UIBackgroundModes</key>
-<array>
-  <string>location</string>
-</array>
-
     <key>UIRequiresFullScreen</key>
     <false/>
     <key>UIStatusBarStyle</key>
