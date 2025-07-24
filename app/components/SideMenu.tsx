@@ -54,6 +54,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    
   },
   header: {
     paddingHorizontal: Theme.spacing.xl,

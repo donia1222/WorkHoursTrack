@@ -1418,7 +1418,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   {
                     backgroundColor: 
                       autoTimerStatus?.state === 'cancelled' ? '#34C759' :  // Verde para play
-                      autoTimerStatus?.state === 'active' ? '#007AFF' :     // Azul para map
+                      autoTimerStatus?.state === 'active' ? '#FF3B30' :     // Azul para map
                       '#FF3B30'  // Rojo para stop
                   }
                 ]}
@@ -1427,7 +1427,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   size={16} 
                   name={
                     autoTimerStatus?.state === 'cancelled' ? "play.fill" :
-                    autoTimerStatus?.state === 'active' ? "clock.fill" :
+                    autoTimerStatus?.state === 'active' ? "stop.fill" :
                     "stop.fill"
                   } 
                   color="#FFFFFF" 

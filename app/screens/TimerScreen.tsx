@@ -893,7 +893,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       {autoTimerStatus && autoTimerStatus.state !== 'inactive' && (() => {
         const selectedJob = jobs.find(job => job.id === selectedJobId);
         const hasLocation = selectedJob?.location?.latitude && selectedJob?.location?.longitude;
-        return hasLocation;
+        return hasLocation && selectedJob?.autoTimer?.enabled;
       })() && (
         <View style={styles.autoTimerStatusContainer}>
           <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.autoTimerStatusCard}>
