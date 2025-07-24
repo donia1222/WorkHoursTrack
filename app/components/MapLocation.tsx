@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MapView, { Marker, Circle } from 'react-native-maps';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, Modal, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, Modal, Dimensions, Switch } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -571,21 +571,19 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flex: 1,
     marginLeft: 12,
   },
-  autoTimerStatusContainer: {
+  autoTimerSwitchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    justifyContent: 'space-between',
+    marginTop: 6,
   },
-  autoTimerIndicatorSmall: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
-  },
-  autoTimerStatusText: {
-    fontSize: 12,
+  autoTimerSwitchLabel: {
+    fontSize: 13,
     color: colors.textSecondary,
     fontWeight: '500',
+  },
+  autoTimerSwitch: {
+    transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }],
   },
   actionModalCancelButton: {
     padding: 16,
@@ -874,6 +872,16 @@ export default function MapLocation({ location, onNavigate }: Props) {
     const interval = setInterval(checkActiveTimer, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Update selectedJob when jobs change to keep it in sync
+  useEffect(() => {
+    if (selectedJob && jobs.length > 0) {
+      const updatedJob = jobs.find(job => job.id === selectedJob.id);
+      if (updatedJob) {
+        setSelectedJob(updatedJob);
+      }
+    }
+  }, [jobs]);
 
   // AutoTimer service initialization - runs only once
   useEffect(() => {
@@ -1266,6 +1274,54 @@ export default function MapLocation({ location, onNavigate }: Props) {
     setEditingJob(null);
   };
 
+  const hasJobAddress = (job: Job) => {
+    return !!(job.address?.trim() || 
+              job.street?.trim() || 
+              job.city?.trim() || 
+              job.postalCode?.trim());
+  };
+
+  const handleAutoTimerToggle = async (job: Job, value: boolean) => {
+    if (value && !hasJobAddress(job)) {
+      Alert.alert(
+        t('maps.auto_timer_address_required_title'),
+        t('maps.auto_timer_address_required_message'),
+        [{ text: 'OK', style: 'default' }]
+      );
+      return;
+    }
+
+    try {
+      const updatedJob = {
+        ...job,
+        autoTimer: {
+          ...job.autoTimer,
+          enabled: value,
+          geofenceRadius: job.autoTimer?.geofenceRadius || 100,
+          delayStart: job.autoTimer?.delayStart || 2,
+          delayStop: job.autoTimer?.delayStop || 2,
+          notifications: job.autoTimer?.notifications !== false,
+        }
+      };
+
+      await JobService.updateJob(job.id, updatedJob);
+      await loadJobs();
+      
+      if (value) {
+        Alert.alert(
+          t('maps.auto_timer_enabled_title'),
+          t('maps.auto_timer_enabled_message')
+        );
+      }
+    } catch (error) {
+      console.error('Error updating auto-timer:', error);
+      Alert.alert(
+        t('maps.error'),
+        t('maps.auto_timer_error')
+      );
+    }
+  };
+
   const handleJobPress = (job: Job) => {
     // Navigate to job location if it has coordinates
     if (job.location?.latitude && job.location?.longitude && mapRef.current) {
@@ -1630,12 +1686,18 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   <Text style={styles.actionModalButtonText}>
                     {t('maps.edit_job')}
                   </Text>
-                  {selectedJob?.autoTimer?.enabled && (
-                    <View style={styles.autoTimerStatusContainer}>
-                      <View style={[styles.autoTimerIndicatorSmall, { backgroundColor: colors.success }]} />
-                      <Text style={styles.autoTimerStatusText}>
-                        {t('maps.auto_timer_active')}
+                  {hasJobAddress(selectedJob) && (
+                    <View style={styles.autoTimerSwitchContainer}>
+                      <Text style={styles.autoTimerSwitchLabel}>
+                        {t('maps.auto_timer')}
                       </Text>
+                      <Switch
+                        value={selectedJob?.autoTimer?.enabled || false}
+                        onValueChange={(value) => handleAutoTimerToggle(selectedJob, value)}
+                        trackColor={{ false: colors.separator, true: colors.success + '40' }}
+                        thumbColor={selectedJob?.autoTimer?.enabled ? colors.success : colors.textTertiary}
+                        style={styles.autoTimerSwitch}
+                      />
                     </View>
                   )}
                 </View>

@@ -566,6 +566,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           address: '',
           radius: 100,
         },
+        autoTimer: {
+          enabled: false,
+          geofenceRadius: 100,
+          delayStart: 2,
+          delayStop: 2,
+          notifications: true,
+        },
       });
     }
     
@@ -1498,8 +1505,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
   const tabs = [
     { key: 'basic', label: t('job_form.tabs.basic'), icon: 'gear' },
-    { key: 'schedule', label: t('job_form.tabs.schedule'), icon: 'clock.fill' },
     { key: 'auto', label: t('job_form.tabs.auto'), icon: 'location.fill' },
+    { key: 'schedule', label: t('job_form.tabs.schedule'), icon: 'clock.fill' },
     { key: 'financial', label: t('job_form.tabs.financial'), icon: 'dollarsign.circle.fill' },
     { key: 'billing', label: t('job_form.tabs.billing'), icon: 'chart.bar.fill' },
   ] as const;
@@ -1541,16 +1548,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     color={
                       isActive 
                         ? colors.primary 
-                        : isAutoTab && isAutoTimerEnabled 
-                          ? colors.success 
-                          : colors.textSecondary
+                        : colors.textSecondary
                     }
                   />
                   <Text
                     style={[
                       styles.tabText,
                       isActive && styles.tabTextActive,
-                      isAutoTab && isAutoTimerEnabled && !isActive && { color: colors.success, fontWeight: '600' },
                     ]}
                   >
                     {tab.label}
