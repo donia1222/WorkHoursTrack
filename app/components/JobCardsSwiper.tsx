@@ -102,13 +102,6 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                     <Text style={[styles.jobName, isActive && styles.jobNameActive]} numberOfLines={1}>
                       {job.name}
                     </Text>
-                    {isActive && (
-                      <View style={styles.activeIndicator}>
-                        <Text style={styles.activeText}>
-                          {t('maps.working_now')}
-                        </Text>
-                      </View>
-                    )}
                   </View>
 
                   {/* Company name */}
@@ -127,18 +120,18 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                       <View style={styles.statsGrid}>
                         <View style={styles.statCard}>
                           <View style={styles.statIconContainer}>
-                            <IconSymbol size={19} name="clock.fill" color={colors.primary} />
+                            <IconSymbol size={19} name="clock.fill" color={job.color} />
                           </View>
-                          <Text style={styles.statValue}>
+                          <Text style={[styles.statValue, { color: job.color }]}>
                             {Math.floor(jobStats.thisMonthHours)}h {Math.round((jobStats.thisMonthHours - Math.floor(jobStats.thisMonthHours)) * 60)}m
                           </Text>
                           <Text style={styles.statLabel} numberOfLines={2}>{t('job_statistics.hours_worked')}</Text>
                         </View>
                         <View style={styles.statCard}>
                           <View style={styles.statIconContainer}>
-                            <IconSymbol size={19} name="calendar" color={colors.primary} />
+                            <IconSymbol size={19} name="calendar" color={job.color} />
                           </View>
-                          <Text style={styles.statValue}>{jobStats.thisMonthDays}</Text>
+                          <Text style={[styles.statValue, { color: job.color }]}>{jobStats.thisMonthDays}</Text>
                           <Text style={styles.statLabel} numberOfLines={2}>{t('job_statistics.days_worked')}</Text>
                         </View>
                       </View>
@@ -262,12 +255,14 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
+    marginRight: 18,
   },
   activeText: {
     fontSize: 10,
     fontWeight: '600',
     color: colors.success,
     textTransform: 'uppercase',
+
   },
   companyName: {
     fontSize: 14,

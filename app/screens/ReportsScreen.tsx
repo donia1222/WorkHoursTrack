@@ -21,6 +21,7 @@ import { JobService } from '../services/JobService';
 import { useBackNavigation } from '../context/NavigationContext';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { Calendar } from 'react-native-calendars';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -144,6 +145,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const { handleBack } = useBackNavigation();
   const { colors, isDark } = useTheme();
   const { t, language } = useLanguage();
+  const { triggerHaptic } = useHapticFeedback();
   const styles = getStyles(colors, isDark);
   
   // Animation values
@@ -782,6 +784,135 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     `;
   };
 
+  const renderCompactJobSelector = () => {
+    if (jobs.length === 0) return null;
+    
+    // Always show "All" option + available jobs
+    const allOptions = [{ id: 'all', name: t('reports.all_jobs'), color: colors.primary }].concat(jobs);
+    
+    if (allOptions.length <= 4) {
+      // Para hasta 4 opciones (incluyendo "Todos"), mostrar como pestañas
+      return (
+        <View style={styles.compactJobSelector}>
+          <Text style={styles.compactJobSelectorTitle}>{t('reports.filter_by_job')}</Text>
+          <View style={styles.compactJobTabs}>
+            {allOptions.map((option) => (
+              <TouchableOpacity
+                key={option.id}
+                style={[
+                  styles.compactJobTab,
+                  selectedJobId === option.id && styles.compactJobTabActive
+                ]}
+                onPress={() => {
+                  triggerHaptic('light');
+                  setSelectedJobId(option.id);
+                }}
+              >
+                {option.id !== 'all' && (
+                  <View style={[styles.compactJobTabDot, { backgroundColor: option.color }]} />
+                )}
+                <Text 
+                  style={[
+                    styles.compactJobTabText,
+                    selectedJobId === option.id && styles.compactJobTabTextActive
+                  ]}
+                  numberOfLines={1}
+                >
+                  {option.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      );
+    } else {
+      // Para más opciones, mostrar como scroll horizontal
+      return (
+        <View style={styles.compactJobSelector}>
+          <Text style={styles.compactJobSelectorTitle}>{t('reports.filter_by_job')}</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.compactJobScrollContainer}
+            contentContainerStyle={{ paddingHorizontal: 4 }}
+          >
+            {allOptions.map((option, index) => (
+              <TouchableOpacity
+                key={option.id}
+                style={[
+                  styles.compactJobTab,
+                  selectedJobId === option.id && styles.compactJobTabActive,
+                  { 
+                    flex: 0,
+                    minWidth: 100,
+                    marginRight: index < allOptions.length - 1 ? 8 : 0
+                  }
+                ]}
+                onPress={() => {
+                  triggerHaptic('light');
+                  setSelectedJobId(option.id);
+                }}
+              >
+                {option.id !== 'all' && (
+                  <View style={[styles.compactJobTabDot, { backgroundColor: option.color }]} />
+                )}
+                <Text 
+                  style={[
+                    styles.compactJobTabText,
+                    selectedJobId === option.id && styles.compactJobTabTextActive
+                  ]}
+                  numberOfLines={1}
+                >
+                  {option.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      );
+    }
+  };
+
+  const renderCompactPeriodSelector = () => {
+    const periods = [
+      { key: 'week', label: t('reports.week') },
+      { key: 'month', label: t('reports.month') },
+      { key: 'year', label: t('reports.year') },
+      { key: 'custom', label: t('reports.custom_range') }
+    ] as const;
+
+    return (
+      <View style={styles.compactPeriodSelector}>
+        <Text style={styles.compactPeriodSelectorTitle}>{t('reports.analysis_period')}</Text>
+        <View style={styles.compactPeriodTabs}>
+          {periods.map((period) => (
+            <TouchableOpacity
+              key={period.key}
+              style={[
+                styles.compactPeriodTab,
+                selectedPeriod === period.key && styles.compactPeriodTabActive
+              ]}
+              onPress={() => {
+                triggerHaptic('light');
+                setSelectedPeriod(period.key);
+              }}
+            >
+              <Text 
+                style={[
+                  styles.compactPeriodTabText,
+                  selectedPeriod === period.key && styles.compactPeriodTabTextActive
+                ]}
+                numberOfLines={1}
+              >
+                {period.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -805,82 +936,15 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Job selector */}
-        {jobs.length > 1 && (
-          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.jobSelector}>
-            <Text style={styles.selectorTitle}>{t('reports.filter_by_job')}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.jobScrollView}>
-              <View style={styles.jobButtons}>
-                <TouchableOpacity
-                  style={[
-                    styles.jobButton,
-                    selectedJobId === 'all' && styles.jobButtonActive,
-                  ]}
-                  onPress={() => setSelectedJobId('all')}
-                >
-                  <Text
-                    style={[
-                      styles.jobButtonText,
-                      selectedJobId === 'all' && styles.jobButtonTextActive,
-                    ]}
-                  >
-                    {t('reports.all_jobs')}
-                  </Text>
-                </TouchableOpacity>
-                {jobs.map((job) => (
-                  <TouchableOpacity
-                    key={job.id}
-                    style={[
-                      styles.jobButton,
-                      selectedJobId === job.id && styles.jobButtonActive,
-                    ]}
-                    onPress={() => setSelectedJobId(job.id)}
-                  >
-                    <View style={[styles.jobButtonDot, { backgroundColor: job.color }]} />
-                    <Text
-                      style={[
-                        styles.jobButtonText,
-                        selectedJobId === job.id && styles.jobButtonTextActive,
-                      ]}
-                    >
-                      {job.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-          </BlurView>
-        )}
+        {renderCompactJobSelector()}
 
         {/* Period selector */}
         <Animated.View style={[{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.periodSelector}>
-            <Text style={styles.selectorTitle}>{t('reports.analysis_period')}</Text>
-            <View style={styles.periodButtons}>
-              {(['week', 'month', 'year', 'custom'] as const).map((period) => (
-                <TouchableOpacity
-                  key={period}
-                  style={[
-                    styles.periodButton,
-                    styles.periodButtonBorder,
-                    selectedPeriod === period && styles.periodButtonActive,
-                  ]}
-                  onPress={() => setSelectedPeriod(period)}
-                >
-                  <Text
-                    style={[
-                      styles.periodButtonText,
-                      styles.periodButtonTextColor,
-                      selectedPeriod === period && styles.periodButtonTextActive,
-                    ]}
-                  >
-                    {period === 'custom' ? t('reports.custom_range') : t(`reports.${period}`)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            
-            {/* Custom Date Range Picker - SOLO cuando Custom range está seleccionado */}
-            {selectedPeriod === 'custom' && (
+          {renderCompactPeriodSelector()}
+          
+          {/* Custom Date Range Picker - SOLO cuando Custom range está seleccionado */}
+          {selectedPeriod === 'custom' && (
+            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.dateRangeSelector}>
               <View style={styles.dateRangeContainer}>
                 <View style={styles.dateRangeRow}>
                   <TouchableOpacity
@@ -915,8 +979,8 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                   <Text style={styles.applyRangeButtonText}>{t('reports.apply_range')}</Text>
                 </TouchableOpacity>
               </View>
-            )}
-          </BlurView>
+            </BlurView>
+          )}
         </Animated.View>
 
         {/* Main stats */}
@@ -1294,6 +1358,114 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   jobButtonTextActive: {
     color: '#FFFFFF',
+  },
+  compactJobSelector: {
+    marginVertical: 8,
+    paddingHorizontal: 16,
+  },
+  compactJobSelectorTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  compactJobTabs: {
+    flexDirection: 'row',
+    backgroundColor: colors.separator + '40',
+    borderRadius: 12,
+    padding: 4,
+  },
+  compactJobTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 8,
+    justifyContent: 'center',
+  },
+  compactJobTabActive: {
+    backgroundColor: colors.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  compactJobTabDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  compactJobTabText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    flex: 1,
+  },
+  compactJobTabTextActive: {
+    color: colors.text,
+    fontWeight: '600',
+  },
+  compactJobScrollContainer: {
+    maxHeight: 60,
+  },
+  compactPeriodSelector: {
+    marginVertical: 8,
+    paddingHorizontal: 16,
+  },
+  compactPeriodSelectorTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  compactPeriodTabs: {
+    flexDirection: 'row',
+    backgroundColor: colors.separator + '40',
+    borderRadius: 12,
+    padding: 4,
+  },
+  compactPeriodTab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  compactPeriodTabActive: {
+    backgroundColor: colors.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  compactPeriodTabText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  compactPeriodTabTextActive: {
+    color: colors.text,
+    fontWeight: '600',
+  },
+  dateRangeSelector: {
+    marginTop: 8,
+    borderRadius: 16,
+    padding: 16,
+    backgroundColor: colors.surface,
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8, 
+    elevation: 4,
   },
   periodSelector: {
     marginVertical: 16,

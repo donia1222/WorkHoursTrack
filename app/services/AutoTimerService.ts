@@ -98,8 +98,8 @@ class AutoTimerService {
         await JobService.clearActiveSession();
       }
 
-      // Start geofence monitoring
-      const success = await this.geofenceService.startMonitoring(jobs);
+      // Start geofence monitoring with background support
+      const success = await this.geofenceService.startMonitoring(jobs, true);
       if (success) {
         this.isEnabled = true;
         this.currentState = 'inactive';

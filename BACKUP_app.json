@@ -15,8 +15,7 @@
         "NSLocationAlwaysUsageDescription": "Diese App benötigt dauerhaften Standortzugriff, um Geofencing und Standortverfolgung im Hintergrund zu ermöglichen.",
         "NSCalendarsUsageDescription": "Esta app necesita acceso al calendario para sincronizar tus días de trabajo con el calendario nativo.",
         "NSCalendarsWriteOnlyAccessUsageDescription": "Esta app necesita acceso de escritura al calendario para crear eventos de tus días de trabajo.",
-        "NSUserNotificationsUsageDescription": "Esta app necesita permisos de notificación para avisarte cuando el timer automático se inicie o pause.",
-        "UIBackgroundModes": ["location", "background-fetch", "background-processing"]
+        "NSUserNotificationsUsageDescription": "Esta app necesita permisos de notificación para avisarte cuando el timer automático se inicie o pause."
       },
       "bundleIdentifier": "com.tuusuario.geolocalizacionapp"
     },

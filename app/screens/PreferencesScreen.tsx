@@ -139,6 +139,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Theme.spacing.md,
+    marginLeft:10
   },
   settingContent: {
     flex: 1,
@@ -441,62 +442,10 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
                 {t('preferences.notifications.test_desc')}
               </Text>
             </View>
-            <View style={styles.checkmark}>
-              <IconSymbol size={20} name="play.fill" color={colors.primary} />
-            </View>
+    
           </TouchableOpacity>
 
-          {/* Delayed Test Notification Button */}
-          <TouchableOpacity 
-            style={[
-              styles.settingItem, 
-              { 
-                marginTop: 8, 
-                backgroundColor: countdown !== null ? 'rgba(255, 149, 0, 0.1)' : 'rgba(52, 199, 89, 0.1)', 
-                borderRadius: 12 
-              }
-            ]}
-            onPress={startDelayedNotificationTest}
-            disabled={countdown !== null}
-          >
-            <View style={[
-              styles.settingIcon, 
-              { backgroundColor: countdown !== null ? 'rgba(255, 149, 0, 0.15)' : 'rgba(52, 199, 89, 0.15)' }
-            ]}>
-              <IconSymbol 
-                size={20} 
-                name={countdown !== null ? "clock.fill" : "alarm.fill"} 
-                color={countdown !== null ? colors.warning : colors.success} 
-              />
-            </View>
-            <View style={styles.settingContent}>
-              <Text style={styles.settingTitle}>
-                {countdown !== null ? `Notificación en ${countdown}s` : 'Prueba con App Cerrada (20s)'}
-              </Text>
-              <Text style={styles.settingDescription}>
-                {countdown !== null 
-                  ? 'Cierra la app ahora para probar notificaciones en background' 
-                  : 'Programa notificación en 20 segundos para probar con app cerrada'
-                }
-              </Text>
-            </View>
-            <View style={styles.checkmark}>
-              {countdown !== null ? (
-                <View style={{ 
-                  backgroundColor: colors.warning, 
-                  borderRadius: 12, 
-                  paddingHorizontal: 8, 
-                  paddingVertical: 4 
-                }}>
-                  <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 14 }}>
-                    {countdown}s
-                  </Text>
-                </View>
-              ) : (
-                <IconSymbol size={20} name="alarm" color={colors.success} />
-              )}
-            </View>
-          </TouchableOpacity>
+          
         </BlurView>
       
       </ScrollView>

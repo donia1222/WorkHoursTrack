@@ -19,6 +19,7 @@ import { JobService } from '../services/JobService';
 import { useBackNavigation, useNavigation } from '../context/NavigationContext';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { CalendarSyncService } from '../services/CalendarSyncService';
 
 // Custom Day Component
@@ -245,6 +246,60 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   jobButtonTextActive: {
     color: '#FFFFFF',
   },
+  compactJobSelector: {
+    marginVertical: 8,
+    paddingHorizontal: 16,
+  },
+  compactJobSelectorTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  compactJobTabs: {
+    flexDirection: 'row',
+    backgroundColor: colors.separator + '40',
+    borderRadius: 12,
+    padding: 4,
+  },
+  compactJobTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 8,
+    justifyContent: 'center',
+  },
+  compactJobTabActive: {
+    backgroundColor: colors.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  compactJobTabDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  compactJobTabText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    flex: 1,
+  },
+  compactJobTabTextActive: {
+    color: colors.text,
+    fontWeight: '600',
+  },
+  compactJobScrollContainer: {
+    maxHeight: 60,
+  },
   calendar: {
     marginVertical: 20,
     borderRadius: 16,
@@ -460,6 +515,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   const [selectedJobId, setSelectedJobId] = useState<string | 'all'>('all');
   const { handleBack } = useBackNavigation();
   const { selectedJob, setSelectedJob } = useNavigation();
+  const { triggerHaptic } = useHapticFeedback();
   
   const styles = getStyles(colors, isDark);
 
@@ -522,6 +578,95 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         console.error('Error deleting work day:', error);
         Alert.alert('Error', t('calendar.delete_workday_error'));
       }
+    }
+  };
+
+  const renderCompactJobSelector = () => {
+    if (jobs.length === 0) return null;
+    
+    // Always show "All" option + available jobs
+    const allOptions = [{ id: 'all', name: t('calendar.all_jobs'), color: colors.primary }].concat(jobs);
+    
+    if (allOptions.length <= 4) {
+      // Para hasta 4 opciones (incluyendo "Todos"), mostrar como pestañas
+      return (
+        <View style={styles.compactJobSelector}>
+          <Text style={styles.compactJobSelectorTitle}>{t('calendar.filter_by_job')}</Text>
+          <View style={styles.compactJobTabs}>
+            {allOptions.map((option) => (
+              <TouchableOpacity
+                key={option.id}
+                style={[
+                  styles.compactJobTab,
+                  selectedJobId === option.id && styles.compactJobTabActive
+                ]}
+                onPress={() => {
+                  triggerHaptic('light');
+                  setSelectedJobId(option.id);
+                }}
+              >
+                {option.id !== 'all' && (
+                  <View style={[styles.compactJobTabDot, { backgroundColor: option.color }]} />
+                )}
+                <Text 
+                  style={[
+                    styles.compactJobTabText,
+                    selectedJobId === option.id && styles.compactJobTabTextActive
+                  ]}
+                  numberOfLines={1}
+                >
+                  {option.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      );
+    } else {
+      // Para más opciones, mostrar como scroll horizontal
+      return (
+        <View style={styles.compactJobSelector}>
+          <Text style={styles.compactJobSelectorTitle}>{t('calendar.filter_by_job')}</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.compactJobScrollContainer}
+            contentContainerStyle={{ paddingHorizontal: 4 }}
+          >
+            {allOptions.map((option, index) => (
+              <TouchableOpacity
+                key={option.id}
+                style={[
+                  styles.compactJobTab,
+                  selectedJobId === option.id && styles.compactJobTabActive,
+                  { 
+                    flex: 0,
+                    minWidth: 100,
+                    marginRight: index < allOptions.length - 1 ? 8 : 0
+                  }
+                ]}
+                onPress={() => {
+                  triggerHaptic('light');
+                  setSelectedJobId(option.id);
+                }}
+              >
+                {option.id !== 'all' && (
+                  <View style={[styles.compactJobTabDot, { backgroundColor: option.color }]} />
+                )}
+                <Text 
+                  style={[
+                    styles.compactJobTabText,
+                    selectedJobId === option.id && styles.compactJobTabTextActive
+                  ]}
+                  numberOfLines={1}
+                >
+                  {option.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      );
     }
   };
 
@@ -694,57 +839,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         ) : (
           <>
         {/* Job selector */}
-        {jobs.length > 1 && (
-          <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.jobSelector}>
-            <LinearGradient
-              colors={isDark ? ['rgba(0, 122, 255, 0.12)', 'rgba(0, 122, 255, 0.04)'] : ['rgba(0, 122, 255, 0.08)', 'rgba(0, 122, 255, 0.02)']}
-              style={styles.jobSelectorGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            />
-            <Text style={styles.selectorTitle}>{t('calendar.filter_by_job')}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.jobScrollView}>
-              <View style={styles.jobButtons}>
-                <TouchableOpacity
-                  style={[
-                    styles.jobButton,
-                    selectedJobId === 'all' && styles.jobButtonActive,
-                  ]}
-                  onPress={() => setSelectedJobId('all')}
-                >
-                  <Text
-                    style={[
-                      styles.jobButtonText,
-                      selectedJobId === 'all' && styles.jobButtonTextActive,
-                    ]}
-                  >
-                    {t('calendar.all_jobs')}
-                  </Text>
-                </TouchableOpacity>
-                {jobs.map((job) => (
-                  <TouchableOpacity
-                    key={job.id}
-                    style={[
-                      styles.jobButton,
-                      selectedJobId === job.id && styles.jobButtonActive,
-                    ]}
-                    onPress={() => setSelectedJobId(job.id)}
-                  >
-                    <View style={[styles.jobButtonDot, { backgroundColor: job.color }]} />
-                    <Text
-                      style={[
-                        styles.jobButtonText,
-                        selectedJobId === job.id && styles.jobButtonTextActive,
-                      ]}
-                    >
-                      {job.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-          </BlurView>
-        )}
+        {renderCompactJobSelector()}
 
         <Calendar
           style={styles.calendar}

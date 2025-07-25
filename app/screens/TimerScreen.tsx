@@ -20,8 +20,8 @@ import Animated, {
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import JobSelector from '../components/JobSelector';
 import NoJobsWarning from '../components/NoJobsWarning';
+import JobFormModal from '../components/JobFormModal';
 import { Job, WorkDay } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
@@ -437,6 +437,116 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: colors.primary,
     fontWeight: '600',
   },
+  autoTimerQuickButton: {
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.15)' : 'rgba(0, 122, 255, 0.1)',
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: isDark ? 'rgba(0, 122, 255, 0.3)' : 'rgba(0, 122, 255, 0.2)',
+    shadowColor: colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+    minWidth: 120,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  autoTimerQuickButtonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 18,
+  },
+  autoTimerQuickButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  autoTimerQuickButtonIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  autoTimerQuickButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.primary,
+    letterSpacing: 0.5,
+    textAlign: 'center',
+  },
+  compactJobSelector: {
+    marginVertical: 8,
+    paddingHorizontal: 16,
+  },
+  compactJobSelectorTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  compactJobTabs: {
+    flexDirection: 'row',
+    backgroundColor: colors.separator + '40',
+    borderRadius: 12,
+    padding: 4,
+  },
+  compactJobTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 8,
+    justifyContent: 'center',
+  },
+  compactJobTabActive: {
+    backgroundColor: colors.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  compactJobTabDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  compactJobTabText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    flex: 1,
+  },
+  compactJobTabTextActive: {
+    color: colors.text,
+    fontWeight: '600',
+  },
+  compactJobScrollContainer: {
+    maxHeight: 60,
+  },
 });
 
 export default function TimerScreen({ onNavigate }: TimerScreenProps) {
@@ -454,6 +564,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   const [autoTimerService] = useState(() => AutoTimerService.getInstance());
   const { handleBack } = useBackNavigation();
   const { selectedJob, setSelectedJob } = useNavigation();
+  const [isJobFormModalVisible, setIsJobFormModalVisible] = useState(false);
   
   // Animaciones
   const pulseAnimation = useSharedValue(1);
@@ -860,6 +971,112 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     onNavigate('jobs-management', { openAddModal: true });
   };
 
+  const handleJobFormSave = async () => {
+    await loadJobs();
+    setIsJobFormModalVisible(false);
+  };
+
+  const renderCompactJobSelector = () => {
+    console.log('🔄 renderCompactJobSelector called with jobs:', jobs.length, 'isRunning:', isRunning, 'activeSession:', !!activeSession);
+    if (jobs.length === 0) return null;
+    
+    if (jobs.length === 1) {
+      // Para 1 trabajo, mostrar como seleccionado
+      const job = jobs[0];
+      return (
+        <View style={styles.compactJobSelector}>
+          <Text style={styles.compactJobSelectorTitle}>{t('job_selector.title')}</Text>
+          <View style={styles.compactJobTabs}>
+            <View style={[styles.compactJobTab, styles.compactJobTabActive]}>
+              <View style={[styles.compactJobTabDot, { backgroundColor: job.color }]} />
+              <Text style={[styles.compactJobTabText, styles.compactJobTabTextActive]} numberOfLines={1}>
+                {job.name}
+              </Text>
+            </View>
+          </View>
+        </View>
+      );
+    }
+    
+    if (jobs.length <= 3) {
+      // Para 2-3 trabajos, mostrar como pestañas
+      return (
+        <View style={styles.compactJobSelector}>
+          <Text style={styles.compactJobSelectorTitle}>{t('job_selector.title')}</Text>
+          <View style={styles.compactJobTabs}>
+            {jobs.map((job) => (
+              <TouchableOpacity
+                key={job.id}
+                style={[
+                  styles.compactJobTab,
+                  selectedJobId === job.id && styles.compactJobTabActive
+                ]}
+                onPress={() => {
+                  triggerHaptic('light');
+                  setSelectedJobId(job.id);
+                }}
+              >
+                <View style={[styles.compactJobTabDot, { backgroundColor: job.color }]} />
+                <Text 
+                  style={[
+                    styles.compactJobTabText,
+                    selectedJobId === job.id && styles.compactJobTabTextActive
+                  ]}
+                  numberOfLines={1}
+                >
+                  {job.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      );
+    } else {
+      // Para más de 3 trabajos, mostrar como scroll horizontal
+      return (
+        <View style={styles.compactJobSelector}>
+          <Text style={styles.compactJobSelectorTitle}>{t('job_selector.title')}</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.compactJobScrollContainer}
+            contentContainerStyle={{ paddingHorizontal: 4 }}
+          >
+            {jobs.map((job, index) => (
+              <TouchableOpacity
+                key={job.id}
+                style={[
+                  styles.compactJobTab,
+                  selectedJobId === job.id && styles.compactJobTabActive,
+                  { 
+                    flex: 0,
+                    minWidth: 120,
+                    marginRight: index < jobs.length - 1 ? 8 : 0
+                  }
+                ]}
+                onPress={() => {
+                  triggerHaptic('light');
+                  setSelectedJobId(job.id);
+                }}
+              >
+                <View style={[styles.compactJobTabDot, { backgroundColor: job.color }]} />
+                <Text 
+                  style={[
+                    styles.compactJobTabText,
+                    selectedJobId === job.id && styles.compactJobTabTextActive
+                  ]}
+                  numberOfLines={1}
+                >
+                  {job.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      );
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -1011,14 +1228,43 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           <NoJobsWarning onCreateJob={handleCreateJob} />
         ) : (
           <>
-            {!isRunning && !activeSession && (
+            {!isRunning && !activeSession && jobs.length > 0 && (
               <View style={styles.section}>
-                <JobSelector
-                  jobs={jobs}
-                  selectedJobId={selectedJobId}
-                  onJobSelect={setSelectedJobId}
-                  showAddButton={false}
-                />
+                {renderCompactJobSelector()}
+              </View>
+            )}
+
+            {!isRunning && !activeSession && (
+              <View style={styles.quickActions}>
+                <Text style={styles.quickActionsTitle}>{t('timer.quick_actions')}</Text>
+                <View style={styles.quickActionButtons}>
+                  <TouchableOpacity 
+                    style={styles.autoTimerQuickButton}
+                    onPress={() => {
+                      triggerHaptic('light');
+                      setIsJobFormModalVisible(true);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <LinearGradient
+                      colors={isDark ? 
+                        ['rgba(0, 122, 255, 0.2)', 'rgba(0, 122, 255, 0.05)'] : 
+                        ['rgba(0, 122, 255, 0.15)', 'rgba(0, 122, 255, 0.03)']
+                      }
+                      style={styles.autoTimerQuickButtonGradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    />
+                    <View style={styles.autoTimerQuickButtonContent}>
+                      <View style={styles.autoTimerQuickButtonIcon}>
+                        <IconSymbol size={16} name="location.fill" color={colors.primary} />
+                      </View>
+                      <Text style={styles.autoTimerQuickButtonText}>
+                        AUTOTIMER
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
 
@@ -1153,6 +1399,14 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           </>
         )}
       </ScrollView>
+
+      <JobFormModal
+        visible={isJobFormModalVisible}
+        onClose={() => setIsJobFormModalVisible(false)}
+        editingJob={selectedJobId ? jobs.find(job => job.id === selectedJobId) : null}
+        onSave={handleJobFormSave}
+        initialTab="auto"
+      />
     </SafeAreaView>
   );
 }
