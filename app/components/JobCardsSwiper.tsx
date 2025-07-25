@@ -118,12 +118,7 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                     </Text>
                   )}
 
-                  {/* Status or schedule */}
-                  {!isActive && scheduleStatus && (
-                    <Text style={styles.scheduleStatus} numberOfLines={1}>
-                      {scheduleStatus}
-                    </Text>
-                  )}
+             
 
                   {/* Mini Statistics - centered display */}
                   {jobStats &&   (
@@ -328,7 +323,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   },
   centeredStats: {
     alignItems: 'center',
-marginTop: -8,
+
     marginBottom: 8,
   },
   statsTitle: {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import { Theme } from '../constants/Theme';
 import { BlurView } from 'expo-blur';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage, languageConfig, SupportedLanguage } from '../contexts/LanguageContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import NotificationService from '../services/NotificationService';
 
 interface PreferencesScreenProps {
   onClose?: () => void;
@@ -183,9 +185,9 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
 export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
   const { themeMode, setThemeMode, colors, isDark } = useTheme();
   const { language, setLanguage, t } = useLanguage();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [reminderNotifications, setReminderNotifications] = useState(true);
-  const [locationNotifications, setLocationNotifications] = useState(false);
+  const { settings: notificationSettings, updateSettings: updateNotificationSettings, sendNotification } = useNotifications();
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [countdownInterval, setCountdownInterval] = useState<NodeJS.Timeout | null>(null);
 
   const handleThemeChange = (mode: 'auto' | 'light' | 'dark') => {
     setThemeMode(mode);
@@ -193,6 +195,50 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
 
   const handleLanguageChange = (lang: SupportedLanguage) => {
     setLanguage(lang);
+  };
+
+  // Cleanup countdown interval on unmount
+  useEffect(() => {
+    return () => {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
+    };
+  }, [countdownInterval]);
+
+  // Start countdown for delayed notification
+  const startDelayedNotificationTest = async () => {
+    console.log('🚀 Starting delayed notification test');
+    
+    // Clear any existing countdown
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+    }
+    
+    try {
+      const notificationService = NotificationService.getInstance();
+      await notificationService.scheduleDelayedTestNotification(20);
+      
+      // Start countdown
+      setCountdown(20);
+      
+      const interval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === null || prev <= 1) {
+            clearInterval(interval);
+            setCountdownInterval(null);
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      setCountdownInterval(interval);
+      
+      console.log('⏰ Countdown started! Close the app to test background notifications');
+    } catch (error) {
+      console.error('❌ Error starting delayed test:', error);
+    }
   };
 
   const styles = getStyles(colors, isDark);
@@ -299,6 +345,159 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
           ))}
         </BlurView>
 
+        {/* Notifications Section */}
+        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>{t('preferences.notifications.title')}</Text>
+          <Text style={styles.sectionDescription}>
+            {t('preferences.notifications.description')}
+          </Text>
+          
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => updateNotificationSettings({ enabled: !notificationSettings.enabled })}
+          >
+            <View style={[styles.settingIcon, styles.notificationIconBg]}>
+              <IconSymbol size={20} name="bell.fill" color={colors.primary} />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>{t('preferences.notifications.general')}</Text>
+              <Text style={styles.settingDescription}>
+                {t('preferences.notifications.general_desc')}
+              </Text>
+            </View>
+            <Switch
+              value={notificationSettings.enabled}
+              onValueChange={(value) => updateNotificationSettings({ enabled: value })}
+              trackColor={{ false: colors.separator, true: colors.primary }}
+              thumbColor={notificationSettings.enabled ? '#FFFFFF' : colors.textSecondary}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => updateNotificationSettings({ autoTimer: !notificationSettings.autoTimer })}
+          >
+            <View style={[styles.settingIcon, styles.autoIconBg]}>
+              <IconSymbol size={20} name="timer" color={colors.warning} />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>Timer Automático</Text>
+              <Text style={styles.settingDescription}>
+                Notificaciones cuando el timer automático se inicie o pause
+              </Text>
+            </View>
+            <Switch
+              value={notificationSettings.autoTimer}
+              onValueChange={(value) => updateNotificationSettings({ autoTimer: value })}
+              trackColor={{ false: colors.separator, true: colors.primary }}
+              thumbColor={notificationSettings.autoTimer ? '#FFFFFF' : colors.textSecondary}
+              disabled={!notificationSettings.enabled}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => updateNotificationSettings({ workReminders: !notificationSettings.workReminders })}
+          >
+            <View style={[styles.settingIcon, styles.reminderIconBg]}>
+              <IconSymbol size={20} name="clock.fill" color={colors.warning} />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>{t('preferences.notifications.schedule')}</Text>
+              <Text style={styles.settingDescription}>
+                {t('preferences.notifications.schedule_desc')}
+              </Text>
+            </View>
+            <Switch
+              value={notificationSettings.workReminders}
+              onValueChange={(value) => updateNotificationSettings({ workReminders: value })}
+              trackColor={{ false: colors.separator, true: colors.primary }}
+              thumbColor={notificationSettings.workReminders ? '#FFFFFF' : colors.textSecondary}
+              disabled={!notificationSettings.enabled}
+            />
+          </TouchableOpacity>
+
+          {/* Test Notification Button */}
+          <TouchableOpacity 
+            style={[styles.settingItem, { marginTop: 16, backgroundColor: 'rgba(0, 122, 255, 0.1)', borderRadius: 12 }]}
+            onPress={async () => {
+              console.log('🧪 Test button pressed');
+              console.log('📱 Notification settings:', notificationSettings);
+              try {
+                const notificationService = NotificationService.getInstance();
+                await notificationService.sendTestNotification();
+                console.log('✅ Test notification sent successfully');
+              } catch (error) {
+                console.error('❌ Error sending test notification:', error);
+              }
+            }}
+          >
+            <View style={[styles.settingIcon, { backgroundColor: 'rgba(0, 122, 255, 0.15)' }]}>
+              <IconSymbol size={20} name="paperplane.fill" color={colors.primary} />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>{t('preferences.notifications.test_button')}</Text>
+              <Text style={styles.settingDescription}>
+                {t('preferences.notifications.test_desc')}
+              </Text>
+            </View>
+            <View style={styles.checkmark}>
+              <IconSymbol size={20} name="play.fill" color={colors.primary} />
+            </View>
+          </TouchableOpacity>
+
+          {/* Delayed Test Notification Button */}
+          <TouchableOpacity 
+            style={[
+              styles.settingItem, 
+              { 
+                marginTop: 8, 
+                backgroundColor: countdown !== null ? 'rgba(255, 149, 0, 0.1)' : 'rgba(52, 199, 89, 0.1)', 
+                borderRadius: 12 
+              }
+            ]}
+            onPress={startDelayedNotificationTest}
+            disabled={countdown !== null}
+          >
+            <View style={[
+              styles.settingIcon, 
+              { backgroundColor: countdown !== null ? 'rgba(255, 149, 0, 0.15)' : 'rgba(52, 199, 89, 0.15)' }
+            ]}>
+              <IconSymbol 
+                size={20} 
+                name={countdown !== null ? "clock.fill" : "alarm.fill"} 
+                color={countdown !== null ? colors.warning : colors.success} 
+              />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>
+                {countdown !== null ? `Notificación en ${countdown}s` : 'Prueba con App Cerrada (20s)'}
+              </Text>
+              <Text style={styles.settingDescription}>
+                {countdown !== null 
+                  ? 'Cierra la app ahora para probar notificaciones en background' 
+                  : 'Programa notificación en 20 segundos para probar con app cerrada'
+                }
+              </Text>
+            </View>
+            <View style={styles.checkmark}>
+              {countdown !== null ? (
+                <View style={{ 
+                  backgroundColor: colors.warning, 
+                  borderRadius: 12, 
+                  paddingHorizontal: 8, 
+                  paddingVertical: 4 
+                }}>
+                  <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 14 }}>
+                    {countdown}s
+                  </Text>
+                </View>
+              ) : (
+                <IconSymbol size={20} name="alarm" color={colors.success} />
+              )}
+            </View>
+          </TouchableOpacity>
+        </BlurView>
       
       </ScrollView>
     </SafeAreaView>

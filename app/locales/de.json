@@ -28,7 +28,9 @@
       "schedule": "Zeitplan-Erinnerungen",
       "schedule_desc": "Ein- und Auscheck-Benachrichtigungen",
       "location": "Standort",
-      "location_desc": "Standortbasierte Benachrichtigungen"
+      "location_desc": "Standortbasierte Benachrichtigungen",
+      "test_button": "Test-Benachrichtigung Senden",
+      "test_desc": "Testen Sie Benachrichtigungen, um zu überprüfen, ob sie korrekt funktionieren"
     }
   },
   "settings": {

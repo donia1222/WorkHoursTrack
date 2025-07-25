@@ -29,7 +29,9 @@
       "schedule": "Schedule Reminders",
       "schedule_desc": "Check-in and check-out alerts",
       "location": "Location",
-      "location_desc": "Geolocation-based alerts"
+      "location_desc": "Geolocation-based alerts",
+      "test_button": "Send Test Notification",
+      "test_desc": "Test notifications to verify they work correctly"
     }
   },
   "settings": {

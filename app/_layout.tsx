@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -25,8 +26,8 @@ function AppWithStatusBar() {
       </Stack>
       <StatusBar 
         style={isDark ? "light" : "dark"} 
-        backgroundColor={isDark ? colors.surface : colors.background}
-        translucent={false}
+        backgroundColor="transparent"
+        translucent={true}
       />
     </>
   );
@@ -52,9 +53,11 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <LanguageProvider>
         <ThemeProvider>
-          <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <AppWithStatusBar />
-          </NavigationThemeProvider>
+          <NotificationProvider>
+            <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <AppWithStatusBar />
+            </NavigationThemeProvider>
+          </NotificationProvider>
         </ThemeProvider>
       </LanguageProvider>
     </GestureHandlerRootView>

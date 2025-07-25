@@ -28,7 +28,9 @@
       "schedule": "Rappels d'horaire",
       "schedule_desc": "Alertes d'entrée et de sortie",
       "location": "Localisation",
-      "location_desc": "Alertes basées sur la géolocalisation"
+      "location_desc": "Alertes basées sur la géolocalisation",
+      "test_button": "Envoyer Notification de Test",
+      "test_desc": "Testez les notifications pour vérifier qu'elles fonctionnent correctement"
     }
   },
   "settings": {

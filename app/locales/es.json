@@ -29,7 +29,9 @@
       "schedule": "Recordatorios de Horario",
       "schedule_desc": "Avisos de entrada y salida",
       "location": "Ubicación",
-      "location_desc": "Alertas basadas en geolocalización"
+      "location_desc": "Alertas basadas en geolocalización",
+      "test_button": "Enviar Notificación de Prueba",
+      "test_desc": "Prueba las notificaciones para verificar que funcionan correctamente"
     }
   },
   "settings": {

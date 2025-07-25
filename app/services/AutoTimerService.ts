@@ -1,6 +1,7 @@
 import { Job } from '../types/WorkTypes';
 import { JobService } from './JobService';
 import GeofenceService, { GeofenceEvent } from './GeofenceService';
+import NotificationService from './NotificationService';
 
 export type AutoTimerState = 
   | 'inactive'     // Not monitoring or no jobs nearby
@@ -30,6 +31,7 @@ interface DelayedAction {
 class AutoTimerService {
   private static instance: AutoTimerService;
   private geofenceService: GeofenceService;
+  private notificationService: NotificationService;
   private currentDelayedAction: DelayedAction | null = null;
   private currentState: AutoTimerState = 'inactive';
   private currentJobId: string | null = null;
@@ -41,6 +43,7 @@ class AutoTimerService {
 
   constructor() {
     this.geofenceService = GeofenceService.getInstance();
+    this.notificationService = NotificationService.getInstance();
     this.bindGeofenceEvents();
   }
 
@@ -197,6 +200,9 @@ class AutoTimerService {
     this.currentState = 'entering';
     this.currentJobId = job.id;
     
+    // Send notification: timer will start in X minutes
+    await this.notificationService.sendNotification('timer_will_start', job.name, { minutes: delayMinutes });
+    
     const timeout = setTimeout(async () => {
       console.log(`🚀 AutoTimer timeout triggered for ${job.name} after ${delayMinutes} minutes`);
       await this.startAutoTimer(job);
@@ -242,6 +248,9 @@ class AutoTimerService {
     this.currentState = 'leaving';
     this.currentJobId = job.id;
     
+    // Send notification: timer will stop in X minutes
+    await this.notificationService.sendNotification('timer_will_stop', job.name, { minutes: delayMinutes });
+    
     const timeout = setTimeout(async () => {
       await this.stopAutoTimer(job);
     }, delaySeconds * 1000);
@@ -284,6 +293,10 @@ class AutoTimerService {
       await JobService.saveActiveSession(sessionForStorage);
       this.currentState = 'active';
       this.currentDelayedAction = null;
+      
+      // Send notification: timer started automatically
+      await this.notificationService.sendNotification('timer_started', job.name);
+      
       this.notifyStatusChange();
       console.log(`✅ Auto-started timer for ${job.name}`);
     } catch (error) {
@@ -322,6 +335,9 @@ class AutoTimerService {
         
         await JobService.addWorkDay(workDay);
         await JobService.clearActiveSession();
+        
+        // Send notification: timer stopped automatically
+        await this.notificationService.sendNotification('timer_stopped', job.name);
         
         console.log(`✅ Auto-stopped timer for ${job.name}: ${elapsedHours}h recorded`);
       }

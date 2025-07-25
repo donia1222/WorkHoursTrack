@@ -28,7 +28,9 @@
       "schedule": "Promemoria orario",
       "schedule_desc": "Avvisi di entrata e uscita",
       "location": "Posizione",
-      "location_desc": "Avvisi basati sulla geolocalizzazione"
+      "location_desc": "Avvisi basati sulla geolocalizzazione",
+      "test_button": "Invia Notifica di Test",
+      "test_desc": "Testa le notifiche per verificare che funzionino correttamente"
     }
   },
   "settings": {

@@ -14,7 +14,8 @@
         "NSLocationWhenInUseUsageDescription": "Diese App benötigt Zugriff auf deinen Standort, um dich auf der Karte zu lokalizieren.",
         "NSLocationAlwaysUsageDescription": "Diese App benötigt dauerhaften Standortzugriff, um Geofencing und Standortverfolgung im Hintergrund zu ermöglichen.",
         "NSCalendarsUsageDescription": "Esta app necesita acceso al calendario para sincronizar tus días de trabajo con el calendario nativo.",
-        "NSCalendarsWriteOnlyAccessUsageDescription": "Esta app necesita acceso de escritura al calendario para crear eventos de tus días de trabajo."
+        "NSCalendarsWriteOnlyAccessUsageDescription": "Esta app necesita acceso de escritura al calendario para crear eventos de tus días de trabajo.",
+        "NSUserNotificationsUsageDescription": "Esta app necesita permisos de notificación para avisarte cuando el timer automático se inicie o pause."
       },
       "bundleIdentifier": "com.tuusuario.geolocalizacionapp"
     },
@@ -49,7 +50,15 @@
         }
       ],
       "expo-localization",
-      "expo-calendar"
+      "expo-calendar",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#007AFF",
+          "sounds": []
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
