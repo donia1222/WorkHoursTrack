@@ -23,6 +23,7 @@ export interface Job {
     currency: string;
   };
   schedule?: {
+    enabled?: boolean; // Enable/disable schedule functionality
     startTime: string; // HH:MM format
     endTime: string; // HH:MM format
     // Support for split shifts

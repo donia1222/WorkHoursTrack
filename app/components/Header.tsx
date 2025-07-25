@@ -16,7 +16,7 @@ interface HeaderProps {
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   safeArea: {
-    backgroundColor: colors.background,
+    backgroundColor: isDark ? colors.surface : colors.background,
   },
   blurContainer: {
     elevation: 8,
@@ -193,9 +193,9 @@ export default function Header({ title, onProfilePress, onMenuPress, onBackPress
   
   return (
     <SafeAreaView style={styles.safeArea}>
-      <BlurView style={styles.blurContainer}>
+      <BlurView intensity={isDark ? 90 : 95} tint={isDark ? "dark" : "light"} style={styles.blurContainer}>
         <LinearGradient
-          colors={isDark ? ['rgba(0, 0, 0, 0.1)', 'rgba(0, 0, 0, 0.02)'] : ['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.1)']}
+          colors={isDark ? ['rgba(0, 0, 0, 0.15)', 'rgba(0, 0, 0, 0.05)'] : ['rgba(255, 255, 255, 0.4)', 'rgba(255, 255, 255, 0.15)']}
           style={styles.blurGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}

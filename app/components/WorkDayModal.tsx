@@ -43,11 +43,18 @@ export default function WorkDayModal({
   onDelete,
 }: WorkDayModalProps) {
   const { t, language } = useLanguage();
+  const { colors } = useTheme();
   const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [hours, setHours] = useState<number>(8);
   const [notes, setNotes] = useState<string>('');
   const [dayType, setDayType] = useState<'work' | 'free' | 'vacation' | 'sick'>('work');
   const [showStatistics, setShowStatistics] = useState(false);
+  const [scheduleMode, setScheduleMode] = useState<'job' | 'custom' | 'manual'>('job');
+  const [startTime, setStartTime] = useState<string>('09:00');
+  const [endTime, setEndTime] = useState<string>('17:00');
+  const [hasSplitShift, setHasSplitShift] = useState<boolean>(false);
+  const [secondStartTime, setSecondStartTime] = useState<string>('14:00');
+  const [secondEndTime, setSecondEndTime] = useState<string>('18:00');
 
   // Dynamic day types with translations
   const getDayTypes = () => ({
@@ -73,12 +80,103 @@ export default function WorkDayModal({
     },
   });
 
+  // Function to calculate hours from time range
+  const calculateHoursFromTime = (start: string, end: string, secondStart?: string, secondEnd?: string): number => {
+    const [startHour, startMin] = start.split(':').map(Number);
+    const [endHour, endMin] = end.split(':').map(Number);
+    
+    const startMinutes = startHour * 60 + startMin;
+    let endMinutes = endHour * 60 + endMin;
+    
+    // Handle overnight shifts
+    if (endMinutes <= startMinutes) {
+      endMinutes += 24 * 60;
+    }
+    
+    let totalMinutes = endMinutes - startMinutes;
+    
+    // Add second shift if split shift is enabled
+    if (secondStart && secondEnd) {
+      const [secondStartHour, secondStartMin] = secondStart.split(':').map(Number);
+      const [secondEndHour, secondEndMin] = secondEnd.split(':').map(Number);
+      
+      const secondStartMinutes = secondStartHour * 60 + secondStartMin;
+      let secondEndMinutes = secondEndHour * 60 + secondEndMin;
+      
+      // Handle overnight for second shift
+      if (secondEndMinutes <= secondStartMinutes) {
+        secondEndMinutes += 24 * 60;
+      }
+      
+      totalMinutes += (secondEndMinutes - secondStartMinutes);
+    }
+    
+    return Math.round((totalMinutes / 60) * 100) / 100; // Round to 2 decimal places
+  };
+
+  // Update hours when schedule mode or times change
+  useEffect(() => {
+    if (dayType === 'work' && scheduleMode !== 'manual') {
+      const selectedJob = jobs.find(job => job.id === selectedJobId);
+      
+      if (scheduleMode === 'job' && selectedJob?.schedule) {
+        const secondStart = selectedJob.schedule.hasSplitShift ? selectedJob.schedule.secondStartTime : undefined;
+        const secondEnd = selectedJob.schedule.hasSplitShift ? selectedJob.schedule.secondEndTime : undefined;
+        
+        const jobHours = calculateHoursFromTime(
+          selectedJob.schedule.startTime, 
+          selectedJob.schedule.endTime,
+          secondStart,
+          secondEnd
+        );
+        setHours(jobHours);
+        setStartTime(selectedJob.schedule.startTime);
+        setEndTime(selectedJob.schedule.endTime);
+        setHasSplitShift(selectedJob.schedule.hasSplitShift || false);
+        if (selectedJob.schedule.secondStartTime) setSecondStartTime(selectedJob.schedule.secondStartTime);
+        if (selectedJob.schedule.secondEndTime) setSecondEndTime(selectedJob.schedule.secondEndTime);
+      } else if (scheduleMode === 'custom') {
+        const secondStart = hasSplitShift ? secondStartTime : undefined;
+        const secondEnd = hasSplitShift ? secondEndTime : undefined;
+        const customHours = calculateHoursFromTime(startTime, endTime, secondStart, secondEnd);
+        setHours(customHours);
+      }
+    }
+  }, [scheduleMode, startTime, endTime, secondStartTime, secondEndTime, hasSplitShift, selectedJobId, dayType, jobs]);
+
   useEffect(() => {
     if (existingWorkDay) {
       setSelectedJobId(existingWorkDay.jobId || '');
       setHours(existingWorkDay.hours);
       setNotes(existingWorkDay.notes || '');
       setDayType(existingWorkDay.type);
+      
+      // Set schedule mode and times based on existing data
+      if (existingWorkDay.startTime && existingWorkDay.endTime) {
+        setStartTime(existingWorkDay.startTime);
+        setEndTime(existingWorkDay.endTime);
+        
+        // Handle split shift data
+        const hasSplit = !!(existingWorkDay.secondStartTime && existingWorkDay.secondEndTime);
+        setHasSplitShift(hasSplit);
+        if (hasSplit) {
+          setSecondStartTime(existingWorkDay.secondStartTime!);
+          setSecondEndTime(existingWorkDay.secondEndTime!);
+        }
+        
+        // Check if it matches job schedule
+        const job = jobs.find(j => j.id === existingWorkDay.jobId);
+        if (job?.schedule && 
+            job.schedule.startTime === existingWorkDay.startTime && 
+            job.schedule.endTime === existingWorkDay.endTime &&
+            job.schedule.hasSplitShift === hasSplit) {
+          setScheduleMode('job');
+        } else {
+          setScheduleMode('custom');
+        }
+      } else {
+        setScheduleMode('manual');
+      }
     } else {
       // Set preselected job if provided, otherwise use default
       if (preselectedJobId) {
@@ -86,6 +184,15 @@ export default function WorkDayModal({
         if (preselectedJob) {
           setSelectedJobId(preselectedJob.id);
           setHours(preselectedJob.defaultHours);
+          
+          // Use job schedule if available
+          if (preselectedJob.schedule) {
+            setScheduleMode('job');
+            setStartTime(preselectedJob.schedule.startTime);
+            setEndTime(preselectedJob.schedule.endTime);
+          } else {
+            setScheduleMode('manual');
+          }
         }
       } else {
         // Set default job and hours
@@ -93,6 +200,15 @@ export default function WorkDayModal({
         if (defaultJob) {
           setSelectedJobId(defaultJob.id);
           setHours(defaultJob.defaultHours);
+          
+          // Use job schedule if available
+          if (defaultJob.schedule) {
+            setScheduleMode('job');
+            setStartTime(defaultJob.schedule.startTime);
+            setEndTime(defaultJob.schedule.endTime);
+          } else {
+            setScheduleMode('manual');
+          }
         }
       }
       setNotes('');
@@ -113,6 +229,10 @@ export default function WorkDayModal({
       notes: notes.trim(),
       overtime: dayType === 'work' && hours > 8,
       type: dayType,
+      startTime: dayType === 'work' && scheduleMode !== 'manual' ? startTime : undefined,
+      endTime: dayType === 'work' && scheduleMode !== 'manual' ? endTime : undefined,
+      secondStartTime: dayType === 'work' && scheduleMode !== 'manual' && hasSplitShift ? secondStartTime : undefined,
+      secondEndTime: dayType === 'work' && scheduleMode !== 'manual' && hasSplitShift ? secondEndTime : undefined,
     };
 
     onSave(workDay);
@@ -267,20 +387,210 @@ export default function WorkDayModal({
             </BlurView>
           </View>
 
-          {/* Job selector - only for work days */}
-          {dayType === 'work' && (
+          {/* Compact job selector - only for work days */}
+          {dayType === 'work' && jobs.length > 1 && (
             <View style={styles.section}>
-              <JobSelector
-                jobs={jobs}
-                selectedJobId={selectedJobId}
-                onJobSelect={setSelectedJobId}
-                showAddButton={false}
-              />
+              <BlurView intensity={95} tint="light" style={styles.compactJobSelector}>
+                <Text style={styles.compactJobTitle}>{t('job_selector.title')}</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.jobTabsScroll}>
+                  <View style={styles.jobTabs}>
+                    {jobs.filter(job => job.isActive).map((job) => (
+                      <TouchableOpacity
+                        key={job.id}
+                        style={[
+                          styles.jobTab,
+                          selectedJobId === job.id && [styles.jobTabActive, { borderBottomColor: job.color }]
+                        ]}
+                        onPress={() => setSelectedJobId(job.id)}
+                      >
+                        <View style={[styles.jobTabDot, { backgroundColor: job.color }]} />
+                        <Text 
+                          style={[
+                            styles.jobTabText,
+                            selectedJobId === job.id && styles.jobTabTextActive
+                          ]}
+                        >
+                          {job.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </ScrollView>
+              </BlurView>
+            </View>
+          )}
+          
+          {/* Single job display - when only one job exists */}
+          {dayType === 'work' && jobs.length === 1 && (
+            <View style={styles.section}>
+              <BlurView intensity={95} tint="light" style={styles.singleJobDisplay}>
+                <View style={styles.singleJobContent}>
+                  <View style={[styles.jobTabDot, { backgroundColor: jobs[0].color }]} />
+                  <Text style={styles.singleJobText}>{jobs[0].name}</Text>
+                  <IconSymbol size={16} name="checkmark.circle.fill" color={colors.success} />
+                </View>
+              </BlurView>
             </View>
           )}
 
-          {/* Hour selector - only for work days */}
+          {/* Schedule mode selector - only for work days */}
           {dayType === 'work' && (
+            <View style={styles.section}>
+              <BlurView intensity={95} tint="light" style={styles.scheduleModeContainer}>
+                <Text style={styles.scheduleModeTitle}>{t('calendar.schedule_mode')}</Text>
+                
+                {/* Schedule Mode Buttons */}
+                <View style={styles.scheduleModeButtons}>
+                  {/* Use Job Schedule */}
+                  {jobs.find(j => j.id === selectedJobId)?.schedule && (
+                    <TouchableOpacity
+                      style={[
+                        styles.scheduleModeButton,
+                        scheduleMode === 'job' && styles.scheduleModeButtonActive
+                      ]}
+                      onPress={() => setScheduleMode('job')}
+                    >
+                      <IconSymbol 
+                        size={20} 
+                        name="clock.fill"
+                        color={scheduleMode === 'job' ? '#FFFFFF' : Theme.colors.primary} 
+                      />
+                      <Text 
+                        style={[
+                          styles.scheduleModeButtonText,
+                          scheduleMode === 'job' && styles.scheduleModeButtonTextActive
+                        ]}
+                      >
+                        {t('calendar.use_job_schedule')}
+                      </Text>
+                      {scheduleMode === 'job' && (
+                        <Text style={styles.scheduleTimeText}>
+                          {jobs.find(j => j.id === selectedJobId)?.schedule?.startTime} - {jobs.find(j => j.id === selectedJobId)?.schedule?.endTime}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  )}
+                  
+                  {/* Custom Schedule */}
+                  <TouchableOpacity
+                    style={[
+                      styles.scheduleModeButton,
+                      scheduleMode === 'custom' && styles.scheduleModeButtonActive
+                    ]}
+                    onPress={() => setScheduleMode('custom')}
+                  >
+                    <IconSymbol 
+                      size={20} 
+                      name="clock"
+                      color={scheduleMode === 'custom' ? '#FFFFFF' : Theme.colors.primary} 
+                    />
+                    <Text 
+                      style={[
+                        styles.scheduleModeButtonText,
+                        scheduleMode === 'custom' && styles.scheduleModeButtonTextActive
+                      ]}
+                    >
+                      {t('calendar.custom_schedule')}
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  {/* Manual Hours */}
+                  <TouchableOpacity
+                    style={[
+                      styles.scheduleModeButton,
+                      scheduleMode === 'manual' && styles.scheduleModeButtonActive
+                    ]}
+                    onPress={() => setScheduleMode('manual')}
+                  >
+                    <IconSymbol 
+                      size={20} 
+                      name="textformat.123"
+                      color={scheduleMode === 'manual' ? '#FFFFFF' : Theme.colors.primary} 
+                    />
+                    <Text 
+                      style={[
+                        styles.scheduleModeButtonText,
+                        scheduleMode === 'manual' && styles.scheduleModeButtonTextActive
+                      ]}
+                    >
+                      {t('calendar.or_manual_hours')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                
+                {/* Custom time inputs */}
+                {scheduleMode === 'custom' && (
+                  <>
+                    <View style={styles.timeInputsContainer}>
+                      <View style={styles.timeInputGroup}>
+                        <Text style={styles.timeLabel}>{t('calendar.start_time')}</Text>
+                        <TextInput
+                          style={styles.timeInput}
+                          value={startTime}
+                          onChangeText={setStartTime}
+                          placeholder="09:00"
+                          placeholderTextColor={Theme.colors.textTertiary}
+                        />
+                      </View>
+                      <View style={styles.timeInputGroup}>
+                        <Text style={styles.timeLabel}>{t('calendar.end_time')}</Text>
+                        <TextInput
+                          style={styles.timeInput}
+                          value={endTime}
+                          onChangeText={setEndTime}
+                          placeholder="17:00"
+                          placeholderTextColor={Theme.colors.textTertiary}
+                        />
+                      </View>
+                    </View>
+                    
+                    {/* Split shift toggle */}
+                    <View style={styles.splitShiftContainer}>
+                      <View style={styles.switchContent}>
+                        <Text style={styles.switchLabel}>{t('calendar.split_shift')}</Text>
+                        <Text style={styles.switchDescription}>{t('calendar.split_shift_desc')}</Text>
+                      </View>
+                      <TouchableOpacity
+                        style={[styles.switch, hasSplitShift && styles.switchActive]}  
+                        onPress={() => setHasSplitShift(!hasSplitShift)}
+                      >
+                        <View style={[styles.switchThumb, hasSplitShift && styles.switchThumbActive]} />
+                      </TouchableOpacity>
+                    </View>
+                    
+                    {/* Second shift times - only show if split shift is enabled */}
+                    {hasSplitShift && (
+                      <View style={styles.timeInputsContainer}>
+                        <View style={styles.timeInputGroup}>
+                          <Text style={styles.timeLabel}>{t('calendar.second_start_time')}</Text>
+                          <TextInput
+                            style={styles.timeInput}
+                            value={secondStartTime}
+                            onChangeText={setSecondStartTime}
+                            placeholder="14:00"
+                            placeholderTextColor={Theme.colors.textTertiary}
+                          />
+                        </View>
+                        <View style={styles.timeInputGroup}>
+                          <Text style={styles.timeLabel}>{t('calendar.second_end_time')}</Text>
+                          <TextInput
+                            style={styles.timeInput}
+                            value={secondEndTime}
+                            onChangeText={setSecondEndTime}
+                            placeholder="18:00"
+                            placeholderTextColor={Theme.colors.textTertiary}
+                          />
+                        </View>
+                      </View>
+                    )}
+                  </>
+                )}
+              </BlurView>
+            </View>
+          )}
+
+          {/* Hour selector - only for work days with manual mode */}
+          {dayType === 'work' && scheduleMode === 'manual' && (
             <View style={styles.section}>
               <HourSelector
                 hours={hours}
@@ -342,6 +652,15 @@ export default function WorkDayModal({
                   <Text style={styles.summaryLabel}>{t('calendar.summary_hours')}</Text>
                   <Text style={styles.summaryValue}>
                     {hours}h {hours > 8 && t('calendar.with_overtime')}
+                  </Text>
+                </View>
+              )}
+              {dayType === 'work' && scheduleMode !== 'manual' && (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>{t('calendar.schedule_mode')}</Text>
+                  <Text style={styles.summaryValue}>
+                    {startTime} - {endTime}
+                    {hasSplitShift && ` | ${secondStartTime} - ${secondEndTime}`}
                   </Text>
                 </View>
               )}
@@ -601,5 +920,183 @@ const styles = StyleSheet.create({
     padding: Theme.spacing.xs,
     borderRadius: Theme.borderRadius.sm,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  scheduleModeContainer: {
+    borderRadius: Theme.borderRadius.lg,
+    padding: Theme.spacing.lg,
+    ...Theme.shadows.medium,
+  },
+  scheduleModeTitle: {
+    ...Theme.typography.headline,
+    color: Theme.colors.text,
+    marginBottom: Theme.spacing.md,
+    textAlign: 'center',
+  },
+  scheduleModeButtons: {
+    gap: Theme.spacing.sm,
+  },
+  scheduleModeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    borderRadius: Theme.borderRadius.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 2,
+    borderColor: Theme.colors.separator,
+  },
+  scheduleModeButtonActive: {
+    backgroundColor: Theme.colors.primary,
+    borderColor: Theme.colors.primary,
+  },
+  scheduleModeButtonText: {
+    ...Theme.typography.callout,
+    color: Theme.colors.text,
+    marginLeft: Theme.spacing.sm,
+    fontWeight: '600',
+    flex: 1,
+  },
+  scheduleModeButtonTextActive: {
+    color: '#FFFFFF',
+  },
+  scheduleTimeText: {
+    ...Theme.typography.caption,
+    color: '#FFFFFF',
+    fontWeight: '500',
+  },
+  timeInputsContainer: {
+    flexDirection: 'row',
+    gap: Theme.spacing.md,
+    marginTop: Theme.spacing.md,
+  },
+  timeInputGroup: {
+    flex: 1,
+  },
+  timeLabel: {
+    ...Theme.typography.callout,
+    color: Theme.colors.text,
+    marginBottom: Theme.spacing.xs,
+    fontWeight: '600',
+  },
+  timeInput: {
+    ...Theme.typography.body,
+    color: Theme.colors.text,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: Theme.borderRadius.md,
+    padding: Theme.spacing.md,
+    borderWidth: 1,
+    borderColor: Theme.colors.separator,
+    textAlign: 'center',
+  },
+  splitShiftContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+  },
+  switchContent: {
+    flex: 1,
+    marginRight: Theme.spacing.md,
+  },
+  switchLabel: {
+    ...Theme.typography.callout,
+    color: Theme.colors.text,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  switchDescription: {
+    ...Theme.typography.caption,
+    color: Theme.colors.textSecondary,
+  },
+  switch: {
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Theme.colors.separator,
+    padding: 2,
+    justifyContent: 'center',
+  },
+  switchActive: {
+    backgroundColor: Theme.colors.primary,
+  },
+  switchThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  switchThumbActive: {
+    transform: [{ translateX: 20 }],
+  },
+  compactJobSelector: {
+    borderRadius: Theme.borderRadius.lg,
+    padding: Theme.spacing.md,
+    ...Theme.shadows.medium,
+  },
+  compactJobTitle: {
+    ...Theme.typography.callout,
+    color: Theme.colors.text,
+    fontWeight: '600',
+    marginBottom: Theme.spacing.sm,
+    textAlign: 'center',
+  },
+  jobTabsScroll: {
+    marginHorizontal: -4,
+  },
+  jobTabs: {
+    flexDirection: 'row',
+    gap: Theme.spacing.xs,
+    paddingHorizontal: 4,
+  },
+  jobTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    borderRadius: Theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+    gap: Theme.spacing.xs,
+  },
+  jobTabActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderBottomWidth: 2,
+  },
+  jobTabDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  jobTabText: {
+    ...Theme.typography.footnote,
+    color: Theme.colors.text,
+    fontWeight: '500',
+  },
+  jobTabTextActive: {
+    fontWeight: '600',
+    color: Theme.colors.text,
+  },
+  singleJobDisplay: {
+    borderRadius: Theme.borderRadius.lg,
+    padding: Theme.spacing.md,
+    ...Theme.shadows.medium,
+  },
+  singleJobContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Theme.spacing.sm,
+  },
+  singleJobText: {
+    ...Theme.typography.callout,
+    color: Theme.colors.text,
+    fontWeight: '600',
   },
 });

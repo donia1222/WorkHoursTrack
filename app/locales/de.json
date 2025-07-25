@@ -95,7 +95,7 @@
     "start_timer": "Timer",
     "view_calendar": "Kalender anzeigen",
     "view_statistics": "Statistiken anzeigen",
-    "edit_job": "Arbeit bearbeiten",
+    "edit_job": "Bearbeiten",
     "edit_job_auto_enabled": "Arbeit bearbeiten (Auto-Timer)",
     "auto_timer_active": "Auto-Timer aktiv",
     "auto_timer": "Auto-Timer",
@@ -225,6 +225,20 @@
     "free_days": "Frei",
     "vacation_days": "Urlaub",
     "sick_days": "Krank",
+    "badge_free": "FREI",
+    "badge_vacation": "URL",
+    "badge_sick": "KRANK",
+    "badge_work": "ARBEIT",
+    "schedule_mode": "Zeitplan",
+    "use_job_schedule": "Arbeitsplan verwenden",
+    "custom_schedule": "Benutzerdefinierter Zeitplan",
+    "start_time": "Startzeit",
+    "end_time": "Endzeit", 
+    "or_manual_hours": "oder Stunden manuell angeben",
+    "split_shift": "Geteilte Schicht",
+    "split_shift_desc": "Schicht in zwei Perioden teilen",
+    "second_start_time": "Zweite Startzeit",
+    "second_end_time": "Zweite Endzeit",
     "by_job": "Nach Arbeit",
     "day_types": "Tagtypen",
     "work_day": "Arbeitstag",
@@ -369,6 +383,8 @@
       "second_end_time_placeholder": "19:00",
       "work_days": "Arbeitstage",
       "days": ["S", "M", "D", "M", "D", "F", "S"],
+      "enable_schedule": "Zeitplan aktivieren",
+      "enable_schedule_desc": "Arbeitszeiten und Kalendersynchronisation für diesen Job aktivieren",
       "auto_schedule": "Automatische Terminplanung",
       "auto_schedule_desc": "Arbeitstage automatisch zum Kalender hinzufügen"
     },
@@ -539,8 +555,8 @@
         "description": "Zeiterfassung"
       },
       "reports": {
-        "title": "Berichte",
-        "description": "Statistiken"
+        "title": "Daten exportieren",
+        "description": "Berichte exportieren"
       },
       "calendar": {
         "title": "Kalender",

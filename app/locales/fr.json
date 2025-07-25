@@ -95,7 +95,7 @@
     "start_timer": "chronomètre",
     "view_calendar": "Voir le calendrier",
     "view_statistics": "Voir les statistiques",
-    "edit_job": "Modifier l'emploi",
+    "edit_job": "Modifier",
     "edit_job_auto_enabled": "Modifier l'emploi (Auto-Timer)",
     "auto_timer_active": "Auto-timer actif",
     "auto_timer": "Auto-timer",
@@ -208,6 +208,20 @@
     "free_days": "Libres",
     "vacation_days": "Vacances",
     "sick_days": "Maladie",
+    "badge_free": "LIBRE",
+    "badge_vacation": "VAC",
+    "badge_sick": "MAL",
+    "badge_work": "TRAVAIL", 
+    "schedule_mode": "Horaire",
+    "use_job_schedule": "Utiliser l'horaire du travail",
+    "custom_schedule": "Horaire personnalisé",
+    "start_time": "Heure de début",
+    "end_time": "Heure de fin", 
+    "or_manual_hours": "ou spécifier les heures manuellement",
+    "split_shift": "Équipe partagée",
+    "split_shift_desc": "Diviser l'équipe en deux périodes",
+    "second_start_time": "Deuxième heure de début",
+    "second_end_time": "Deuxième heure de fin",
     "by_job": "Par emploi",
     "day_types": "Types de jours",
     "work_day": "Jour de travail",
@@ -343,6 +357,8 @@
       "second_end_time_placeholder": "19:00",
       "work_days": "Jours de travail",
       "days": ["D", "L", "M", "M", "J", "V", "S"],
+      "enable_schedule": "Activer l'horaire",
+      "enable_schedule_desc": "Activer l'horaire de travail et la synchronisation du calendrier pour ce travail",
       "auto_schedule": "Planification automatique",
       "auto_schedule_desc": "Ajouter automatiquement les jours de travail au calendrier"
     },
@@ -513,8 +529,8 @@
         "description": "Suivi du temps"
       },
       "reports": {
-        "title": "Rapports",
-        "description": "Statistiques"
+        "title": "Exporter données",
+        "description": "Exporter rapports"
       },
       "calendar": {
         "title": "Calendrier",

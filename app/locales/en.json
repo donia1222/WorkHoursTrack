@@ -96,7 +96,7 @@
     "start_timer": "  Timer",
     "view_calendar": "  View Calendar",
     "view_statistics": "  View Statistics",
-    "edit_job": "Job",
+    "edit_job": "Edit",
     "edit_job_auto_enabled": "Edit Job (Auto-Timer)",
     "auto_timer_active": "Auto-timer active",
     "auto_timer": "Auto-timer",
@@ -116,7 +116,10 @@
     "no_job_selected": "No job selected",
     "success": "Success",
     "in_range": "In range",
-    "out_of_range": "Out of range"
+    "out_of_range": "Out of range",
+    "working_now": "Working now",
+    "swipe_or_tap": "Swipe or tap",
+    "tap_to_open": "Tap to open"
   },
   "timer": {
     "title": "Timer",
@@ -215,6 +218,20 @@
     "free_days": "Free",
     "vacation_days": "Vacation",
     "sick_days": "Sick",
+    "badge_free": "FREE",
+    "badge_vacation": "VAC",
+    "badge_sick": "SICK",
+    "badge_work": "WORK",
+    "schedule_mode": "Schedule",
+    "use_job_schedule": "Use job schedule",
+    "custom_schedule": "Custom schedule",
+    "start_time": "Start time",
+    "end_time": "End time", 
+    "or_manual_hours": "or specify hours manually",
+    "split_shift": "Split shift",
+    "split_shift_desc": "Divide shift into two periods",
+    "second_start_time": "Second start time",
+    "second_end_time": "Second end time",
     "by_job": "By job",
     "day_types": "Day types",
     "work_day": "Work day",
@@ -469,6 +486,8 @@
       "second_end_time_placeholder": "19:00",
       "work_days": "Work days",
       "days": ["S", "M", "T", "W", "T", "F", "S"],
+      "enable_schedule": "Enable schedule",
+      "enable_schedule_desc": "Enable work schedule and calendar sync for this job",
       "auto_schedule": "Auto scheduling",
       "auto_schedule_desc": "Automatically add work days to calendar"
     },
@@ -654,8 +673,8 @@
         "description": "Time tracking"
       },
       "reports": {
-        "title": "Reports",
-        "description": "Statistics"
+        "title": "Export data",
+        "description": "Export reports"
       },
       "calendar": {
         "title": "Calendar",

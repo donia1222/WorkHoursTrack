@@ -21,6 +21,115 @@ import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { CalendarSyncService } from '../services/CalendarSyncService';
 
+// Custom Day Component
+const CustomDay = ({ date, state, marking, onPress }: any) => {
+  const { colors } = useTheme();
+  const { t } = useLanguage();
+  
+  const getWorkBadgeStyle = (workDay: WorkDay, job?: Job) => {
+    if (!workDay) return null;
+    
+    let badgeColor = '#9CA3AF'; // Default gray for OFF
+    let badgeText = 'OFF';
+    let timeText = '';
+    
+    if (workDay.type === 'work' && job) {
+      badgeColor = '#10B981'; // Green for all work days
+      badgeText = t('calendar.badge_work');
+      timeText = workDay.startTime || '';
+      if (workDay.endTime) {
+        timeText = `${workDay.startTime}-${workDay.endTime}`;
+        // Add second shift info if split shift
+        if (workDay.secondStartTime && workDay.secondEndTime) {
+          timeText += `\n${workDay.secondStartTime}-${workDay.secondEndTime}`;
+        }
+      }
+    } else if (workDay.type === 'free') {
+      badgeColor = '#3B82F6'; // Blue
+      badgeText = t('calendar.badge_free');
+    } else if (workDay.type === 'vacation') {
+      badgeColor = '#F59E0B'; // Yellow
+      badgeText = t('calendar.badge_vacation');
+    } else if (workDay.type === 'sick') {
+      badgeColor = '#EF4444'; // Red
+      badgeText = t('calendar.badge_sick');
+    }
+    
+    return { badgeColor, badgeText, timeText };
+  };
+  
+  const isToday = state === 'today';
+  const isDisabled = state === 'disabled';
+  const workDay = marking?.workDay;
+  const job = marking?.job;
+  const badgeStyle = getWorkBadgeStyle(workDay, job);
+  
+  return (
+    <TouchableOpacity
+      onPress={() => onPress && onPress(date)}
+      style={{
+        width: 50,
+        height: 80,
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        paddingTop: 4,
+        paddingBottom: 4,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 16,
+          fontWeight: isToday ? '600' : '500',
+          color: isDisabled ? '#CCCCCC' : isToday ? colors.primary : '#333333',
+          marginBottom: 2,
+        }}
+      >
+        {date.day}
+      </Text>
+      
+      {badgeStyle && (
+        <View style={{ alignItems: 'center' }}>
+          <View
+            style={{
+              backgroundColor: badgeStyle.badgeColor,
+              paddingHorizontal: 6,
+              paddingVertical: 6,
+              borderRadius: 4,
+              minWidth: 32,
+              alignItems: 'center',
+              marginBottom: 3,
+            }}
+          >
+            <Text
+              style={{
+                color: '#FFFFFF',
+                fontSize: 10,
+                fontWeight: '600',
+              }}
+            >
+              {badgeStyle.badgeText}
+            </Text>
+          </View>
+          {badgeStyle.timeText && (
+            <Text
+              style={{
+                fontSize: 8,
+                color: '#666666',
+                fontWeight: '500',
+                marginTop: 2,
+                textAlign: 'center',
+                lineHeight: 10,
+              }}
+            >
+              {badgeStyle.timeText}
+            </Text>
+          )}
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+};
+
 interface CalendarScreenProps {
   onNavigate?: (screen: string, options?: any) => void;
 }
@@ -139,11 +248,13 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   calendar: {
     marginVertical: 20,
     borderRadius: 16,
+    backgroundColor: '#FFFFFF',
     shadowColor: "#000", 
     shadowOffset: { width: 0, height: 2 }, 
     shadowOpacity: 0.1, 
     shadowRadius: 8, 
     elevation: 4,
+    overflow: 'hidden',
   },
   statsCard: {
     marginVertical: 20,
@@ -430,28 +541,26 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
       : workDays;
 
     filteredWorkDays.forEach(workDay => {
-      let color: string;
+      const job = jobs.find(j => j.id === workDay.jobId);
       
-      // Safety check for undefined or null type
-      if (!workDay.type) {
-        color = '#000000'; // Black for undefined/null types
-      } else if (workDay.type === 'work') {
-        color = '#30D158'; // Green for work days
-      } else if (workDay.type === 'free') {
-        color = '#007AFF'; // Blue for free days
-      } else if (workDay.type === 'vacation') {
-        color = '#FF9500'; // Yellow for vacation
-      } else if (workDay.type === 'sick') {
-        color = '#FF3B30'; // Red for sick days
-      } else {
-        color = '#000000'; // Black for others
-      }
-
       marked[workDay.date] = {
-        marked: true,
-        dotColor: color,
-        selectedColor: color,
-        selectedTextColor: '#FFFFFF',
+        customStyles: {
+          container: {
+            backgroundColor: '#FFFFFF',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 42,
+            height: 42,
+          },
+          text: {
+            color: '#333333',
+            fontWeight: '500',
+            fontSize: 16,
+            marginBottom: 2,
+          },
+        },
+        workDay: workDay,
+        job: job,
       };
     });
 
@@ -642,33 +751,93 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           onDayPress={handleDayPress}
           onMonthChange={(month: any) => setCurrentMonth(new Date(month.timestamp))}
           markedDates={getMarkedDates()}
+          dayComponent={CustomDay}
           theme={{
-            backgroundColor: colors.surface,
-            calendarBackground: colors.surface,
-            textSectionTitleColor: colors.textSecondary,
+            backgroundColor: '#FFFFFF',
+            calendarBackground: '#FFFFFF',
+            textSectionTitleColor: '#FFFFFF',
+            textSectionTitleDisabledColor: '#FFFFFF',
             selectedDayBackgroundColor: colors.primary,
             selectedDayTextColor: '#ffffff',
             todayTextColor: colors.primary,
-            dayTextColor: colors.text,
-            textDisabledColor: colors.textSecondary,
+            dayTextColor: '#333333',
+            textDisabledColor: '#CCCCCC',
             dotColor: colors.primary,
             selectedDotColor: '#ffffff',
             arrowColor: colors.primary,
-            monthTextColor: colors.text,
+            monthTextColor: '#333333',
             indicatorColor: colors.primary,
             textDayFontFamily: 'System',
             textMonthFontFamily: 'System',
             textDayHeaderFontFamily: 'System',
-            textDayFontWeight: '400',
+            textDayFontWeight: '500',
             textMonthFontWeight: '600',
             textDayHeaderFontWeight: '600',
             textDayFontSize: 16,
             textMonthFontSize: 18,
-            textDayHeaderFontSize: 14,
-            dotStyle: {
-              width: 8,
-              height: 8,
-              borderRadius: 4,
+            textDayHeaderFontSize: 13,
+            'stylesheet.calendar.header': {
+              header: {
+                backgroundColor: '#FFFFFF',
+                paddingVertical: 12,
+                paddingHorizontal: 0,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              },
+              dayHeader: {
+                marginTop: 8,
+                marginBottom: 8,
+                width: 32,
+                textAlign: 'center',
+                fontSize: 13,
+                fontWeight: '600',
+                color: '#333333',
+              },
+              week: {
+                marginTop: 0,
+                marginBottom: 0,
+                flexDirection: 'row',
+                justifyContent: 'space-around',
+                backgroundColor: '#FFFFFF',
+                paddingBottom: 8,
+              },
+            },
+            'stylesheet.day.basic': {
+              base: {
+                width: 50,
+                height: 80,
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+              },
+              text: {
+                marginTop: 4,
+                fontSize: 16,
+                fontFamily: 'System',
+                fontWeight: '500',
+                color: '#333333',
+                backgroundColor: 'transparent',
+              },
+              today: {
+                backgroundColor: 'transparent',
+              },
+              todayText: {
+                color: colors.primary,
+                fontWeight: '600',
+              },
+            },
+            'stylesheet.calendar.main': {
+              container: {
+                backgroundColor: '#FFFFFF',
+              },
+              week: {
+                marginTop: 0,
+                marginBottom: 0,
+                flexDirection: 'row',
+                justifyContent: 'space-around',
+                backgroundColor: '#FFFFFF',
+                paddingVertical: 4,
+              },
             },
           }}
         />

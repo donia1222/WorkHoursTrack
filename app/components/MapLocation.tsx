@@ -16,6 +16,7 @@ import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
+import { JobCardsSwiper } from './JobCardsSwiper';
 
 // Dark mode map style
 const darkMapStyle = [
@@ -326,73 +327,6 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: colors.text,
     fontWeight: '500',
   },
-  jobButtonsOverlay: {
-    position: 'absolute',
-    top: 60,
-    left: 20,
-    right: 20,
-    bottom: 120,
-  },
-  jobButtonsContainer: {
-    gap: 12,
-  },
-  jobButton: {
-    marginBottom: 8,
-  },
-  jobButtonInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: isDark ? 0.1 : 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  jobButtonColorDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginRight: 16,
-    borderWidth: 2,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  jobButtonText: {
-    fontSize: 16,
-    color: colors.text,
-    fontWeight: '600',
-    flex: 1,
-  },
-  jobButtonActive: {
-    transform: [{ scale: 1.02 }],
-  },
-  jobButtonContent: {
-    flex: 1,
-  },
-  jobButtonTextActive: {
-    color: colors.success,
-  },
-  jobStatusText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 2,
-    fontWeight: '500',
-  },
   jobsOverlay: {
     position: 'absolute',
     top: 0,
@@ -487,8 +421,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1000,
-    elevation: 1000,
+    pointerEvents: 'box-none',
   },
   actionModalBackdrop: {
     position: 'absolute',
@@ -496,27 +429,25 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 999,
-    elevation: 999,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
   },
   actionModalContent: {
     borderRadius: 28,
     margin: 20,
     padding: 24,
-    backgroundColor: colors.surface,
     minWidth: 300,
-    zIndex: 1001,
-    elevation: 1001,
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    borderWidth: 2,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: isDark ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 20,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 25,
+    shadowOpacity: 0.3,
+    shadowRadius: 30,
+    overflow: 'hidden',
+    pointerEvents: 'auto',
   },
   actionModalHeader: {
     flexDirection: 'row',
@@ -551,16 +482,17 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     alignItems: 'center',
     padding: 18,
     borderRadius: 16,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.6)',
     borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.8)',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 4,
   },
   actionModalButtonText: {
     fontSize: 16,
@@ -779,9 +711,21 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showJobForm, setShowJobForm] = useState(false);
+  
+  // Animation values for modal
+  const modalScale = useSharedValue(0);
+  const modalOpacity = useSharedValue(0);
+  
+  // Animated style for modal
+  const animatedModalStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: modalScale.value }],
+    opacity: modalOpacity.value,
+  }));
+  
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [showStatistics, setShowStatistics] = useState(false);
   const [selectedJobForStats, setSelectedJobForStats] = useState<Job | null>(null);
+  const [jobStatistics, setJobStatistics] = useState<Map<string, { thisMonthHours: number; thisMonthDays: number }>>(new Map());
   const [activeTimerJobId, setActiveTimerJobId] = useState<string | null>(null);
   const [autoTimerStatus, setAutoTimerStatus] = useState<AutoTimerStatus | null>(null);
   const [autoTimerService] = useState(() => AutoTimerService.getInstance());
@@ -968,10 +912,54 @@ export default function MapLocation({ location, onNavigate }: Props) {
     };
   }, [autoTimerStatus?.state, autoTimerStatus?.jobId]);
 
+  const calculateJobStatistics = async (job: Job): Promise<{ thisMonthHours: number; thisMonthDays: number }> => {
+    try {
+      const workDays = await JobService.getWorkDaysForJob(job.id);
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      
+      let thisMonthHours = 0;
+      let thisMonthDays = 0;
+      
+      workDays.forEach((day: any) => {
+        const dayDate = new Date(day.date);
+        
+        // This month statistics
+        if (dayDate.getMonth() + 1 === currentMonth && dayDate.getFullYear() === currentYear) {
+          if (day.type === 'work') {
+            thisMonthHours += day.hours;
+            thisMonthDays++;
+          }
+        }
+      });
+      
+      return {
+        thisMonthHours,
+        thisMonthDays
+      };
+    } catch (error) {
+      console.error('Error calculating job statistics:', error);
+      return {
+        thisMonthHours: 0,
+        thisMonthDays: 0
+      };
+    }
+  };
+
   const loadJobs = async () => {
     try {
       const loadedJobs = await JobService.getJobs();
-      setJobs(loadedJobs.filter(job => job.isActive));
+      const activeJobs = loadedJobs.filter(job => job.isActive);
+      setJobs(activeJobs);
+      
+      // Load statistics for all jobs
+      const statsMap = new Map();
+      for (const job of activeJobs) {
+        const stats = await calculateJobStatistics(job);
+        statsMap.set(job.id, stats);
+      }
+      setJobStatistics(statsMap);
     } catch (error) {
       console.error('Error loading jobs:', error);
     }
@@ -1217,7 +1205,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
     if (action === 'statistics') {
       setSelectedJobForStats(job);
       setShowStatistics(true);
-      setSelectedJob(null);
+      closeModal();
       return;
     }
 
@@ -1239,7 +1227,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
               try {
                 await JobService.deleteJob(job.id);
                 await loadJobs();
-                setSelectedJob(null);
+                closeModal();
                 Alert.alert(t('maps.success'), t('maps.delete_success'));
               } catch (error) {
                 console.error('Error deleting job:', error);
@@ -1254,15 +1242,15 @@ export default function MapLocation({ location, onNavigate }: Props) {
     
     switch (action) {
       case 'timer':
-        setSelectedJob(null);
+        closeModal();
         navigateTo('timer', job);
         break;
       case 'calendar':
         navigateTo('calendar', job);
-        setSelectedJob(null);
+        closeModal();
         break;
       case 'edit':
-        setSelectedJob(null);
+        closeModal();
         handleEditJob(job);
         break;
     }
@@ -1322,6 +1310,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
     }
   };
 
+  const getJobStatistics = (job: Job): { thisMonthHours: number; thisMonthDays: number } | null => {
+    return jobStatistics.get(job.id) || null;
+  };
+
   const handleJobPress = (job: Job) => {
     // Navigate to job location if it has coordinates
     if (job.location?.latitude && job.location?.longitude && mapRef.current) {
@@ -1333,8 +1325,36 @@ export default function MapLocation({ location, onNavigate }: Props) {
       }, 1000);
     }
     
-    // Open action modal
+    // Open action modal with animation
     setSelectedJob(job);
+    
+    // Animate modal appearance
+    modalScale.value = withSpring(1, {
+      damping: 15,
+      stiffness: 300,
+      mass: 1,
+    });
+    modalOpacity.value = withTiming(1, {
+      duration: 200,
+      easing: Easing.out(Easing.quad),
+    });
+  };
+
+  const closeModal = () => {
+    // Animate modal disappearance
+    modalScale.value = withTiming(0, {
+      duration: 150,
+      easing: Easing.in(Easing.quad),
+    });
+    modalOpacity.value = withTiming(0, {
+      duration: 150,
+      easing: Easing.in(Easing.quad),
+    });
+    
+    // Clear selected job after animation
+    setTimeout(() => {
+      setSelectedJob(null);
+    }, 150);
   };
 
   return (
@@ -1611,44 +1631,16 @@ export default function MapLocation({ location, onNavigate }: Props) {
         </View>
       )}
 
-      {/* Job buttons overlay */}
+      {/* Job cards swiper */}
       {jobs.length > 0 && (
-        <View style={styles.jobButtonsOverlay}>
-          <View style={styles.jobButtonsContainer}>
-            {jobs.map((job) => {
-              const isActive = isJobCurrentlyActive(job);
-              const scheduleStatus = getJobScheduleStatus(job);
-              
-              return (
-                <TouchableOpacity
-                  key={job.id}
-                  style={[styles.jobButton, isActive && styles.jobButtonActive]}
-                  onPress={() => handleJobPress(job)}
-                >
-                  <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.jobButtonInner}>
-                    <View style={[styles.jobButtonColorDot, { backgroundColor: job.color }]} />
-                    <View style={styles.jobButtonContent}>
-                      <Text style={[styles.jobButtonText, isActive && styles.jobButtonTextActive]} numberOfLines={1}>
-                        {job.name}
-                      </Text>
-                      {isActive && (
-                        <Text style={styles.jobStatusText}>
-                          {t('maps.working_now')}
-                        </Text>
-                      )}
-                      {!isActive && scheduleStatus && (
-                        <Text style={styles.jobStatusText}>
-                          {scheduleStatus}
-                        </Text>
-                      )}
-                    </View>
-                    <IconSymbol size={18} name="chevron.right" color={colors.textSecondary} />
-                  </BlurView>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
+        <JobCardsSwiper
+          jobs={jobs}
+          onJobPress={handleJobPress}
+          isJobCurrentlyActive={isJobCurrentlyActive}
+          getJobScheduleStatus={getJobScheduleStatus}
+          getJobStatistics={getJobStatistics}
+          t={t}
+        />
       )}
 
       {/* Job action modal */}
@@ -1656,14 +1648,15 @@ export default function MapLocation({ location, onNavigate }: Props) {
         visible={selectedJob !== null}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => setSelectedJob(null)}
+        onRequestClose={closeModal}
       >
         <View style={styles.actionModal}>
           <TouchableOpacity 
             style={styles.actionModalBackdrop}
-            onPress={() => setSelectedJob(null)}
+            onPress={closeModal}
           />
-          <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.actionModalContent}>
+          <Animated.View style={animatedModalStyle}>
+            <BlurView intensity={100} tint={isDark ? "dark" : "light"} style={styles.actionModalContent}>
             {selectedJob && (
               <>
                 <View style={styles.actionModalHeader}>
@@ -1746,13 +1739,14 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
                 <TouchableOpacity
                   style={styles.actionModalCancelButton}
-                  onPress={() => setSelectedJob(null)}
+                  onPress={closeModal}
                 >
                   <Text style={styles.actionModalCancelText}>{t('maps.cancel')}</Text>
                 </TouchableOpacity>
               </>
             )}
-          </BlurView>
+            </BlurView>
+          </Animated.View>
         </View>
       </Modal>
 

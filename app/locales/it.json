@@ -95,7 +95,7 @@
     "start_timer": "Timer",
     "view_calendar": "Vedi Calendario",
     "view_statistics": "Vedi Statistiche",
-    "edit_job": "Modifica Lavoro",
+    "edit_job": "Modifica",
     "edit_job_auto_enabled": "Modifica Lavoro (Auto-Timer)",
     "auto_timer_active": "Auto-timer attivo",
     "auto_timer": "Auto-timer",
@@ -208,6 +208,20 @@
     "free_days": "Liberi",
     "vacation_days": "Ferie",
     "sick_days": "Malattia",
+    "badge_free": "LIBERO",
+    "badge_vacation": "FERIE",
+    "badge_sick": "MAL",
+    "badge_work": "LAVORO",
+    "schedule_mode": "Orario",
+    "use_job_schedule": "Usa orario del lavoro",
+    "custom_schedule": "Orario personalizzato",
+    "start_time": "Ora di inizio",
+    "end_time": "Ora di fine", 
+    "or_manual_hours": "o specificare ore manualmente",
+    "split_shift": "Turno diviso",
+    "split_shift_desc": "Dividere il turno in due periodi",
+    "second_start_time": "Seconda ora di inizio",
+    "second_end_time": "Seconda ora di fine",
     "by_job": "Per lavoro",
     "day_types": "Tipi di giorni",
     "work_day": "Giorno lavorativo",
@@ -343,6 +357,8 @@
       "second_end_time_placeholder": "19:00",
       "work_days": "Giorni lavorativi",
       "days": ["D", "L", "M", "M", "G", "V", "S"],
+      "enable_schedule": "Attiva orario",
+      "enable_schedule_desc": "Attiva l'orario di lavoro e la sincronizzazione del calendario per questo lavoro",
       "auto_schedule": "Programmazione automatica",
       "auto_schedule_desc": "Aggiungere automaticamente i giorni lavorativi al calendario"
     },
@@ -513,8 +529,8 @@
         "description": "Controllo tempo"
       },
       "reports": {
-        "title": "Rapporti",
-        "description": "Statistiche"
+        "title": "Esporta dati",
+        "description": "Esporta rapporti"
       },
       "calendar": {
         "title": "Calendario",

@@ -96,7 +96,7 @@
     "start_timer": "  Timer",
     "view_calendar": "  Ver Calendario", 
     "view_statistics": "  Ver Estadísticas",
-    "edit_job": "Trabajo",
+    "edit_job": "Editar",
     "edit_job_auto_enabled": "Editar Trabajo (Auto-Timer)",
     "auto_timer_active": "Auto-timer activo",
     "auto_timer": "Auto-timer",
@@ -121,7 +121,9 @@
     "days": ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
     "success": "Éxito",
     "auto_timer_pin": "{{jobName}} (Auto)",
-    "auto_timer_status": "Timer automático: {{status}}"
+    "auto_timer_status": "Timer automático: {{status}}",
+    "swipe_or_tap": "Desliza o toca",
+    "tap_to_open": "Toca para abrir"
   },
   "timer": {
     "title": "Timer",
@@ -228,6 +230,20 @@
     "free_days": "Libres",
     "vacation_days": "Vacaciones", 
     "sick_days": "Enfermedad",
+    "badge_free": "LIBRE",
+    "badge_vacation": "VAC",
+    "badge_sick": "ENF",
+    "badge_work": "TRABAJO",
+    "schedule_mode": "Horario",
+    "use_job_schedule": "Usar horario del trabajo",
+    "custom_schedule": "Horario personalizado", 
+    "start_time": "Hora de inicio",
+    "end_time": "Hora de fin",
+    "or_manual_hours": "o especificar horas manualmente",
+    "split_shift": "Turno partido",
+    "split_shift_desc": "Dividir el turno en dos períodos",
+    "second_start_time": "Segunda hora de inicio",
+    "second_end_time": "Segunda hora de fin",
     "by_job": "Por trabajo",
     "day_types": "Tipos de días",
     "work_day": "Día trabajado",
@@ -482,6 +498,8 @@
       "break_time_placeholder": "60",
       "work_days": "Días laborables",
       "days": ["D", "L", "M", "X", "J", "V", "S"],
+      "enable_schedule": "Habilitar horario",
+      "enable_schedule_desc": "Habilitar horario de trabajo y sincronización con calendario para este trabajo",
       "auto_schedule": "Programación automática",
       "auto_schedule_desc": "Añadir automáticamente los días laborables al calendario"
     },
@@ -668,8 +686,8 @@
         "description": "Control de tiempo"
       },
       "reports": {
-        "title": "Reportes",
-        "description": "Estadísticas"
+        "title": "Exportar datos",
+        "description": "Exportar informes"
       },
       "calendar": {
         "title": "Calendario",

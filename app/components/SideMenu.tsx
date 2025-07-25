@@ -182,6 +182,13 @@ export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps
       color: colors.primary,
     },
     {
+      id: 'calendar',
+      title: t('side_menu.menu_items.calendar.title'),
+      icon: 'calendar',
+      description: t('side_menu.menu_items.calendar.description'),
+      color: '#AF52DE', // Purple color
+    },
+    {
       id: 'timer',
       title: t('side_menu.menu_items.timer.title'),
       icon: 'clock.fill',
@@ -194,13 +201,6 @@ export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps
       icon: 'chart.bar.fill',
       description: t('side_menu.menu_items.reports.description'),
       color: colors.warning,
-    },
-    {
-      id: 'calendar',
-      title: t('side_menu.menu_items.calendar.title'),
-      icon: 'calendar',
-      description: t('side_menu.menu_items.calendar.description'),
-      color: colors.primary,
     },
     {
       id: 'settings',

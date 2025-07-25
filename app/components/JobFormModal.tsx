@@ -450,6 +450,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       currency: 'EUR',
     },
     schedule: {
+      enabled: false, // Schedule disabled by default
       startTime: '09:00',
       endTime: '17:00',
       workDays: [1, 2, 3, 4, 5], // Monday to Friday
@@ -1040,6 +1041,30 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
         <Text style={styles.sectionTitle}>{t('job_form.schedule.title')}</Text>
         
+        {/* Schedule Enable/Disable Switch */}
+        <View style={styles.switchContainer}>
+          <View style={styles.switchContent}>
+            <Text style={styles.switchLabel}>{t('job_form.schedule.enable_schedule')}</Text>
+            <Text style={styles.switchDescription}>{t('job_form.schedule.enable_schedule_desc')}</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.switch, formData.schedule?.enabled && styles.switchActive]}
+            onPress={() => {
+              const newEnabled = !formData.schedule?.enabled;
+              updateNestedData('schedule', 'enabled', newEnabled);
+              // If disabling schedule, also disable auto schedule
+              if (!newEnabled) {
+                updateNestedData('schedule', 'autoSchedule', false);
+              }
+            }}
+          >
+            <View style={[styles.switchThumb, formData.schedule?.enabled && styles.switchThumbActive]} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Only show schedule fields if schedule is enabled */}
+        {formData.schedule?.enabled && (
+        <>
         <View style={styles.row}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>{t('job_form.schedule.start_time')}</Text>
@@ -1167,6 +1192,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             <View style={[styles.switchThumb, formData.schedule?.autoSchedule && styles.switchThumbActive]} />
           </TouchableOpacity>
         </View>
+        </>
+        )}
       </BlurView>
     </ScrollView>
   );
