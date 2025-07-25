@@ -211,7 +211,7 @@
     "badge_free": "LIBERO",
     "badge_vacation": "FERIE",
     "badge_sick": "MAL",
-    "badge_work": "LAVORO",
+    "badge_work": "✓",
     "schedule_mode": "Orario",
     "use_job_schedule": "Usa orario del lavoro",
     "custom_schedule": "Orario personalizzato",

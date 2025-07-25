@@ -692,6 +692,11 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           font-size: 10px;
           margin-left: 4px;
         }
+        .activity-schedule {
+          font-size: 11px;
+          color: #666;
+          font-style: italic;
+        }
       </style>
     </head>
     <body>
@@ -754,6 +759,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                 </div>
                 <div>
                   <span class="activity-hours">${day.hours}h</span>
+                  ${(day.startTime && day.endTime) ? `<br><span class="activity-schedule">${day.startTime}-${day.endTime}${day.secondStartTime && day.secondEndTime ? `, ${day.secondStartTime}-${day.secondEndTime}` : ''}</span>` : ''}
                   ${day.overtime ? '<span class="activity-overtime">OT</span>' : ''}
                 </div>
               </div>
@@ -1036,6 +1042,15 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                     </View>
                     <View style={styles.recentRight}>
                       <Text style={styles.recentHours}>{day.hours}h</Text>
+                      {/* Show specific schedule if available */}
+                      {(day.startTime && day.endTime) && (
+                        <Text style={styles.recentSchedule}>
+                          {day.startTime}-{day.endTime}
+                          {day.secondStartTime && day.secondEndTime && (
+                            `, ${day.secondStartTime}-${day.secondEndTime}`
+                          )}
+                        </Text>
+                      )}
                       {day.overtime && (
                         <Text style={styles.recentOvertime}>{t('reports.ot')}</Text>
                       )}
@@ -1552,6 +1567,12 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
+  },
+  recentSchedule: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    marginTop: 2,
   },
   recentOvertime: {
     fontSize: 12,

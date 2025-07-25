@@ -119,7 +119,13 @@ export default function WorkDayModal({
     if (dayType === 'work' && scheduleMode !== 'manual') {
       const selectedJob = jobs.find(job => job.id === selectedJobId);
       
-      if (scheduleMode === 'job' && selectedJob?.schedule) {
+      // If job schedule mode is selected but schedule is disabled, switch to custom mode
+      if (scheduleMode === 'job' && (!selectedJob?.schedule || !selectedJob.schedule.enabled)) {
+        setScheduleMode('custom');
+        return;
+      }
+      
+      if (scheduleMode === 'job' && selectedJob?.schedule && selectedJob.schedule.enabled) {
         const secondStart = selectedJob.schedule.hasSplitShift ? selectedJob.schedule.secondStartTime : undefined;
         const secondEnd = selectedJob.schedule.hasSplitShift ? selectedJob.schedule.secondEndTime : undefined;
         
@@ -166,7 +172,7 @@ export default function WorkDayModal({
         
         // Check if it matches job schedule
         const job = jobs.find(j => j.id === existingWorkDay.jobId);
-        if (job?.schedule && 
+        if (job?.schedule && job.schedule.enabled &&
             job.schedule.startTime === existingWorkDay.startTime && 
             job.schedule.endTime === existingWorkDay.endTime &&
             job.schedule.hasSplitShift === hasSplit) {
@@ -185,8 +191,8 @@ export default function WorkDayModal({
           setSelectedJobId(preselectedJob.id);
           setHours(preselectedJob.defaultHours);
           
-          // Use job schedule if available
-          if (preselectedJob.schedule) {
+          // Use job schedule if available and enabled
+          if (preselectedJob.schedule && preselectedJob.schedule.enabled) {
             setScheduleMode('job');
             setStartTime(preselectedJob.schedule.startTime);
             setEndTime(preselectedJob.schedule.endTime);
@@ -201,8 +207,8 @@ export default function WorkDayModal({
           setSelectedJobId(defaultJob.id);
           setHours(defaultJob.defaultHours);
           
-          // Use job schedule if available
-          if (defaultJob.schedule) {
+          // Use job schedule if available and enabled
+          if (defaultJob.schedule && defaultJob.schedule.enabled) {
             setScheduleMode('job');
             setStartTime(defaultJob.schedule.startTime);
             setEndTime(defaultJob.schedule.endTime);
@@ -442,34 +448,41 @@ export default function WorkDayModal({
                 {/* Schedule Mode Buttons */}
                 <View style={styles.scheduleModeButtons}>
                   {/* Use Job Schedule */}
-                  {jobs.find(j => j.id === selectedJobId)?.schedule && (
-                    <TouchableOpacity
-                      style={[
-                        styles.scheduleModeButton,
-                        scheduleMode === 'job' && styles.scheduleModeButtonActive
-                      ]}
-                      onPress={() => setScheduleMode('job')}
-                    >
-                      <IconSymbol 
-                        size={20} 
-                        name="clock.fill"
-                        color={scheduleMode === 'job' ? '#FFFFFF' : Theme.colors.primary} 
-                      />
-                      <Text 
+                  {(() => {
+                    const selectedJob = jobs.find(j => j.id === selectedJobId);
+                    const schedule = selectedJob?.schedule;
+                    
+                    if (!schedule || !schedule.enabled) return null;
+                    
+                    return (
+                      <TouchableOpacity
                         style={[
-                          styles.scheduleModeButtonText,
-                          scheduleMode === 'job' && styles.scheduleModeButtonTextActive
+                          styles.scheduleModeButton,
+                          scheduleMode === 'job' && styles.scheduleModeButtonActive
                         ]}
+                        onPress={() => setScheduleMode('job')}
                       >
-                        {t('calendar.use_job_schedule')}
-                      </Text>
-                      {scheduleMode === 'job' && (
-                        <Text style={styles.scheduleTimeText}>
-                          {jobs.find(j => j.id === selectedJobId)?.schedule?.startTime} - {jobs.find(j => j.id === selectedJobId)?.schedule?.endTime}
+                        <IconSymbol 
+                          size={20} 
+                          name="clock.fill"
+                          color={scheduleMode === 'job' ? '#FFFFFF' : Theme.colors.primary} 
+                        />
+                        <Text 
+                          style={[
+                            styles.scheduleModeButtonText,
+                            scheduleMode === 'job' && styles.scheduleModeButtonTextActive
+                          ]}
+                        >
+                          {t('calendar.use_job_schedule')}
                         </Text>
-                      )}
-                    </TouchableOpacity>
-                  )}
+                        {scheduleMode === 'job' && (
+                          <Text style={styles.scheduleTimeText}>
+                            {schedule.startTime} - {schedule.endTime}
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })()}
                   
                   {/* Custom Schedule */}
                   <TouchableOpacity

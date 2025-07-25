@@ -113,12 +113,12 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
           {badgeStyle.timeText && (
             <Text
               style={{
-                fontSize: 8,
-                color: '#666666',
+                fontSize: 7,
+                color: '#555555',
                 fontWeight: '500',
-                marginTop: 2,
+                marginTop: 1,
                 textAlign: 'center',
-                lineHeight: 10,
+                lineHeight: 9,
               }}
             >
               {badgeStyle.timeText}

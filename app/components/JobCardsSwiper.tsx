@@ -126,7 +126,7 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                   )}
 
                   {/* Mini Statistics - centered display */}
-                  {jobStats && (jobStats.thisMonthHours > 0 || jobStats.thisMonthDays > 0) && (
+                  {jobStats &&   (
                     <View style={styles.centeredStats}>
                       <Text style={styles.statsTitle}>{t('job_statistics.this_month')}</Text>
                       <View style={styles.statsGrid}>
@@ -171,9 +171,9 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                     <View style={styles.actionHint}>
                       <Text style={styles.actionHintText}>Tap to open</Text>
                       <IconSymbol 
-                        size={16} 
+                        size={18} 
                         name="arrow.up.circle.fill" 
-                        color={colors.text} 
+                        color={colors.textSecondary} 
                       />
                     </View>
                   )}
@@ -297,12 +297,12 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
+    marginTop: -4,
     paddingTop: 4,
   },
   actionHintText: {
-    fontSize: 11,
-    color: isDark ? colors.text : colors.text,
+    fontSize: 14,
+    color: isDark ? colors.textSecondary : colors.textSecondary,
     marginRight: 6,
     fontWeight: '700',
     textShadowColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)',
@@ -328,7 +328,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   },
   centeredStats: {
     alignItems: 'center',
-
+marginTop: -8,
     marginBottom: 8,
   },
   statsTitle: {
@@ -366,18 +366,14 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     fontWeight: '800',
     color: colors.primary,
     marginBottom: 1,
-    textShadowColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+
   },
   statLabel: {
     fontSize: 9,
-    color: colors.textSecondary,
-    fontWeight: '600',
+    color: colors.text,
+    fontWeight: '400',
     textAlign: 'center',
-    textShadowColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 1,
+
     lineHeight: 8,
   },
   cardDecoration: {
