@@ -264,8 +264,8 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
     }
   };
 
-  const activeJobs = jobs.filter(job => job.isActive);
-  const inactiveJobs = jobs.filter(job => !job.isActive);
+  const activeJobs = (jobs || []).filter(job => job && job.isActive);
+  const inactiveJobs = (jobs || []).filter(job => job && !job.isActive);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -406,7 +406,7 @@ function JobCard({ job, onEdit, onDelete, onToggleActive, isInactive }: JobCardP
       <View style={styles.jobDetails}>
         <View style={styles.jobDetailRow}>
           <IconSymbol size={16} name="clock.fill" color={colors.textSecondary} />
-          <Text style={styles.jobDetailText}>{t('jobs_management.default_hours', { hours: job.defaultHours.toString() })}</Text>
+          <Text style={styles.jobDetailText}>{t('jobs_management.default_hours', { hours: (job.defaultHours || 8).toString() })}</Text>
         </View>
         
         {job.salary && job.salary.amount > 0 && (

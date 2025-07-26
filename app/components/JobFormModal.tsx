@@ -27,7 +27,7 @@ interface JobFormModalProps {
   visible: boolean;
   onClose: () => void;
   editingJob?: Job | null;
-  onSave: () => void;
+  onSave: (jobData: any) => void;
   initialTab?: 'basic' | 'schedule' | 'financial' | 'billing' | 'auto';
   onNavigateToCalendar?: () => void; // Optional callback to navigate to calendar
 }
@@ -605,9 +605,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     },
     autoTimer: {
       enabled: false,
-      geofenceRadius: 100,
-      delayStart: 2,
-      delayStop: 2,
+      geofenceRadius: 50,
+      delayStart: 1,
+      delayStop: 1,
       notifications: true,
     },
   });
@@ -675,9 +675,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         },
         autoTimer: editingJob.autoTimer || {
           enabled: false,
-          geofenceRadius: 100,
-          delayStart: 2,
-          delayStop: 2,
+          geofenceRadius: 50,
+          delayStart: 1,
+          delayStop: 1,
           notifications: true,
         },
       });
@@ -730,9 +730,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         },
         autoTimer: {
           enabled: false,
-          geofenceRadius: 100,
-          delayStart: 2,
-          delayStop: 2,
+          geofenceRadius: 50,
+          delayStart: 1,
+          delayStop: 1,
           notifications: true,
         },
       });
@@ -872,28 +872,36 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         try {
           const result = await AutoScheduleService.applyAutoSchedule(savedJob);
           
+          // Validate result exists and has expected structure
+          if (!result) {
+            console.warn('AutoScheduleService returned no result');
+            onSave(savedJob);
+            onClose();
+            return;
+          }
+          
           // Show confirmation with conflicts if any
-          if (result.conflicts.length > 0) {
+          if (result.conflicts && result.conflicts.length > 0) {
             Alert.alert(
               t('job_form.auto_schedule.applied_title'),
               t('job_form.auto_schedule.applied_conflicts', {
-                workDays: result.generatedDays.length.toString(),
-                freeDays: result.freeDays.length.toString(),
-                conflicts: result.conflicts.length.toString()
+                workDays: (result.generatedDays?.length || 0).toString(),
+                freeDays: (result.freeDays?.length || 0).toString(),
+                conflicts: (result.conflicts?.length || 0).toString()
               }),
               [
                 { 
                   text: 'OK', 
                   style: 'cancel',
                   onPress: () => {
-                    onSave();
+                    onSave(savedJob);
                     onClose();
                   }
                 },
                 { 
                   text: t('job_form.auto_schedule.view_calendar'), 
                   onPress: () => {
-                    onSave();
+                    onSave(savedJob);
                     onClose();
                     setTimeout(() => {
                       onNavigateToCalendar?.();
@@ -906,22 +914,22 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             Alert.alert(
               t('job_form.auto_schedule.applied_title'),
               t('job_form.auto_schedule.applied_success', {
-                workDays: result.generatedDays.length.toString(),
-                freeDays: result.freeDays.length.toString()
+                workDays: (result.generatedDays?.length || 0).toString(),
+                freeDays: (result.freeDays?.length || 0).toString()
               }),
               [
                 { 
                   text: 'OK', 
                   style: 'cancel',
                   onPress: () => {
-                    onSave();
+                    onSave(savedJob);
                     onClose();
                   }
                 },
                 { 
                   text: t('job_form.auto_schedule.view_calendar'), 
                   onPress: () => {
-                    onSave();
+                    onSave(savedJob);
                     onClose();
                     setTimeout(() => {
                       onNavigateToCalendar?.();
@@ -941,7 +949,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         }
       }
 
-      onSave();
+      onSave(savedJob);
       onClose();
     } catch (error) {
       console.error('Error saving job:', error);
@@ -1851,16 +1859,31 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('job_form.auto_timer.geofence_radius')}</Text>
               <Text style={styles.labelDescription}>{t('job_form.auto_timer.geofence_radius_desc')}</Text>
-              <View style={styles.sliderContainer}>
-                <TextInput
-                  style={styles.input}
-                  value={String(formData.autoTimer?.geofenceRadius || 100)}
-                  onChangeText={(value) => updateNestedData('autoTimer', 'geofenceRadius', Math.max(50, Math.min(500, Number(value) || 100)))}
-                  keyboardType="numeric"
-                  placeholder="100"
-                  placeholderTextColor={colors.textTertiary}
-                />
-                <Text style={styles.unitLabel}>metros</Text>
+              <View style={styles.counterContainer}>
+                <TouchableOpacity 
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.geofenceRadius || 50;
+                    const newValue = Math.max(5, currentValue - 5);
+                    updateNestedData('autoTimer', 'geofenceRadius', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="minus" color={colors.primary} />
+                </TouchableOpacity>
+                <View style={styles.counterValue}>
+                  <Text style={styles.counterText}>{formData.autoTimer?.geofenceRadius || 50}</Text>
+                  <Text style={styles.counterUnit}>metros</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.geofenceRadius || 50;
+                    const newValue = Math.min(200, currentValue + 5);
+                    updateNestedData('autoTimer', 'geofenceRadius', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="plus" color={colors.primary} />
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -1871,7 +1894,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 <TouchableOpacity 
                   style={styles.counterButton}
                   onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStart || 2;
+                    const currentValue = formData.autoTimer?.delayStart || 1;
                     const newValue = Math.max(1, currentValue - 1);
                     updateNestedData('autoTimer', 'delayStart', newValue);
                   }}
@@ -1879,13 +1902,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   <IconSymbol size={20} name="minus" color={colors.primary} />
                 </TouchableOpacity>
                 <View style={styles.counterValue}>
-                  <Text style={styles.counterText}>{formData.autoTimer?.delayStart || 2}</Text>
+                  <Text style={styles.counterText}>{formData.autoTimer?.delayStart || 1}</Text>
                   <Text style={styles.counterUnit}>min</Text>
                 </View>
                 <TouchableOpacity 
                   style={styles.counterButton}
                   onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStart || 2;
+                    const currentValue = formData.autoTimer?.delayStart || 1;
                     const newValue = Math.min(10, currentValue + 1);
                     updateNestedData('autoTimer', 'delayStart', newValue);
                   }}
@@ -1902,7 +1925,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 <TouchableOpacity 
                   style={styles.counterButton}
                   onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStop || 2;
+                    const currentValue = formData.autoTimer?.delayStop || 1;
                     const newValue = Math.max(1, currentValue - 1);
                     updateNestedData('autoTimer', 'delayStop', newValue);
                   }}
@@ -1910,13 +1933,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   <IconSymbol size={20} name="minus" color={colors.primary} />
                 </TouchableOpacity>
                 <View style={styles.counterValue}>
-                  <Text style={styles.counterText}>{formData.autoTimer?.delayStop || 2}</Text>
+                  <Text style={styles.counterText}>{formData.autoTimer?.delayStop || 1}</Text>
                   <Text style={styles.counterUnit}>min</Text>
                 </View>
                 <TouchableOpacity 
                   style={styles.counterButton}
                   onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStop || 2;
+                    const currentValue = formData.autoTimer?.delayStop || 1;
                     const newValue = Math.min(10, currentValue + 1);
                     updateNestedData('autoTimer', 'delayStop', newValue);
                   }}

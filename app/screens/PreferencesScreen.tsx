@@ -9,6 +9,7 @@ import {
   Switch,
   TextInput,
   Alert,
+  AppState,
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
@@ -236,18 +237,57 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     ...Theme.typography.footnote,
     color: colors.textSecondary,
   },
+  permissionsDeniedContainer: {
+    backgroundColor: 'rgba(255, 59, 48, 0.1)',
+    borderColor: 'rgba(255, 59, 48, 0.3)',
+    borderWidth: 1,
+    borderRadius: Theme.borderRadius.md,
+    padding: Theme.spacing.md,
+    marginBottom: Theme.spacing.md,
+  },
+  permissionsDeniedTitle: {
+    ...Theme.typography.callout,
+    color: '#FF3B30',
+    fontWeight: '600',
+    marginBottom: Theme.spacing.xs,
+  },
+  permissionsDeniedMessage: {
+    ...Theme.typography.footnote,
+    color: colors.text,
+    marginBottom: Theme.spacing.md,
+    lineHeight: 18,
+  },
+  openSettingsButton: {
+    backgroundColor: '#FF3B30',
+    borderRadius: Theme.borderRadius.md,
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    alignSelf: 'flex-start',
+  },
+  openSettingsButtonText: {
+    ...Theme.typography.footnote,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
 });
 
 export default function PreferencesScreen({ onClose, scrollToNotifications }: PreferencesScreenProps) {
   const { themeMode, setThemeMode, colors, isDark } = useTheme();
   const { language, setLanguage, t } = useLanguage();
-  const { settings: notificationSettings, updateSettings: updateNotificationSettings, sendNotification } = useNotifications();
+  const { 
+    settings: notificationSettings, 
+    updateSettings: updateNotificationSettings, 
+    sendNotification,
+    getPermissionStatus,
+    openNotificationSettings
+  } = useNotifications();
   const [countdown, setCountdown] = useState<number | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const notificationsRef = useRef<View>(null);
   const [countdownInterval, setCountdownInterval] = useState<NodeJS.Timeout | null>(null);
   const [showReminderOptions, setShowReminderOptions] = useState(false);
   const [customMinutes, setCustomMinutes] = useState(notificationSettings.reminderMinutes?.toString() || '15');
+  const [permissionStatus, setPermissionStatus] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
 
   const handleThemeChange = (mode: 'auto' | 'light' | 'dark') => {
     setThemeMode(mode);
@@ -284,6 +324,33 @@ export default function PreferencesScreen({ onClose, scrollToNotifications }: Pr
   useEffect(() => {
     setShowReminderOptions(notificationSettings.workReminders);
   }, [notificationSettings.workReminders]);
+
+  // Check permission status on mount and when component becomes visible
+  useEffect(() => {
+    const checkPermissions = async () => {
+      const status = await getPermissionStatus();
+      setPermissionStatus(status);
+    };
+    
+    checkPermissions();
+  }, [getPermissionStatus]);
+
+  // Listen for app state changes to re-check permissions when user returns from settings
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: string) => {
+      if (nextAppState === 'active') {
+        // Re-check permissions when app becomes active (user might have changed settings)
+        const status = await getPermissionStatus();
+        setPermissionStatus(status);
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    return () => {
+      subscription?.remove();
+    };
+  }, [getPermissionStatus]);
 
   // Cleanup countdown interval on unmount
   useEffect(() => {
@@ -493,6 +560,26 @@ export default function PreferencesScreen({ onClose, scrollToNotifications }: Pr
           <Text style={styles.sectionDescription}>
             {t('preferences.notifications.description')}
           </Text>
+          
+          {/* Permissions Denied Warning */}
+          {permissionStatus === 'denied' && (
+            <View style={styles.permissionsDeniedContainer}>
+              <Text style={styles.permissionsDeniedTitle}>
+                {t('preferences.notifications.permissions_denied_title')}
+              </Text>
+              <Text style={styles.permissionsDeniedMessage}>
+                {t('preferences.notifications.permissions_denied_message')}
+              </Text>
+              <TouchableOpacity 
+                style={styles.openSettingsButton}
+                onPress={openNotificationSettings}
+              >
+                <Text style={styles.openSettingsButtonText}>
+                  {t('preferences.notifications.open_settings')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
           
           <TouchableOpacity 
             style={styles.settingItem}

@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { Platform, AppState } from 'react-native';
+import { Platform, AppState, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configure notification behavior to show alerts even when app is in foreground
@@ -216,6 +216,34 @@ class NotificationService {
    */
   canSendNotifications(): boolean {
     return this.hasPermissions && this.settings.enabled;
+  }
+
+  /**
+   * Get current notification permission status
+   */
+  async getPermissionStatus(): Promise<'granted' | 'denied' | 'undetermined'> {
+    try {
+      const { status } = await Notifications.getPermissionsAsync();
+      return status;
+    } catch (error) {
+      console.error('Error getting permission status:', error);
+      return 'undetermined';
+    }
+  }
+
+  /**
+   * Open system settings for notifications
+   */
+  async openNotificationSettings(): Promise<void> {
+    try {
+      if (Platform.OS === 'ios') {
+        await Linking.openURL('app-settings:');
+      } else {
+        await Linking.openSettings();
+      }
+    } catch (error) {
+      console.error('Error opening notification settings:', error);
+    }
   }
 
   /**

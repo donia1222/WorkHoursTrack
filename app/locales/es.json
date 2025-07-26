@@ -38,7 +38,10 @@
       "enable_work_reminders_message": "¿Quieres activar los recordatorios de horario para recibir notificaciones antes de tu hora de trabajo?",
       "go_to_preferences": "Ir a Preferencias",
       "reminder_title": "Recordatorio",
-      "reminder_message": "Ve a Preferencias > Notificaciones para activar los recordatorios de horario de trabajo"
+      "reminder_message": "Ve a Preferencias > Notificaciones para activar los recordatorios de horario de trabajo",
+      "permissions_denied_title": "Permisos de Notificaciones Requeridos",
+      "permissions_denied_message": "Para recibir notificaciones, necesitas activar los permisos en Configuración del sistema.",
+      "open_settings": "Abrir Configuración"
     }
   },
   "settings": {
@@ -102,6 +105,10 @@
     "you_are_here": "Estás aquí",
     "add_job": "Agregar Trabajo",
     "add_job_desc": "Configura tu primer trabajo para comenzar",
+    "location_permission_denied_title": "Permisos de Ubicación Requeridos",
+    "location_permission_denied_message": "Para usar el mapa y la ubicación automática, necesitas activar los permisos de ubicación en Configuración.",
+    "location_open_settings": "Abrir Configuración",
+    "location_continue_without": "Continuar sin ubicación",
     "start_timer": "  Timer",
     "view_calendar": "  Ver Calendario", 
     "view_statistics": "  Ver Estadísticas",

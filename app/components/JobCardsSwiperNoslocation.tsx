@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Switch,
   Alert,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useTheme } from '../contexts/ThemeContext';
@@ -32,26 +33,14 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
   jobs,
   onJobPress,
   isJobCurrentlyActive,
-  getJobScheduleStatus,
   onTimerToggle,
   getJobStatistics,
   t,
 }) => {
   const { colors, isDark } = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const handleScroll = (event: any) => {
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / (CARD_WIDTH + 20)); // 20px gap between cards
-    setCurrentIndex(index);
-  };
-
-  const scrollTo = (index: number) => {
-    scrollViewRef.current?.scrollTo({
-      x: index * (CARD_WIDTH + 20),
-      animated: true,
-    });
+  const handleScroll = (_event: any) => {
+    // Handle scroll events if needed
   };
 
   if (jobs.length === 0) return null;
@@ -74,7 +63,6 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
       >
         {jobs.map((job, index) => {
           const isActive = isJobCurrentlyActive(job);
-          const scheduleStatus = getJobScheduleStatus(job);
           const jobStats = getJobStatistics ? getJobStatistics(job) : null;
           
           return (
@@ -89,54 +77,105 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                 console.log('🟢 JobCardsSwiper: TouchableOpacity pressed for job:', job.name);
                 onJobPress(job);
               }}
-              activeOpacity={0.9}
+              activeOpacity={0.85}
             >
-              <BlurView 
-                intensity={isDark ? 85 : 95} 
-                tint={isDark ? "dark" : "light"} 
-                style={styles.cardInner}
+              <LinearGradient
+                colors={isActive 
+                  ? isDark 
+                    ? ['rgba(52, 199, 89, 0.25)', 'rgba(40, 40, 40, 0.9)', 'rgba(20, 20, 20, 0.95)']
+                    : ['rgba(52, 199, 89, 0.15)', 'rgba(255, 255, 255, 0.95)', 'rgba(248, 250, 252, 0.9)']
+                  : isDark 
+                    ? ['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.8)', 'rgba(20, 20, 20, 0.9)']
+                    : ['rgba(255, 255, 255, 0.95)', 'rgba(250, 252, 255, 0.9)', 'rgba(245, 248, 250, 0.85)']
+                }
+                style={styles.cardGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
               >
-                {/* Color indicator bar at the top */}
-                <View style={[styles.colorBar, { backgroundColor: job.color }]} />
+                <BlurView 
+                  intensity={isDark ? 80 : 90} 
+                  tint={isDark ? "dark" : "light"} 
+                  style={styles.cardInner}
+                >
+                {/* Enhanced color indicator with gradient */}
+                <LinearGradient
+                  colors={[job.color, job.color + 'AA', job.color + '60']}
+                  style={styles.colorBar}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                />
                 
                 {/* Card content */}
                 <View style={styles.cardContent}>
-                  {/* Header with job name and status */}
+                  {/* Header with job name and enhanced status */}
                   <View style={styles.cardHeader}>
-                    <Text style={[styles.jobName, isActive && styles.jobNameActive]} numberOfLines={1}>
-                      {job.name}
-                    </Text>
+                    <View style={styles.jobNameContainer}>
+                      <Text style={[styles.jobName, isActive && styles.jobNameActive]} numberOfLines={1}>
+                        {job.name}
+                      </Text>
+                      {isActive && (
+                        <View style={styles.activeIndicator}>
+                          <LinearGradient
+                            colors={['#34C759', '#30D158']}
+                            style={styles.activeIndicatorGradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                          >
+                            <Text style={styles.activeText}>ACTIVO</Text>
+                          </LinearGradient>
+                        </View>
+                      )}
+                    </View>
                   </View>
 
-                  {/* Company name */}
+                  {/* Company name with enhanced styling */}
                   {job.company && (
-                    <Text style={styles.companyName} numberOfLines={1}>
-                      {job.company}
-                    </Text>
+                    <View style={styles.companyContainer}>
+                      <View style={styles.companyIconContainer}>
+                        <IconSymbol size={14} name="building.2" color={job.color} />
+                      </View>
+                      <Text style={styles.companyName} numberOfLines={1}>
+                        {job.company}
+                      </Text>
+                    </View>
                   )}
 
              
 
-                  {/* Mini Statistics - centered display */}
-                  {jobStats &&   (
+                  {/* Enhanced Statistics Display */}
+                  {jobStats && (
                     <View style={styles.centeredStats}>
                       <Text style={styles.statsTitle}>{t('job_statistics.this_month')}</Text>
                       <View style={styles.statsGrid}>
                         <View style={styles.statCard}>
-                          <View style={styles.statIconContainer}>
-                            <IconSymbol size={19} name="clock.fill" color={job.color} />
-                          </View>
-                          <Text style={[styles.statValue, { color: job.color }]}>
-                            {Math.floor(jobStats.thisMonthHours)}h {Math.round((jobStats.thisMonthHours - Math.floor(jobStats.thisMonthHours)) * 60)}m
-                          </Text>
-                          <Text style={styles.statLabel} numberOfLines={2}>{t('job_statistics.hours_worked')}</Text>
+                          <LinearGradient
+                            colors={[job.color + '20', job.color + '10']}
+                            style={styles.statCardGradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                          >
+                            <View style={[styles.statIconContainer, { backgroundColor: job.color + '30' }]}>
+                              <IconSymbol size={16} name="clock.fill" color={job.color} />
+                            </View>
+                            <Text style={[styles.statValue, { color: job.color }]}>
+                              {Math.floor(jobStats.thisMonthHours)}h {Math.round((jobStats.thisMonthHours - Math.floor(jobStats.thisMonthHours)) * 60)}m
+                            </Text>
+                            <Text style={styles.statLabel} numberOfLines={2}>{t('job_statistics.hours_worked')}</Text>
+                          </LinearGradient>
                         </View>
                         <View style={styles.statCard}>
-                          <View style={styles.statIconContainer}>
-                            <IconSymbol size={19} name="calendar" color={job.color} />
-                          </View>
-                          <Text style={[styles.statValue, { color: job.color }]}>{jobStats.thisMonthDays}</Text>
-                          <Text style={styles.statLabel} numberOfLines={2}>{t('job_statistics.days_worked')}</Text>
+                          <LinearGradient
+                            colors={[job.color + '20', job.color + '10']}
+                            style={styles.statCardGradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                          >
+                            <View style={[styles.statIconContainer, { backgroundColor: job.color + '30' }]}>
+                              <IconSymbol size={16} name="calendar" color={job.color} />
+                            </View>
+                            <Text style={[styles.statValue, { color: job.color }]}>{jobStats.thisMonthDays}</Text>
+                            <Text style={styles.statLabel} numberOfLines={2}>{t('job_statistics.days_worked')}</Text>
+                          </LinearGradient>
                         </View>
                       </View>
                     </View>
@@ -161,22 +200,27 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                     </View>
                   ) : (
                     <View style={styles.actionHint}>
-                      <Text style={styles.actionHintText}>Tap to open</Text>
-                      <IconSymbol 
-                        size={18} 
-                        name="arrow.up.circle.fill" 
-                        color={colors.textSecondary} 
-                      />
+            
+                    
                     </View>
                   )}
                 </View>
 
-                {/* Visual elements */}
+                {/* Enhanced Visual Elements */}
                 <View style={styles.cardDecoration}>
-                  <View style={[styles.decorationDot, { backgroundColor: job.color }]} />
-                  <View style={[styles.decorationLine, { backgroundColor: job.color + '60' }]} />
+                  <LinearGradient
+                    colors={[job.color, job.color + 'DD']}
+                    style={styles.decorationDot}
+                  />
+                  <LinearGradient
+                    colors={[job.color + '80', job.color + '40', job.color + '20']}
+                    style={styles.decorationLine}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                  />
                 </View>
               </BlurView>
+              </LinearGradient>
             </TouchableOpacity>
           );
         })}
@@ -192,6 +236,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     left: 0,
     right: 0,
     height: CARD_HEIGHT + 60,
+    zIndex: 10,
   },
   scrollView: {
     height: CARD_HEIGHT,
@@ -207,28 +252,40 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
     marginRight: 20,
-    borderRadius: 24,
+    borderRadius: 28,
     overflow: 'hidden',
-    elevation: 10,
+    elevation: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 15,
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    borderWidth: 1.5,
+    borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)',
+  },
+  cardGradient: {
+    flex: 1,
+    borderRadius: 28,
   },
   cardActive: {
-    transform: [{ scale: 1.02 }],
-    elevation: 12,
-    shadowOpacity: 0.25,
+    transform: [{ scale: 1.03 }],
+    elevation: 18,
+    shadowOpacity: 0.35,
+    shadowRadius: 25,
+    borderColor: '#34C759',
+    borderWidth: 2,
   },
   cardInner: {
     flex: 1,
     position: 'relative',
   },
   colorBar: {
-    height: 4,
+    height: 6,
     width: '100%',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
   cardContent: {
     flex: 1,
@@ -236,43 +293,69 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     justifyContent: 'flex-start',
   },
   cardHeader: {
+    marginBottom: 10,
+  },
+  jobNameContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
   },
   jobName: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 19,
+    fontWeight: '800',
     color: colors.text,
     flex: 1,
     marginRight: 12,
-    textShadowColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.8)',
+    textShadowColor: isDark ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.9)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 3,
+    letterSpacing: 0.3,
   },
   jobNameActive: {
     color: colors.success,
   },
   activeIndicator: {
-    backgroundColor: colors.success + '20',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
     borderRadius: 12,
-    marginRight: 18,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#34C759',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  activeIndicatorGradient: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
   activeText: {
     fontSize: 10,
-    fontWeight: '600',
-    color: colors.success,
+    fontWeight: '800',
+    color: '#FFFFFF',
     textTransform: 'uppercase',
-
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  companyContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  companyIconContainer: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
   },
   companyName: {
     fontSize: 14,
     color: isDark ? colors.text : colors.textSecondary,
     fontWeight: '600',
-    marginBottom: 4,
+    flex: 1,
     textShadowColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 1,
@@ -322,53 +405,70 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   },
   centeredStats: {
     alignItems: 'center',
-
-    marginBottom: 8,
+    marginBottom: 10,
+    marginTop: 4,
   },
   statsTitle: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
     color: colors.text,
-    marginBottom: 4,
+    marginBottom: 6,
     textShadowColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.8)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+    letterSpacing: 0.3,
   },
   statsGrid: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 8,
+    justifyContent: 'center',
   },
   statCard: {
-    alignItems: 'center',
-    backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-    borderRadius: 6,
-    padding: 4,
-    minWidth: 50,
+    borderRadius: 10,
+    overflow: 'hidden',
+    minWidth: 55,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
     borderWidth: 1,
-    borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)',
+    borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+  },
+  statCardGradient: {
+    alignItems: 'center',
+    padding: 6,
+    borderRadius: 10,
   },
   statIconContainer: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 2,
+    marginBottom: 3,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   statValue: {
     fontSize: 12,
-    fontWeight: '800',
-    color: colors.primary,
-    marginBottom: 1,
-
+    fontWeight: '900',
+    marginBottom: 2,
+    textShadowColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
+    letterSpacing: 0.2,
   },
   statLabel: {
     fontSize: 9,
-    color: colors.text,
-    fontWeight: '400',
+    color: colors.textSecondary,
+    fontWeight: '600',
     textAlign: 'center',
-
-    lineHeight: 8,
+    lineHeight: 10,
+    letterSpacing: 0.1,
   },
   cardDecoration: {
     position: 'absolute',
@@ -377,27 +477,27 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     alignItems: 'center',
   },
   decorationDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginBottom: 6,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    marginBottom: 8,
     borderWidth: 2,
-    borderColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
+    borderColor: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.8)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  decorationLine: {
+    width: 4,
+    height: 55,
+    borderRadius: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  decorationLine: {
-    width: 3,
-    height: 50,
-    borderRadius: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   indicators: {
     flexDirection: 'row',

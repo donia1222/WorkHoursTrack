@@ -578,9 +578,18 @@ export default function WorkDayModal({
                         <TextInput
                           style={styles.timeInput}
                           value={startTime}
-                          onChangeText={setStartTime}
-                          placeholder="09:00"
+                          onChangeText={(text) => {
+                            // Format time input with colon
+                            let formatted = text.replace(/[^0-9]/g, '');
+                            if (formatted.length >= 3) {
+                              formatted = formatted.substring(0, 2) + ':' + formatted.substring(2, 4);
+                            }
+                            setStartTime(formatted);
+                          }}
+                          placeholder="00:00"
                           placeholderTextColor={Theme.colors.textTertiary}
+                          keyboardType="numeric"
+                          maxLength={5}
                         />
                       </View>
                       <View style={styles.timeInputGroup}>
@@ -588,9 +597,18 @@ export default function WorkDayModal({
                         <TextInput
                           style={styles.timeInput}
                           value={endTime}
-                          onChangeText={setEndTime}
-                          placeholder="17:00"
+                          onChangeText={(text) => {
+                            // Format time input with colon
+                            let formatted = text.replace(/[^0-9]/g, '');
+                            if (formatted.length >= 3) {
+                              formatted = formatted.substring(0, 2) + ':' + formatted.substring(2, 4);
+                            }
+                            setEndTime(formatted);
+                          }}
+                          placeholder="00:00"
                           placeholderTextColor={Theme.colors.textTertiary}
+                          keyboardType="numeric"
+                          maxLength={5}
                         />
                       </View>
                     </View>
@@ -617,9 +635,18 @@ export default function WorkDayModal({
                           <TextInput
                             style={styles.timeInput}
                             value={secondStartTime}
-                            onChangeText={setSecondStartTime}
-                            placeholder="14:00"
+                            onChangeText={(text) => {
+                              // Format time input with colon
+                              let formatted = text.replace(/[^0-9]/g, '');
+                              if (formatted.length >= 3) {
+                                formatted = formatted.substring(0, 2) + ':' + formatted.substring(2, 4);
+                              }
+                              setSecondStartTime(formatted);
+                            }}
+                            placeholder="00:00"
                             placeholderTextColor={Theme.colors.textTertiary}
+                            keyboardType="numeric"
+                            maxLength={5}
                           />
                         </View>
                         <View style={styles.timeInputGroup}>
@@ -627,9 +654,18 @@ export default function WorkDayModal({
                           <TextInput
                             style={styles.timeInput}
                             value={secondEndTime}
-                            onChangeText={setSecondEndTime}
-                            placeholder="18:00"
+                            onChangeText={(text) => {
+                              // Format time input with colon
+                              let formatted = text.replace(/[^0-9]/g, '');
+                              if (formatted.length >= 3) {
+                                formatted = formatted.substring(0, 2) + ':' + formatted.substring(2, 4);
+                              }
+                              setSecondEndTime(formatted);
+                            }}
+                            placeholder="00:00"
                             placeholderTextColor={Theme.colors.textTertiary}
+                            keyboardType="numeric"
+                            maxLength={5}
                           />
                         </View>
                       </View>

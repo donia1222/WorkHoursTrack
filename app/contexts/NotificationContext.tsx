@@ -8,6 +8,8 @@ interface NotificationContextType {
   sendNotification: (type: NotificationType, jobName: string, extraData?: { minutes?: number }) => Promise<void>;
   requestPermissions: () => Promise<boolean>;
   canSendNotifications: () => boolean;
+  getPermissionStatus: () => Promise<'granted' | 'denied' | 'undetermined'>;
+  openNotificationSettings: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -105,12 +107,28 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     return notificationService.canSendNotifications();
   };
 
+  /**
+   * Get current notification permission status
+   */
+  const getPermissionStatus = async (): Promise<'granted' | 'denied' | 'undetermined'> => {
+    return await notificationService.getPermissionStatus();
+  };
+
+  /**
+   * Open system settings for notifications
+   */
+  const openNotificationSettings = async (): Promise<void> => {
+    return await notificationService.openNotificationSettings();
+  };
+
   const contextValue: NotificationContextType = {
     settings,
     updateSettings,
     sendNotification,
     requestPermissions,
     canSendNotifications,
+    getPermissionStatus,
+    openNotificationSettings,
     isLoading,
   };
 
