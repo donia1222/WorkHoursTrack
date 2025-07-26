@@ -793,6 +793,21 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     setPreviousAutoSchedule(currentAutoSchedule);
   }, [formData.schedule?.autoSchedule, editingJob, t, previousAutoSchedule]);
 
+  const geocodeAddress = async (address: string) => {
+    try {
+      const geocodedLocations = await Location.geocodeAsync(address);
+      if (geocodedLocations.length > 0) {
+        return {
+          latitude: geocodedLocations[0].latitude,
+          longitude: geocodedLocations[0].longitude,
+        };
+      }
+    } catch (error) {
+      console.warn('Error geocoding address:', error);
+    }
+    return null;
+  };
+
   const handleSave = async () => {
     if (!formData.name?.trim()) {
       Alert.alert(t('job_form.errors.error_title'), t('job_form.errors.name_required'));
@@ -806,6 +821,20 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       if (formData.city?.trim()) addressParts.push(formData.city.trim());
       if (formData.postalCode?.trim()) addressParts.push(formData.postalCode.trim());
       const fullAddress = addressParts.join(', ');
+
+      // Geocode the address if we have one and don't already have coordinates
+      let locationData = formData.location;
+      if (fullAddress && (!locationData?.latitude || !locationData?.longitude)) {
+        const coords = await geocodeAddress(fullAddress);
+        if (coords) {
+          locationData = {
+            ...locationData,
+            address: fullAddress,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+          };
+        }
+      }
 
       const jobData: Omit<Job, 'id' | 'createdAt'> = {
         name: formData.name.trim(),
@@ -826,7 +855,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         salary: formData.salary,
         schedule: formData.schedule,
         billing: formData.billing,
-        location: formData.location,
+        location: locationData,
         autoTimer: formData.autoTimer,
       };
 

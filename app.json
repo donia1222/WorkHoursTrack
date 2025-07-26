@@ -12,11 +12,10 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Diese App benötigt Zugriff auf deinen Standort, um dich auf der Karte zu lokalizieren.",
-        "NSLocationAlwaysUsageDescription": "Diese App benötigt dauerhaften Standortzugriff, um Geofencing und Standortverfolgung im Hintergrund zu ermöglichen.",
         "NSCalendarsUsageDescription": "Esta app necesita acceso al calendario para sincronizar tus días de trabajo con el calendario nativo.",
         "NSCalendarsWriteOnlyAccessUsageDescription": "Esta app necesita acceso de escritura al calendario para crear eventos de tus días de trabajo.",
         "NSUserNotificationsUsageDescription": "Esta app necesita permisos de notificación para avisarte cuando el timer automático se inicie o pause.",
-        "UIBackgroundModes": ["location", "background-fetch", "background-processing"]
+        "UIBackgroundModes": []
       },
       "bundleIdentifier": "com.tuusuario.geolocalizacionapp"
     },
@@ -55,11 +54,9 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Esta app necesita acceso a tu ubicación para el timer automático basado en geofencing.",
-          "locationAlwaysPermission": "Esta app necesita acceso continuo a tu ubicación para iniciar/pausar el timer automáticamente cuando entres o salgas del área de trabajo.",
           "locationWhenInUsePermission": "Esta app necesita acceso a tu ubicación cuando la uses para mostrarte en el mapa.",
-          "isIosBackgroundLocationEnabled": true,
-          "isAndroidBackgroundLocationEnabled": true
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
         }
       ],
       [

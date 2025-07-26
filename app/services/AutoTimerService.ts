@@ -2,6 +2,7 @@ import { Job } from '../types/WorkTypes';
 import { JobService } from './JobService';
 import GeofenceService, { GeofenceEvent } from './GeofenceService';
 import NotificationService from './NotificationService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type AutoTimerState = 
   | 'inactive'     // Not monitoring or no jobs nearby
@@ -83,6 +84,9 @@ class AutoTimerService {
         return true;
       }
 
+      // Restore state from storage
+      await this.restoreState();
+
       // Check for active sessions and clear old ones
       const activeSession = await JobService.getActiveSession();
       if (activeSession) {
@@ -98,14 +102,8 @@ class AutoTimerService {
         await JobService.clearActiveSession();
       }
 
-      // Start geofence monitoring with background support, but fallback to foreground if needed
-      let success = await this.geofenceService.startMonitoring(jobs, true);
-      
-      // If background monitoring fails, try foreground mode
-      if (!success) {
-        console.log('⚠️ Background monitoring failed, trying foreground mode');
-        success = await this.geofenceService.startMonitoring(jobs, false);
-      }
+      // Start geofence monitoring in FOREGROUND ONLY mode
+      let success = await this.geofenceService.startMonitoring(jobs, false);
       if (success) {
         this.isEnabled = true;
         this.currentState = 'inactive';
@@ -545,6 +543,57 @@ class AutoTimerService {
         console.error('Error in auto timer status callback:', error);
       }
     });
+    // Save state when it changes
+    this.saveState();
+  }
+
+  /**
+   * Save current state to storage
+   */
+  private async saveState(): Promise<void> {
+    try {
+      const state = {
+        isEnabled: this.isEnabled,
+        currentState: this.currentState,
+        currentJobId: this.currentJobId,
+        delayedAction: this.currentDelayedAction ? {
+          jobId: this.currentDelayedAction.jobId,
+          action: this.currentDelayedAction.action,
+          startTime: this.currentDelayedAction.startTime.toISOString(),
+          delaySeconds: this.currentDelayedAction.delaySeconds,
+        } : null,
+      };
+      
+      await AsyncStorage.setItem('@auto_timer_state', JSON.stringify(state));
+      console.log('🔄 AutoTimer state saved');
+    } catch (error) {
+      console.error('Error saving AutoTimer state:', error);
+    }
+  }
+
+  /**
+   * Restore state from storage
+   */
+  private async restoreState(): Promise<void> {
+    try {
+      const stateJson = await AsyncStorage.getItem('@auto_timer_state');
+      if (stateJson) {
+        const state = JSON.parse(stateJson);
+        this.isEnabled = state.isEnabled || false;
+        this.currentState = state.currentState || 'inactive';
+        this.currentJobId = state.currentJobId || null;
+        
+        // Don't restore delayed actions (timers don't persist across app restarts)
+        // But keep the state so UI shows correctly
+        console.log('🔄 AutoTimer state restored:', {
+          isEnabled: this.isEnabled,
+          currentState: this.currentState,
+          currentJobId: this.currentJobId,
+        });
+      }
+    } catch (error) {
+      console.error('Error restoring AutoTimer state:', error);
+    }
   }
 
   /**

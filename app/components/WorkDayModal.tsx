@@ -21,6 +21,7 @@ import { CalendarSyncService } from '../services/CalendarSyncService';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useNavigation } from '../context/NavigationContext';
 
 interface WorkDayModalProps {
   visible: boolean;
@@ -46,29 +47,42 @@ export default function WorkDayModal({
   const { t, language } = useLanguage();
   const { colors } = useTheme();
   const { settings } = useNotifications();
+  const { navigateTo } = useNavigation();
   
   // Function to handle navigating to preferences to enable work reminders
   const handleEnableNotifications = () => {
+    console.log('🔍 WorkDayModal handleEnableNotifications called');
+    console.log('🔍 WorkDayModal Debug:', {
+      language,
+      titleTranslation: t('preferences.notifications.enable_work_reminders_title'),
+      messageTranslation: t('preferences.notifications.enable_work_reminders_message'),
+      suggestionTranslation: t('preferences.notifications.enable_work_reminders_suggestion'),
+      descriptionTranslation: t('preferences.notifications.enable_work_reminders_description')
+    });
+    
     Alert.alert(
-      t('notifications.enable_work_reminders_title') || 'Activar Recordatorios',
-      t('notifications.enable_work_reminders_message') || '¿Quieres activar los recordatorios de horario para recibir notificaciones antes de tu hora de trabajo?',
+      t('preferences.notifications.enable_work_reminders_title') || 'Activar Recordatorios',
+      t('preferences.notifications.enable_work_reminders_message') || '¿Quieres activar los recordatorios de horario para recibir notificaciones antes de tu hora de trabajo?',
       [
         {
           text: t('common.cancel') || 'Cancelar',
           style: 'cancel',
+          onPress: () => {
+            console.log('🔍 WorkDayModal: Cancel button pressed');
+          },
         },
         {
-          text: t('notifications.go_to_preferences') || 'Ir a Preferencias',
+          text: t('preferences.notifications.go_to_preferences') || 'Ir a Preferencias',
           onPress: () => {
+            console.log('🔍 WorkDayModal: Go to Preferences button pressed');
             onClose();
-            // Navigate to preferences - you might need to implement this navigation
-            // For now, we'll just close the modal and show an alert
+            // Navigate to preferences screen with scroll flag
             setTimeout(() => {
-              Alert.alert(
-                t('notifications.reminder_title') || 'Recordatorio',
-                t('notifications.reminder_message') || 'Ve a Preferencias > Notificaciones para activar los recordatorios de horario de trabajo'
-              );
-            }, 500);
+              // Set a global flag that PreferencesScreen can check
+              console.log('🚀 WorkDayModal: Setting scrollToNotifications flag and navigating to settings');
+              (global as any).scrollToNotifications = true;
+              navigateTo('settings');
+            }, 300);
           },
         },
       ]
@@ -626,21 +640,35 @@ export default function WorkDayModal({
             </View>
           )}
 
-          {/* Work reminders suggestion - only show for work days in custom schedule mode when notifications are disabled */}
-          {dayType === 'work' && scheduleMode === 'custom' && !settings.workReminders && (
+          {/* Work reminders suggestion - only show if reminders are disabled */}
+          {(() => {
+            const shouldShow = dayType === 'work' && scheduleMode === 'custom' && !settings.workReminders;
+            console.log('🔍 WorkDayModal: Button visibility debug:', {
+              dayType,
+              scheduleMode,
+              'settings.workReminders': settings.workReminders,
+              '!settings.workReminders': !settings.workReminders,
+              shouldShow,
+              'Full settings object': settings
+            });
+            return shouldShow;
+          })() && (
             <View style={styles.section}>
               <TouchableOpacity 
                 style={styles.notificationSuggestion}
-                onPress={handleEnableNotifications}
+                onPress={() => {
+                  console.log('🔍 WorkDayModal: Notification suggestion button pressed');
+                  handleEnableNotifications();
+                }}
               >
                 <View style={styles.notificationSuggestionContent}>
                   <IconSymbol name="bell.badge" size={20} color={Theme.colors.primary} />
                   <View style={styles.notificationSuggestionText}>
                     <Text style={styles.notificationSuggestionTitle}>
-                      {t('notifications.enable_work_reminders_suggestion') || 'Activar recordatorios de horario'}
+                      {t('preferences.notifications.enable_work_reminders_suggestion') || 'Activar recordatorios de horario'}
                     </Text>
                     <Text style={styles.notificationSuggestionDescription}>
-                      {t('notifications.enable_work_reminders_description') || 'Recibe avisos antes de tu hora de entrada'}
+                      {t('preferences.notifications.enable_work_reminders_description') || 'Recibe avisos antes de tu hora de entrada'}
                     </Text>
                   </View>
                   <IconSymbol name="chevron.right" size={14} color={Theme.colors.textSecondary} />

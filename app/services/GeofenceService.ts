@@ -42,9 +42,9 @@ class GeofenceService {
   }
 
   /**
-   * Start monitoring geofences for jobs with autoTimer enabled
+   * Start monitoring geofences for jobs with autoTimer enabled (FOREGROUND ONLY)
    * @param jobs - Array of jobs to monitor
-   * @param useBackgroundMode - Whether to use background location tracking
+   * @param useBackgroundMode - IGNORED - Always uses foreground mode
    */
   async startMonitoring(jobs: Job[], useBackgroundMode = false): Promise<boolean> {
     try {
@@ -70,19 +70,7 @@ class GeofenceService {
       // Stop existing monitoring
       this.stopMonitoring();
 
-      this.isBackgroundMode = useBackgroundMode;
-
-      // Use foreground mode if app is active and background mode is requested
-      const currentAppState = AppState.currentState;
-      const shouldUseForeground = useBackgroundMode && currentAppState === 'active';
-      
-      if (shouldUseForeground) {
-        console.log('🔄 GeofenceService: App is active, using foreground mode for better responsiveness');
-        this.isBackgroundMode = false;
-        return await this.startForegroundMonitoring(jobsToMonitor);
-      } else if (useBackgroundMode) {
-        return await this.startBackgroundMonitoring(jobsToMonitor);
-      }
+      this.isBackgroundMode = false; // Always foreground mode
 
       // Initialize statuses for jobs
       jobsToMonitor.forEach(job => {
@@ -100,8 +88,8 @@ class GeofenceService {
       this.locationSubscription = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
-          timeInterval: 30000, // Update every 30 seconds
-          distanceInterval: 20, // Or when user moves 20 meters
+          timeInterval: 10000, // Update every 10 seconds (more frequent)
+          distanceInterval: 10, // Or when user moves 10 meters
         },
         (location) => {
           this.processLocationUpdate(location, jobsToMonitor);
@@ -109,7 +97,7 @@ class GeofenceService {
       );
 
       this.isActive = true;
-      console.log(`Started foreground monitoring ${jobsToMonitor.length} job geofences`);
+      console.log(`✅ Started FOREGROUND-ONLY monitoring ${jobsToMonitor.length} job geofences`);
       return true;
 
     } catch (error) {
@@ -118,81 +106,6 @@ class GeofenceService {
     }
   }
 
-  /**
-   * Start background monitoring using TaskManager
-   */
-  private async startBackgroundMonitoring(jobs: Job[]): Promise<boolean> {
-    try {
-      // Prepare geofence data for background task
-      const geofences: BackgroundGeofenceData[] = jobs
-        .filter(job => job.location?.latitude && job.location?.longitude)
-        .map(job => ({
-          jobId: job.id,
-          jobName: job.name,
-          latitude: job.location!.latitude!,
-          longitude: job.location!.longitude!,
-          radius: job.autoTimer?.geofenceRadius || 100,
-          delayStart: job.autoTimer?.delayStart || 2,
-          delayStop: job.autoTimer?.delayStop || 2,
-        }));
-
-      // Start background location updates
-      const success = await this.backgroundTaskManager.startBackgroundLocationUpdates(geofences);
-      
-      if (success) {
-        this.isActive = true;
-        console.log(`Started background monitoring ${jobs.length} job geofences`);
-        return true;
-      } else {
-        console.log('Failed to start background monitoring, falling back to foreground');
-        this.isBackgroundMode = false;
-        return await this.startForegroundMonitoring(jobs);
-      }
-    } catch (error) {
-      console.error('Error starting background monitoring:', error);
-      this.isBackgroundMode = false;
-      return await this.startForegroundMonitoring(jobs);
-    }
-  }
-
-  /**
-   * Start foreground monitoring (original implementation)
-   */
-  private async startForegroundMonitoring(jobs: Job[]): Promise<boolean> {
-    try {
-      // Initialize statuses for jobs
-      jobs.forEach(job => {
-        if (job.location?.latitude && job.location?.longitude) {
-          this.currentStatuses.set(job.id, {
-            jobId: job.id,
-            isInside: false,
-            distance: Number.MAX_VALUE,
-            lastUpdate: new Date(),
-          });
-        }
-      });
-
-      // Start location tracking
-      this.locationSubscription = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.High,
-          timeInterval: 30000, // Update every 30 seconds
-          distanceInterval: 20, // Or when user moves 20 meters
-        },
-        (location) => {
-          this.processLocationUpdate(location, jobs);
-        }
-      );
-
-      this.isActive = true;
-      console.log(`Started foreground monitoring ${jobs.length} job geofences`);
-      return true;
-
-    } catch (error) {
-      console.error('Error starting foreground monitoring:', error);
-      return false;
-    }
-  }
 
   /**
    * Stop monitoring geofences
@@ -204,15 +117,10 @@ class GeofenceService {
       this.locationSubscription = null;
     }
 
-    // Stop background monitoring
-    if (this.isBackgroundMode) {
-      this.backgroundTaskManager.stopBackgroundLocationUpdates();
-    }
-
     this.currentStatuses.clear();
     this.isActive = false;
     this.isBackgroundMode = false;
-    console.log('Stopped geofence monitoring');
+    console.log('✅ Stopped FOREGROUND-ONLY geofence monitoring');
   }
 
   /**

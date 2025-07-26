@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import NotificationService from '../services/NotificationService';
 
 interface PreferencesScreenProps {
   onClose?: () => void;
+  scrollToNotifications?: boolean;
 }
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
@@ -237,11 +238,13 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
 });
 
-export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
+export default function PreferencesScreen({ onClose, scrollToNotifications }: PreferencesScreenProps) {
   const { themeMode, setThemeMode, colors, isDark } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const { settings: notificationSettings, updateSettings: updateNotificationSettings, sendNotification } = useNotifications();
   const [countdown, setCountdown] = useState<number | null>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const notificationsRef = useRef<View>(null);
   const [countdownInterval, setCountdownInterval] = useState<NodeJS.Timeout | null>(null);
   const [showReminderOptions, setShowReminderOptions] = useState(false);
   const [customMinutes, setCustomMinutes] = useState(notificationSettings.reminderMinutes?.toString() || '15');
@@ -260,7 +263,9 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
   };
 
   const handleWorkRemindersToggle = async (value: boolean) => {
+    console.log('🔧 PreferencesScreen: Toggling workReminders to:', value);
     await updateNotificationSettings({ workReminders: value });
+    console.log('🔧 PreferencesScreen: workReminders updated, new settings should be:', { ...notificationSettings, workReminders: value });
     if (value) {
       setShowReminderOptions(true);
     } else {
@@ -289,40 +294,85 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
     };
   }, [countdownInterval]);
 
-  // Start countdown for delayed notification
-  const startDelayedNotificationTest = async () => {
-    console.log('🚀 Starting delayed notification test');
+  // Auto-scroll to notifications section if requested
+  useEffect(() => {
+    const shouldScroll = scrollToNotifications || (global as any).scrollToNotifications;
     
-    // Clear any existing countdown
-    if (countdownInterval) {
-      clearInterval(countdownInterval);
-    }
+    console.log('🔍 PreferencesScreen Auto-scroll check:', {
+      scrollToNotifications,
+      globalFlag: (global as any).scrollToNotifications,
+      shouldScroll,
+      hasNotificationsRef: !!notificationsRef.current,
+      hasScrollViewRef: !!scrollViewRef.current
+    });
     
-    try {
-      const notificationService = NotificationService.getInstance();
-      await notificationService.scheduleDelayedTestNotification(20);
+    if (shouldScroll) {
+      // Clear the global flag
+      (global as any).scrollToNotifications = false;
       
-      // Start countdown
-      setCountdown(20);
+      console.log('📍 Starting auto-scroll process...');
       
-      const interval = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev === null || prev <= 1) {
-            clearInterval(interval);
-            setCountdownInterval(null);
-            return null;
-          }
-          return prev - 1;
+      setTimeout(() => {
+        console.log('📍 After timeout - checking refs again:', {
+          hasNotificationsRef: !!notificationsRef.current,
+          hasScrollViewRef: !!scrollViewRef.current
         });
-      }, 1000);
-      
-      setCountdownInterval(interval);
-      
-      console.log('⏰ Countdown started! Close the app to test background notifications');
-    } catch (error) {
-      console.error('❌ Error starting delayed test:', error);
+        
+        if (notificationsRef.current && scrollViewRef.current) {
+          console.log('📍 Attempting measureLayout...');
+          notificationsRef.current?.measureLayout(
+            scrollViewRef.current as any,
+            (x, y) => {
+              console.log('📍 measureLayout success - scrolling to:', { x, y, targetY: y - 100 });
+              scrollViewRef.current?.scrollTo({
+                y: y - 100, // Offset para mostrar un poco del contexto superior
+                animated: true,
+              });
+            },
+            () => {
+              console.log('📍 measureLayout failed, using fallback scrollToEnd');
+              // Fallback si measureLayout falla - scroll to end
+              scrollViewRef.current?.scrollToEnd({ animated: true });
+            }
+          );
+        } else {
+          console.log('📍 Refs not available, trying simple scrollToEnd...');
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }
+      }, 1000); // Increased delay to ensure component is fully rendered
     }
-  };
+  }, [scrollToNotifications]);
+
+  // Additional effect to check for scroll flag on component mount
+  useEffect(() => {
+    console.log('🔍 PreferencesScreen mounted, checking for scroll flag...');
+    
+    // Check again after a longer delay in case the component needs more time to render
+    const checkScrollFlag = () => {
+      const shouldScroll = (global as any).scrollToNotifications;
+      console.log('🔍 Delayed scroll check:', { shouldScroll });
+      
+      if (shouldScroll) {
+        (global as any).scrollToNotifications = false;
+        console.log('📍 Late scroll attempt...');
+        
+        // Try simple scrollToEnd first
+        setTimeout(() => {
+          if (scrollViewRef.current) {
+            console.log('📍 Executing scrollToEnd...');
+            scrollViewRef.current.scrollToEnd({ animated: true });
+          }
+        }, 1500);
+      }
+    };
+    
+    // Check immediately and after delays
+    checkScrollFlag();
+    const timeoutId = setTimeout(checkScrollFlag, 2000);
+    
+    return () => clearTimeout(timeoutId);
+  }, []); // Empty dependency array means this runs only once on mount
+
 
   const styles = getStyles(colors, isDark);
 
@@ -347,7 +397,11 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
         </View>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+      >
         {/* Theme Section */}
         <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>{t('preferences.appearance.title')}</Text>
@@ -429,7 +483,12 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
         </BlurView>
 
         {/* Notifications Section */}
-        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.sectionCard}>
+        <View ref={notificationsRef}>
+          <BlurView 
+            intensity={95} 
+            tint={isDark ? "dark" : "light"} 
+            style={styles.sectionCard}
+          >
           <Text style={styles.sectionTitle}>{t('preferences.notifications.title')}</Text>
           <Text style={styles.sectionDescription}>
             {t('preferences.notifications.description')}
@@ -580,34 +639,10 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
     
           </TouchableOpacity>
 
-          {/* Delayed Test Notification Button */}
-          <TouchableOpacity
-            style={styles.setting}
-            onPress={async () => {
-              console.log('⏰ Delayed test button pressed');
-              try {
-                const notificationService = NotificationService.getInstance();
-                await notificationService.scheduleDelayedTestNotification(10); // 10 seconds delay
-                console.log('✅ Delayed test notification scheduled for 10 seconds');
-                alert('Notificación programada para 10 segundos. Minimiza la app para probarla.');
-              } catch (error) {
-                console.error('❌ Error scheduling delayed test notification:', error);
-              }
-            }}
-          >
-            <View style={[styles.settingIcon, { backgroundColor: 'rgba(255, 149, 0, 0.15)' }]}>
-              <IconSymbol size={20} name="clock.fill" color="#FF9500" />
-            </View>
-            <View style={styles.settingContent}>
-              <Text style={styles.settingTitle}>Prueba Retrasada (10s)</Text>
-              <Text style={styles.settingDescription}>
-                Programa una notificación para 10 segundos después
-              </Text>
-            </View>
-          </TouchableOpacity>
 
           
         </BlurView>
+        </View>
       
       </ScrollView>
     </SafeAreaView>

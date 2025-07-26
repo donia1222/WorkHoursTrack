@@ -57,10 +57,6 @@
     <string>Esta app necesita acceso al calendario para sincronizar tus días de trabajo con el calendario nativo.</string>
     <key>NSCalendarsWriteOnlyAccessUsageDescription</key>
     <string>Esta app necesita acceso de escritura al calendario para crear eventos de tus días de trabajo.</string>
-    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>Esta app necesita acceso a tu ubicación para el timer automático basado en geofencing.</string>
-    <key>NSLocationAlwaysUsageDescription</key>
-    <string>Esta app necesita acceso continuo a tu ubicación para iniciar/pausar el timer automáticamente cuando entres o salgas del área de trabajo.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>Esta app necesita acceso a tu ubicación cuando la uses para mostrarte en el mapa.</string>
     <key>NSRemindersFullAccessUsageDescription</key>
@@ -75,10 +71,6 @@
     <string>Esta app necesita permisos de notificación para avisarte cuando el timer automático se inicie o pause.</string>
     <key>UIBackgroundModes</key>
     <array>
-      <string>location</string>
-      <string>background-fetch</string>
-      <string>background-processing</string>
-      <string>fetch</string>
     </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
