@@ -31,7 +31,14 @@
       "location": "Location",
       "location_desc": "Geolocation-based alerts",
       "test_button": "Send Test Notification",
-      "test_desc": "Test notifications to verify they work correctly"
+      "test_desc": "Test notifications to verify they work correctly",
+      "enable_work_reminders_suggestion": "Enable work reminders",
+      "enable_work_reminders_description": "Get alerts before your work time",
+      "enable_work_reminders_title": "Enable Reminders",
+      "enable_work_reminders_message": "Would you like to enable work reminders to receive notifications before your work time?",
+      "go_to_preferences": "Go to Preferences",
+      "reminder_title": "Reminder",
+      "reminder_message": "Go to Preferences > Notifications to enable work schedule reminders"
     }
   },
   "settings": {
@@ -203,7 +210,16 @@
     "export_job": "Export {{jobName}}",
     "generating_pdf": "Generating PDF...",
     "pdf_generated": "PDF generated successfully",
-    "pdf_error": "Error generating PDF"
+    "pdf_error": "Error generating PDF",
+    "export_options": "Export Options",
+    "billing_information": "Billing Information",
+    "include_billing_data": "Add data to PDF",
+    "include_billing_desc": "Include billing information in the PDF report",
+    "include_invoice_details": "Add date and invoice number",
+    "include_invoice_details_desc": "Automatically generate invoice number and current date",
+    "no_billing_data": "No billing data",
+    "no_billing_data_desc": "Configure billing data to include it in your PDF reports",
+    "configure_billing": "Add billing data to PDF"
   },
   "calendar": {
     "title": "My Calendar",
@@ -495,6 +511,7 @@
     },
     "financial": {
       "title": "Salary Configuration",
+      "enabled": "Salary configuration enabled",
       "salary_type": "Salary type",
       "hourly": "Hourly",
       "monthly": "Monthly",
@@ -514,7 +531,36 @@
       "tax_rate": "Tax rate (%)",
       "tax_rate_placeholder": "21",
       "notes": "Billing notes",
-      "notes_placeholder": "Payment terms, additional information..."
+      "notes_placeholder": "Payment terms, additional information...",
+      "user_data": {
+        "title": "User/Company Data",
+        "subtitle": "Information that will appear on invoices",
+        "is_company": "Is company?",
+        "is_company_desc": "Enable if you generate invoices as a company",
+        "company_name": "Company Name",
+        "company_name_placeholder": "e.g.: My Company Ltd.",
+        "tax_id": "Tax ID/VAT Number",
+        "tax_id_placeholder": "e.g.: B12345678",
+        "full_name": "Full Name",
+        "full_name_placeholder": "e.g.: John Doe",
+        "address": "Full Address",
+        "address_placeholder": "Street, number, postal code, city",
+        "phone": "Phone",
+        "phone_placeholder": "e.g.: +1 123 456 789",
+        "email": "Email",
+        "email_placeholder": "email@example.com",
+        "website": "Website",
+        "website_placeholder": "https://www.example.com",
+        "banking_info": "Banking Information",
+        "banking_desc": "Optional payment details",
+        "bank_account": "Account Number",
+        "bank_account_placeholder": "1234567890",
+        "bank_name": "Bank Name",
+        "bank_name_placeholder": "e.g.: Chase Bank",
+        "swift_code": "SWIFT/BIC Code",
+        "swift_code_placeholder": "e.g.: CHASUS33",
+        "preview_title": "Invoice Preview"
+      }
     },
     "location": {
       "title": "Geolocation",

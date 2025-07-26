@@ -2,7 +2,8 @@
   "common": {
     "no_jobs_title": "Keine Jobs Konfiguriert",
     "no_jobs_message": "Sie müssen mindestens einen Job erstellen, bevor Sie den Timer, Kalender oder Berichte verwenden können. Beginnen Sie mit der Einrichtung Ihres ersten Jobs.",
-    "create_first_job": "Ersten Job Erstellen"
+    "create_first_job": "Ersten Job Erstellen",
+    "cancel": "Abbrechen"
   },
   "preferences": {
     "title": "Einstellungen",
@@ -30,7 +31,14 @@
       "location": "Standort",
       "location_desc": "Standortbasierte Benachrichtigungen",
       "test_button": "Test-Benachrichtigung Senden",
-      "test_desc": "Testen Sie Benachrichtigungen, um zu überprüfen, ob sie korrekt funktionieren"
+      "test_desc": "Testen Sie Benachrichtigungen, um zu überprüfen, ob sie korrekt funktionieren",
+      "enable_work_reminders_suggestion": "Arbeitserinnerungen aktivieren",
+      "enable_work_reminders_description": "Erhalten Sie Benachrichtigungen vor Ihrer Arbeitszeit",
+      "enable_work_reminders_title": "Erinnerungen Aktivieren",
+      "enable_work_reminders_message": "Möchten Sie Arbeitserinnerungen aktivieren, um Benachrichtigungen vor Ihrer Arbeitszeit zu erhalten?",
+      "go_to_preferences": "Zu Einstellungen Gehen",
+      "reminder_title": "Erinnerung",
+      "reminder_message": "Gehen Sie zu Einstellungen > Benachrichtigungen, um Arbeitszeiterinnerungen zu aktivieren"
     }
   },
   "settings": {
@@ -204,6 +212,15 @@
     "generating_pdf": "PDF wird generiert...",
     "pdf_generated": "PDF erfolgreich generiert",
     "pdf_error": "Fehler beim Generieren des PDFs",
+    "export_options": "Exportoptionen",
+    "billing_information": "Abrechnungsinformationen",
+    "include_billing_data": "Daten zum PDF hinzufügen",
+    "include_billing_desc": "Abrechnungsinformationen in den PDF-Bericht einschließen",
+    "include_invoice_details": "Datum und Rechnungsnummer hinzufügen",
+    "include_invoice_details_desc": "Automatisch Rechnungsnummer und aktuelles Datum generieren",
+    "no_billing_data": "Keine Abrechnungsdaten",
+    "no_billing_data_desc": "Konfigurieren Sie Abrechnungsdaten, um sie in Ihre PDF-Berichte einzuschließen",
+    "configure_billing": "Abrechnungsdaten zum PDF hinzufügen",
     "pdf_title": "Arbeitsbericht",
     "analysis_date": "Analysedatum",
     "days": "Tage",
@@ -392,6 +409,7 @@
     },
     "financial": {
       "title": "Gehaltskonfiguration",
+      "enabled": "Gehaltskonfiguration aktiviert",
       "salary_type": "Gehaltsart",
       "hourly": "Stündlich",
       "monthly": "Monatlich",
@@ -411,7 +429,36 @@
       "tax_rate": "Steuersatz (%)",
       "tax_rate_placeholder": "19",
       "notes": "Abrechnungsnotizen",
-      "notes_placeholder": "Zahlungsbedingungen, zusätzliche Informationen..."
+      "notes_placeholder": "Zahlungsbedingungen, zusätzliche Informationen...",
+      "user_data": {
+        "title": "Benutzer-/Firmendaten",
+        "subtitle": "Informationen, die auf Rechnungen erscheinen",
+        "is_company": "Ist Unternehmen?",
+        "is_company_desc": "Aktivieren, wenn Sie Rechnungen als Unternehmen erstellen",
+        "company_name": "Firmenname",
+        "company_name_placeholder": "z.B.: Meine Firma GmbH",
+        "tax_id": "Steuer-ID/USt-IdNr.",
+        "tax_id_placeholder": "z.B.: DE123456789",
+        "full_name": "Vollständiger Name",
+        "full_name_placeholder": "z.B.: Max Mustermann",
+        "address": "Vollständige Adresse",
+        "address_placeholder": "Straße, Hausnummer, PLZ, Stadt",
+        "phone": "Telefon",
+        "phone_placeholder": "z.B.: +49 123 456 789",
+        "email": "E-Mail",
+        "email_placeholder": "email@beispiel.de",
+        "website": "Website",
+        "website_placeholder": "https://www.beispiel.de",
+        "banking_info": "Bankverbindung",
+        "banking_desc": "Optionale Zahlungsdaten",
+        "bank_account": "Kontonummer",
+        "bank_account_placeholder": "DE12 1234 5678 9012 3456 78",
+        "bank_name": "Bankname",
+        "bank_name_placeholder": "z.B.: Deutsche Bank",
+        "swift_code": "SWIFT/BIC-Code",
+        "swift_code_placeholder": "z.B.: DEUTDEFF",
+        "preview_title": "Rechnungsvorschau"
+      }
     },
     "location": {
       "title": "Geolokalisierung",

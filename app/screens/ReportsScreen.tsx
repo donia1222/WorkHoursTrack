@@ -25,6 +25,7 @@ import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { Calendar } from 'react-native-calendars';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import JobFormModal from '../components/JobFormModal';
 
 interface ReportsScreenProps {
   onNavigate: (screen: string) => void;
@@ -141,6 +142,13 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const [tempFromDate, setTempFromDate] = useState<Date>(new Date(new Date().setDate(1)));
   const [tempToDate, setTempToDate] = useState<Date>(new Date());
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [showBillingModal, setShowBillingModal] = useState(false);
+  const [includeBillingData, setIncludeBillingData] = useState(true);
+  const [includeInvoiceDetails, setIncludeInvoiceDetails] = useState(true);
+  const [showJobFormModal, setShowJobFormModal] = useState(false);
+  const [editingJobForBilling, setEditingJobForBilling] = useState<Job | null>(null);
+  const [includeSalaryCalculation, setIncludeSalaryCalculation] = useState(false);
+  const [salaryPeriod, setSalaryPeriod] = useState<'hour' | 'week' | 'month'>('hour');
   
   const { handleBack } = useBackNavigation();
   const { colors, isDark } = useTheme();
@@ -515,6 +523,10 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     setShowDatePicker(true);
   };
 
+  const showBillingDataModal = () => {
+    setShowBillingModal(true);
+  };
+
   const generatePDF = async () => {
     if (!periodStats) return;
 
@@ -526,7 +538,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       const jobName = selectedJob ? selectedJob.name : t('reports.all_jobs');
       
       // Generate HTML content
-      const htmlContent = generateHTMLReport();
+      const htmlContent = generateHTMLReport(includeBillingData);
       
       // Create PDF
       const { uri } = await Print.printToFileAsync({
@@ -549,10 +561,186 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       Alert.alert('❌', t('reports.pdf_error'));
     } finally {
       setIsGeneratingPDF(false);
+      setShowBillingModal(false);
     }
   };
 
-  const generateHTMLReport = () => {
+  const handleExportWithBillingData = () => {
+    generatePDF();
+  };
+
+  const getBillingData = () => {
+    // Get billing data from the first job that has billing enabled, or from selected job
+    let jobWithBilling = null;
+    
+    if (selectedJobId !== 'all') {
+      const selectedJob = jobs.find(job => job.id === selectedJobId);
+      if (selectedJob?.billing?.enabled && selectedJob?.billing?.userData) {
+        jobWithBilling = selectedJob;
+      }
+    }
+    
+    // If no selected job or it doesn't have billing, find first job with billing data
+    if (!jobWithBilling) {
+      jobWithBilling = jobs.find(job => 
+        job.billing?.enabled && 
+        job.billing?.userData && 
+        (job.billing.userData.name || job.billing.userData.companyName)
+      );
+    }
+    
+    return jobWithBilling?.billing?.userData || null;
+  };
+
+  const getSalaryData = () => {
+    // Get salary data from the selected job
+    let jobWithSalary = null;
+    
+    if (selectedJobId !== 'all') {
+      const selectedJob = jobs.find(job => job.id === selectedJobId);
+      if (selectedJob?.salary?.enabled) {
+        jobWithSalary = selectedJob;
+      }
+    }
+    
+    // If no selected job or it doesn't have salary, find first job with salary data
+    if (!jobWithSalary) {
+      jobWithSalary = jobs.find(job => 
+        job.salary?.enabled && 
+        job.salary?.amount > 0
+      );
+    }
+    
+    return jobWithSalary?.salary || null;
+  };
+
+  const calculateSalaryTotal = () => {
+    const salaryData = getSalaryData();
+    if (!salaryData || !periodStats) return null;
+
+    const totalHours = periodStats.totalHours;
+
+    switch (salaryPeriod) {
+      case 'hour':
+        // If salary type is hourly, use amount directly
+        if (salaryData.type === 'hourly') {
+          return {
+            amount: totalHours * salaryData.amount,
+            currency: salaryData.currency || 'EUR',
+            period: 'por horas trabajadas',
+            rate: salaryData.amount > 0 ? `${salaryData.amount} ${salaryData.currency || 'EUR'}/h` : 'No configurado',
+            hours: totalHours
+          };
+        }
+        // If not hourly, use hourly rate from job
+        const job = jobs.find(j => j.salary === salaryData);
+        const hourlyRate = job?.hourlyRate || 0;
+        return {
+          amount: totalHours * hourlyRate,
+          currency: salaryData.currency || 'EUR',
+          period: 'por horas trabajadas',
+          rate: hourlyRate > 0 ? `${hourlyRate} ${salaryData.currency || 'EUR'}/h` : 'No configurado',
+          hours: totalHours
+        };
+
+      case 'week':
+        // Calculate weekly rate
+        let weeklyRate = 0;
+        if (salaryData.type === 'hourly') {
+          // Assume 40 hours per week for hourly workers
+          weeklyRate = salaryData.amount * 40;
+        } else if (salaryData.type === 'monthly') {
+          // Convert monthly to weekly (4.33 weeks per month)
+          weeklyRate = salaryData.amount / 4.33;
+        } else if (salaryData.type === 'annual') {
+          // Convert annual to weekly (52 weeks per year)
+          weeklyRate = salaryData.amount / 52;
+        }
+        
+        const weeksWorked = totalHours / 40; // Assuming 40 hours per week
+        return {
+          amount: weeksWorked * weeklyRate,
+          currency: salaryData.currency || 'EUR',
+          period: 'por semanas trabajadas',
+          rate: weeklyRate > 0 ? `${weeklyRate.toFixed(2)} ${salaryData.currency || 'EUR'}/semana` : 'No configurado',
+          weeks: weeksWorked
+        };
+
+      case 'month':
+        // Calculate monthly rate
+        let monthlyRate = 0;
+        if (salaryData.type === 'monthly') {
+          monthlyRate = salaryData.amount;
+        } else if (salaryData.type === 'hourly') {
+          // Assume 173.33 hours per month (40 hours * 4.33 weeks)
+          monthlyRate = salaryData.amount * 173.33;
+        } else if (salaryData.type === 'annual') {
+          monthlyRate = salaryData.amount / 12;
+        }
+        
+        const monthsWorked = totalHours / 173.33; // Assuming 173.33 hours per month
+        return {
+          amount: monthsWorked * monthlyRate,
+          currency: salaryData.currency || 'EUR',
+          period: 'proporcional al mes',
+          rate: monthlyRate > 0 ? `${monthlyRate.toFixed(2)} ${salaryData.currency || 'EUR'}/mes` : 'No configurado',
+          months: monthsWorked
+        };
+
+      default:
+        return null;
+    }
+  };
+
+  const openBillingConfiguration = () => {
+    setShowBillingModal(false);
+    
+    // Use selected job or first job for billing configuration
+    let jobToEdit = null;
+    if (selectedJobId !== 'all') {
+      jobToEdit = jobs.find(job => job.id === selectedJobId);
+    } else {
+      jobToEdit = jobs[0]; // Use first job if all jobs selected
+    }
+    
+    if (jobToEdit) {
+      setEditingJobForBilling(jobToEdit);
+      setShowJobFormModal(true);
+    }
+  };
+
+  const openSalaryConfiguration = () => {
+    setShowBillingModal(false);
+    
+    // Use selected job or first job for salary configuration
+    let jobToEdit = null;
+    if (selectedJobId !== 'all') {
+      jobToEdit = jobs.find(job => job.id === selectedJobId);
+    } else {
+      jobToEdit = jobs[0]; // Use first job if all jobs selected
+    }
+    
+    if (jobToEdit) {
+      setEditingJobForBilling(jobToEdit);
+      setShowJobFormModal(true);
+    }
+  };
+
+  const generateInvoiceNumber = () => {
+    const billingData = getBillingData();
+    const prefix = billingData?.isCompany ? 
+      (billingData?.companyName?.substring(0, 3).toUpperCase() || 'EMP') : 
+      'USR';
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2);
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const random = Math.floor(Math.random() * 999).toString().padStart(3, '0');
+    
+    return `${prefix}-${year}${month}${day}-${random}`;
+  };
+
+  const generateHTMLReport = (includeBilling: boolean = false) => {
     if (!periodStats) return '';
 
     const selectedJob = selectedJobId === 'all' ? null : jobs.find(job => job.id === selectedJobId);
@@ -561,6 +749,20 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     
     // Get recent activity for PDF
     const recentDays = getAllRecentWorkDays().slice(0, 10); // Max 10 recent days
+    
+    // Get billing data if needed
+    const billingData = includeBilling ? getBillingData() : null;
+    
+    // Get salary calculation if needed
+    const salaryTotal = includeSalaryCalculation ? calculateSalaryTotal() : null;
+    
+    // Generate invoice details if needed
+    const invoiceNumber = includeInvoiceDetails ? generateInvoiceNumber() : null;
+    const invoiceDate = includeInvoiceDetails ? new Date().toLocaleDateString(language === 'es' ? 'es-ES' : language === 'de' ? 'de-DE' : language === 'fr' ? 'fr-FR' : language === 'it' ? 'it-IT' : 'en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }) : null;
 
     return `
     <!DOCTYPE html>
@@ -767,6 +969,104 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
               </div>
             `;
           }).join('')}
+        </div>
+      ` : ''}
+
+      ${billingData ? `
+        <div style="page-break-before: always; margin-top: 40px;">
+          <div style="border: 2px solid #007AFF; border-radius: 12px; padding: 30px; background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);">
+            <div style="text-align: center; margin-bottom: 25px;">
+              <h2 style="color: #007AFF; font-size: 24px; margin: 0; font-weight: 700;">💼 FACTURA / INVOICE</h2>
+              ${invoiceNumber ? `<div style="color: #666; font-size: 16px; margin-top: 8px; font-weight: 600;">📄 ${invoiceNumber}</div>` : ''}
+              ${invoiceDate ? `<div style="color: #666; font-size: 14px; margin-top: 4px;">📅 ${invoiceDate}</div>` : ''}
+              <div style="height: 3px; background: linear-gradient(90deg, #007AFF, #00D4FF); margin: 10px auto; width: 150px; border-radius: 2px;"></div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+              <div style="flex: 1;">
+                <h3 style="color: #333; font-size: 16px; margin-bottom: 15px; border-bottom: 2px solid #007AFF; padding-bottom: 5px;">📋 DATOS DEL PROVEEDOR / PROVIDER</h3>
+                ${billingData.isCompany ? `
+                  <div style="margin-bottom: 10px; font-size: 18px; font-weight: 700; color: #007AFF;">🏢 ${billingData.companyName || 'Empresa'}</div>
+                  <div style="margin-bottom: 8px; color: #666; font-weight: 600;">📄 ${billingData.taxId ? 'CIF/VAT: ' + billingData.taxId : 'CIF/VAT: N/A'}</div>
+                ` : `
+                  <div style="margin-bottom: 10px; font-size: 18px; font-weight: 700; color: #007AFF;">👤 ${billingData.name || 'Usuario'}</div>
+                `}
+                ${billingData.address ? `<div style="margin-bottom: 8px; color: #555;">📍 ${billingData.address}</div>` : ''}
+                ${billingData.phone ? `<div style="margin-bottom: 8px; color: #555;">📞 ${billingData.phone}</div>` : ''}
+                ${billingData.email ? `<div style="margin-bottom: 8px; color: #555;">✉️ ${billingData.email}</div>` : ''}
+                ${billingData.website ? `<div style="margin-bottom: 8px; color: #007AFF;">🌐 ${billingData.website}</div>` : ''}
+              </div>
+              
+              <div style="flex: 1; margin-left: 30px;">
+                <h3 style="color: #333; font-size: 16px; margin-bottom: 15px; border-bottom: 2px solid #28a745; padding-bottom: 5px;">💰 RESUMEN / SUMMARY</h3>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                  <div style="margin-bottom: 8px;"><strong>📊 ${t('reports.total_hours')}: ${periodStats.totalHours.toFixed(1)}h</strong></div>
+                  <div style="margin-bottom: 8px;"><strong>📅 ${t('reports.worked_days')}: ${periodStats.totalDays}</strong></div>
+                  <div style="margin-bottom: 8px;"><strong>⏱️ ${t('reports.average_per_day')}: ${periodStats.avgHoursPerDay.toFixed(1)}h</strong></div>
+                  ${periodStats.overtimeHours > 0 ? `<div style="color: #ff6b35;"><strong>⏰ Overtime: ${periodStats.overtimeHours.toFixed(1)}h</strong></div>` : ''}
+                </div>
+              </div>
+            </div>
+
+            ${billingData.bankAccount || billingData.bankName || billingData.swiftCode ? `
+              <div style="margin-top: 25px; padding: 20px; background: #e3f2fd; border-radius: 8px; border: 1px solid #2196f3;">
+                <h3 style="color: #1976d2; font-size: 16px; margin-bottom: 15px;">🏦 DATOS BANCARIOS / BANKING DETAILS</h3>
+                ${billingData.bankAccount ? `<div style="margin-bottom: 8px; font-weight: 600;">💳 <strong>Cuenta/Account:</strong> ${billingData.bankAccount}</div>` : ''}
+                ${billingData.bankName ? `<div style="margin-bottom: 8px;">🏦 <strong>Banco/Bank:</strong> ${billingData.bankName}</div>` : ''}
+                ${billingData.swiftCode ? `<div style="margin-bottom: 8px;">🔗 <strong>SWIFT/BIC:</strong> ${billingData.swiftCode}</div>` : ''}
+              </div>
+            ` : ''}
+
+            <div style="margin-top: 30px; padding: 15px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;">
+              <div style="text-align: center; color: #856404;">
+                <strong>📄 Período facturado / Billing Period: ${periodLabel}</strong><br>
+                <small>Generado el / Generated on: ${new Date().toLocaleDateString()}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      ` : ''}
+
+      ${salaryTotal ? `
+        <div style="page-break-before: avoid; margin-top: 40px;">
+          <div style="border: 2px solid #28a745; border-radius: 12px; padding: 30px; background: linear-gradient(135deg, #f8fff8 0%, #ffffff 100%);">
+            <div style="text-align: center; margin-bottom: 25px;">
+              <h2 style="color: #28a745; font-size: 24px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);">
+                💰 CÁLCULO SALARIAL / SALARY CALCULATION
+              </h2>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div style="flex: 1;">
+                <h3 style="color: #333; font-size: 16px; margin-bottom: 15px; border-bottom: 2px solid #28a745; padding-bottom: 5px;">📊 DETALLES DE CÁLCULO / CALCULATION DETAILS</h3>
+                <div style="margin-bottom: 10px; font-size: 16px; color: #555;">
+                  <strong>⏱️ Tarifa:</strong> ${salaryTotal.rate}
+                </div>
+                <div style="margin-bottom: 10px; font-size: 16px; color: #555;">
+                  <strong>📅 Período:</strong> ${salaryTotal.period}
+                </div>
+                ${salaryTotal.hours ? `<div style="margin-bottom: 10px; font-size: 16px; color: #555;"><strong>🕐 Horas trabajadas:</strong> ${salaryTotal.hours.toFixed(2)}h</div>` : ''}
+                ${salaryTotal.weeks ? `<div style="margin-bottom: 10px; font-size: 16px; color: #555;"><strong>📊 Semanas trabajadas:</strong> ${salaryTotal.weeks.toFixed(2)}</div>` : ''}
+                ${salaryTotal.months ? `<div style="margin-bottom: 10px; font-size: 16px; color: #555;"><strong>📊 Meses trabajados:</strong> ${salaryTotal.months.toFixed(2)}</div>` : ''}
+              </div>
+              
+              <div style="flex: 1; margin-left: 30px; text-align: right;">
+                <div style="background: #28a745; color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">
+                  <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; opacity: 0.9;">TOTAL A PAGAR / TOTAL TO PAY</div>
+                  <div style="font-size: 32px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    ${salaryTotal.amount.toFixed(2)} ${salaryTotal.currency}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div style="margin-top: 25px; padding: 20px; background: #e8f5e8; border-radius: 8px; border: 1px solid #28a745;">
+              <div style="text-align: center; color: #155724; font-size: 14px;">
+                <strong>💡 Nota:</strong> Este cálculo se basa en las horas registradas y la configuración salarial del trabajo.<br>
+                <strong>💡 Note:</strong> This calculation is based on recorded hours and job salary configuration.
+              </div>
+            </div>
+          </div>
         </div>
       ` : ''}
 
@@ -1148,6 +1448,39 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           )}
         </BlurView>
 
+        {/* PDF Export Button - Main Action */}
+        {periodStats && (
+          <TouchableOpacity
+            style={[styles.primaryExportButton, isGeneratingPDF && styles.exportButtonDisabled]}
+            onPress={showBillingDataModal}
+            disabled={isGeneratingPDF}
+          >
+            <LinearGradient
+              colors={isGeneratingPDF ? [colors.textSecondary, colors.textSecondary] : ['#007AFF', '#0056CC']}
+              style={styles.primaryExportButtonInner}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 1}}
+            >
+              {isGeneratingPDF ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <IconSymbol size={28} name="square.and.arrow.up" color="#FFFFFF" />
+              )}
+              <Text style={[styles.primaryExportButtonText, isGeneratingPDF && styles.exportButtonTextDisabled]}>
+                {isGeneratingPDF 
+                  ? t('reports.generating_pdf')
+                  : selectedJobId === 'all'
+                    ? t('reports.export_all_jobs') 
+                    : t('reports.export_job', { jobName: jobs.find(j => j.id === selectedJobId)?.name || '' })
+                }
+              </Text>
+              {!isGeneratingPDF && (
+                <IconSymbol size={18} name="arrow.right" color="#FFFFFF" />
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
+
         {/* Quick actions */}
         <View style={styles.actionsContainer}>
           <TouchableOpacity
@@ -1172,34 +1505,6 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
             </BlurView>
           </TouchableOpacity>
         </View>
-
-        {/* PDF Export Button */}
-        {periodStats && (
-          <TouchableOpacity
-            style={[styles.actionButton, isGeneratingPDF && styles.exportButtonDisabled]}
-            onPress={generatePDF}
-            disabled={isGeneratingPDF}
-          >
-            <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.actionButtonInner}>
-              {isGeneratingPDF ? (
-                <ActivityIndicator size="small" color={colors.primary} />
-              ) : (
-                <IconSymbol size={24} name="square.and.arrow.up" color={colors.primary} />
-              )}
-              <Text style={[styles.actionButtonText, isGeneratingPDF && styles.exportButtonTextDisabled]}>
-                {isGeneratingPDF 
-                  ? t('reports.generating_pdf')
-                  : selectedJobId === 'all'
-                    ? t('reports.export_all_jobs') 
-                    : t('reports.export_job', { jobName: jobs.find(j => j.id === selectedJobId)?.name || '' })
-                }
-              </Text>
-              {!isGeneratingPDF && (
-                <IconSymbol size={16} name="arrow.right" color={colors.primary} />
-              )}
-            </BlurView>
-          </TouchableOpacity>
-        )}
       </ScrollView>
       
       {/* Date Picker Modal */}
@@ -1265,6 +1570,316 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
             </View>
           </View>
         </Modal>
+      )}
+
+      {/* Billing Data Modal */}
+      {showBillingModal && (
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={showBillingModal}
+          onRequestClose={() => setShowBillingModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.billingModal}>
+              <View style={styles.modalHeader}>
+                <TouchableOpacity
+                  style={styles.modalCloseButton}
+                  onPress={() => setShowBillingModal(false)}
+                >
+                  <IconSymbol size={24} name="xmark" color={colors.text} />
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>
+                  {t('reports.export_options') || 'Opciones de Exportación'}
+                </Text>
+                <View style={{width: 40}} />
+              </View>
+              
+              <ScrollView style={styles.billingModalContent}>
+                {getBillingData() ? (
+                  <>
+                    <View style={styles.billingDataSection}>
+                      <Text style={styles.billingDataTitle}>
+                        📄 {t('job_form.billing.user_data.title')}
+                      </Text>
+                      <View style={styles.billingDataCard}>
+                        {getBillingData()?.isCompany ? (
+                          <>
+                            <Text style={styles.billingDataItem}>
+                              🏢 <Text style={styles.billingDataValue}>{getBillingData()?.companyName}</Text>
+                            </Text>
+                            <Text style={styles.billingDataItem}>
+                              🏷️ <Text style={styles.billingDataValue}>{getBillingData()?.taxId}</Text>
+                            </Text>
+                          </>
+                        ) : (
+                          <Text style={styles.billingDataItem}>
+                            👤 <Text style={styles.billingDataValue}>{getBillingData()?.name}</Text>
+                          </Text>
+                        )}
+                        {getBillingData()?.address && (
+                          <Text style={styles.billingDataItem}>
+                            📍 <Text style={styles.billingDataValue}>{getBillingData()?.address}</Text>
+                          </Text>
+                        )}
+                        {getBillingData()?.phone && (
+                          <Text style={styles.billingDataItem}>
+                            📞 <Text style={styles.billingDataValue}>{getBillingData()?.phone}</Text>
+                          </Text>
+                        )}
+                        {getBillingData()?.email && (
+                          <Text style={styles.billingDataItem}>
+                            ✉️ <Text style={styles.billingDataValue}>{getBillingData()?.email}</Text>
+                          </Text>
+                        )}
+                        {getBillingData()?.website && (
+                          <Text style={styles.billingDataItem}>
+                            🌐 <Text style={styles.billingDataValue}>{getBillingData()?.website}</Text>
+                          </Text>
+                        )}
+                        
+                        {/* Banking Section */}
+                        {(getBillingData()?.bankAccount || getBillingData()?.bankName || getBillingData()?.swiftCode) && (
+                          <>
+                            <View style={{height: 1, backgroundColor: colors.separator, marginVertical: 12}} />
+                            <Text style={[styles.billingDataItem, {fontWeight: '700', color: colors.primary, marginBottom: 8}]}>
+                              🏦 Datos Bancarios
+                            </Text>
+                            {getBillingData()?.bankAccount && (
+                              <Text style={styles.billingDataItem}>
+                                💳 <Text style={styles.billingDataValue}>{getBillingData()?.bankAccount}</Text>
+                              </Text>
+                            )}
+                            {getBillingData()?.bankName && (
+                              <Text style={styles.billingDataItem}>
+                                🏦 <Text style={styles.billingDataValue}>{getBillingData()?.bankName}</Text>
+                              </Text>
+                            )}
+                            {getBillingData()?.swiftCode && (
+                              <Text style={styles.billingDataItem}>
+                                🔗 <Text style={styles.billingDataValue}>SWIFT: {getBillingData()?.swiftCode}</Text>
+                              </Text>
+                            )}
+                          </>
+                        )}
+                      </View>
+                    </View>
+
+                    <View style={styles.switchSection}>
+                      <View style={styles.switchRow}>
+                        <View style={styles.switchContent}>
+                          <Text style={styles.switchLabel}>
+                            {t('reports.include_billing_data') || 'Añadir datos al PDF'}
+                          </Text>
+                          <Text style={styles.switchDescription}>
+                            {t('reports.include_billing_desc') || 'Incluir información de facturación en el reporte PDF'}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          style={[styles.switch, includeBillingData && styles.switchActive]}
+                          onPress={() => setIncludeBillingData(!includeBillingData)}
+                        >
+                          <View style={[styles.switchThumb, includeBillingData && styles.switchThumbActive]} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    <View style={styles.switchSection}>
+                      <View style={styles.switchRow}>
+                        <View style={styles.switchContent}>
+                          <Text style={styles.switchLabel}>
+                            {t('reports.include_invoice_details') || 'Añadir fecha y número de factura'}
+                          </Text>
+                          <Text style={styles.switchDescription}>
+                            {t('reports.include_invoice_details_desc') || 'Generar automáticamente número de factura y fecha actual'}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          style={[styles.switch, includeInvoiceDetails && styles.switchActive]}
+                          onPress={() => setIncludeInvoiceDetails(!includeInvoiceDetails)}
+                        >
+                          <View style={[styles.switchThumb, includeInvoiceDetails && styles.switchThumbActive]} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </>
+                ) : (
+                  <View style={styles.noBillingDataSection}>
+                    <IconSymbol size={48} name="doc.text" color={colors.textSecondary} />
+                    <Text style={styles.noBillingDataTitle}>
+                      {t('reports.no_billing_data') || 'Sin datos de facturación'}
+                    </Text>
+                    <Text style={styles.noBillingDataMessage}>
+                      {t('reports.no_billing_data_desc') || 'Configura los datos de facturación para incluirlos en tus reportes PDF'}
+                    </Text>
+                    
+                    <TouchableOpacity
+                      style={styles.configureBillingButton}
+                      onPress={openBillingConfiguration}
+                    >
+                      <IconSymbol size={20} name="gear" color="#FFFFFF" />
+                      <Text style={styles.configureBillingButtonText}>
+                        {t('reports.configure_billing') || 'Añadir datos de facturación al PDF'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* Salary Calculation Section */}
+                <View style={styles.salarySection}>
+                  <Text style={styles.salarySectionTitle}>
+                    💰 Cálculo Salarial
+                  </Text>
+                  
+                  {getSalaryData() ? (
+                    <>
+                      <View style={styles.switchSection}>
+                        <View style={styles.switchRow}>
+                          <View style={styles.switchContent}>
+                            <Text style={styles.switchLabel}>
+                              Incluir total salarial
+                            </Text>
+                            <Text style={styles.switchDescription}>
+                              Calcular y mostrar el total a pagar basado en las horas trabajadas
+                            </Text>
+                          </View>
+                          <TouchableOpacity
+                            style={[styles.switch, includeSalaryCalculation && styles.switchActive]}
+                            onPress={() => setIncludeSalaryCalculation(!includeSalaryCalculation)}
+                          >
+                            <View style={[styles.switchThumb, includeSalaryCalculation && styles.switchThumbActive]} />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+
+                      {includeSalaryCalculation && (
+                        <>
+                          <View style={styles.periodSelectorSection}>
+                            <Text style={styles.periodSelectorLabel}>Período de facturación:</Text>
+                            <View style={styles.salaryPeriodSelector}>
+                              {[
+                                { key: 'hour', label: 'Por horas' },
+                                { key: 'week', label: 'Por semana' },
+                                { key: 'month', label: 'Por mes' },
+                              ].map((option) => (
+                                <TouchableOpacity
+                                  key={option.key}
+                                  style={[
+                                    styles.periodOption,
+                                    salaryPeriod === option.key && styles.periodOptionActive,
+                                  ]}
+                                  onPress={() => setSalaryPeriod(option.key as 'hour' | 'week' | 'month')}
+                                >
+                                  <Text
+                                    style={[
+                                      styles.periodOptionText,
+                                      salaryPeriod === option.key && styles.periodOptionTextActive,
+                                    ]}
+                                  >
+                                    {option.label}
+                                  </Text>
+                                </TouchableOpacity>
+                              ))}
+                            </View>
+                          </View>
+
+                          {calculateSalaryTotal() && (
+                            <View style={styles.salaryCalculationPreview}>
+                              <Text style={styles.salaryPreviewTitle}>Vista Previa del Cálculo:</Text>
+                              <View style={styles.salaryPreviewCard}>
+                                <Text style={styles.salaryPreviewItem}>
+                                  📊 Tarifa: <Text style={styles.salaryPreviewValue}>{calculateSalaryTotal()?.rate}</Text>
+                                </Text>
+                                <Text style={styles.salaryPreviewItem}>
+                                  ⏱️ Período: <Text style={styles.salaryPreviewValue}>{calculateSalaryTotal()?.period}</Text>
+                                </Text>
+                                <Text style={styles.salaryPreviewTotal}>
+                                  💰 Total: <Text style={styles.salaryPreviewTotalValue}>
+                                    {(() => {
+                                      const total = calculateSalaryTotal();
+                                      return total?.amount && total.amount > 0 
+                                        ? `${total.amount.toFixed(2)} ${total.currency}`
+                                        : 'Configura las cantidades para ver el total';
+                                    })()}
+                                  </Text>
+                                </Text>
+                              </View>
+                            </View>
+                          )}
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <View style={styles.noSalaryDataSection}>
+                      <IconSymbol size={48} name="dollarsign.circle" color={colors.textSecondary} />
+                      <Text style={styles.noSalaryDataTitle}>
+                        Sin configuración salarial
+                      </Text>
+                      <Text style={styles.noSalaryDataMessage}>
+                        Activa la configuración salarial en tu trabajo para incluir cálculos automáticos
+                      </Text>
+                      
+                      <TouchableOpacity
+                        style={styles.configureSalaryButton}
+                        onPress={openSalaryConfiguration}
+                      >
+                        <IconSymbol size={20} name="gear" color="#FFFFFF" />
+                        <Text style={styles.configureSalaryButtonText}>
+                          Activar configuración salarial
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+
+                <View style={styles.modalActions}>
+                  <TouchableOpacity
+                    style={styles.exportButton}
+                    onPress={handleExportWithBillingData}
+                    disabled={isGeneratingPDF}
+                  >
+                    {isGeneratingPDF ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <IconSymbol size={20} name="square.and.arrow.up" color="#FFFFFF" />
+                    )}
+                    <Text style={styles.exportButtonText}>
+                      {isGeneratingPDF 
+                        ? (t('reports.generating_pdf') || 'Generando...')
+                        : (t('reports.export_pdf') || 'Exportar PDF')
+                      }
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {/* Job Form Modal for Billing Configuration */}
+      {showJobFormModal && editingJobForBilling && (
+        <JobFormModal
+          visible={showJobFormModal}
+          onClose={() => {
+            setShowJobFormModal(false);
+            setEditingJobForBilling(null);
+          }}
+          editingJob={editingJobForBilling}
+          onSave={() => {
+            // Reload jobs to get updated billing data
+            const loadJobs = async () => {
+              try {
+                const loadedJobs = await JobService.getJobs();
+                setJobs(loadedJobs);
+              } catch (error) {
+                console.error('Error reloading jobs:', error);
+              }
+            };
+            loadJobs();
+          }}
+          initialTab="billing"
+        />
       )}
     </SafeAreaView>
   );
@@ -1898,6 +2513,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: colors.text,
+    textAlign: 'center',
+    flex: 1,
   },
   modalButton: {
     minWidth: 60,
@@ -1906,6 +2523,16 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: colors.primary,
+  },
+  modalCloseButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
   },
   pickerContainer: {
     padding: 20,
@@ -1922,5 +2549,301 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   exportButtonTextDisabled: {
     color: colors.textSecondary,
+  },
+
+  // Billing Modal Styles
+  billingModal: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    margin: 20,
+    width: '90%',
+    maxHeight: '80%',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  billingModalContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  billingDataSection: {
+    marginBottom: 24,
+  },
+  billingDataTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  billingDataCard: {
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 12,
+    padding: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+  },
+  billingDataItem: {
+    fontSize: 16,
+    color: colors.text,
+    marginBottom: 8,
+    lineHeight: 22,
+  },
+  billingDataValue: {
+    fontWeight: '600',
+  },
+  switchSection: {
+    marginBottom: 24,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  switchContent: {
+    flex: 1,
+    marginRight: 16,
+  },
+  switchLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  switchDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+  },
+  switch: {
+    width: 50,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.separator,
+    padding: 2,
+    justifyContent: 'center',
+  },
+  switchActive: {
+    backgroundColor: colors.primary,
+  },
+  switchThumb: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  switchThumbActive: {
+    transform: [{ translateX: 20 }],
+  },
+  noBillingDataSection: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  noBillingDataTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  noBillingDataMessage: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  configureBillingButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  configureBillingButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  modalActions: {
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: colors.separator,
+  },
+  exportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  exportButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
+  // Primary Export Button Styles
+  primaryExportButton: {
+    marginHorizontal: 20,
+    marginVertical: 8,
+    borderRadius: 16,
+    shadowColor: '#007AFF',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  primaryExportButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    borderRadius: 16,
+  },
+  primaryExportButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    flex: 1,
+    marginHorizontal: 12,
+    letterSpacing: 0.5,
+  },
+  // Salary calculation styles
+  salarySection: {
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: colors.separator,
+  },
+  salarySectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 16,
+  },
+  periodSelectorSection: {
+    marginTop: 16,
+  },
+  periodSelectorLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  salaryPeriodSelector: {
+    flexDirection: 'row',
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    padding: 4,
+  },
+  periodOption: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  periodOptionActive: {
+    backgroundColor: colors.primary,
+  },
+  periodOptionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  periodOptionTextActive: {
+    color: '#FFFFFF',
+  },
+  salaryCalculationPreview: {
+    marginTop: 16,
+  },
+  salaryPreviewTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  salaryPreviewCard: {
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.separator,
+  },
+  salaryPreviewItem: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 8,
+  },
+  salaryPreviewValue: {
+    fontWeight: '600',
+    color: colors.text,
+  },
+  salaryPreviewTotal: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+    marginTop: 4,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.separator,
+  },
+  salaryPreviewTotalValue: {
+    color: colors.primary,
+    fontSize: 18,
+  },
+  noSalaryDataSection: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  noSalaryDataTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  noSalaryDataMessage: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+    paddingHorizontal: 20,
+  },
+  configureSalaryButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  configureSalaryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 });

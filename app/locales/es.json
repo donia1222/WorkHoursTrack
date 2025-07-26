@@ -31,7 +31,14 @@
       "location": "Ubicación",
       "location_desc": "Alertas basadas en geolocalización",
       "test_button": "Enviar Notificación de Prueba",
-      "test_desc": "Prueba las notificaciones para verificar que funcionan correctamente"
+      "test_desc": "Prueba las notificaciones para verificar que funcionan correctamente",
+      "enable_work_reminders_suggestion": "Activar recordatorios de horario",
+      "enable_work_reminders_description": "Recibe avisos antes de tu hora de entrada",
+      "enable_work_reminders_title": "Activar Recordatorios",
+      "enable_work_reminders_message": "¿Quieres activar los recordatorios de horario para recibir notificaciones antes de tu hora de trabajo?",
+      "go_to_preferences": "Ir a Preferencias",
+      "reminder_title": "Recordatorio",
+      "reminder_message": "Ve a Preferencias > Notificaciones para activar los recordatorios de horario de trabajo"
     }
   },
   "settings": {
@@ -215,7 +222,16 @@
     "work": "Trabajo",
     "statistics_section": "Estadísticas",
     "breakdown_by_job": "Desglose por trabajo",
-    "recent_activity_section": "Actividad Reciente"
+    "recent_activity_section": "Actividad Reciente",
+    "export_options": "Opciones de Exportación",
+    "billing_information": "Información de Facturación",
+    "include_billing_data": "Añadir datos al PDF",
+    "include_billing_desc": "Incluir información de facturación en el reporte PDF",
+    "include_invoice_details": "Añadir fecha y número de factura",
+    "include_invoice_details_desc": "Generar automáticamente número de factura y fecha actual",
+    "no_billing_data": "Sin datos de facturación",
+    "no_billing_data_desc": "Configura los datos de facturación para incluirlos en tus reportes PDF",
+    "configure_billing": "Añadir datos de facturación al PDF"
   },
   "calendar": {
     "title": "Mi Calendario",
@@ -506,6 +522,7 @@
     },
     "financial": {
       "title": "Configuración Salarial",
+      "enabled": "Configuración salarial habilitada",
       "salary_type": "Tipo de sueldo",
       "hourly": "Por hora",
       "monthly": "Mensual", 
@@ -525,7 +542,36 @@
       "tax_rate": "Tasa de impuestos (%)",
       "tax_rate_placeholder": "21",
       "notes": "Notas para facturación",
-      "notes_placeholder": "Términos de pago, información adicional..."
+      "notes_placeholder": "Términos de pago, información adicional...",
+      "user_data": {
+        "title": "Datos del Usuario/Empresa",
+        "subtitle": "Información que aparecerá en las facturas",
+        "is_company": "¿Es empresa?",
+        "is_company_desc": "Activa si generas facturas como empresa",
+        "company_name": "Nombre de la Empresa",
+        "company_name_placeholder": "Ej: Mi Empresa S.L.",
+        "tax_id": "CIF/NIF Empresa",
+        "tax_id_placeholder": "Ej: B12345678",
+        "full_name": "Nombre Completo",
+        "full_name_placeholder": "Ej: Juan Pérez García",
+        "address": "Dirección Completa",
+        "address_placeholder": "Calle, número, código postal, ciudad",
+        "phone": "Teléfono",
+        "phone_placeholder": "Ej: +34 123 456 789",
+        "email": "Email",
+        "email_placeholder": "email@ejemplo.com",
+        "website": "Sitio Web",
+        "website_placeholder": "https://www.ejemplo.com",
+        "banking_info": "Información Bancaria",
+        "banking_desc": "Datos opcionales para recibir pagos",
+        "bank_account": "Número de Cuenta",
+        "bank_account_placeholder": "ES12 1234 5678 9012 3456 7890",
+        "bank_name": "Nombre del Banco",
+        "bank_name_placeholder": "Ej: Banco Santander",
+        "swift_code": "Código SWIFT/BIC",
+        "swift_code_placeholder": "Ej: BSCHESMM",
+        "preview_title": "Vista Previa de Factura"
+      }
     },
     "location": {
       "title": "Geolocalización",

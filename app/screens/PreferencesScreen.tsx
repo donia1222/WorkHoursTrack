@@ -7,6 +7,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
+  TextInput,
+  Alert,
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
@@ -181,6 +183,58 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   locationIconBg: {
     backgroundColor: 'rgba(52, 199, 89, 0.15)',
   },
+  reminderOptions: {
+    marginTop: Theme.spacing.md,
+    paddingTop: Theme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.separator,
+  },
+  reminderPresetsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Theme.spacing.sm,
+    marginBottom: Theme.spacing.md,
+  },
+  reminderPreset: {
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    borderRadius: Theme.borderRadius.md,
+    backgroundColor: 'rgba(0, 122, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  reminderPresetActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  reminderPresetText: {
+    ...Theme.typography.footnote,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  reminderPresetTextActive: {
+    color: '#FFFFFF',
+  },
+  customInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.sm,
+  },
+  customInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.separator,
+    borderRadius: Theme.borderRadius.md,
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    color: colors.text,
+    backgroundColor: colors.background,
+    ...Theme.typography.body,
+  },
+  customInputLabel: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+  },
 });
 
 export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
@@ -189,6 +243,8 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
   const { settings: notificationSettings, updateSettings: updateNotificationSettings, sendNotification } = useNotifications();
   const [countdown, setCountdown] = useState<number | null>(null);
   const [countdownInterval, setCountdownInterval] = useState<NodeJS.Timeout | null>(null);
+  const [showReminderOptions, setShowReminderOptions] = useState(false);
+  const [customMinutes, setCustomMinutes] = useState(notificationSettings.reminderMinutes?.toString() || '15');
 
   const handleThemeChange = (mode: 'auto' | 'light' | 'dark') => {
     setThemeMode(mode);
@@ -197,6 +253,32 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
   const handleLanguageChange = (lang: SupportedLanguage) => {
     setLanguage(lang);
   };
+
+  const handleReminderMinutesChange = async (minutes: number) => {
+    await updateNotificationSettings({ reminderMinutes: minutes });
+    setCustomMinutes(minutes.toString());
+  };
+
+  const handleWorkRemindersToggle = async (value: boolean) => {
+    await updateNotificationSettings({ workReminders: value });
+    if (value) {
+      setShowReminderOptions(true);
+    } else {
+      setShowReminderOptions(false);
+    }
+  };
+
+  const predefinedMinutes = [
+    { label: 'En la hora', value: 0 },
+    { label: '15 min antes', value: 15 },
+    { label: '30 min antes', value: 30 },
+    { label: '1 hora antes', value: 60 },
+  ];
+
+  // Initialize reminder options visibility based on workReminders setting
+  useEffect(() => {
+    setShowReminderOptions(notificationSettings.workReminders);
+  }, [notificationSettings.workReminders]);
 
   // Cleanup countdown interval on unmount
   useEffect(() => {
@@ -398,7 +480,7 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
 
           <TouchableOpacity 
             style={styles.settingItem}
-            onPress={() => updateNotificationSettings({ workReminders: !notificationSettings.workReminders })}
+            onPress={() => handleWorkRemindersToggle(!notificationSettings.workReminders)}
           >
             <View style={[styles.settingIcon, styles.reminderIconBg]}>
               <IconSymbol size={20} name="clock.fill" color={colors.warning} />
@@ -411,12 +493,65 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
             </View>
             <Switch
               value={notificationSettings.workReminders}
-              onValueChange={(value) => updateNotificationSettings({ workReminders: value })}
+              onValueChange={handleWorkRemindersToggle}
               trackColor={{ false: colors.separator, true: colors.primary }}
               thumbColor={notificationSettings.workReminders ? '#FFFFFF' : colors.textSecondary}
               disabled={!notificationSettings.enabled}
             />
           </TouchableOpacity>
+
+          {/* Reminder Options - Solo se muestran cuando workReminders está activado */}
+          {showReminderOptions && notificationSettings.workReminders && (
+            <View style={styles.reminderOptions}>
+              <Text style={styles.settingTitle}>Tiempo de aviso</Text>
+              <Text style={styles.settingDescription}>
+                Configura cuándo recibir el recordatorio antes de tu horario de trabajo
+              </Text>
+              
+              {/* Presets predefinidos */}
+              <View style={styles.reminderPresetsContainer}>
+                {predefinedMinutes.map((preset) => (
+                  <TouchableOpacity
+                    key={preset.value}
+                    style={[
+                      styles.reminderPreset,
+                      notificationSettings.reminderMinutes === preset.value && styles.reminderPresetActive
+                    ]}
+                    onPress={() => handleReminderMinutesChange(preset.value)}
+                  >
+                    <Text style={[
+                      styles.reminderPresetText,
+                      notificationSettings.reminderMinutes === preset.value && styles.reminderPresetTextActive
+                    ]}>
+                      {preset.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Input personalizado */}
+              <View style={styles.customInputContainer}>
+                <TextInput
+                  style={styles.customInput}
+                  value={customMinutes}
+                  onChangeText={setCustomMinutes}
+                  onEndEditing={() => {
+                    const minutes = parseInt(customMinutes);
+                    if (!isNaN(minutes) && minutes >= 0 && minutes <= 480) {
+                      handleReminderMinutesChange(minutes);
+                    } else {
+                      Alert.alert('Error', 'Ingresa un valor entre 0 y 480 minutos (8 horas)');
+                      setCustomMinutes(notificationSettings.reminderMinutes.toString());
+                    }
+                  }}
+                  placeholder="Minutos personalizados"
+                  keyboardType="numeric"
+                  maxLength={3}
+                />
+                <Text style={styles.customInputLabel}>minutos antes</Text>
+              </View>
+            </View>
+          )}
 
           {/* Test Notification Button */}
           <TouchableOpacity 
@@ -443,6 +578,32 @@ export default function PreferencesScreen({ onClose }: PreferencesScreenProps) {
               </Text>
             </View>
     
+          </TouchableOpacity>
+
+          {/* Delayed Test Notification Button */}
+          <TouchableOpacity
+            style={styles.setting}
+            onPress={async () => {
+              console.log('⏰ Delayed test button pressed');
+              try {
+                const notificationService = NotificationService.getInstance();
+                await notificationService.scheduleDelayedTestNotification(10); // 10 seconds delay
+                console.log('✅ Delayed test notification scheduled for 10 seconds');
+                alert('Notificación programada para 10 segundos. Minimiza la app para probarla.');
+              } catch (error) {
+                console.error('❌ Error scheduling delayed test notification:', error);
+              }
+            }}
+          >
+            <View style={[styles.settingIcon, { backgroundColor: 'rgba(255, 149, 0, 0.15)' }]}>
+              <IconSymbol size={20} name="clock.fill" color="#FF9500" />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>Prueba Retrasada (10s)</Text>
+              <Text style={styles.settingDescription}>
+                Programa una notificación para 10 segundos después
+              </Text>
+            </View>
           </TouchableOpacity>
 
           

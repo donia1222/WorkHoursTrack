@@ -98,8 +98,14 @@ class AutoTimerService {
         await JobService.clearActiveSession();
       }
 
-      // Start geofence monitoring with background support
-      const success = await this.geofenceService.startMonitoring(jobs, true);
+      // Start geofence monitoring with background support, but fallback to foreground if needed
+      let success = await this.geofenceService.startMonitoring(jobs, true);
+      
+      // If background monitoring fails, try foreground mode
+      if (!success) {
+        console.log('⚠️ Background monitoring failed, trying foreground mode');
+        success = await this.geofenceService.startMonitoring(jobs, false);
+      }
       if (success) {
         this.isEnabled = true;
         this.currentState = 'inactive';
@@ -607,6 +613,13 @@ class AutoTimerService {
     }
     
     this.jobs = jobs;
+    
+    // Restart geofence monitoring with updated jobs if service is enabled
+    if (this.isEnabled) {
+      console.log('🔄 Restarting geofence monitoring with updated jobs');
+      await this.geofenceService.startMonitoring(jobs, true);
+    }
+    
     this.notifyStatusChange();
   }
 
@@ -683,7 +696,7 @@ class AutoTimerService {
     
     // Resume geofence monitoring if service is enabled
     if (this.isEnabled) {
-      await this.geofenceService.startMonitoring(this.jobs);
+      await this.geofenceService.startMonitoring(this.jobs, true);
     }
   }
 

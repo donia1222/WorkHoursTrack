@@ -20,6 +20,7 @@ import { Job, WorkDay } from '../types/WorkTypes';
 import { CalendarSyncService } from '../services/CalendarSyncService';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useNotifications } from '../contexts/NotificationContext';
 
 interface WorkDayModalProps {
   visible: boolean;
@@ -44,6 +45,35 @@ export default function WorkDayModal({
 }: WorkDayModalProps) {
   const { t, language } = useLanguage();
   const { colors } = useTheme();
+  const { settings } = useNotifications();
+  
+  // Function to handle navigating to preferences to enable work reminders
+  const handleEnableNotifications = () => {
+    Alert.alert(
+      t('notifications.enable_work_reminders_title') || 'Activar Recordatorios',
+      t('notifications.enable_work_reminders_message') || '¿Quieres activar los recordatorios de horario para recibir notificaciones antes de tu hora de trabajo?',
+      [
+        {
+          text: t('common.cancel') || 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: t('notifications.go_to_preferences') || 'Ir a Preferencias',
+          onPress: () => {
+            onClose();
+            // Navigate to preferences - you might need to implement this navigation
+            // For now, we'll just close the modal and show an alert
+            setTimeout(() => {
+              Alert.alert(
+                t('notifications.reminder_title') || 'Recordatorio',
+                t('notifications.reminder_message') || 'Ve a Preferencias > Notificaciones para activar los recordatorios de horario de trabajo'
+              );
+            }, 500);
+          },
+        },
+      ]
+    );
+  };
   const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [hours, setHours] = useState<number>(8);
   const [notes, setNotes] = useState<string>('');
@@ -299,8 +329,8 @@ export default function WorkDayModal({
       notes: notes.trim(),
       overtime: hours > 8,
       type: dayType,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     Alert.alert(
@@ -325,17 +355,11 @@ export default function WorkDayModal({
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={onClose}
+      onRequestClose={handleSave}
     >
       <SafeAreaView style={styles.container}>
         <BlurView intensity={95} tint="light" style={styles.header}>
           <View style={styles.headerContent}>
-            <TouchableOpacity 
-              onPress={handleSave}
-              style={styles.saveButton}
-            >
-              <IconSymbol size={20} name="checkmark" color="#FFFFFF" />
-            </TouchableOpacity>
             <View style={styles.headerText}>
               <View style={styles.titleContainer}>
                 <IconSymbol size={20} name="calendar" color={Theme.colors.primary} />
@@ -348,10 +372,10 @@ export default function WorkDayModal({
               </Text>
             </View>
             <TouchableOpacity 
-              onPress={onClose}
-              style={styles.backButton}
+              onPress={handleSave}
+             style={styles.saveButton}
             >
-              <IconSymbol size={24} name="xmark" color={Theme.colors.primary} />
+               <IconSymbol size={20} name="checkmark" color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </BlurView>
@@ -602,6 +626,29 @@ export default function WorkDayModal({
             </View>
           )}
 
+          {/* Work reminders suggestion - only show for work days in custom schedule mode when notifications are disabled */}
+          {dayType === 'work' && scheduleMode === 'custom' && !settings.workReminders && (
+            <View style={styles.section}>
+              <TouchableOpacity 
+                style={styles.notificationSuggestion}
+                onPress={handleEnableNotifications}
+              >
+                <View style={styles.notificationSuggestionContent}>
+                  <IconSymbol name="bell.badge" size={20} color={Theme.colors.primary} />
+                  <View style={styles.notificationSuggestionText}>
+                    <Text style={styles.notificationSuggestionTitle}>
+                      {t('notifications.enable_work_reminders_suggestion') || 'Activar recordatorios de horario'}
+                    </Text>
+                    <Text style={styles.notificationSuggestionDescription}>
+                      {t('notifications.enable_work_reminders_description') || 'Recibe avisos antes de tu hora de entrada'}
+                    </Text>
+                  </View>
+                  <IconSymbol name="chevron.right" size={14} color={Theme.colors.textSecondary} />
+                </View>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* Hour selector - only for work days with manual mode */}
           {dayType === 'work' && scheduleMode === 'manual' && (
             <View style={styles.section}>
@@ -753,16 +800,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Theme.spacing.sm,
+    marginLeft: Theme.spacing.lg,
   },
   headerTitle: {
     ...Theme.typography.headline,
     color: Theme.colors.text,
     marginBottom: 2,
+ 
   },
   headerSubtitle: {
     ...Theme.typography.footnote,
     color: Theme.colors.textSecondary,
     textTransform: 'capitalize',
+    marginLeft: Theme.spacing.lg,
   },
   saveButton: {
     padding: 8,
@@ -973,7 +1023,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   scheduleTimeText: {
-    ...Theme.typography.caption,
+    ...Theme.typography.caption2,
     color: '#FFFFFF',
     fontWeight: '500',
   },
@@ -1019,7 +1069,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   switchDescription: {
-    ...Theme.typography.caption,
+    ...Theme.typography.caption2,
     color: Theme.colors.textSecondary,
   },
   switch: {
@@ -1111,5 +1161,32 @@ const styles = StyleSheet.create({
     ...Theme.typography.callout,
     color: Theme.colors.text,
     fontWeight: '600',
+  },
+  notificationSuggestion: {
+    borderRadius: Theme.borderRadius.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 122, 255, 0.2)',
+    overflow: 'hidden',
+  },
+  notificationSuggestionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Theme.spacing.md,
+    gap: Theme.spacing.md,
+  },
+  notificationSuggestionText: {
+    flex: 1,
+  },
+  notificationSuggestionTitle: {
+    ...Theme.typography.callout,
+    color: Theme.colors.text,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  notificationSuggestionDescription: {
+    ...Theme.typography.caption2,
+    color: Theme.colors.textSecondary,
+    lineHeight: 16,
   },
 });

@@ -1545,6 +1545,19 @@ export default function MapLocation({ location, onNavigate }: Props) {
               
               // Check if this job has AutoTimer activity
               const isAutoTimerActive = autoTimerStatus && autoTimerStatus.jobId === job.id;
+              
+              // Debug logging
+              if (autoTimerStatus && autoTimerStatus.jobId === job.id) {
+                console.log(`🎯 MapLocation UI Debug for job ${job.name}:`, {
+                  isAutoTimerActive,
+                  state: autoTimerStatus.state,
+                  remainingTime: autoTimerStatus.remainingTime,
+                  totalDelayTime: autoTimerStatus.totalDelayTime,
+                  autoTimerEnabled: job.autoTimer?.enabled,
+                  shouldShowCountdown: isAutoTimerActive && autoTimerStatus.remainingTime > 0 && autoTimerStatus.state !== 'active' && job.autoTimer?.enabled
+                });
+              }
+              
               let statusText = isNearby ? t('maps.in_range') : t('maps.out_of_range');
               let statusColor = isNearby ? colors.success : colors.textSecondary;
               

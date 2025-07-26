@@ -18,6 +18,7 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   enabled: true,
   autoTimer: true,
   workReminders: true,
+  reminderMinutes: 15,
 };
 
 interface NotificationProviderProps {

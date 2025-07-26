@@ -2,7 +2,8 @@
   "common": {
     "no_jobs_title": "Aucun Emploi Configuré",
     "no_jobs_message": "Vous devez créer au moins un emploi avant de pouvoir utiliser le minuteur, le calendrier ou les rapports. Commencez par configurer votre premier emploi.",
-    "create_first_job": "Créer Premier Emploi"
+    "create_first_job": "Créer Premier Emploi",
+    "cancel": "Annuler"
   },
   "preferences": {
     "title": "Préférences",
@@ -30,7 +31,14 @@
       "location": "Localisation",
       "location_desc": "Alertes basées sur la géolocalisation",
       "test_button": "Envoyer Notification de Test",
-      "test_desc": "Testez les notifications pour vérifier qu'elles fonctionnent correctement"
+      "test_desc": "Testez les notifications pour vérifier qu'elles fonctionnent correctement",
+      "enable_work_reminders_suggestion": "Activer les rappels de travail",
+      "enable_work_reminders_description": "Recevez des alertes avant votre heure de travail",
+      "enable_work_reminders_title": "Activer les Rappels",
+      "enable_work_reminders_message": "Voulez-vous activer les rappels de travail pour recevoir des notifications avant votre heure de travail?",
+      "go_to_preferences": "Aller aux Préférences",
+      "reminder_title": "Rappel",
+      "reminder_message": "Allez dans Préférences > Notifications pour activer les rappels d'horaire de travail"
     }
   },
   "settings": {
@@ -193,7 +201,22 @@
     "cancel": "Annuler",
     "select_dates": "Sélectionner les dates",
     "date_range_title": "Plage de dates",
-    "from_to_dates": "Du {{fromDate}} au {{toDate}}"
+    "from_to_dates": "Du {{fromDate}} au {{toDate}}",
+    "export_pdf": "Exporter PDF",
+    "export_all_jobs": "Exporter tous les emplois",
+    "export_job": "Exporter {{jobName}}",
+    "generating_pdf": "Génération du PDF...",
+    "pdf_generated": "PDF généré avec succès",
+    "pdf_error": "Erreur lors de la génération du PDF",
+    "export_options": "Options d'Exportation",
+    "billing_information": "Informations de Facturation",
+    "include_billing_data": "Ajouter les données au PDF",
+    "include_billing_desc": "Inclure les informations de facturation dans le rapport PDF",
+    "include_invoice_details": "Ajouter date et numéro de facture",
+    "include_invoice_details_desc": "Générer automatiquement le numéro de facture et la date actuelle",
+    "no_billing_data": "Aucunes données de facturation",
+    "no_billing_data_desc": "Configurez les données de facturation pour les inclure dans vos rapports PDF",
+    "configure_billing": "Ajouter les données de facturation au PDF"
   },
   "calendar": {
     "title": "Mon Calendrier",
@@ -366,6 +389,7 @@
     },
     "financial": {
       "title": "Configuration salariale",
+      "enabled": "Configuration salariale activée",
       "salary_type": "Type de salaire",
       "hourly": "Horaire",
       "monthly": "Mensuel",
@@ -385,7 +409,36 @@
       "tax_rate": "Taux de taxe (%)",
       "tax_rate_placeholder": "20",
       "notes": "Notes de facturation",
-      "notes_placeholder": "Conditions de paiement, informations supplémentaires..."
+      "notes_placeholder": "Conditions de paiement, informations supplémentaires...",
+      "user_data": {
+        "title": "Données Utilisateur/Entreprise",
+        "subtitle": "Informations qui apparaîtront sur les factures",
+        "is_company": "Est-ce une entreprise ?",
+        "is_company_desc": "Activer si vous générez des factures en tant qu'entreprise",
+        "company_name": "Nom de l'Entreprise",
+        "company_name_placeholder": "ex: Mon Entreprise SARL",
+        "tax_id": "Numéro SIRET/TVA",
+        "tax_id_placeholder": "ex: 12345678901234",
+        "full_name": "Nom Complet",
+        "full_name_placeholder": "ex: Jean Dupont",
+        "address": "Adresse Complète",
+        "address_placeholder": "Rue, numéro, code postal, ville",
+        "phone": "Téléphone",
+        "phone_placeholder": "ex: +33 1 23 45 67 89",
+        "email": "Email",
+        "email_placeholder": "email@exemple.fr",
+        "website": "Site Web",
+        "website_placeholder": "https://www.exemple.fr",
+        "banking_info": "Informations Bancaires",
+        "banking_desc": "Détails de paiement optionnels",
+        "bank_account": "Numéro de Compte",
+        "bank_account_placeholder": "FR12 1234 5678 9012 3456 78",
+        "bank_name": "Nom de la Banque",
+        "bank_name_placeholder": "ex: BNP Paribas",
+        "swift_code": "Code SWIFT/BIC",
+        "swift_code_placeholder": "ex: BNPAFRPP",
+        "preview_title": "Aperçu de Facture"
+      }
     },
     "location": {
       "title": "Géolocalisation",

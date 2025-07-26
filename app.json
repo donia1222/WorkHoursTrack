@@ -53,6 +53,16 @@
       "expo-localization",
       "expo-calendar",
       [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Esta app necesita acceso a tu ubicación para el timer automático basado en geofencing.",
+          "locationAlwaysPermission": "Esta app necesita acceso continuo a tu ubicación para iniciar/pausar el timer automáticamente cuando entres o salgas del área de trabajo.",
+          "locationWhenInUsePermission": "Esta app necesita acceso a tu ubicación cuando la uses para mostrarte en el mapa.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/images/notification-icon.png",

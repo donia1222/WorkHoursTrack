@@ -21,6 +21,8 @@ import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { CalendarSyncService } from '../services/CalendarSyncService';
+import { useNotifications } from '../contexts/NotificationContext';
+import NotificationService from '../services/NotificationService';
 
 // Custom Day Component
 const CustomDay = ({ date, state, marking, onPress }: any) => {
@@ -505,6 +507,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
 export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
+  const { settings: notificationSettings } = useNotifications();
   const [workDays, setWorkDays] = useState<WorkDay[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -513,6 +516,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   const [editingWorkDay, setEditingWorkDay] = useState<WorkDay | undefined>();
   const [preselectedJobId, setPreselectedJobId] = useState<string | undefined>();
   const [selectedJobId, setSelectedJobId] = useState<string | 'all'>('all');
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const { handleBack } = useBackNavigation();
   const { selectedJob, setSelectedJob } = useNavigation();
   const { triggerHaptic } = useHapticFeedback();
@@ -533,6 +537,43 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
     }
   }, [selectedJob]);
 
+  // Re-schedule reminders when notification settings change (with debounce)
+  useEffect(() => {
+    console.log('🔄 Notification settings changed, checking if need to reschedule...');
+    console.log('   isInitialLoad:', isInitialLoad);
+    console.log('   Jobs:', jobs.length, 'WorkDays:', workDays.length);
+    console.log('   Settings:', { 
+      enabled: notificationSettings.enabled, 
+      workReminders: notificationSettings.workReminders,
+      reminderMinutes: notificationSettings.reminderMinutes 
+    });
+    
+    // Skip scheduling during initial load to avoid immediate notifications
+    if (isInitialLoad) {
+      console.log('⏭️ Skipping notification scheduling during initial load');
+      return;
+    }
+    
+    // Debounce to avoid multiple rapid executions
+    const timeoutId = setTimeout(() => {
+      if (jobs.length > 0 && workDays.length > 0) {
+        if (notificationSettings.enabled && notificationSettings.workReminders) {
+          console.log('📅 Rescheduling due to settings change (debounced)...');
+          scheduleWorkReminders(jobs, workDays);
+        } else {
+          console.log('🗑️ Cancelling reminders due to settings change (debounced)...');
+          // Cancel all work reminders if disabled
+          const notificationService = NotificationService.getInstance();
+          notificationService.cancelWorkReminders();
+        }
+      } else {
+        console.log('⏭️ No jobs/workdays to schedule (debounced)');
+      }
+    }, 3000); // Wait 3 seconds before executing to avoid interfering with immediate scheduling
+
+    return () => clearTimeout(timeoutId);
+  }, [notificationSettings.workReminders, notificationSettings.reminderMinutes, notificationSettings.enabled, jobs, workDays, isInitialLoad]);
+
   const loadData = async () => {
     try {
       const [loadedJobs, loadedWorkDays] = await Promise.all([
@@ -541,8 +582,120 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
       ]);
       setJobs(loadedJobs);
       setWorkDays(loadedWorkDays);
+      
+      // Mark initial load as complete after a short delay
+      setTimeout(() => {
+        setIsInitialLoad(false);
+        console.log('✅ Initial load completed, notifications can now be scheduled');
+      }, 2000);
+      
+      // NO schedule reminders here - only when data changes
     } catch (error) {
       console.error('Error loading data:', error);
+    }
+  };
+
+  const scheduleWorkReminders = async (jobsList: Job[], workDaysList: WorkDay[]) => {
+    const notificationService = NotificationService.getInstance();
+    
+    try {
+      // Cancel existing scheduled notifications for work reminders
+      // TODO: Temporarily disabled to prevent immediate cancellation
+      // await notificationService.cancelWorkReminders();
+      
+      if (!notificationSettings.workReminders || !notificationSettings.enabled) {
+        console.log('📵 Work reminders disabled, skipping scheduling');
+        return;
+      }
+      
+      const now = new Date();
+      const nextDays = 7; // Schedule reminders for the next 7 days
+      let scheduledCount = 0;
+      
+      console.log(`⏰ Scheduling work reminders. Current time: ${now.toLocaleString()}`);
+      console.log(`📋 Reminder setting: ${notificationSettings.reminderMinutes} minutes before work`);
+      
+      for (let i = 0; i < nextDays; i++) {
+        const checkDate = new Date(now);
+        checkDate.setDate(now.getDate() + i);
+        const dateString = checkDate.toISOString().split('T')[0];
+        
+        // Check if there's a work day scheduled for this date
+        const workDay = workDaysList.find(wd => wd.date === dateString);
+        if (workDay && workDay.type === 'work' && workDay.jobId && workDay.startTime) {
+          const job = jobsList.find(j => j.id === workDay.jobId);
+          if (job) {
+            try {
+              // Parse start time
+              const [hours, minutes] = workDay.startTime.split(':').map(Number);
+              const workStartTime = new Date(checkDate);
+              workStartTime.setHours(hours, minutes, 0, 0);
+              
+              // Let the detailed logic below handle time validation
+              
+              // Calculate reminder time
+              const reminderDate = new Date(workStartTime);
+              reminderDate.setMinutes(reminderDate.getMinutes() - notificationSettings.reminderMinutes);
+              
+              const minutesUntilReminder = Math.round((reminderDate.getTime() - now.getTime()) / 1000 / 60);
+              const minutesUntilWork = Math.round((workStartTime.getTime() - now.getTime()) / 1000 / 60);
+              
+              console.log(`\n🔍 Checking ${job.name} on ${dateString}:`);
+              console.log(`   Work time: ${workDay.startTime} (${workStartTime.toLocaleString()})`);
+              console.log(`   Reminder time: ${reminderDate.toLocaleString()}`);
+              console.log(`   Minutes until reminder: ${minutesUntilReminder}`);
+              console.log(`   Minutes until work: ${minutesUntilWork}`);
+              
+              // Only schedule if work time is in the future
+              if (workStartTime.getTime() > now.getTime()) {
+                let actualReminderDate = reminderDate;
+                let actualMinutesBefore = notificationSettings.reminderMinutes;
+                
+                // If normal reminder time has passed, calculate when to send it
+                if (reminderDate.getTime() <= now.getTime()) {
+                  const minutesUntilWork = Math.round((workStartTime.getTime() - now.getTime()) / 1000 / 60);
+                  
+                  if (minutesUntilWork < 0) {
+                    console.log(`   ⏭️ SKIPPED - work time has already passed`);
+                    continue;
+                  } else if (minutesUntilWork >= 15) {
+                    // If there's still 15+ minutes until work, schedule for 15 minutes before
+                    actualReminderDate = new Date(workStartTime.getTime() - (15 * 60 * 1000));
+                    actualMinutesBefore = 15;
+                    console.log(`   🕐 Rescheduling for 15 minutes before work: ${actualReminderDate.toLocaleTimeString()}`);
+                  } else {
+                    // If less than 15 minutes until work, schedule for work start time
+                    actualReminderDate = new Date(workStartTime.getTime());
+                    actualMinutesBefore = 0; // It's time to start work
+                    console.log(`   ⚡ Scheduling notification for work start time: ${actualReminderDate.toLocaleTimeString()}`);
+                  }
+                }
+                
+                await notificationService.scheduleWorkReminder(
+                  actualReminderDate,
+                  job.name,
+                  workDay.startTime,
+                  actualMinutesBefore
+                );
+                scheduledCount++;
+                console.log(`   ✅ SCHEDULED reminder for ${actualReminderDate.toLocaleTimeString()}`);
+              } else {
+                console.log(`   ⏭️ SKIPPED - work time already passed`);
+              }
+              
+            } catch (error) {
+              console.error(`❌ Error processing reminder for ${job?.name || 'unknown job'}:`, error);
+            }
+          }
+        }
+      }
+      
+      console.log(`\n🎯 FINAL RESULT: Scheduled ${scheduledCount} work reminders`);
+      if (scheduledCount === 0) {
+        console.log('💡 No reminders scheduled - check if work times are in the future');
+      }
+    } catch (error) {
+      console.error('❌ Error scheduling work reminders:', error);
     }
   };
 
@@ -557,12 +710,39 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
 
   const handleSaveWorkDay = async (workDayData: Omit<WorkDay, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
+      console.log('💾 Saving work day:', workDayData);
+      console.log('   Date:', workDayData.date);
+      console.log('   Start time:', workDayData.startTime);
+      console.log('   Job ID:', workDayData.jobId);
+      
       if (editingWorkDay) {
         await JobService.updateWorkDay(editingWorkDay.id, workDayData);
       } else {
         await JobService.addWorkDay(workDayData);
       }
-      await loadData();
+      
+      // Reload data and get fresh data
+      const [updatedJobs, updatedWorkDays] = await Promise.all([
+        JobService.getJobs(),
+        JobService.getWorkDays(),
+      ]);
+      setJobs(updatedJobs);
+      setWorkDays(updatedWorkDays);
+      
+      console.log('📚 Fresh data loaded:');
+      console.log('   Jobs:', updatedJobs.length);
+      console.log('   Work days:', updatedWorkDays.length);
+      if (updatedWorkDays.length > 0) {
+        const latestWorkDay = updatedWorkDays[updatedWorkDays.length - 1];
+        console.log('   Latest work day:', latestWorkDay.date, latestWorkDay.startTime);
+      }
+      
+      // Schedule reminders immediately after save
+      if (notificationSettings.enabled && notificationSettings.workReminders) {
+        console.log('🔄 Scheduling reminders after save...');
+        await scheduleWorkReminders(updatedJobs, updatedWorkDays);
+      }
+      
     } catch (error) {
       console.error('Error saving work day:', error);
       Alert.alert('Error', t('calendar.save_workday_error'));
@@ -573,7 +753,19 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
     if (editingWorkDay) {
       try {
         await JobService.deleteWorkDay(editingWorkDay.id);
-        await loadData();
+        
+        // Reload data and get fresh data
+        const [updatedJobs, updatedWorkDays] = await Promise.all([
+          JobService.getJobs(),
+          JobService.getWorkDays(),
+        ]);
+        setJobs(updatedJobs);
+        setWorkDays(updatedWorkDays);
+        
+        // Then reschedule reminders with fresh data
+        if (notificationSettings.enabled && notificationSettings.workReminders) {
+          await scheduleWorkReminders(updatedJobs, updatedWorkDays);
+        }
       } catch (error) {
         console.error('Error deleting work day:', error);
         Alert.alert('Error', t('calendar.delete_workday_error'));

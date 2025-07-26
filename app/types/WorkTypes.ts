@@ -18,6 +18,7 @@ export interface Job {
   createdAt: string;
   // New fields for advanced job management
   salary?: {
+    enabled?: boolean;
     type: 'hourly' | 'monthly' | 'annual';
     amount: number;
     currency: string;
@@ -40,6 +41,22 @@ export interface Job {
     invoicePrefix?: string;
     taxRate?: number;
     notes?: string;
+    userData?: {
+      name?: string;
+      address?: string;
+      phone?: string;
+      email?: string;
+      isCompany?: boolean;
+      companyName?: string;
+      taxId?: string;
+      // Banking information
+      bankAccount?: string;
+      bankName?: string;
+      swiftCode?: string;
+      // Professional details
+      website?: string;
+      logoUrl?: string;
+    };
   };
   location?: {
     address: string;

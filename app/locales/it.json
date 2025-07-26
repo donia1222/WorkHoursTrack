@@ -2,7 +2,8 @@
   "common": {
     "no_jobs_title": "Nessun Lavoro Configurato",
     "no_jobs_message": "Devi creare almeno un lavoro prima di poter utilizzare il timer, il calendario o i report. Inizia configurando il tuo primo lavoro.",
-    "create_first_job": "Crea Primo Lavoro"
+    "create_first_job": "Crea Primo Lavoro",
+    "cancel": "Annulla"
   },
   "preferences": {
     "title": "Preferenze",
@@ -30,7 +31,14 @@
       "location": "Posizione",
       "location_desc": "Avvisi basati sulla geolocalizzazione",
       "test_button": "Invia Notifica di Test",
-      "test_desc": "Testa le notifiche per verificare che funzionino correttamente"
+      "test_desc": "Testa le notifiche per verificare che funzionino correttamente",
+      "enable_work_reminders_suggestion": "Attiva promemoria di lavoro",
+      "enable_work_reminders_description": "Ricevi avvisi prima dell'orario di lavoro",
+      "enable_work_reminders_title": "Attiva Promemoria",
+      "enable_work_reminders_message": "Vuoi attivare i promemoria di lavoro per ricevere notifiche prima del tuo orario di lavoro?",
+      "go_to_preferences": "Vai alle Preferenze",
+      "reminder_title": "Promemoria",
+      "reminder_message": "Vai su Preferenze > Notifiche per attivare i promemoria dell'orario di lavoro"
     }
   },
   "settings": {
@@ -193,7 +201,22 @@
     "cancel": "Annulla",
     "select_dates": "Seleziona date",
     "date_range_title": "Intervallo date",
-    "from_to_dates": "Dal {{fromDate}} al {{toDate}}"
+    "from_to_dates": "Dal {{fromDate}} al {{toDate}}",
+    "export_pdf": "Esporta PDF",
+    "export_all_jobs": "Esporta tutti i lavori",
+    "export_job": "Esporta {{jobName}}",
+    "generating_pdf": "Generazione PDF...",
+    "pdf_generated": "PDF generato con successo",
+    "pdf_error": "Errore nella generazione del PDF",
+    "export_options": "Opzioni di Esportazione",
+    "billing_information": "Informazioni di Fatturazione",
+    "include_billing_data": "Aggiungi dati al PDF",
+    "include_billing_desc": "Includi informazioni di fatturazione nel report PDF",
+    "include_invoice_details": "Aggiungi data e numero fattura",
+    "include_invoice_details_desc": "Genera automaticamente numero fattura e data corrente",
+    "no_billing_data": "Nessun dato di fatturazione",
+    "no_billing_data_desc": "Configura i dati di fatturazione per includerli nei tuoi report PDF",
+    "configure_billing": "Aggiungi dati di fatturazione al PDF"
   },
   "calendar": {
     "title": "Il Mio Calendario",
@@ -366,6 +389,7 @@
     },
     "financial": {
       "title": "Configurazione stipendio",
+      "enabled": "Configurazione stipendio abilitata",
       "salary_type": "Tipo di stipendio",
       "hourly": "Orario",
       "monthly": "Mensile",
@@ -385,7 +409,36 @@
       "tax_rate": "Aliquota fiscale (%)",
       "tax_rate_placeholder": "22",
       "notes": "Note per fatturazione",
-      "notes_placeholder": "Termini di pagamento, informazioni aggiuntive..."
+      "notes_placeholder": "Termini di pagamento, informazioni aggiuntive...",
+      "user_data": {
+        "title": "Dati Utente/Azienda",
+        "subtitle": "Informazioni che appariranno sulle fatture",
+        "is_company": "È un'azienda?",
+        "is_company_desc": "Attiva se generi fatture come azienda",
+        "company_name": "Nome Azienda",
+        "company_name_placeholder": "es: La Mia Azienda S.r.l.",
+        "tax_id": "Partita IVA/Codice Fiscale",
+        "tax_id_placeholder": "es: IT12345678901",
+        "full_name": "Nome Completo",
+        "full_name_placeholder": "es: Mario Rossi",
+        "address": "Indirizzo Completo",
+        "address_placeholder": "Via, numero, CAP, città",
+        "phone": "Telefono",
+        "phone_placeholder": "es: +39 123 456 789",
+        "email": "Email",
+        "email_placeholder": "email@esempio.it",
+        "website": "Sito Web",
+        "website_placeholder": "https://www.esempio.it",
+        "banking_info": "Informazioni Bancarie",
+        "banking_desc": "Dettagli di pagamento opzionali",
+        "bank_account": "Numero di Conto",
+        "bank_account_placeholder": "IT12 A123 4567 8901 2345 678901",
+        "bank_name": "Nome Banca",
+        "bank_name_placeholder": "es: UniCredit",
+        "swift_code": "Codice SWIFT/BIC",
+        "swift_code_placeholder": "es: UNCRITMM",
+        "preview_title": "Anteprima Fattura"
+      }
     },
     "location": {
       "title": "Geolocalizzazione",

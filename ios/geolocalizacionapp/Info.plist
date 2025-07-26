@@ -58,11 +58,11 @@
     <key>NSCalendarsWriteOnlyAccessUsageDescription</key>
     <string>Esta app necesita acceso de escritura al calendario para crear eventos de tus días de trabajo.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your location</string>
+    <string>Esta app necesita acceso a tu ubicación para el timer automático basado en geofencing.</string>
     <key>NSLocationAlwaysUsageDescription</key>
-    <string>Diese App benötigt dauerhaften Standortzugriff, um Geofencing und Standortverfolgung im Hintergrund zu ermöglichen.</string>
+    <string>Esta app necesita acceso continuo a tu ubicación para iniciar/pausar el timer automáticamente cuando entres o salgas del área de trabajo.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Diese App benötigt Zugriff auf deinen Standort, um dich auf der Karte zu lokalizieren.</string>
+    <string>Esta app necesita acceso a tu ubicación cuando la uses para mostrarte en el mapa.</string>
     <key>NSRemindersFullAccessUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your reminders</string>
     <key>NSRemindersUsageDescription</key>
@@ -70,6 +70,15 @@
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
+    </array>
+    <key>NSUserNotificationsUsageDescription</key>
+    <string>Esta app necesita permisos de notificación para avisarte cuando el timer automático se inicie o pause.</string>
+    <key>UIBackgroundModes</key>
+    <array>
+      <string>location</string>
+      <string>background-fetch</string>
+      <string>background-processing</string>
+      <string>fetch</string>
     </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>

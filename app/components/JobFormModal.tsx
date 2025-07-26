@@ -10,6 +10,8 @@ import {
   TextInput,
   Switch,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -420,6 +422,123 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginTop: 2,
     lineHeight: 16,
   },
+  // Financial section styles
+  financialCard: {
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(247, 248, 250, 1)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+  },
+  financialCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  financialCardTitle: {
+    ...Theme.typography.callout,
+    fontWeight: '600',
+    color: colors.text,
+    marginLeft: 8,
+  },
+  currencyInputContainer: {
+    alignItems: 'center',
+  },
+  currencyInput: {
+    ...Theme.typography.title1,
+    fontWeight: '700',
+    color: colors.primary,
+    textAlign: 'center',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 1)',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    minWidth: 100,
+  },
+  salaryTypeSelector: {
+    flexDirection: 'row',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+    borderRadius: 12,
+    padding: 4,
+  },
+  salaryTypeOption: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  salaryTypeOptionActive: {
+    backgroundColor: colors.primary,
+  },
+  salaryTypeIcon: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  salaryTypeText: {
+    ...Theme.typography.footnote,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
+  },
+  salaryTypeTextActive: {
+    color: '#FFFFFF',
+  },
+  amountInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 1)',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.separator,
+    overflow: 'hidden',
+  },
+  currencySymbol: {
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 60,
+  },
+  currencySymbolText: {
+    ...Theme.typography.callout,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  amountInput: {
+    ...Theme.typography.title2,
+    fontWeight: '700',
+    color: colors.text,
+    flex: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    textAlign: 'center',
+  },
+  periodIndicator: {
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 60,
+  },
+  periodIndicatorText: {
+    ...Theme.typography.callout,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  amountHelper: {
+    ...Theme.typography.caption2,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
 });
 
 export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar }: JobFormModalProps) {
@@ -465,6 +584,20 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       invoicePrefix: 'INV',
       taxRate: 21,
       notes: '',
+      userData: {
+        name: '',
+        address: '',
+        phone: '',
+        email: '',
+        isCompany: false,
+        companyName: '',
+        taxId: '',
+        bankAccount: '',
+        bankName: '',
+        swiftCode: '',
+        website: '',
+        logoUrl: '',
+      },
     },
     location: {
       address: '',
@@ -521,6 +654,20 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           invoicePrefix: 'INV',
           taxRate: 21,
           notes: '',
+          userData: {
+            name: '',
+            address: '',
+            phone: '',
+            email: '',
+            isCompany: false,
+            companyName: '',
+            taxId: '',
+            bankAccount: '',
+            bankName: '',
+            swiftCode: '',
+            website: '',
+            logoUrl: '',
+          },
         },
         location: editingJob.location || {
           address: editingJob.address || '',
@@ -562,6 +709,20 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           invoicePrefix: 'INV',
           taxRate: 21,
           notes: '',
+          userData: {
+            name: '',
+            address: '',
+            phone: '',
+            email: '',
+            isCompany: false,
+            companyName: '',
+            taxId: '',
+            bankAccount: '',
+            bankName: '',
+            swiftCode: '',
+            website: '',
+            logoUrl: '',
+          },
         },
         location: {
           address: '',
@@ -1199,75 +1360,122 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   );
 
   const renderFinancialTab = () => (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.tabContent} 
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets={true}
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={{ paddingBottom: 100 }}
+    >
       <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
         <Text style={styles.sectionTitle}>{t('job_form.financial.title')}</Text>
         
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>{t('job_form.financial.salary_type')}</Text>
-          <View style={styles.segmentedControl}>
-            {[
-              { key: 'hourly', label: t('job_form.financial.hourly') },
-              { key: 'monthly', label: t('job_form.financial.monthly') },
-              { key: 'annual', label: t('job_form.financial.annual') },
-            ].map((option) => (
-              <TouchableOpacity
-                key={option.key}
-                style={[
-                  styles.segmentButton,
-                  formData.salary?.type === option.key && styles.segmentButtonActive,
-                ]}
-                onPress={() => updateNestedData('salary', 'type', option.key)}
-              >
-                <Text
-                  style={[
-                    styles.segmentText,
-                    formData.salary?.type === option.key && styles.segmentTextActive,
-                  ]}
-                >
-                  {option.label}
+          <View style={styles.switchRow}>
+            <Text style={styles.label}>{t('job_form.financial.enabled')}</Text>
+            <Switch
+              value={formData.salary?.enabled}
+              onValueChange={(value) => updateNestedData('salary', 'enabled', value)}
+              trackColor={{ false: colors.separator, true: colors.primary }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+        </View>
+
+        {formData.salary?.enabled && (
+          <>
+            {/* Currency Section */}
+            <View style={styles.financialCard}>
+              <View style={styles.financialCardHeader}>
+                <IconSymbol size={20} name="dollarsign.circle.fill" color={colors.primary} />
+                <Text style={styles.financialCardTitle}>Moneda</Text>
+              </View>
+              <View style={styles.currencyInputContainer}>
+                <TextInput
+                  style={styles.currencyInput}
+                  value={formData.salary?.currency || ''}
+                  onChangeText={(value) => updateNestedData('salary', 'currency', value)}
+                  placeholder="EUR"
+                  placeholderTextColor={colors.textTertiary}
+                  maxLength={3}
+                />
+              </View>
+            </View>
+
+            {/* Salary Type Section */}
+            <View style={styles.financialCard}>
+              <View style={styles.financialCardHeader}>
+                <IconSymbol size={20} name="clock.fill" color={colors.primary} />
+                <Text style={styles.financialCardTitle}>Tipo de Pago</Text>
+              </View>
+              <View style={styles.salaryTypeSelector}>
+                {[
+                  { key: 'hourly', label: 'Por Hora', icon: '⏰' },
+                  { key: 'monthly', label: 'Por Mes', icon: '📅' },
+                  { key: 'annual', label: 'Por Año', icon: '📊' },
+                ].map((option) => (
+                  <TouchableOpacity
+                    key={option.key}
+                    style={[
+                      styles.salaryTypeOption,
+                      formData.salary?.type === option.key && styles.salaryTypeOptionActive,
+                    ]}
+                    onPress={() => updateNestedData('salary', 'type', option.key)}
+                  >
+                    <Text style={styles.salaryTypeIcon}>{option.icon}</Text>
+                    <Text
+                      style={[
+                        styles.salaryTypeText,
+                        formData.salary?.type === option.key && styles.salaryTypeTextActive,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Amount Section */}
+            <View style={styles.financialCard}>
+              <View style={styles.financialCardHeader}>
+                <IconSymbol size={20} name="banknote.fill" color={colors.primary} />
+                <Text style={styles.financialCardTitle}>
+                  {formData.salary?.type === 'hourly' ? 'Cantidad por Hora' :
+                   formData.salary?.type === 'monthly' ? 'Cantidad por Mes' : 'Cantidad por Año'}
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+              </View>
+              <View style={styles.amountInputContainer}>
+                <View style={styles.currencySymbol}>
+                  <Text style={styles.currencySymbolText}>{formData.salary?.currency || 'EUR'}</Text>
+                </View>
+                <TextInput
+                  style={styles.amountInput}
+                  value={formData.salary?.amount ? String(formData.salary.amount) : ''}
+                  onChangeText={(value) => updateNestedData('salary', 'amount', Number(value) || 0)}
+                  placeholder={
+                    formData.salary?.type === 'hourly' ? '15' :
+                    formData.salary?.type === 'monthly' ? '1800' : '35000'
+                  }
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                />
+                <View style={styles.periodIndicator}>
+                  <Text style={styles.periodIndicatorText}>
+                    /{formData.salary?.type === 'hourly' ? 'h' :
+                      formData.salary?.type === 'monthly' ? 'mes' : 'año'}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.amountHelper}>
+                {formData.salary?.type === 'hourly' ? 'Ej: 15€/hora para trabajos freelance' :
+                 formData.salary?.type === 'monthly' ? 'Ej: 1800€/mes para empleos fijos' : 'Ej: 35000€/año para salarios anuales'}
+              </Text>
+            </View>
 
-        <View style={styles.row}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>{t('job_form.financial.amount')}</Text>
-            <TextInput
-              style={styles.input}
-              value={String(formData.salary?.amount || 0)}
-              onChangeText={(value) => updateNestedData('salary', 'amount', Number(value) || 0)}
-              placeholder={t('job_form.financial.amount_placeholder')}
-              placeholderTextColor={colors.textTertiary}
-              keyboardType="numeric"
-            />
-          </View>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>{t('job_form.financial.currency')}</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.salary?.currency}
-              onChangeText={(value) => updateNestedData('salary', 'currency', value)}
-              placeholder={t('job_form.financial.currency_placeholder')}
-              placeholderTextColor={colors.textTertiary}
-            />
-          </View>
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>{t('job_form.financial.hourly_rate')}</Text>
-          <TextInput
-            style={styles.input}
-            value={String(formData.hourlyRate || 0)}
-            onChangeText={(value) => updateFormData('hourlyRate', Number(value) || 0)}
-            placeholder={t('job_form.financial.hourly_rate_placeholder')}
-            placeholderTextColor={colors.textTertiary}
-            keyboardType="numeric"
-          />
-        </View>
+          </>
+        )}
       </BlurView>
     </ScrollView>
   );
@@ -1330,51 +1538,241 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         )}
       </BlurView>
 
-      <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('job_form.location.title')}</Text>
-        
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>{t('job_form.location.address')}</Text>
-          <View style={styles.addressInputContainer}>
+      {formData.billing?.enabled && (
+        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('job_form.billing.user_data.title')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('job_form.billing.user_data.subtitle')}</Text>
+          
+          <View style={styles.inputGroup}>
+            <View style={styles.switchRow}>
+              <View style={styles.switchContent}>
+                <Text style={styles.label}>{t('job_form.billing.user_data.is_company')}</Text>
+                <Text style={styles.labelDescription}>{t('job_form.billing.user_data.is_company_desc')}</Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.switch, formData.billing?.userData?.isCompany && styles.switchActive]}
+                onPress={() => {
+                  const newValue = !formData.billing?.userData?.isCompany;
+                  updateNestedData('billing', 'userData', {
+                    ...formData.billing?.userData,
+                    isCompany: newValue
+                  });
+                }}
+              >
+                <View style={[styles.switchThumb, formData.billing?.userData?.isCompany && styles.switchThumbActive]} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {formData.billing?.userData?.isCompany ? (
+            <>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>
+                  <IconSymbol size={16} name="building.2" color={colors.primary} /> {t('job_form.billing.user_data.company_name')}
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.billing?.userData?.companyName}
+                  onChangeText={(value) => updateNestedData('billing', 'userData', {
+                    ...formData.billing?.userData,
+                    companyName: value
+                  })}
+                  placeholder={t('job_form.billing.user_data.company_name_placeholder')}
+                  placeholderTextColor={colors.textTertiary}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('job_form.billing.user_data.tax_id')}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.billing?.userData?.taxId}
+                  onChangeText={(value) => updateNestedData('billing', 'userData', {
+                    ...formData.billing?.userData,
+                    taxId: value
+                  })}
+                  placeholder={t('job_form.billing.user_data.tax_id_placeholder')}
+                  placeholderTextColor={colors.textTertiary}
+                />
+              </View>
+            </>
+          ) : (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                <IconSymbol size={16} name="person" color={colors.primary} /> {t('job_form.billing.user_data.full_name')}
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={formData.billing?.userData?.name}
+                onChangeText={(value) => updateNestedData('billing', 'userData', {
+                  ...formData.billing?.userData,
+                  name: value
+                })}
+                placeholder={t('job_form.billing.user_data.full_name_placeholder')}
+                placeholderTextColor={colors.textTertiary}
+              />
+            </View>
+          )}
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              <IconSymbol size={16} name="location" color={colors.primary} /> {t('job_form.billing.user_data.address')}
+            </Text>
             <TextInput
-              style={[styles.input, styles.addressInput]}
-              value={formData.location?.address}
-              onChangeText={(value) => updateNestedData('location', 'address', value)}
-              placeholder={t('job_form.location.address_placeholder')}
+              style={[styles.input, styles.textArea]}
+              value={formData.billing?.userData?.address}
+              onChangeText={(value) => updateNestedData('billing', 'userData', {
+                ...formData.billing?.userData,
+                address: value
+              })}
+              placeholder={t('job_form.billing.user_data.address_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+              multiline
+              numberOfLines={2}
+            />
+          </View>
+
+          <View style={styles.row}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                <IconSymbol size={16} name="phone" color={colors.primary} /> {t('job_form.billing.user_data.phone')}
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={formData.billing?.userData?.phone}
+                onChangeText={(value) => updateNestedData('billing', 'userData', {
+                  ...formData.billing?.userData,
+                  phone: value
+                })}
+                placeholder={t('job_form.billing.user_data.phone_placeholder')}
+                placeholderTextColor={colors.textTertiary}
+                keyboardType="phone-pad"
+              />
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                <IconSymbol size={16} name="envelope" color={colors.primary} /> {t('job_form.billing.user_data.email')}
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={formData.billing?.userData?.email}
+                onChangeText={(value) => updateNestedData('billing', 'userData', {
+                  ...formData.billing?.userData,
+                  email: value
+                })}
+                placeholder={t('job_form.billing.user_data.email_placeholder')}
+                placeholderTextColor={colors.textTertiary}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+          </View>
+
+          {/* Professional Information Section */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              <IconSymbol size={16} name="globe" color={colors.primary} /> {t('job_form.billing.user_data.website')}
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={formData.billing?.userData?.website}
+              onChangeText={(value) => updateNestedData('billing', 'userData', {
+                ...formData.billing?.userData,
+                website: value
+              })}
+              placeholder={t('job_form.billing.user_data.website_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+              keyboardType="url"
+              autoCapitalize="none"
+            />
+          </View>
+
+          {/* Banking Information Section */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.sectionTitle, { fontSize: 16, marginBottom: 12, marginTop: 8 }]}>
+              🏦 {t('job_form.billing.user_data.banking_info')}
+            </Text>
+            <Text style={styles.labelDescription}>
+              {t('job_form.billing.user_data.banking_desc')}
+            </Text>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              <IconSymbol size={16} name="creditcard" color={colors.primary} /> {t('job_form.billing.user_data.bank_account')}
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={formData.billing?.userData?.bankAccount}
+              onChangeText={(value) => updateNestedData('billing', 'userData', {
+                ...formData.billing?.userData,
+                bankAccount: value
+              })}
+              placeholder={t('job_form.billing.user_data.bank_account_placeholder')}
               placeholderTextColor={colors.textTertiary}
             />
-            <TouchableOpacity
-              style={[
-                styles.detectLocationButton,
-                isDetectingLocation && styles.detectLocationButtonLoading
-              ]}
-              onPress={detectCurrentLocation}
-              disabled={isDetectingLocation}
-            >
-              <IconSymbol 
-                size={20} 
-                name={isDetectingLocation ? "gear" : "location.fill"} 
-                color={isDetectingLocation ? colors.textSecondary : colors.success} 
-              />
-              {!isDetectingLocation && (
-                <Text style={[styles.detectLocationText, { color: colors.success }]}>GPS</Text>
-              )}
-            </TouchableOpacity>
           </View>
-        </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>{t('job_form.location.radius')}</Text>
-          <TextInput
-            style={styles.input}
-            value={String(formData.location?.radius || 100)}
-            onChangeText={(value) => updateNestedData('location', 'radius', Number(value) || 100)}
-            placeholder={t('job_form.location.radius_placeholder')}
-            placeholderTextColor={colors.textTertiary}
-            keyboardType="numeric"
-          />
-        </View>
-      </BlurView>
+          <View style={styles.row}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                <IconSymbol size={16} name="building.2" color={colors.primary} /> {t('job_form.billing.user_data.bank_name')}
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={formData.billing?.userData?.bankName}
+                onChangeText={(value) => updateNestedData('billing', 'userData', {
+                  ...formData.billing?.userData,
+                  bankName: value
+                })}
+                placeholder={t('job_form.billing.user_data.bank_name_placeholder')}
+                placeholderTextColor={colors.textTertiary}
+              />
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                <IconSymbol size={16} name="network" color={colors.primary} /> {t('job_form.billing.user_data.swift_code')}
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={formData.billing?.userData?.swiftCode}
+                onChangeText={(value) => updateNestedData('billing', 'userData', {
+                  ...formData.billing?.userData,
+                  swiftCode: value
+                })}
+                placeholder={t('job_form.billing.user_data.swift_code_placeholder')}
+                placeholderTextColor={colors.textTertiary}
+                autoCapitalize="characters"
+              />
+            </View>
+          </View>
+
+          <View style={styles.previewCard}>
+            <Text style={styles.previewTitle}>
+              <IconSymbol size={18} name="doc.text" color={colors.primary} /> {t('job_form.billing.user_data.preview_title')}
+            </Text>
+            <Text style={styles.previewText}>
+              {formData.billing?.userData?.isCompany ? (
+                `🏢 ${formData.billing?.userData?.companyName || 'Nombre Empresa'}\n` +
+                `CIF: ${formData.billing?.userData?.taxId || 'CIF/NIF'}`
+              ) : (
+                `👤 ${formData.billing?.userData?.name || 'Nombre Usuario'}`
+              )}
+              {'\n'}📍 {formData.billing?.userData?.address || 'Dirección completa'}
+              {'\n'}📞 {formData.billing?.userData?.phone || 'Teléfono'}
+              {'\n'}✉️ {formData.billing?.userData?.email || 'Email'}
+              {formData.billing?.userData?.website ? `\n🌐 ${formData.billing.userData.website}` : ''}
+              {formData.billing?.userData?.bankAccount ? `\n\n💳 ${formData.billing.userData.bankAccount}` : ''}
+              {formData.billing?.userData?.bankName ? `\n🏦 ${formData.billing.userData.bankName}` : ''}
+              {formData.billing?.userData?.swiftCode ? `\n🔗 SWIFT: ${formData.billing.userData.swiftCode}` : ''}
+              {'\n\n'}Prefijo: {formData.billing?.invoicePrefix || 'INV'}
+              {'\n'}Impuestos: {formData.billing?.taxRate || 0}%
+            </Text>
+          </View>
+        </BlurView>
+      )}
     </ScrollView>
   );
 
@@ -1595,13 +1993,17 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           </ScrollView>
         </View>
 
-        <View style={styles.content}>
+        <KeyboardAvoidingView 
+          style={styles.content}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+        >
           {currentTab === 'basic' && renderBasicTab()}
           {currentTab === 'schedule' && renderScheduleTab()}
           {currentTab === 'financial' && renderFinancialTab()}
           {currentTab === 'billing' && renderBillingTab()}
           {currentTab === 'auto' && renderAutoTab()}
-        </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </Modal>
   );

@@ -1,4 +1,5 @@
 import * as Location from 'expo-location';
+import { AppState } from 'react-native';
 import { Job } from '../types/WorkTypes';
 import BackgroundLocationTaskManager, { type BackgroundGeofenceData } from './BackgroundLocationTask';
 
@@ -71,7 +72,15 @@ class GeofenceService {
 
       this.isBackgroundMode = useBackgroundMode;
 
-      if (useBackgroundMode) {
+      // Use foreground mode if app is active and background mode is requested
+      const currentAppState = AppState.currentState;
+      const shouldUseForeground = useBackgroundMode && currentAppState === 'active';
+      
+      if (shouldUseForeground) {
+        console.log('🔄 GeofenceService: App is active, using foreground mode for better responsiveness');
+        this.isBackgroundMode = false;
+        return await this.startForegroundMonitoring(jobsToMonitor);
+      } else if (useBackgroundMode) {
         return await this.startBackgroundMonitoring(jobsToMonitor);
       }
 
@@ -115,13 +124,17 @@ class GeofenceService {
   private async startBackgroundMonitoring(jobs: Job[]): Promise<boolean> {
     try {
       // Prepare geofence data for background task
-      const geofences: BackgroundGeofenceData[] = jobs.map(job => ({
-        jobId: job.id,
-        jobName: job.name,
-        latitude: job.location!.latitude,
-        longitude: job.location!.longitude,
-        radius: job.autoTimer?.geofenceRadius || 100,
-      }));
+      const geofences: BackgroundGeofenceData[] = jobs
+        .filter(job => job.location?.latitude && job.location?.longitude)
+        .map(job => ({
+          jobId: job.id,
+          jobName: job.name,
+          latitude: job.location!.latitude!,
+          longitude: job.location!.longitude!,
+          radius: job.autoTimer?.geofenceRadius || 100,
+          delayStart: job.autoTimer?.delayStart || 2,
+          delayStop: job.autoTimer?.delayStop || 2,
+        }));
 
       // Start background location updates
       const success = await this.backgroundTaskManager.startBackgroundLocationUpdates(geofences);
