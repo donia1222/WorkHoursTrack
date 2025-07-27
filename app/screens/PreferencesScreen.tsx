@@ -654,48 +654,7 @@ export default function PreferencesScreen({ onClose, scrollToNotifications }: Pr
                 Configura cuándo recibir el recordatorio antes de tu horario de trabajo
               </Text>
               
-              {/* Presets predefinidos */}
-              <View style={styles.reminderPresetsContainer}>
-                {predefinedMinutes.map((preset) => (
-                  <TouchableOpacity
-                    key={preset.value}
-                    style={[
-                      styles.reminderPreset,
-                      notificationSettings.reminderMinutes === preset.value && styles.reminderPresetActive
-                    ]}
-                    onPress={() => handleReminderMinutesChange(preset.value)}
-                  >
-                    <Text style={[
-                      styles.reminderPresetText,
-                      notificationSettings.reminderMinutes === preset.value && styles.reminderPresetTextActive
-                    ]}>
-                      {preset.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
 
-              {/* Input personalizado */}
-              <View style={styles.customInputContainer}>
-                <TextInput
-                  style={styles.customInput}
-                  value={customMinutes}
-                  onChangeText={setCustomMinutes}
-                  onEndEditing={() => {
-                    const minutes = parseInt(customMinutes);
-                    if (!isNaN(minutes) && minutes >= 0 && minutes <= 480) {
-                      handleReminderMinutesChange(minutes);
-                    } else {
-                      Alert.alert('Error', 'Ingresa un valor entre 0 y 480 minutos (8 horas)');
-                      setCustomMinutes(notificationSettings.reminderMinutes.toString());
-                    }
-                  }}
-                  placeholder="Minutos personalizados"
-                  keyboardType="numeric"
-                  maxLength={3}
-                />
-                <Text style={styles.customInputLabel}>minutos antes</Text>
-              </View>
             </View>
           )}
 
@@ -735,4 +694,3 @@ export default function PreferencesScreen({ onClose, scrollToNotifications }: Pr
     </SafeAreaView>
   );
 }
-

@@ -431,8 +431,8 @@ export default function WorkDayModal({
             </BlurView>
           </View>
 
-          {/* Compact job selector - only for work days */}
-          {dayType === 'work' && jobs.length > 1 && (
+          {/* Compact job selector - only for work days and when no job is preselected */}
+          {dayType === 'work' && jobs.length > 1 && !preselectedJobId && (
             <View style={styles.section}>
               <BlurView intensity={95} tint="light" style={styles.compactJobSelector}>
                 <Text style={styles.compactJobTitle}>{t('job_selector.title')}</Text>
@@ -463,9 +463,29 @@ export default function WorkDayModal({
               </BlurView>
             </View>
           )}
+
+          {/* Preselected job display - when job is preselected from calendar filter */}
+          {dayType === 'work' && preselectedJobId && (
+            <View style={styles.section}>
+              <BlurView intensity={95} tint="light" style={styles.singleJobDisplay}>
+                <View style={styles.singleJobContent}>
+                  {(() => {
+                    const preselectedJob = jobs.find(job => job.id === preselectedJobId);
+                    return preselectedJob ? (
+                      <>
+                        <View style={[styles.jobTabDot, { backgroundColor: preselectedJob.color }]} />
+                        <Text style={styles.singleJobText}>{preselectedJob.name}</Text>
+                        <IconSymbol size={16} name="checkmark.circle.fill" color={colors.success} />
+                      </>
+                    ) : null;
+                  })()}
+                </View>
+              </BlurView>
+            </View>
+          )}
           
-          {/* Single job display - when only one job exists */}
-          {dayType === 'work' && jobs.length === 1 && (
+          {/* Single job display - when only one job exists and no job is preselected */}
+          {dayType === 'work' && jobs.length === 1 && !preselectedJobId && (
             <View style={styles.section}>
               <BlurView intensity={95} tint="light" style={styles.singleJobDisplay}>
                 <View style={styles.singleJobContent}>

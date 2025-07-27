@@ -705,6 +705,14 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
     
     const existingWorkDay = workDays.find(wd => wd.date === dateString);
     setEditingWorkDay(existingWorkDay);
+    
+    // Pre-select the job if a specific job is filtered
+    if (selectedJobId !== 'all') {
+      setPreselectedJobId(selectedJobId);
+    } else {
+      setPreselectedJobId(undefined);
+    }
+    
     setShowWorkDayModal(true);
   };
 

@@ -41,7 +41,11 @@
       "reminder_message": "Ve a Preferencias > Notificaciones para activar los recordatorios de horario de trabajo",
       "permissions_denied_title": "Permisos de Notificaciones Requeridos",
       "permissions_denied_message": "Para recibir notificaciones, necesitas activar los permisos en Configuración del sistema.",
-      "open_settings": "Abrir Configuración"
+      "open_settings": "Abrir Configuración",
+      "auto_timer": "Timer Automático",
+      "auto_timer_desc": "Notificaciones cuando el timer automático se inicie o pause",
+      "reminder_time": "Tiempo de aviso",
+      "reminder_time_desc": "Configura cuándo recibir el recordatorio antes de tu horario de trabajo"
     }
   },
   "settings": {
@@ -57,8 +61,8 @@
       "title": "Configuración Laboral",
       "schedules": "Horarios Estándar",
       "schedules_desc": "Configurar horarios por defecto",
-      "locations": "Ubicaciones de Trabajo",
-      "locations_desc": "Gestionar sitios y geofencing"
+      "autotimer": "Auto-timer",
+      "autotimer_desc": "Configurar auto-timer basado en ubicación"
     },
     "financial_config": {
       "title": "Configuración Financiera",
@@ -88,9 +92,9 @@
       "title": "Editar Horarios",
       "subtitle": "Selecciona un trabajo para configurar horarios, días laborables y descansos"
     },
-    "location": {
-      "title": "Editar Ubicaciones",
-      "subtitle": "Selecciona un trabajo para configurar su ubicación y geofencing"
+    "autotimer": {
+      "title": "Configurar Auto-timer",
+      "subtitle": "Selecciona un trabajo para configurar el auto-timer"
     },
     "financial": {
       "title": "Editar Tarifas y Sueldos",
@@ -139,7 +143,8 @@
     "auto_timer_pin": "{{jobName}} (Auto)",
     "auto_timer_status": "Timer automático: {{status}}",
     "swipe_or_tap": "Desliza o toca",
-    "tap_to_open": "Toca para abrir"
+    "tap_to_open": "Toca para abrir",
+    "view_options": "Tocar para opciones"
   },
   "timer": {
     "title": "Timer",
@@ -472,7 +477,7 @@
       "schedule": "Horario", 
       "financial": "Financiero",
       "billing": "Facturación",
-      "auto": "Automático"
+      "auto": "Auto"
     },
     "basic": {
       "title": "Información Básica",
@@ -728,6 +733,48 @@
       "last_update": "Última actualización: Julio 2025"
     }
   },
+  "preferences": {
+    "title": "Configuración",
+    "subtitle": "Personaliza tu experiencia de trabajo",
+    "appearance": {
+      "title": "Apariencia",
+      "description": "Configura el tema visual de la aplicación",
+      "auto": "Auto",
+      "light": "Claro",
+      "dark": "Oscuro"
+    },
+    "language": {
+      "title": "Idioma",
+      "description": "Selecciona tu idioma preferido",
+      "default": "Idioma actual",
+      "change_to": "Cambiar a {{language}}"
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "description": "Configura recordatorios y alertas",
+      "general": "Notificaciones generales",
+      "general_desc": "Activar todas las notificaciones",
+      "schedule": "Recordatorios de horario",
+      "schedule_desc": "Notificaciones de entrada y salida",
+      "work_reminders": "Recordatorios de trabajo",
+      "work_reminders_desc": "Recibir recordatorios antes de comenzar el trabajo",
+      "reminder_time": "Tiempo de recordatorio",
+      "custom_minutes": "Minutos personalizados",
+      "test_button": "Probar notificación",
+      "test_desc": "Enviar una notificación de prueba",
+      "permissions_denied_title": "Permisos denegados",
+      "permissions_denied_message": "Para recibir notificaciones, debes permitir los permisos en la configuración del dispositivo",
+      "open_settings": "Abrir configuración"
+    },
+    "data_management": {
+      "title": "Gestión de Datos",
+      "description": "⚠️ IMPORTANTE: Esta app guarda todos los datos solo en tu dispositivo. No utilizamos servidores ni bases de datos en la nube. Por este motivo, debes crear backups regularmente y importarlos si reinstalar la aplicación.",
+      "export_title": "Crear archivo .json",
+      "export_desc": "Crear backup de todos tus trabajos, horas y configuración",
+      "import_title": "Importar archivo.json",
+      "import_desc": "Restaurar datos desde un archivo de backup"
+    }
+  },
   "side_menu": {
     "title": "Navegación",
     "menu_items": {
@@ -740,8 +787,8 @@
         "description": "Control de tiempo"
       },
       "reports": {
-        "title": "Exportar datos",
-        "description": "Exportar informes"
+        "title": "Estadísticas",
+        "description": "Ver informes y estadísticas"
       },
       "calendar": {
         "title": "Calendario",

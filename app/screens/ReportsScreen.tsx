@@ -18,7 +18,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Job, WorkDay } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
-import { useBackNavigation } from '../context/NavigationContext';
+import { useBackNavigation, useNavigation } from '../context/NavigationContext';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
@@ -129,10 +129,11 @@ const AnimatedIcon: React.FC<AnimatedIconProps> = ({ name, size, color }) => {
 };
 
 export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
+  const { selectedJob, setSelectedJob } = useNavigation();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [workDays, setWorkDays] = useState<WorkDay[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year' | 'custom'>('month');
-  const [selectedJobId, setSelectedJobId] = useState<string | 'all'>('all');
+  const [selectedJobId, setSelectedJobId] = useState<string | 'all'>(selectedJob?.id || 'all');
   const [periodStats, setPeriodStats] = useState<PeriodStats | null>(null);
   const [visibleRecentDays, setVisibleRecentDays] = useState<number>(6);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -188,6 +189,15 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       calculateStatsFromRecentActivity();
     }
   }, [workDays, jobs, selectedPeriod, selectedJobId, fromDate, toDate]);
+
+  // Sync selectedJob from navigation context with local selectedJobId
+  useEffect(() => {
+    if (selectedJob?.id && selectedJob.id !== selectedJobId) {
+      setSelectedJobId(selectedJob.id);
+      // Clear selectedJob from context after using it
+      setSelectedJob(null);
+    }
+  }, [selectedJob]);
 
   const loadData = async () => {
     try {

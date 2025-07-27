@@ -15,6 +15,7 @@ import WelcomeModal from '../components/WelcomeModal';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { DataExportService } from '../services/DataExportService';
 
 interface SettingsScreenProps {
   onNavigate: (screen: string) => void;
@@ -242,9 +243,9 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
         };
       case 'location':
         return {
-          title: t('edit.location.title'),
-          subtitle: t('edit.location.subtitle'),
-          tab: 'billing' as const,
+          title: t('edit.autotimer.title'),
+          subtitle: t('edit.autotimer.subtitle'),
+          tab: 'auto' as const,
         };
       case 'financial':
         return {
@@ -382,11 +383,11 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
             onPress={() => handleEditCategory('location')}
           >
             <View style={[styles.settingIcon, styles.warningIconBg]}>
-              <IconSymbol size={24} name="location.fill" color={colors.warning} />
+              <IconSymbol size={24} name="timer" color={colors.warning} />
             </View>
             <View style={styles.settingContent}>
-              <Text style={styles.settingTitle}>{t('settings.work_config.locations')}</Text>
-              <Text style={styles.settingDescription}>{t('settings.work_config.locations_desc')}</Text>
+              <Text style={styles.settingTitle}>{t('settings.work_config.autotimer')}</Text>
+              <Text style={styles.settingDescription}>{t('settings.work_config.autotimer_desc')}</Text>
             </View>
             <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
           </TouchableOpacity>
@@ -487,6 +488,71 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
             <View style={styles.settingContent}>
               <Text style={styles.settingTitle}>{t('settings.app_config.help')}</Text>
               <Text style={styles.settingDescription}>{t('settings.app_config.help_desc')}</Text>
+            </View>
+            <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
+          </TouchableOpacity>
+
+        </BlurView>
+
+        {/* Data Management Section */}
+        <BlurView 
+          intensity={98} 
+          tint={isDark ? "dark" : "light"} 
+          style={styles.sectionCard}
+        >
+          <LinearGradient
+            colors={isDark ? ['rgba(255, 59, 48, 0.12)', 'rgba(255, 59, 48, 0.04)'] : ['rgba(255, 59, 48, 0.08)', 'rgba(255, 59, 48, 0.02)']}
+            style={styles.sectionCardGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
+          <Text style={styles.sectionTitle}>{t('preferences.data_management.title')}</Text>
+          <Text style={styles.sectionDescription}>
+            {t('preferences.data_management.description')}
+          </Text>
+          
+          {/* Export Data */}
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={async () => {
+              try {
+                await DataExportService.exportAllData();
+              } catch (error) {
+                console.error('Error exporting data:', error);
+              }
+            }}
+          >
+            <View style={[styles.settingIcon, { backgroundColor: 'rgba(0, 200, 100, 0.15)' }]}>
+              <IconSymbol size={24} name="square.and.arrow.up" color={colors.success} />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>{t('preferences.data_management.export_title')}</Text>
+              <Text style={styles.settingDescription}>
+                {t('preferences.data_management.export_desc')}
+              </Text>
+            </View>
+            <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          {/* Import Data */}
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={async () => {
+              try {
+                await DataExportService.importAllData();
+              } catch (error) {
+                console.error('Error importing data:', error);
+              }
+            }}
+          >
+            <View style={[styles.settingIcon, { backgroundColor: 'rgba(255, 149, 0, 0.15)' }]}>
+              <IconSymbol size={24} name="square.and.arrow.down" color={colors.warning} />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>{t('preferences.data_management.import_title')}</Text>
+              <Text style={styles.settingDescription}>
+                {t('preferences.data_management.import_desc')}
+              </Text>
             </View>
             <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
           </TouchableOpacity>

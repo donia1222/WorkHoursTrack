@@ -41,7 +41,11 @@
       "reminder_message": "Go to Preferences > Notifications to enable work schedule reminders",
       "permissions_denied_title": "Notification Permissions Required",
       "permissions_denied_message": "To receive notifications, you need to enable permissions in System Settings.",
-      "open_settings": "Open Settings"
+      "open_settings": "Open Settings",
+      "auto_timer": "Auto Timer",
+      "auto_timer_desc": "Notifications when auto timer starts or pauses",
+      "reminder_time": "Reminder Time",
+      "reminder_time_desc": "Configure when to receive reminders before your work schedule"
     }
   },
   "settings": {
@@ -57,8 +61,8 @@
       "title": "Work Configuration",
       "schedules": "Standard Schedules",
       "schedules_desc": "Configure default schedules",
-      "locations": "Work Locations",
-      "locations_desc": "Manage sites and geofencing"
+      "autotimer": "Auto-timer",
+      "autotimer_desc": "Configure location-based auto-timer"
     },
     "financial_config": {
       "title": "Financial Configuration",
@@ -88,9 +92,9 @@
       "title": "Edit Schedules",
       "subtitle": "Select a job to configure schedules, working days and breaks"
     },
-    "location": {
-      "title": "Edit Locations",
-      "subtitle": "Select a job to configure its location and geofencing"
+    "autotimer": {
+      "title": "Configure Auto-timer",
+      "subtitle": "Select a job to configure the auto-timer"
     },
     "financial": {
       "title": "Edit Rates and Salaries",
@@ -135,7 +139,8 @@
     "out_of_range": "Out of range",
     "working_now": "Working now",
     "swipe_or_tap": "Swipe or tap",
-    "tap_to_open": "Tap to open"
+    "tap_to_open": "Tap to open",
+    "view_options": "Tap for options"
   },
   "timer": {
     "title": "Timer",
@@ -716,6 +721,41 @@
       "last_update": "Last update: July 2025"
     }
   },
+  "preferences": {
+    "title": "Settings",
+    "subtitle": "Customize your work experience",
+    "appearance": {
+      "title": "Appearance",
+      "description": "Configure the visual theme of the app",
+      "auto": "Auto",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "language": {
+      "title": "Language",
+      "description": "Select your preferred language",
+      "default": "Current language",
+      "change_to": "Change to {{language}}"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Configure work reminders and alerts",
+      "work_reminders": "Work reminders",
+      "work_reminders_desc": "Receive reminders before work starts",
+      "reminder_time": "Reminder time",
+      "custom_minutes": "Custom minutes",
+      "test_button": "Test notification",
+      "test_desc": "Send a test notification"
+    },
+    "data_management": {
+      "title": "Data Management",
+      "description": "⚠️ IMPORTANT: This app stores all data only on your device. We don't use servers or cloud databases. For this reason, you must create backups regularly and import them if you reinstall the application.",
+      "export_title": "Create .json file",
+      "export_desc": "Create backup of all your jobs, hours and settings",
+      "import_title": "Import .json file",
+      "import_desc": "Restore data from a backup file"
+    }
+  },
   "side_menu": {
     "title": "Navigation",
     "menu_items": {
@@ -728,8 +768,8 @@
         "description": "Time tracking"
       },
       "reports": {
-        "title": "Export data",
-        "description": "Export reports"
+        "title": "Statistics",
+        "description": "View reports and statistics"
       },
       "calendar": {
         "title": "Calendar",

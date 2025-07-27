@@ -38,7 +38,14 @@
       "enable_work_reminders_message": "Möchten Sie Arbeitserinnerungen aktivieren, um Benachrichtigungen vor Ihrer Arbeitszeit zu erhalten?",
       "go_to_preferences": "Zu Einstellungen Gehen",
       "reminder_title": "Erinnerung",
-      "reminder_message": "Gehen Sie zu Einstellungen > Benachrichtigungen, um Arbeitszeiterinnerungen zu aktivieren"
+      "reminder_message": "Gehen Sie zu Einstellungen > Benachrichtigungen, um Arbeitszeiterinnerungen zu aktivieren",
+      "permissions_denied_title": "Benachrichtigungsberechtigungen Erforderlich",
+      "permissions_denied_message": "Um Benachrichtigungen zu erhalten, müssen Sie die Berechtigungen in den Systemeinstellungen aktivieren.",
+      "open_settings": "Einstellungen Öffnen",
+      "auto_timer": "Auto-Timer",
+      "auto_timer_desc": "Benachrichtigungen wenn Auto-Timer startet oder pausiert",
+      "reminder_time": "Erinnerungszeit",
+      "reminder_time_desc": "Konfigurieren Sie, wann Sie Erinnerungen vor Ihrem Arbeitsplan erhalten möchten"
     }
   },
   "settings": {
@@ -54,8 +61,8 @@
       "title": "Arbeitskonfiguration",
       "schedules": "Standard-Zeitpläne",
       "schedules_desc": "Standard-Zeitpläne konfigurieren",
-      "locations": "Arbeitsplätze",
-      "locations_desc": "Standorte und Geofencing verwalten"
+      "autotimer": "Auto-timer",
+      "autotimer_desc": "Standortbasierten Auto-timer konfigurieren"
     },
     "financial_config": {
       "title": "Finanzielle Konfiguration",
@@ -85,9 +92,9 @@
       "title": "Zeitpläne bearbeiten",
       "subtitle": "Wählen Sie einen Arbeitsplatz aus, um Zeitpläne, Arbeitstage und Pausen zu konfigurieren"
     },
-    "location": {
-      "title": "Standorte bearbeiten",
-      "subtitle": "Wählen Sie einen Arbeitsplatz aus, um seinen Standort und Geofencing zu konfigurieren"
+    "autotimer": {
+      "title": "Auto-timer konfigurieren",
+      "subtitle": "Wählen Sie einen Arbeitsplatz aus, um den Auto-timer zu konfigurieren"
     },
     "financial": {
       "title": "Tarife und Gehälter bearbeiten",
@@ -134,7 +141,8 @@
     "auto_timer_pin": "{{jobName}} (Auto)",
     "in_range": "Im Arbeitsbereich",
     "out_of_range": "Außerhalb des Bereichs",
-    "auto_timer_status": "Automatischer Timer: {{status}}"
+    "auto_timer_status": "Automatischer Timer: {{status}}",
+    "view_options": "Tippen für Optionen"
   },
   "timer": {
     "title": "Timer",
@@ -356,7 +364,7 @@
       "schedule": "Zeitplan", 
       "financial": "Finanziell",
       "billing": "Abrechnung",
-      "auto": "Automatisch"
+      "auto": "Auto"
     },
     "basic": {
       "title": "Grundinformationen",
@@ -596,6 +604,33 @@
       "last_update": "Letztes Update: Juli 2025"
     }
   },
+  "preferences": {
+    "data_management": {
+      "title": "Datenverwaltung",
+      "description": "⚠️ WICHTIG: Diese App speichert alle Daten nur auf Ihrem Gerät. Wir verwenden keine Server oder Cloud-Datenbanken. Aus diesem Grund müssen Sie regelmäßig Backups erstellen und bei einer Neuinstallation der App importieren.",
+      "export_title": ".json-Datei erstellen",
+      "export_desc": "Backup aller Ihrer Jobs, Stunden und Einstellungen erstellen",
+      "import_title": ".json-Datei importieren",
+      "import_desc": "Daten aus einer Backup-Datei wiederherstellen"
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "description": "Arbeitserinnerungen und Warnungen konfigurieren",
+      "general": "Allgemeine Benachrichtigungen",
+      "general_desc": "Alle Benachrichtigungen aktivieren",
+      "schedule": "Zeitplan-Erinnerungen",
+      "schedule_desc": "Ein- und Ausgangsbenachrichtigungen",
+      "work_reminders": "Arbeitserinnerungen",
+      "work_reminders_desc": "Erinnerungen vor Arbeitsbeginn erhalten",
+      "reminder_time": "Erinnerungszeit",
+      "custom_minutes": "Benutzerdefinierte Minuten",
+      "test_button": "Benachrichtigung testen",
+      "test_desc": "Eine Test-Benachrichtigung senden",
+      "permissions_denied_title": "Berechtigungen verweigert",
+      "permissions_denied_message": "Um Benachrichtigungen zu erhalten, müssen Sie die Berechtigungen in der Gerätekonfiguration zulassen",
+      "open_settings": "Konfiguration öffnen"
+    }
+  },
   "side_menu": {
     "title": "Navigation",
     "menu_items": {
@@ -608,8 +643,8 @@
         "description": "Zeiterfassung"
       },
       "reports": {
-        "title": "Daten exportieren",
-        "description": "Berichte exportieren"
+        "title": "Statistiken",
+        "description": "Berichte und Statistiken anzeigen"
       },
       "calendar": {
         "title": "Kalender",

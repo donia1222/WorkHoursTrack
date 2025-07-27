@@ -38,7 +38,14 @@
       "enable_work_reminders_message": "Voulez-vous activer les rappels de travail pour recevoir des notifications avant votre heure de travail?",
       "go_to_preferences": "Aller aux Préférences",
       "reminder_title": "Rappel",
-      "reminder_message": "Allez dans Préférences > Notifications pour activer les rappels d'horaire de travail"
+      "reminder_message": "Allez dans Préférences > Notifications pour activer les rappels d'horaire de travail",
+      "permissions_denied_title": "Autorisations de Notification Requises",
+      "permissions_denied_message": "Pour recevoir des notifications, vous devez activer les autorisations dans les Paramètres Système.",
+      "open_settings": "Ouvrir les Paramètres",
+      "auto_timer": "Minuteur Automatique",
+      "auto_timer_desc": "Notifications quand le minuteur automatique démarre ou se met en pause",
+      "reminder_time": "Heure de Rappel",
+      "reminder_time_desc": "Configurez quand recevoir des rappels avant votre horaire de travail"
     }
   },
   "settings": {
@@ -54,8 +61,8 @@
       "title": "Configuration de travail",
       "schedules": "Horaires standards",
       "schedules_desc": "Configurer les horaires par défaut",
-      "locations": "Lieux de travail",
-      "locations_desc": "Gérer les sites et le géofencing"
+      "autotimer": "Auto-timer",
+      "autotimer_desc": "Configurer l'auto-timer basé sur la localisation"
     },
     "financial_config": {
       "title": "Configuration financière",
@@ -85,9 +92,9 @@
       "title": "Modifier les horaires",
       "subtitle": "Sélectionnez un emploi pour configurer les horaires, jours ouvrables et pauses"
     },
-    "location": {
-      "title": "Modifier les emplacements",
-      "subtitle": "Sélectionnez un emploi pour configurer son emplacement et géofencing"
+    "autotimer": {
+      "title": "Configurer Auto-timer",
+      "subtitle": "Sélectionnez un emploi pour configurer l'auto-timer"
     },
     "financial": {
       "title": "Modifier les tarifs et salaires",
@@ -131,7 +138,8 @@
     "in_range": "Dans la portée",
     "out_of_range": "Hors de portée",
     "auto_timer_pin": "{{jobName}} (Auto)",
-    "auto_timer_status": "Minuteur automatique: {{status}}"
+    "auto_timer_status": "Minuteur automatique: {{status}}",
+    "view_options": "Toucher pour options"
   },
   "timer": {
     "title": "Chronomètre",
@@ -576,6 +584,16 @@
       "last_update": "Dernière mise à jour : Juillet 2025"
     }
   },
+  "preferences": {
+    "data_management": {
+      "title": "Gestion des Données",
+      "description": "⚠️ IMPORTANT : Cette application stocke toutes les données uniquement sur votre appareil. Nous n'utilisons pas de serveurs ou de bases de données cloud. Pour cette raison, vous devez créer des sauvegardes régulièrement et les importer si vous réinstallez l'application.",
+      "export_title": "Créer fichier .json",
+      "export_desc": "Créer une sauvegarde de tous vos emplois, heures et paramètres",
+      "import_title": "Importer fichier .json",
+      "import_desc": "Restaurer les données à partir d'un fichier de sauvegarde"
+    }
+  },
   "side_menu": {
     "title": "Navigation",
     "menu_items": {
@@ -588,8 +606,8 @@
         "description": "Suivi du temps"
       },
       "reports": {
-        "title": "Exporter données",
-        "description": "Exporter rapports"
+        "title": "Statistiques",
+        "description": "Voir rapports et statistiques"
       },
       "calendar": {
         "title": "Calendrier",
@@ -599,6 +617,31 @@
         "title": "Paramètres",
         "description": "Préférences"
       }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Configurer les rappels et alertes de travail",
+      "general": "Notifications générales",
+      "general_desc": "Activer toutes les notifications",
+      "schedule": "Rappels d'horaire",
+      "schedule_desc": "Notifications d'entrée et de sortie",
+      "work_reminders": "Rappels de travail",
+      "work_reminders_desc": "Recevoir des rappels avant le début du travail",
+      "reminder_time": "Heure de rappel",
+      "custom_minutes": "Minutes personnalisées",
+      "test_button": "Tester la notification",
+      "test_desc": "Envoyer une notification de test",
+      "permissions_denied_title": "Autorisations refusées",
+      "permissions_denied_message": "Pour recevoir des notifications, vous devez autoriser les permissions dans la configuration de l'appareil",
+      "open_settings": "Ouvrir la configuration"
+    },
+    "data_management": {
+      "title": "Gestion des Données",
+      "description": "⚠️ IMPORTANT : Cette application stocke toutes les données uniquement sur votre appareil. Nous n'utilisons pas de serveurs ou de bases de données cloud. Pour cette raison, vous devez créer des sauvegardes régulièrement et les importer si vous réinstallez l'application.",
+      "export_title": "Créer fichier .json",
+      "export_desc": "Créer une sauvegarde de tous vos emplois, heures et paramètres",
+      "import_title": "Importer fichier .json",
+      "import_desc": "Restaurer les données à partir d'un fichier de sauvegarde"
     }
   }
 }

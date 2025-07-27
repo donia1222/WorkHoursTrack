@@ -1203,8 +1203,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
   const handleJobAction = (job: Job, action: 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete') => {
     if (action === 'statistics') {
-      setSelectedJobForStats(job);
-      setShowStatistics(true);
+      navigateTo('reports', job);
       closeModal();
       return;
     }

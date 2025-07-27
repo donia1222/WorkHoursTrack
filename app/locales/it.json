@@ -38,7 +38,14 @@
       "enable_work_reminders_message": "Vuoi attivare i promemoria di lavoro per ricevere notifiche prima del tuo orario di lavoro?",
       "go_to_preferences": "Vai alle Preferenze",
       "reminder_title": "Promemoria",
-      "reminder_message": "Vai su Preferenze > Notifiche per attivare i promemoria dell'orario di lavoro"
+      "reminder_message": "Vai su Preferenze > Notifiche per attivare i promemoria dell'orario di lavoro",
+      "permissions_denied_title": "Autorizzazioni Notifiche Richieste",
+      "permissions_denied_message": "Per ricevere notifiche, devi abilitare le autorizzazioni nelle Impostazioni di Sistema.",
+      "open_settings": "Apri Impostazioni",
+      "auto_timer": "Timer Automatico",
+      "auto_timer_desc": "Notifiche quando il timer automatico si avvia o si mette in pausa",
+      "reminder_time": "Orario Promemoria",
+      "reminder_time_desc": "Configura quando ricevere promemoria prima del tuo orario di lavoro"
     }
   },
   "settings": {
@@ -54,8 +61,8 @@
       "title": "Configurazione lavoro",
       "schedules": "Orari standard",
       "schedules_desc": "Configura orari predefiniti",
-      "locations": "Luoghi di lavoro",
-      "locations_desc": "Gestisci siti e geofencing"
+      "autotimer": "Auto-timer",
+      "autotimer_desc": "Configura auto-timer basato sulla posizione"
     },
     "financial_config": {
       "title": "Configurazione finanziaria",
@@ -85,9 +92,9 @@
       "title": "Modifica orari",
       "subtitle": "Seleziona un lavoro per configurare orari, giorni lavorativi e pause"
     },
-    "location": {
-      "title": "Modifica posizioni",
-      "subtitle": "Seleziona un lavoro per configurare la sua posizione e geofencing"
+    "autotimer": {
+      "title": "Configura Auto-timer",
+      "subtitle": "Seleziona un lavoro per configurare l'auto-timer"
     },
     "financial": {
       "title": "Modifica tariffe e stipendi",
@@ -131,7 +138,8 @@
     "in_range": "Nel raggio",
     "out_of_range": "Fuori raggio",
     "auto_timer_pin": "{{jobName}} (Auto)",
-    "auto_timer_status": "Timer automatico: {{status}}"
+    "auto_timer_status": "Timer automatico: {{status}}",
+    "view_options": "Toccare per opzioni"
   },
   "timer": {
     "title": "Timer",
@@ -576,6 +584,33 @@
       "last_update": "Ultimo aggiornamento: Luglio 2025"
     }
   },
+  "preferences": {
+    "data_management": {
+      "title": "Gestione Dati",
+      "description": "⚠️ IMPORTANTE: Questa app memorizza tutti i dati solo sul tuo dispositivo. Non utilizziamo server o database cloud. Per questo motivo, devi creare backup regolarmente e importarli se reinstalli l'applicazione.",
+      "export_title": "Crea file .json",
+      "export_desc": "Crea backup di tutti i tuoi lavori, ore e impostazioni",
+      "import_title": "Importa file .json",
+      "import_desc": "Ripristina dati da un file di backup"
+    },
+    "notifications": {
+      "title": "Notifiche",
+      "description": "Configura promemoria e avvisi di lavoro",
+      "general": "Notifiche generali",
+      "general_desc": "Attiva tutte le notifiche",
+      "schedule": "Promemoria orari",
+      "schedule_desc": "Notifiche di entrata e uscita",
+      "work_reminders": "Promemoria di lavoro",
+      "work_reminders_desc": "Ricevi promemoria prima dell'inizio del lavoro",
+      "reminder_time": "Orario promemoria",
+      "custom_minutes": "Minuti personalizzati",
+      "test_button": "Testa notifica",
+      "test_desc": "Invia una notifica di test",
+      "permissions_denied_title": "Autorizzazioni negate",
+      "permissions_denied_message": "Per ricevere notifiche, devi consentire le autorizzazioni nella configurazione del dispositivo",
+      "open_settings": "Apri configurazione"
+    }
+  },
   "side_menu": {
     "title": "Navigazione",
     "menu_items": {
@@ -588,8 +623,8 @@
         "description": "Controllo tempo"
       },
       "reports": {
-        "title": "Esporta dati",
-        "description": "Esporta rapporti"
+        "title": "Statistiche",
+        "description": "Visualizza rapporti e statistiche"
       },
       "calendar": {
         "title": "Calendario",
