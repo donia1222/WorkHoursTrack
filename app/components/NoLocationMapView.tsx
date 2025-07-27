@@ -153,6 +153,55 @@ export default function NoLocationMapView({ onNavigate }: Props) {
     return jobStatistics.get(job.id) || { thisMonthHours: 0, thisMonthDays: 0 };
   };
 
+  const hasJobAddress = (job: Job) => {
+    return !!(job.address?.trim() || 
+              job.street?.trim() || 
+              job.city?.trim() || 
+              job.postalCode?.trim());
+  };
+
+  const handleAutoTimerToggle = async (job: Job, value: boolean) => {
+    if (value && !hasJobAddress(job)) {
+      Alert.alert(
+        'Dirección requerida',
+        'Para activar el timer automático, el trabajo debe tener una dirección configurada.',
+        [{ text: 'OK', style: 'default' }]
+      );
+      return;
+    }
+
+    try {
+      const updatedJob = {
+        ...job,
+        autoTimer: {
+          ...job.autoTimer,
+          enabled: value,
+          geofenceRadius: job.autoTimer?.geofenceRadius || 100,
+          delayStart: job.autoTimer?.delayStart || 2,
+          delayStop: job.autoTimer?.delayStop || 2,
+          notifications: job.autoTimer?.notifications !== false,
+        }
+      };
+
+      await JobService.updateJob(job.id, updatedJob);
+      await loadJobs();
+      await loadJobStatistics();
+      
+      if (value) {
+        Alert.alert(
+          'Timer automático activado',
+          'El timer se iniciará automáticamente cuando estés cerca del trabajo.'
+        );
+      }
+    } catch (error) {
+      console.error('Error updating auto-timer:', error);
+      Alert.alert(
+        'Error',
+        'No se pudo actualizar la configuración del timer automático.'
+      );
+    }
+  };
+
   const handleModalAction = (action: string) => {
     setShowActionModal(false);
     
@@ -165,6 +214,10 @@ export default function NoLocationMapView({ onNavigate }: Props) {
         break;
       case 'statistics':
         onNavigate?.('reports');
+        break;
+      case 'map':
+        // En modo sin ubicación, no hay mapa para navegar
+        console.log('Map action not available in no-location mode');
         break;
       case 'edit':
         if (selectedJob) {
@@ -266,6 +319,16 @@ export default function NoLocationMapView({ onNavigate }: Props) {
           isJobCurrentlyActive={isJobCurrentlyActive}
           getJobScheduleStatus={getJobScheduleStatus}
           getJobStatistics={getJobStatistics}
+          onAction={(action, job) => {
+            if (action === 'edit') {
+              handleEditJob(job);
+            } else {
+              handleModalAction(action);
+            }
+          }}
+          showAutoTimer={true}
+          autoTimerEnabled={false}
+          onAutoTimerToggle={handleAutoTimerToggle}
           t={t}
         />
       )}
@@ -287,7 +350,9 @@ export default function NoLocationMapView({ onNavigate }: Props) {
         job={selectedJob}
         onClose={handleCloseModal}
         onAction={handleModalAction}
-        showAutoTimer={false}
+        showAutoTimer={selectedJob ? hasJobAddress(selectedJob) : false}
+        autoTimerEnabled={selectedJob?.autoTimer?.enabled || false}
+        onAutoTimerToggle={(value) => selectedJob && handleAutoTimerToggle(selectedJob, value)}
       />
     </View>
   );

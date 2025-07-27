@@ -6,13 +6,24 @@ import {
   Modal,
   StyleSheet,
   Switch,
+  Dimensions,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring, 
+  withTiming, 
+  useAnimatedGestureHandler,
+  runOnJS,
+} from 'react-native-reanimated';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Job } from '../types/WorkTypes';
+
+const { height: screenHeight } = Dimensions.get('window');
 
 interface JobActionModalProps {
   visible: boolean;
@@ -36,34 +47,65 @@ export default function JobActionModal({
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
 
-  // Animation values for modal
-  const modalScale = useSharedValue(0);
-  const modalOpacity = useSharedValue(0);
+  // Animation values for bottom sheet
+  const translateY = useSharedValue(screenHeight);
+  const backdropOpacity = useSharedValue(0);
 
-  // Animated style for modal
-  const animatedModalStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: modalScale.value }],
-    opacity: modalOpacity.value,
+  // Gesture handler for dragging
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: () => {
+      console.log('🟡 Gesture started');
+    },
+    onActive: (event) => {
+      if (event.translationY > 0) {
+        translateY.value = event.translationY;
+      }
+    },
+    onEnd: (event) => {
+      const threshold = 150; // Threshold for closing
+      
+      if (event.translationY > threshold || event.velocityY > 500) {
+        // Close modal
+        translateY.value = withTiming(screenHeight, { duration: 300 });
+        backdropOpacity.value = withTiming(0, { duration: 300 });
+        runOnJS(onClose)();
+      } else {
+        // Snap back to open position
+        translateY.value = withSpring(0, {
+          damping: 20,
+          stiffness: 300,
+        });
+      }
+    },
+  });
+
+  // Animated styles
+  const animatedSheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const animatedBackdropStyle = useAnimatedStyle(() => ({
+    opacity: backdropOpacity.value,
   }));
 
   React.useEffect(() => {
     console.log('🟡 JobActionModal: visibility changed to:', visible, 'job:', job?.name);
     if (visible) {
-      // Open modal with animation
-      modalScale.value = withSpring(1, {
+      // Open modal with bottom sheet animation
+      translateY.value = withSpring(0, {
         damping: 20,
         stiffness: 300,
       });
-      modalOpacity.value = withTiming(1, {
-        duration: 200,
+      backdropOpacity.value = withTiming(0.5, {
+        duration: 300,
       });
     } else {
-      // Close modal with animation
-      modalScale.value = withTiming(0, {
-        duration: 150,
+      // Close modal
+      translateY.value = withTiming(screenHeight, {
+        duration: 300,
       });
-      modalOpacity.value = withTiming(0, {
-        duration: 150,
+      backdropOpacity.value = withTiming(0, {
+        duration: 300,
       });
     }
   }, [visible]);
@@ -74,104 +116,121 @@ export default function JobActionModal({
     <Modal
       visible={visible}
       transparent={true}
-      animationType="fade"
+      animationType="none"
       onRequestClose={onClose}
     >
       <View style={styles.actionModal}>
-        <TouchableOpacity 
-          style={styles.actionModalBackdrop}
-          onPress={onClose}
-        />
-        <View style={[styles.actionModalContent, { backgroundColor: isDark ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)' }]}>
-            {job && (
-              <>
-                <View style={styles.actionModalHeader}>
-                  <View style={[styles.actionModalColorDot, { backgroundColor: job.color }]} />
-                  <View style={styles.actionModalInfo}>
-                    <Text style={styles.actionModalTitle}>{job.name}</Text>
-                    {job.company && (
-                      <Text style={styles.actionModalSubtitle}>{job.company}</Text>
-                    )}
-                  </View>
-                </View>
+        {/* Backdrop with animated opacity */}
+        <Animated.View style={[styles.actionModalBackdrop, animatedBackdropStyle]}>
+          <TouchableOpacity 
+            style={{ flex: 1 }}
+            onPress={onClose}
+            activeOpacity={1}
+          />
+        </Animated.View>
 
-                <View style={styles.actionModalButtons}>
-                  <TouchableOpacity
-                    style={[styles.actionModalButton, styles.secondaryButtonBg]}
-                    onPress={() => onAction('edit')}
-                  >
-                    <IconSymbol size={24} name="gear" color={colors.textSecondary} />
-                    <View style={styles.actionModalButtonTextContainer}>
-                      <Text style={styles.actionModalButtonText}>
-                        {t('maps.edit_job')}
-                      </Text>
-                      {showAutoTimer && (
-                        <View style={styles.autoTimerSwitchContainer}>
-                          <Text style={styles.autoTimerSwitchLabel}>
-                            {t('maps.auto_timer')}
-                          </Text>
-                          <Switch
-                            value={autoTimerEnabled}
-                            onValueChange={onAutoTimerToggle}
-                            trackColor={{ false: colors.separator, true: colors.success + '40' }}
-                            thumbColor={autoTimerEnabled ? colors.success : colors.textTertiary}
-                            style={styles.autoTimerSwitch}
-                          />
-                        </View>
+        {/* Bottom Sheet */}
+        <PanGestureHandler onGestureEvent={gestureHandler}>
+          <Animated.View style={[styles.bottomSheet, animatedSheetStyle]}>
+            <BlurView 
+              intensity={isDark ? 90 : 98} 
+              tint={isDark ? "dark" : "light"} 
+              style={styles.bottomSheetContent}
+            >
+              {/* Drag Handle */}
+              <View style={styles.dragHandle} />
+              
+              {job && (
+                <>
+                  <View style={styles.actionModalHeader}>
+                    <View style={[styles.actionModalColorDot, { backgroundColor: job.color }]} />
+                    <View style={styles.actionModalInfo}>
+                      <Text style={styles.actionModalTitle}>{job.name}</Text>
+                      {job.company && (
+                        <Text style={styles.actionModalSubtitle}>{job.company}</Text>
                       )}
                     </View>
-                  </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.actionModalButtons}>
+                    <TouchableOpacity
+                      style={[styles.actionModalButton, styles.secondaryButtonBg]}
+                      onPress={() => onAction('edit')}
+                    >
+                      <IconSymbol size={24} name="gear" color={colors.textSecondary} />
+                      <View style={styles.actionModalButtonTextContainer}>
+                        <Text style={styles.actionModalButtonText}>
+                          {t('maps.edit_job')}
+                        </Text>
+                        {showAutoTimer && (
+                          <View style={styles.autoTimerSwitchContainer}>
+                            <Text style={styles.autoTimerSwitchLabel}>
+                              {t('maps.auto_timer')}
+                            </Text>
+                            <Switch
+                              value={autoTimerEnabled}
+                              onValueChange={onAutoTimerToggle}
+                              trackColor={{ false: colors.separator, true: colors.success + '40' }}
+                              thumbColor={autoTimerEnabled ? colors.success : colors.textTertiary}
+                              style={styles.autoTimerSwitch}
+                            />
+                          </View>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.actionModalButton, styles.successButtonBg]}
+                      onPress={() => onAction('timer')}
+                    >
+                      <IconSymbol size={24} name="clock.fill" color={colors.success} />
+                      <Text style={styles.actionModalButtonText}>
+                        {t('maps.start_timer')}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.actionModalButton, styles.primaryButtonBg]}
+                      onPress={() => onAction('calendar')}
+                    >
+                      <IconSymbol size={24} name="calendar" color={colors.primary} />
+                      <Text style={styles.actionModalButtonText}>
+                        {t('maps.view_calendar')}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.actionModalButton, styles.warningButtonBg]}
+                      onPress={() => onAction('statistics')}
+                    >
+                      <IconSymbol size={24} name="chart.bar.fill" color={colors.warning} />
+                      <Text style={styles.actionModalButtonText}>
+                        {t('maps.view_statistics')}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.actionModalButton, styles.errorButtonBg]}
+                      onPress={() => onAction('delete')}
+                    >
+                      <IconSymbol size={24} name="trash.fill" color={colors.error} />
+                      <Text style={styles.actionModalButtonText}>
+                        {t('maps.delete_job')}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
 
                   <TouchableOpacity
-                    style={[styles.actionModalButton, styles.successButtonBg]}
-                    onPress={() => onAction('timer')}
+                    style={styles.actionModalCancelButton}
+                    onPress={onClose}
                   >
-                    <IconSymbol size={24} name="clock.fill" color={colors.success} />
-                    <Text style={styles.actionModalButtonText}>
-                      {t('maps.start_timer')}
-                    </Text>
+                    <Text style={styles.actionModalCancelText}>{t('maps.cancel')}</Text>
                   </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.actionModalButton, styles.primaryButtonBg]}
-                    onPress={() => onAction('calendar')}
-                  >
-                    <IconSymbol size={24} name="calendar" color={colors.primary} />
-                    <Text style={styles.actionModalButtonText}>
-                      {t('maps.view_calendar')}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.actionModalButton, styles.warningButtonBg]}
-                    onPress={() => onAction('statistics')}
-                  >
-                    <IconSymbol size={24} name="chart.bar.fill" color={colors.warning} />
-                    <Text style={styles.actionModalButtonText}>
-                      {t('maps.view_statistics')}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.actionModalButton, styles.errorButtonBg]}
-                    onPress={() => onAction('delete')}
-                  >
-                    <IconSymbol size={24} name="trash.fill" color={colors.error} />
-                    <Text style={styles.actionModalButtonText}>
-                      {t('maps.delete_job')}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.actionModalCancelButton}
-                  onPress={onClose}
-                >
-                  <Text style={styles.actionModalCancelText}>{t('maps.cancel')}</Text>
-                </TouchableOpacity>
-              </>
-            )}
-        </View>
+                </>
+              )}
+            </BlurView>
+          </Animated.View>
+        </PanGestureHandler>
       </View>
     </Modal>
   );
@@ -179,39 +238,41 @@ export default function JobActionModal({
 
 const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   actionModal: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    pointerEvents: 'box-none',
+    flex: 1,
+    justifyContent: 'flex-end',
   },
   actionModalBackdrop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
-  actionModalContent: {
-    borderRadius: 28,
-    margin: 20,
-    padding: 24,
-    minWidth: 300,
-    borderWidth: 2,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(200, 200, 200, 0.9)',
+  bottomSheet: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 20,
+      height: -10,
     },
     shadowOpacity: 0.3,
-    shadowRadius: 30,
-    overflow: 'hidden',
-    pointerEvents: 'auto',
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  bottomSheetContent: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingTop: 8,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+    minHeight: 400,
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 20,
   },
   actionModalHeader: {
     flexDirection: 'row',

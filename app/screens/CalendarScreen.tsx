@@ -1198,28 +1198,6 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           )}
         </BlurView>
 
-        {/* Jobs breakdown */}
-        {Object.keys(stats.jobStats).length > 0 && selectedJobId === 'all' && (
-          <BlurView 
-            intensity={95} 
-            tint={isDark ? "dark" : "light"} 
-            style={styles.jobsStatsCard}
-          >
-            <Text style={styles.statsTitle}>{t('calendar.by_job')}</Text>
-            {Object.values(stats.jobStats).map(({ job, days, hours }) => (
-              <View key={job.id} style={styles.jobStatRow}>
-                <View style={styles.jobStatInfo}>
-                  <View style={[styles.jobStatColor, { backgroundColor: job.color }]} />
-                  <View style={styles.jobStatText}>
-                    <Text style={styles.jobStatName}>{job.name}</Text>
-                    <Text style={styles.jobStatDetails}>{days} días • {hours}h</Text>
-                  </View>
-                </View>
-              </View>
-            ))}
-          </BlurView>
-        )}
-
         <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.legendCard}>
           <LinearGradient
             colors={isDark ? ['rgba(142, 142, 147, 0.1)', 'rgba(142, 142, 147, 0.03)'] : ['rgba(142, 142, 147, 0.06)', 'rgba(142, 142, 147, 0.02)']}

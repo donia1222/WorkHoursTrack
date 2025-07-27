@@ -1201,10 +1201,23 @@ export default function MapLocation({ location, onNavigate }: Props) {
     setSelectedJob(null);
   };
 
-  const handleJobAction = (job: Job, action: 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete') => {
+  const handleJobAction = (job: Job, action: 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map') => {
     if (action === 'statistics') {
       navigateTo('reports', job);
       closeModal();
+      return;
+    }
+
+    if (action === 'map') {
+      // Navigate to job location without opening modal
+      if (job.location?.latitude && job.location?.longitude && mapRef.current) {
+        mapRef.current.animateToRegion({
+          latitude: job.location.latitude,
+          longitude: job.location.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }, 1000);
+      }
       return;
     }
 
@@ -1651,6 +1664,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
           isJobCurrentlyActive={isJobCurrentlyActive}
           getJobScheduleStatus={getJobScheduleStatus}
           getJobStatistics={getJobStatistics}
+          onAction={(action, job) => handleJobAction(job, action as 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map')}
+          showAutoTimer={true}
+          autoTimerEnabled={false}
+          onAutoTimerToggle={handleAutoTimerToggle}
           t={t}
         />
       )}

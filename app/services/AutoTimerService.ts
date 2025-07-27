@@ -41,6 +41,7 @@ class AutoTimerService {
   private isEnabled = false;
   private statusUpdateInterval: NodeJS.Timeout | null = null;
   private pausedDelayedAction: DelayedAction | null = null; // To remember paused countdown
+  private sentNotifications: Set<string> = new Set(); // Track sent notifications to avoid duplicates
 
   constructor() {
     this.geofenceService = GeofenceService.getInstance();
@@ -131,6 +132,7 @@ class AutoTimerService {
     this.currentJobId = null;
     this.pausedDelayedAction = null; // Clear paused state
     this.isEnabled = false;
+    this.clearNotificationHistory(); // Clear notification history when stopping
     this.notifyStatusChange();
     console.log('Auto timer service stopped');
   }
@@ -204,8 +206,12 @@ class AutoTimerService {
     this.currentState = 'entering';
     this.currentJobId = job.id;
     
-    // Send notification: timer will start in X minutes
-    await this.notificationService.sendNotification('timer_will_start', job.name, { minutes: delayMinutes });
+    // Send notification: timer will start in X minutes (only once)
+    const willStartNotificationId = `timer_will_start_${job.id}_${delayMinutes}`;
+    if (!this.sentNotifications.has(willStartNotificationId)) {
+      await this.notificationService.sendNotification('timer_will_start', job.name, { minutes: delayMinutes });
+      this.sentNotifications.add(willStartNotificationId);
+    }
     
     const timeout = setTimeout(async () => {
       console.log(`🚀 AutoTimer timeout triggered for ${job.name} after ${delayMinutes} minutes`);
@@ -252,8 +258,12 @@ class AutoTimerService {
     this.currentState = 'leaving';
     this.currentJobId = job.id;
     
-    // Send notification: timer will stop in X minutes
-    await this.notificationService.sendNotification('timer_will_stop', job.name, { minutes: delayMinutes });
+    // Send notification: timer will stop in X minutes (only once)
+    const willStopNotificationId = `timer_will_stop_${job.id}_${delayMinutes}`;
+    if (!this.sentNotifications.has(willStopNotificationId)) {
+      await this.notificationService.sendNotification('timer_will_stop', job.name, { minutes: delayMinutes });
+      this.sentNotifications.add(willStopNotificationId);
+    }
     
     const timeout = setTimeout(async () => {
       await this.stopAutoTimer(job);
@@ -298,8 +308,12 @@ class AutoTimerService {
       this.currentState = 'active';
       this.currentDelayedAction = null;
       
-      // Send notification: timer started automatically
-      await this.notificationService.sendNotification('timer_started', job.name);
+      // Send notification: timer started automatically (only once)
+      const startedNotificationId = `timer_started_${job.id}_${new Date().toDateString()}`;
+      if (!this.sentNotifications.has(startedNotificationId)) {
+        await this.notificationService.sendNotification('timer_started', job.name);
+        this.sentNotifications.add(startedNotificationId);
+      }
       
       this.notifyStatusChange();
       console.log(`✅ Auto-started timer for ${job.name}`);
@@ -340,8 +354,12 @@ class AutoTimerService {
         await JobService.addWorkDay(workDay);
         await JobService.clearActiveSession();
         
-        // Send notification: timer stopped automatically
-        await this.notificationService.sendNotification('timer_stopped', job.name);
+        // Send notification: timer stopped automatically (only once)
+        const stoppedNotificationId = `timer_stopped_${job.id}_${new Date().toDateString()}`;
+        if (!this.sentNotifications.has(stoppedNotificationId)) {
+          await this.notificationService.sendNotification('timer_stopped', job.name);
+          this.sentNotifications.add(stoppedNotificationId);
+        }
         
         console.log(`✅ Auto-stopped timer for ${job.name}: ${elapsedHours}h recorded`);
       }
@@ -366,7 +384,17 @@ class AutoTimerService {
       console.log(`🚫 Cancelling delayed ${this.currentDelayedAction.action} action`);
       clearTimeout(this.currentDelayedAction.timeout);
       this.currentDelayedAction = null;
+      // Clear related sent notifications when cancelling actions
+      this.clearNotificationHistory();
     }
+  }
+
+  /**
+   * Clear notification history to allow new notifications
+   */
+  private clearNotificationHistory(): void {
+    this.sentNotifications.clear();
+    console.log('🗑️ Notification history cleared');
   }
 
   /**
@@ -548,6 +576,21 @@ class AutoTimerService {
   }
 
   /**
+   * Notify status change for countdown updates only (without saving state repeatedly)
+   */
+  private notifyStatusChangeForCountdown(): void {
+    const status = this.getStatus();
+    this.statusCallbacks.forEach(callback => {
+      try {
+        callback(status);
+      } catch (error) {
+        console.error('Error in auto timer status callback:', error);
+      }
+    });
+    // No guardamos estado en cada segundo, solo para actualizaciones de UI
+  }
+
+  /**
    * Save current state to storage
    */
   private async saveState(): Promise<void> {
@@ -706,7 +749,9 @@ class AutoTimerService {
           console.log(`🔄 AutoTimer countdown: ${Math.ceil(remainingTime)}s remaining for ${this.currentDelayedAction.action} action`);
         }
         
-        this.notifyStatusChange();
+        // Solo notificar cambios de estado, no cada segundo
+        // Los listeners de UI se actualizarán solo cuando sea necesario
+        this.notifyStatusChangeForCountdown();
       }
     }, 1000);
   }

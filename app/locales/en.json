@@ -116,6 +116,7 @@
     "start_timer": "  Timer",
     "view_calendar": "  View Calendar",
     "view_statistics": "  View Statistics",
+    "view_map": "View on map",
     "edit_job": "Edit",
     "edit_job_auto_enabled": "Edit Job (Auto-Timer)",
     "auto_timer_active": "Auto-timer active",
