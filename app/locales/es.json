@@ -820,6 +820,10 @@
         "title": "Configuración",
         "description": "Preferencias"
       },
+      "chatbot": {
+        "title": "Chatbot IA",
+        "description": "Analiza imágenes con inteligencia artificial"
+      },
       "subscription": {
         "title": "Suscribe",
         "description": "Accede a funciones premium",
@@ -890,5 +894,52 @@
         "expires": "Expira"
       }
     }
+  },
+  "chatbot": {
+    "welcome_message": "¡Hola! Soy tu asistente especializado en análisis de planes de trabajo. Puedo:\n\n📅 Analizar imágenes y documentos PDF de horarios laborales\n🔍 Extraer días de trabajo, horarios y turnos\n🏖️ Identificar días libres y vacaciones\n👥 Detectar múltiples personas y preguntar de quién extraer datos\n🧠 Recordar el contexto de nuestra conversación\n📊 Organizar la información de forma clara\n\n📸 Envía una foto o 📄 documento PDF de tu plan de trabajo.\n💡 Escribe \"reset\" para empezar de nuevo.",
+    "welcome_title": "Asistente IA de Planes de Trabajo",
+    "welcome_subtitle": "¡Hola! Soy tu asistente especializado en análisis de horarios laborales. Te ayudo a extraer y organizar información de tus planes de trabajo.",
+    "feature_analyze": "Analizar imágenes y documentos PDF de horarios laborales",
+    "feature_extract": "Extraer días de trabajo, horarios y turnos específicos",
+    "feature_identify": "Identificar días libres, vacaciones y descansos",
+    "feature_detect": "Detectar múltiples personas y seleccionar datos específicos",
+    "feature_remember": "Recordar el contexto de nuestra conversación",
+    "feature_organize": "Organizar la información de forma clara y estructurada",
+    "get_started": "¿Cómo empezar?",
+    "action_photo": "Envía una foto de tu plan de trabajo",
+    "action_document": "Sube un documento PDF de horarios",
+    "action_reset": "Escribe \"reset\" para empezar de nuevo",
+    "context_cleared": "✅ Contexto limpiado. Ahora puedes enviar una nueva imagen o documento PDF de plan de trabajo o hacer consultas generales.",
+    "analyzing_document": "Analizando documento...",
+    "generating_response": "Generando respuesta...",
+    "placeholder_waiting": "Escribe el nombre de la persona...",
+    "placeholder_default": "Escribe tu mensaje aquí...",
+    "placeholder_processing": "El asistente está procesando...",
+    "error_no_text": "No encontré texto legible en esta imagen de plan de trabajo. ¿Puedes intentar con una imagen más clara?",
+    "pdf_not_supported": "El usuario subió un documento PDF llamado \"{{documentName}}\" y quiere extraer texto. Los PDFs no se pueden procesar directamente para OCR. Sugiere convertir el PDF a imagen o usar herramientas especializadas.",
+    "text_extracted_message": "📝 TEXTO EXTRAÍDO DEL PLAN DE TRABAJO:\n\n\"{{extractedText}}\"\n\n{{inputText}}\n\nAhora analizo este texto para identificar días de trabajo, horarios y vacaciones.",
+    "pdf_analysis_default": "Analiza este documento PDF de plan de trabajo y extrae los días laborales, días libres y vacaciones",
+    "image_analysis_default": "Analiza este plan de trabajo y extrae los días laborales, días libres y vacaciones",
+    "extract_specific_person": "Extrae los horarios específicamente de \"{{personName}}\". {{personName}}",
+    "pdf_context_message": "\n\nContexto: Hay un documento PDF activo llamado \"{{documentName}}\" que fue analizado previamente.",
+    "reset_commands": ["limpiar contexto", "reset", "nueva imagen"],
+    "detection_patterns": {
+      "person_selection_question": "¿De cuál persona quieres que extraiga los horarios?",
+      "multiple_names": "varios nombres"
+    },
+    "permissions_needed": "Permisos necesarios",
+    "gallery_permission_message": "Necesitamos permisos para acceder a tu galería de fotos.",
+    "camera_permission_message": "Necesitamos permisos para acceder a tu cámara.",
+    "error_selecting_image": "Error al seleccionar imagen",
+    "error_taking_photo": "Error al tomar foto",
+    "error_selecting_document": "Error al seleccionar documento",
+    "unknown_error": "Error desconocido",
+    "select_file": "Seleccionar archivo",
+    "file_type_question": "¿Qué tipo de archivo quieres analizar?",
+    "photo_gallery": "Galería de fotos",
+    "take_photo": "Tomar foto",
+    "pdf_document": "Documento PDF",
+    "cancel": "Cancelar",
+    "error_processing_request": "Lo siento, hubo un error al procesar tu solicitud. Por favor, intenta de nuevo."
   }
 }

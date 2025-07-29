@@ -271,9 +271,9 @@ export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps
     },
     {
       id: 'chatbot',
-      title: 'Chatbot IA',
+      title: t('side_menu.menu_items.chatbot.title'),
       icon: 'brain.head.profile',
-      description: 'Analiza imágenes con inteligencia artificial',
+      description: t('side_menu.menu_items.chatbot.description'),
       color: '#FF6B35', // Orange color
     },
     {

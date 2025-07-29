@@ -801,6 +801,10 @@
         "title": "Settings",
         "description": "Preferences"
       },
+      "chatbot": {
+        "title": "AI Chatbot",
+        "description": "Analyze images with artificial intelligence"
+      },
       "subscription": {
         "title": "Subscribe",
         "description": "Access premium features",
@@ -871,5 +875,52 @@
         "expires": "Expires"
       }
     }
+  },
+  "chatbot": {
+    "welcome_message": "Hello! I'm your assistant specialized in work plan analysis. I can:\n\n📅 Analyze images and PDF documents of work schedules\n🔍 Extract work days, schedules and shifts\n🏖️ Identify free days and vacations\n👥 Detect multiple people and ask whose data to extract\n🧠 Remember the context of our conversation\n📊 Organize information clearly\n\n📸 Send a photo or 📄 PDF document of your work plan.\n💡 Type \"reset\" to start over.",
+    "welcome_title": "Work Plan AI Assistant",
+    "welcome_subtitle": "Hello! I'm your specialized assistant for work schedule analysis. I help you extract and organize information from your work plans.",
+    "feature_analyze": "Analyze images and PDF documents of work schedules",
+    "feature_extract": "Extract work days, schedules and specific shifts",
+    "feature_identify": "Identify free days, vacations and breaks",
+    "feature_detect": "Detect multiple people and select specific data",
+    "feature_remember": "Remember the context of our conversation",
+    "feature_organize": "Organize information clearly and structured",
+    "get_started": "How to get started?",
+    "action_photo": "Send a photo of your work plan",
+    "action_document": "Upload a PDF document of schedules",
+    "action_reset": "Write \"reset\" to start over",
+    "context_cleared": "✅ Context cleared. You can now send a new image or PDF document of work plan or make general queries.",
+    "analyzing_document": "Analyzing document...",
+    "generating_response": "Generating response...",
+    "placeholder_waiting": "Type the person's name...",
+    "placeholder_default": "Type your message here...",
+    "placeholder_processing": "Assistant is processing...",
+    "error_no_text": "I couldn't find readable text in this work plan image. Can you try with a clearer image?",
+    "pdf_not_supported": "The user uploaded a PDF document named \"{{documentName}}\" and wants to extract text. PDFs cannot be processed directly for OCR. Suggest converting the PDF to image or using specialized tools.",
+    "text_extracted_message": "📝 TEXT EXTRACTED FROM WORK PLAN:\n\n\"{{extractedText}}\"\n\n{{inputText}}\n\nNow I analyze this text to identify work days, schedules and vacations.",
+    "pdf_analysis_default": "Analyze this PDF work plan document and extract work days, free days and vacations",
+    "image_analysis_default": "Analyze this work plan and extract work days, free days and vacations",
+    "extract_specific_person": "Extract schedules specifically from \"{{personName}}\". {{personName}}",
+    "pdf_context_message": "\n\nContext: There is an active PDF document named \"{{documentName}}\" that was previously analyzed.",
+    "reset_commands": ["clear context", "reset", "new image"],
+    "detection_patterns": {
+      "person_selection_question": "Which person's schedules do you want me to extract?",
+      "multiple_names": "several names"
+    },
+    "permissions_needed": "Permissions Required",
+    "gallery_permission_message": "We need permissions to access your photo gallery.",
+    "camera_permission_message": "We need permissions to access your camera.",
+    "error_selecting_image": "Error selecting image",
+    "error_taking_photo": "Error taking photo",
+    "error_selecting_document": "Error selecting document",
+    "unknown_error": "Unknown error",
+    "select_file": "Select file",
+    "file_type_question": "What type of file do you want to analyze?",
+    "photo_gallery": "Photo gallery",
+    "take_photo": "Take photo",
+    "pdf_document": "PDF document",
+    "cancel": "Cancel",
+    "error_processing_request": "Sorry, there was an error processing your request. Please try again."
   }
 }

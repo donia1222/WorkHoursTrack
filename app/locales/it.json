@@ -653,6 +653,10 @@
         "title": "Impostazioni",
         "description": "Preferenze"
       },
+      "chatbot": {
+        "title": "Chatbot IA",
+        "description": "Analizza immagini con intelligenza artificiale"
+      },
       "subscription": {
         "title": "Abbonati",
         "description": "Accedi alle funzioni premium",
@@ -723,5 +727,52 @@
         "expires": "Scade"
       }
     }
+  },
+  "chatbot": {
+    "welcome_message": "Ciao! Sono il tuo assistente specializzato nell'analisi dei piani di lavoro. Posso:\n\n📅 Analizzare immagini e documenti PDF di orari di lavoro\n🔍 Estrarre giorni lavorativi, orari e turni\n🏖️ Identificare giorni liberi e vacanze\n👥 Rilevare più persone e chiedere di chi estrarre i dati\n🧠 Ricordare il contesto della nostra conversazione\n📊 Organizzare le informazioni chiaramente\n\n📸 Invia una foto o 📄 documento PDF del tuo piano di lavoro.\n💡 Scrivi \"reset\" per ricominciare.",
+    "welcome_title": "Assistente IA per Piani di Lavoro",
+    "welcome_subtitle": "Ciao! Sono il tuo assistente specializzato nell'analisi degli orari di lavoro. Ti aiuto a estrarre e organizzare le informazioni dai tuoi piani di lavoro.",
+    "feature_analyze": "Analizzare immagini e documenti PDF di orari di lavoro",
+    "feature_extract": "Estrarre giorni lavorativi, orari e turni specifici",
+    "feature_identify": "Identificare giorni liberi, vacanze e pause",
+    "feature_detect": "Rilevare più persone e selezionare dati specifici",
+    "feature_remember": "Ricordare il contesto della nostra conversazione",
+    "feature_organize": "Organizzare le informazioni in modo chiaro e strutturato",
+    "get_started": "Come iniziare?",
+    "action_photo": "Invia una foto del tuo piano di lavoro",
+    "action_document": "Carica un documento PDF di orari",
+    "action_reset": "Scrivi \"reset\" per ricominciare",
+    "context_cleared": "✅ Contesto cancellato. Ora puoi inviare una nuova immagine o documento PDF del piano di lavoro o fare domande generali.",
+    "analyzing_document": "Analisi del documento...",
+    "generating_response": "Generazione della risposta...",
+    "placeholder_waiting": "Scrivi il nome della persona...",
+    "placeholder_default": "Scrivi qui il tuo messaggio...",
+    "placeholder_processing": "L'assistente sta elaborando...",
+    "error_no_text": "Non sono riuscito a trovare testo leggibile in questa immagine del piano di lavoro. Puoi provare con un'immagine più chiara?",
+    "pdf_not_supported": "L'utente ha caricato un documento PDF chiamato \"{{documentName}}\" e vuole estrarre testo. I PDF non possono essere elaborati direttamente per l'OCR. Suggerisci di convertire il PDF in immagine o di usare strumenti specializzati.",
+    "text_extracted_message": "📝 TESTO ESTRATTO DAL PIANO DI LAVORO:\n\n\"{{extractedText}}\"\n\n{{inputText}}\n\nOra analizzo questo testo per identificare giorni lavorativi, orari e vacanze.",
+    "pdf_analysis_default": "Analizza questo documento PDF del piano di lavoro ed estrai giorni lavorativi, giorni liberi e vacanze",
+    "image_analysis_default": "Analizza questo piano di lavoro ed estrai giorni lavorativi, giorni liberi e vacanze",
+    "extract_specific_person": "Estrai gli orari specificamente da \"{{personName}}\". {{personName}}",
+    "pdf_context_message": "\n\nContesto: C'è un documento PDF attivo chiamato \"{{documentName}}\" che è stato analizzato precedentemente.",
+    "reset_commands": ["cancella contesto", "reset", "nuova immagine"],
+    "detection_patterns": {
+      "person_selection_question": "Di quale persona vuoi che estragga gli orari?",
+      "multiple_names": "diversi nomi"
+    },
+    "permissions_needed": "Autorizzazioni richieste",
+    "gallery_permission_message": "Abbiamo bisogno di autorizzazioni per accedere alla tua galleria fotografica.",
+    "camera_permission_message": "Abbiamo bisogno di autorizzazioni per accedere alla tua fotocamera.",
+    "error_selecting_image": "Errore nella selezione dell'immagine",
+    "error_taking_photo": "Errore nello scattare la foto",
+    "error_selecting_document": "Errore nella selezione del documento",
+    "unknown_error": "Errore sconosciuto",
+    "select_file": "Seleziona file",
+    "file_type_question": "Che tipo di file vuoi analizzare?",
+    "photo_gallery": "Galleria fotografica",
+    "take_photo": "Scatta foto",
+    "pdf_document": "Documento PDF",
+    "cancel": "Annulla",
+    "error_processing_request": "Spiacente, si è verificato un errore nell'elaborazione della tua richiesta. Riprova di nuovo."
   }
 }

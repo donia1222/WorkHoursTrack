@@ -673,6 +673,10 @@
         "title": "Einstellungen",
         "description": "Präferenzen"
       },
+      "chatbot": {
+        "title": "KI-Chatbot",
+        "description": "Bilder mit künstlicher Intelligenz analysieren"
+      },
       "subscription": {
         "title": "Abonnieren",
         "description": "Premium-Funktionen nutzen",
@@ -759,5 +763,52 @@
         "expires": "Läuft ab"
       }
     }
+  },
+  "chatbot": {
+    "welcome_message": "Hallo! Ich bin Ihr Assistent, spezialisiert auf die Analyse von Arbeitsplänen. Ich kann:\n\n📅 Bilder und PDF-Dokumente von Arbeitsplänen analysieren\n🔍 Arbeitstage, Arbeitszeiten und Schichten extrahieren\n🏖️ Freie Tage und Urlaub identifizieren\n👥 Mehrere Personen erkennen und fragen, wessen Daten extrahiert werden sollen\n🧠 Den Kontext unserer Unterhaltung merken\n📊 Informationen klar organisieren\n\n📸 Senden Sie ein Foto oder 📄 PDF-Dokument Ihres Arbeitsplans.\n💡 Schreiben Sie \"reset\" um neu zu beginnen.",
+    "welcome_title": "Arbeitsplan KI-Assistent",
+    "welcome_subtitle": "Hallo! Ich bin Ihr spezialisierter Assistent für die Analyse von Arbeitszeiten. Ich helfe Ihnen, Informationen aus Ihren Arbeitsplänen zu extrahieren und zu organisieren.",
+    "feature_analyze": "Bilder und PDF-Dokumente von Arbeitszeiten analysieren",
+    "feature_extract": "Arbeitstage, Zeitpläne und spezifische Schichten extrahieren",
+    "feature_identify": "Freie Tage, Urlaub und Pausen identifizieren",
+    "feature_detect": "Mehrere Personen erkennen und spezifische Daten auswählen",
+    "feature_remember": "Den Kontext unserer Unterhaltung merken",
+    "feature_organize": "Informationen klar und strukturiert organisieren",
+    "get_started": "Wie fange ich an?",
+    "action_photo": "Senden Sie ein Foto Ihres Arbeitsplans",
+    "action_document": "Laden Sie ein PDF-Dokument mit Zeitplänen hoch",
+    "action_reset": "Schreiben Sie \"reset\" um neu zu beginnen",
+    "context_cleared": "✅ Kontext gelöscht. Sie können jetzt ein neues Bild oder PDF-Dokument des Arbeitsplans senden oder allgemeine Fragen stellen.",
+    "analyzing_document": "Dokument wird analysiert...",
+    "generating_response": "Antwort wird generiert...",
+    "placeholder_waiting": "Geben Sie den Namen der Person ein...",
+    "placeholder_default": "Geben Sie hier Ihre Nachricht ein...",
+    "placeholder_processing": "Assistent verarbeitet...",
+    "error_no_text": "Ich konnte keinen lesbaren Text in diesem Arbeitsplanbild finden. Können Sie es mit einem klareren Bild versuchen?",
+    "pdf_not_supported": "Der Benutzer hat ein PDF-Dokument namens \"{{documentName}}\" hochgeladen und möchte Text extrahieren. PDFs können nicht direkt für OCR verarbeitet werden. Schlagen Sie vor, das PDF in ein Bild zu konvertieren oder spezialisierte Tools zu verwenden.",
+    "text_extracted_message": "📝 TEXT AUS ARBEITSPLAN EXTRAHIERT:\n\n\"{{extractedText}}\"\n\n{{inputText}}\n\nJetzt analysiere ich diesen Text, um Arbeitstage, Arbeitszeiten und Urlaub zu identifizieren.",
+    "pdf_analysis_default": "Analysieren Sie dieses PDF-Arbeitsplan-Dokument und extrahieren Sie Arbeitstage, freie Tage und Urlaub",
+    "image_analysis_default": "Analysieren Sie diesen Arbeitsplan und extrahieren Sie Arbeitstage, freie Tage und Urlaub",
+    "extract_specific_person": "Extrahieren Sie die Arbeitszeiten speziell von \"{{personName}}\". {{personName}}",
+    "pdf_context_message": "\n\nKontext: Es gibt ein aktives PDF-Dokument namens \"{{documentName}}\", das zuvor analysiert wurde.",
+    "reset_commands": ["kontext löschen", "reset", "neues bild"],
+    "detection_patterns": {
+      "person_selection_question": "Von welcher Person soll ich die Arbeitszeiten extrahieren?",
+      "multiple_names": "mehrere Namen"
+    },
+    "permissions_needed": "Berechtigungen erforderlich",
+    "gallery_permission_message": "Wir benötigen Berechtigungen für den Zugriff auf Ihre Fotogalerie.",
+    "camera_permission_message": "Wir benötigen Berechtigungen für den Zugriff auf Ihre Kamera.",
+    "error_selecting_image": "Fehler beim Auswählen des Bildes",
+    "error_taking_photo": "Fehler beim Aufnehmen des Fotos",
+    "error_selecting_document": "Fehler beim Auswählen des Dokuments",
+    "unknown_error": "Unbekannter Fehler",
+    "select_file": "Datei auswählen",
+    "file_type_question": "Welchen Dateityp möchten Sie analysieren?",
+    "photo_gallery": "Fotogalerie",
+    "take_photo": "Foto aufnehmen",
+    "pdf_document": "PDF-Dokument",
+    "cancel": "Abbrechen",
+    "error_processing_request": "Entschuldigung, es gab einen Fehler bei der Verarbeitung Ihrer Anfrage. Bitte versuchen Sie es erneut."
   }
 }

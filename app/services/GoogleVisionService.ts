@@ -1,15 +1,17 @@
 import * as FileSystem from 'expo-file-system';
+import { SupportedLanguage } from '../contexts/LanguageContext';
+import { VisionPrompts } from './VisionPrompts';
 
 export interface ImageAnalysisResult {
   text?: string;
-  labels?: Array<{
+  labels?: {
     description: string;
     score: number;
-  }>;
-  objects?: Array<{
+  }[];
+  objects?: {
     name: string;
     score: number;
-  }>;
+  }[];
   error?: string;
 }
 
@@ -17,12 +19,61 @@ export class GoogleVisionService {
   private static readonly API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
   private static readonly VISION_BASE_URL = 'https://vision.googleapis.com/v1/images:annotate';
   private static readonly GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
-  private static readonly GEMINI_VISION_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-vision:generateContent';
+  private static readonly GEMINI_VISION_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 
-  static async analyzeImage(imageUri: string, features: string[] = ['TEXT_DETECTION', 'LABEL_DETECTION']): Promise<ImageAnalysisResult> {
+  // Helper method to detect if the message is asking for specific person analysis
+  private static isSpecificPersonAnalysis(userMessage: string): boolean {
+    const specificAnalysisPatterns = [
+      'Extrae los horarios específicamente de',     // Spanish
+      'Extract schedules specifically from',        // English
+      'Extrahieren Sie die Arbeitszeiten speziell von', // German
+      'Extrayez les horaires spécifiquement de',   // French
+      'Estrai gli orari specificamente da'         // Italian
+    ];
+    
+    return specificAnalysisPatterns.some(pattern => userMessage.includes(pattern));
+  }
+
+  // Helper method to extract person name from the message
+  private static extractPersonName(userMessage: string): string {
+    // Pattern matching for different languages
+    const patterns = [
+      /Extrae los horarios específicamente de "([^"]+)"/,     // Spanish
+      /Extract schedules specifically from "([^"]+)"/,        // English  
+      /Extrahieren Sie die Arbeitszeiten speziell von "([^"]+)"/, // German
+      /Extrayez les horaires spécifiquement de "([^"]+)"/,   // French
+      /Estrai gli orari specificamente da "([^"]+)"/         // Italian
+    ];
+    
+    for (const pattern of patterns) {
+      const match = userMessage.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    
+    // Fallback: try to extract name after common words
+    const fallbackPatterns = [
+      /de "([^"]+)"/,  // Spanish/French fallback
+      /from "([^"]+)"/, // English fallback
+      /von "([^"]+)"/, // German fallback
+      /da "([^"]+)"/   // Italian fallback
+    ];
+    
+    for (const pattern of fallbackPatterns) {
+      const match = userMessage.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    
+    return '';
+  }
+
+  static async analyzeImage(imageUri: string, features: string[] = ['TEXT_DETECTION', 'LABEL_DETECTION'], language: SupportedLanguage = 'en'): Promise<ImageAnalysisResult> {
     try {
       if (!this.API_KEY) {
-        throw new Error('Google API key no configurada');
+        throw new Error(VisionPrompts.getErrorMessage('apiKey', language));
       }
 
       // Convertir imagen a base64
@@ -96,37 +147,37 @@ export class GoogleVisionService {
     }
   }
 
-  static async extractTextOnly(imageUri: string): Promise<string> {
-    const result = await this.analyzeImage(imageUri, ['TEXT_DETECTION']);
-    return result.text || result.error || 'No se detectó texto en la imagen';
+  static async extractTextOnly(imageUri: string, language: SupportedLanguage = 'en'): Promise<string> {
+    const result = await this.analyzeImage(imageUri, ['TEXT_DETECTION'], language);
+    return result.text || result.error || VisionPrompts.getPrompt('noTextDetected', language);
   }
 
-  static async getImageDescription(imageUri: string): Promise<string> {
+  static async getImageDescription(imageUri: string, language: SupportedLanguage = 'en'): Promise<string> {
     console.log('🔍 [VISION] Iniciando análisis completo de imagen...');
     
     // Hacer análisis completo: OCR + detección de objetos + etiquetas
-    const result = await this.analyzeImage(imageUri, ['TEXT_DETECTION', 'LABEL_DETECTION', 'OBJECT_LOCALIZATION']);
+    const result = await this.analyzeImage(imageUri, ['TEXT_DETECTION', 'LABEL_DETECTION', 'OBJECT_LOCALIZATION'], language);
     
     if (result.error) {
       console.error('❌ [VISION] Error en análisis:', result.error);
       return `Error: ${result.error}`;
     }
 
-    let description = '📋 **ANÁLISIS COMPLETO DE LA IMAGEN:**\n\n';
+    let description = VisionPrompts.getImageAnalysisTitle(language);
     
     // PRIMERO: Texto extraído (lo más importante para planes de trabajo)
     if (result.text && result.text.trim()) {
       console.log('📝 [VISION] Texto extraído:', result.text);
-      description += '📝 **TEXTO DETECTADO:**\n';
+      description += VisionPrompts.getTextDetectedTitle(language);
       description += `${result.text}\n\n`;
     } else {
       console.log('⚠️ [VISION] No se detectó texto legible');
-      description += '⚠️ **TEXTO:** No se detectó texto legible en la imagen\n\n';
+      description += VisionPrompts.getNoTextWarning(language);
     }
     
     // SEGUNDO: Elementos generales (contexto adicional)
     if (result.labels && result.labels.length > 0) {
-      description += '🏷️ **ELEMENTOS DETECTADOS:**\n';
+      description += VisionPrompts.getElementsDetectedTitle(language);
       result.labels
         .filter(label => label.score > 0.5)
         .slice(0, 5)
@@ -139,7 +190,7 @@ export class GoogleVisionService {
 
     // TERCERO: Objetos específicos
     if (result.objects && result.objects.length > 0) {
-      description += '🎯 **OBJETOS ESPECÍFICOS:**\n';
+      description += VisionPrompts.getSpecificObjectsTitle(language);
       result.objects
         .filter(obj => obj.score > 0.5)
         .slice(0, 3)
@@ -154,14 +205,14 @@ export class GoogleVisionService {
   }
 
   // Función para respuestas conversacionales con Gemini
-  static async getChatResponse(message: string): Promise<string> {
+  static async getChatResponse(message: string, language: SupportedLanguage = 'en'): Promise<string> {
     try {
       console.log('🤖 [GEMINI] Iniciando getChatResponse...');
       console.log('📝 [GEMINI] Mensaje recibido:', message.substring(0, 200) + '...');
       
       if (!this.API_KEY) {
         console.error('❌ [GEMINI] API key no configurada');
-        throw new Error('Google API key no configurada');
+        throw new Error(VisionPrompts.getErrorMessage('apiKey', language));
       }
       
       console.log('✅ [GEMINI] API key disponible');
@@ -171,21 +222,7 @@ export class GoogleVisionService {
           {
             parts: [
               {
-                text: `Eres un asistente especializado en análisis de planes de trabajo y horarios laborales. Tu función principal es:
-
-1. 📅 Analizar imágenes de calendarios, horarios y planes de trabajo
-2. 🔍 Extraer información sobre:
-   - Días de trabajo y horarios
-   - Días libres y descansos
-   - Vacaciones y períodos de ausencia
-   - Turnos y horarios específicos
-3. 👥 Detectar múltiples personas en planes de trabajo y preguntar específicamente de quién extraer los datos
-4. 📊 Presentar la información de forma clara y organizada
-5. 💼 Ayudar con consultas relacionadas con planificación laboral
-
-IMPORTANTE: Si detectas varios nombres en un plan de trabajo, SIEMPRE pregunta de cuál persona específica debe extraer los horarios antes de proceder.
-
-Responde siempre en español de manera clara y profesional.
+                text: `${VisionPrompts.getChatAssistantPrompt(language)}
 
 Usuario: ${message}`
               }
@@ -258,22 +295,22 @@ Usuario: ${message}`
       }
 
       console.log('🔄 [GEMINI] Retornando respuesta por defecto');
-      return 'Lo siento, no pude generar una respuesta en este momento.';
+      return VisionPrompts.getErrorMessage('noResponse', language);
     } catch (error) {
       console.error('Error en Gemini API:', error);
-      return 'Lo siento, hubo un problema al procesar tu mensaje. ¿Puedes intentar de nuevo?';
+      return VisionPrompts.getErrorMessage('processing', language);
     }
   }
 
   // Función para analizar imagen directamente con Gemini Vision
-  static async analyzeImageWithGeminiVision(imageUri: string, userMessage: string): Promise<string> {
+  static async analyzeImageWithGeminiVision(imageUri: string, userMessage: string, language: SupportedLanguage = 'en'): Promise<string> {
     try {
       console.log('👁️ [GEMINI-VISION] Iniciando análisis con Gemini Vision...');
       console.log('📱 [GEMINI-VISION] Image URI:', imageUri);
       console.log('💬 [GEMINI-VISION] User message:', userMessage);
       
       if (!this.API_KEY) {
-        throw new Error('Google API key no configurada');
+        throw new Error(VisionPrompts.getErrorMessage('apiKey', language));
       }
 
       // Convertir imagen a base64
@@ -287,53 +324,9 @@ Usuario: ${message}`
           {
             parts: [
               {
-                text: `Eres un experto en análisis de planes de trabajo y horarios laborales.
-
-ANÁLISIS DE PLAN DE TRABAJO - ${userMessage || 'Analiza este plan de trabajo'}
-
-INSTRUCCIONES ESPECÍFICAS:
-
-${userMessage.includes('Extrae los horarios específicamente de') ? 
-  `🎯 ANÁLISIS ESPECÍFICO: ${userMessage}
-
-Analiza la imagen y extrae SOLO los datos de la persona especificada:
-1. 📅 Días de trabajo de esa persona y sus horarios
-2. 🏖️ Días libres, descansos de esa persona (OFF, LIBRE, etc.)
-3. 🏝️ Vacaciones de esa persona
-4. 🕐 Horarios específicos de esa persona
-
-FORMATO DE RESPUESTA:
-- PERSONA: [nombre especificado]
-- DÍAS DE TRABAJO: [días y horarios específicos de esa persona]
-- DÍAS LIBRES: [días libres de esa persona]
-- VACACIONES: [vacaciones de esa persona]
-- OBSERVACIONES: [detalles específicos de esa persona]` 
-  : 
-  `PASO 1 - DETECCIÓN DE PERSONAS:
-🔍 Identifica si hay MÚLTIPLES NOMBRES/PERSONAS en este plan de trabajo.
-
-SI HAY VARIOS NOMBRES:
-- Lista todos los nombres que veas
-- Pregunta: "Veo varios nombres en este plan: [lista nombres]. ¿De cuál persona quieres que extraiga los horarios?"
-- NO extraigas datos hasta que el usuario especifique
-
-SI HAY UN SOLO NOMBRE O NINGÚN NOMBRE ESPECÍFICO:
-PASO 2 - EXTRACCIÓN DE DATOS:
-Analiza la imagen y extrae:
-1. 📅 Días de trabajo (lunes, martes, miércoles, etc.) y sus horarios
-2. 🏖️ Días libres, descansos (OFF, LIBRE, descanso, etc.)
-3. 🏝️ Vacaciones o períodos libres (VACACIONES, holidays, etc.)
-4. 🕐 Horarios específicos (8:00-16:00, 9:00-17:00, mañana, tarde, noche, etc.)
-5. 👤 Nombres de personas si están visibles
-
-FORMATO DE RESPUESTA:
-- PERSONA: [nombre si está visible, sino "Plan general"]
-- DÍAS DE TRABAJO: [lista días y horarios]
-- DÍAS LIBRES: [lista días de descanso]
-- VACACIONES: [períodos de vacaciones]
-- OBSERVACIONES: [turnos, notas especiales, etc.]`}
-
-Responde en español de forma clara y estructurada y comprimida mensajes no muy largos.`
+                text: this.isSpecificPersonAnalysis(userMessage)
+                  ? VisionPrompts.buildSpecificPersonPrompt(language, userMessage, this.extractPersonName(userMessage))
+                  : VisionPrompts.buildGeneralAnalysisPrompt(language, userMessage)
               },
               {
                 inline_data: {
@@ -382,55 +375,32 @@ Responde en español de forma clara y estructurada y comprimida mensajes no muy 
       }
 
       console.log('⚠️ [GEMINI-VISION] Respuesta vacía, usando fallback');
-      return 'No pude analizar la imagen del plan de trabajo. Por favor, intenta con una imagen más clara.';
+      return VisionPrompts.getErrorMessage('visionAnalysis', language);
 
     } catch (error) {
       console.error('❌ [GEMINI-VISION] Error:', error);
-      return 'Lo siento, hubo un problema al analizar la imagen con Gemini Vision. Intentaré con el método alternativo.';
+      return VisionPrompts.getErrorMessage('geminiVision', language);
     }
   }
 
   // Función para respuesta con contexto conversacional
-  static async getChatResponseWithContext(message: string, conversationHistory: any[], currentImage?: string): Promise<string> {
+  static async getChatResponseWithContext(message: string, conversationHistory: any[], currentImage?: string, language: SupportedLanguage = 'en'): Promise<string> {
     try {
       console.log('🧠 [CONTEXTO] Iniciando respuesta con contexto conversacional...');
       console.log('📚 [CONTEXTO] Historial de conversación:', conversationHistory);
       console.log('🖼️ [CONTEXTO] Imagen actual:', currentImage ? 'Sí' : 'No');
       
       if (!this.API_KEY) {
-        throw new Error('Google API key no configurada');
+        throw new Error(VisionPrompts.getErrorMessage('apiKey', language));
       }
 
-      // Crear contexto de conversación
-      let contextPrompt = `Eres un asistente especializado en análisis de planes de trabajo y horarios laborales.
-
-CONTEXTO DE LA CONVERSACIÓN:
-`;
-
-      // Agregar historial de conversación
-      if (conversationHistory.length > 0) {
-        contextPrompt += `\nHISTORIAL DE MENSAJES RECIENTES:\n`;
-        conversationHistory.forEach((msg) => {
-          const mediaIndicator = msg.hasImage ? ' [CON IMAGEN]' : msg.hasDocument ? ' [CON DOCUMENTO PDF]' : '';
-          contextPrompt += `${msg.role.toUpperCase()}: ${msg.content}${mediaIndicator}\n`;
-        });
-      }
-
-      // Si hay imagen actual, mencionarla
-      if (currentImage) {
-        contextPrompt += `\nIMAGEN ACTIVA: Hay una imagen de plan de trabajo que fue analizada previamente y sigue siendo relevante para las consultas del usuario.\n`;
-      }
-
-      contextPrompt += `\nINSTRUCCIONES:
-1. 🧠 Usa el contexto de la conversación para entender qué información necesita el usuario
-2. 📋 Si se mencionaron nombres en mensajes anteriores, recuerda cuáles eran
-3. 🔍 Si el usuario está pidiendo información específica de una persona mencionada antes, proporciona esa información
-4. 💬 Mantén coherencia con las respuestas anteriores
-5. 📸 Si hay una imagen activa, asume que las preguntas se refieren a esa imagen
-
-MENSAJE ACTUAL DEL USUARIO: ${message}
-
-Responde de manera coherente con el contexto de la conversación.`;
+      // Crear contexto de conversación usando VisionPrompts
+      const contextPrompt = VisionPrompts.buildContextPrompt(
+        language,
+        message,
+        conversationHistory,
+        !!currentImage
+      );
 
       const requestBody = {
         contents: [
@@ -495,15 +465,15 @@ Responde de manera coherente con el contexto de la conversación.`;
         }
       }
 
-      return 'Lo siento, no pude generar una respuesta en este momento.';
+      return VisionPrompts.getErrorMessage('noResponse', language);
     } catch (error) {
       console.error('❌ [CONTEXTO] Error:', error);
-      return 'Lo siento, hubo un problema al procesar tu mensaje con contexto.';
+      return VisionPrompts.getErrorMessage('processing', language);
     }
   }
 
   // Función para analizar documentos PDF
-  static async analyzePDFDocument(documentUri: string, documentName: string, userMessage: string): Promise<string> {
+  static async analyzePDFDocument(documentUri: string, documentName: string, userMessage: string, language: SupportedLanguage = 'en'): Promise<string> {
     try {
       console.log('📄 [PDF] Iniciando análisis de documento PDF...');
       console.log('📁 [PDF] Document URI:', documentUri);
@@ -511,7 +481,7 @@ Responde de manera coherente con el contexto de la conversación.`;
       console.log('💬 [PDF] User message:', userMessage);
       
       if (!this.API_KEY) {
-        throw new Error('Google API key no configurada');
+        throw new Error(VisionPrompts.getErrorMessage('apiKey', language));
       }
 
       // Convertir PDF a base64
@@ -525,57 +495,9 @@ Responde de manera coherente con el contexto de la conversación.`;
           {
             parts: [
               {
-                text: `Eres un experto en análisis de planes de trabajo y horarios laborales.
-
-ANÁLISIS DE DOCUMENTO PDF - ${userMessage || 'Analiza este documento'}
-
-El usuario subió un documento PDF llamado "${documentName}".
-
-INSTRUCCIONES ESPECÍFICAS:
-
-${userMessage.includes('Extrae los horarios específicamente de') ? 
-  `🎯 ANÁLISIS ESPECÍFICO: ${userMessage}
-
-Lee el documento PDF y extrae SOLO los datos de la persona especificada:
-1. 📅 Días de trabajo de esa persona y sus horarios
-2. 🏖️ Días libres, descansos de esa persona (OFF, LIBRE, etc.)
-3. 🏝️ Vacaciones de esa persona
-4. 🕐 Horarios específicos de esa persona
-
-FORMATO DE RESPUESTA:
-- DOCUMENTO: ${documentName}
-- PERSONA: [nombre especificado en el mensaje]
-- DÍAS DE TRABAJO: [días y horarios específicos de esa persona]
-- DÍAS LIBRES: [días libres de esa persona]
-- VACACIONES: [vacaciones de esa persona]
-- OBSERVACIONES: [detalles específicos de esa persona]` 
-  : 
-  `PASO 1 - DETECCIÓN DE PERSONAS:
-🔍 Lee el contenido del PDF e identifica si hay MÚLTIPLES NOMBRES/PERSONAS en este plan de trabajo.
-
-SI HAY VARIOS NOMBRES:
-- Lista todos los nombres que encuentres
-- Pregunta: "Veo varios nombres en este plan: [lista nombres]. ¿De cuál persona quieres que extraiga los horarios?"
-- NO extraigas datos hasta que el usuario especifique
-
-SI HAY UN SOLO NOMBRE O NINGÚN NOMBRE ESPECÍFICO:
-PASO 2 - EXTRACCIÓN DE DATOS:
-Lee el documento PDF y extrae:
-1. 📅 Días de trabajo (lunes, martes, miércoles, etc.) y sus horarios
-2. 🏖️ Días libres, descansos (OFF, LIBRE, descanso, etc.)
-3. 🏝️ Vacaciones o períodos libres (VACACIONES, holidays, etc.)
-4. 🕐 Horarios específicos (8:00-16:00, 9:00-17:00, mañana, tarde, noche, etc.)
-5. 👤 Nombres de personas si están visibles
-
-FORMATO DE RESPUESTA:
-- DOCUMENTO: ${documentName}
-- PERSONA: [nombre si está visible, sino "Plan general"]
-- DÍAS DE TRABAJO: [lista días y horarios]
-- DÍAS LIBRES: [lista días de descanso]
-- VACACIONES: [períodos de vacaciones]
-- OBSERVACIONES: [turnos, notas especiales, etc.]`}
-
-Responde en español de forma clara y estructurada.`
+                text: this.isSpecificPersonAnalysis(userMessage)
+                  ? VisionPrompts.buildSpecificPersonPrompt(language, userMessage, this.extractPersonName(userMessage))
+                  : VisionPrompts.buildGeneralAnalysisPrompt(language, userMessage || `Analiza este documento PDF llamado "${documentName}"`)
               },
               {
                 inline_data: {
@@ -633,17 +555,17 @@ Responde en español de forma clara y estructurada.`
   }
 
   // Función híbrida que usa Gemini Vision primero, y Vision API como fallback
-  static async analyzeWorkPlan(imageUri: string, userMessage: string): Promise<string> {
+  static async analyzeWorkPlan(imageUri: string, userMessage: string, language: SupportedLanguage = 'en'): Promise<string> {
     try {
       console.log('🔀 [HÍBRIDO] Iniciando análisis híbrido de plan de trabajo...');
       
       // MÉTODO 1: Intentar con Gemini Vision primero (más inteligente)
       console.log('👁️ [HÍBRIDO] Probando con Gemini Vision...');
       try {
-        const geminiResult = await this.analyzeImageWithGeminiVision(imageUri, userMessage);
+        const geminiResult = await this.analyzeImageWithGeminiVision(imageUri, userMessage, language);
         
         // Si Gemini Vision funcionó y no devolvió un mensaje de error
-        if (geminiResult && !geminiResult.includes('Lo siento, hubo un problema')) {
+        if (geminiResult && !geminiResult.includes(VisionPrompts.getErrorMessage('geminiVision', language))) {
           console.log('✅ [HÍBRIDO] Gemini Vision exitoso!');
           return geminiResult;
         }
@@ -654,16 +576,16 @@ Responde en español de forma clara y estructurada.`
 
       // MÉTODO 2: Fallback a Vision API + Gemini texto
       console.log('🔄 [HÍBRIDO] Usando Vision API + Gemini como fallback...');
-      return await this.analyzeImageWithContext(imageUri, userMessage);
+      return await this.analyzeImageWithContext(imageUri, userMessage, language);
 
     } catch (error) {
       console.error('❌ [HÍBRIDO] Error en análisis híbrido:', error);
-      return 'Lo siento, hubo un problema al analizar el plan de trabajo. Por favor, intenta con una imagen más clara o en mejor calidad.';
+      return VisionPrompts.getErrorMessage('visionAnalysis', language);
     }
   }
 
   // Función combinada para análisis de imagen + respuesta conversacional (Vision API)
-  static async analyzeImageWithContext(imageUri: string, userMessage: string): Promise<string> {
+  static async analyzeImageWithContext(imageUri: string, userMessage: string, language: SupportedLanguage = 'en'): Promise<string> {
     try {
       console.log('🖼️ [VISION-API] Iniciando analyzeImageWithContext...');
       console.log('📱 [VISION-API] Image URI:', imageUri);
@@ -671,13 +593,11 @@ Responde en español de forma clara y estructurada.`
       
       // Primero analizar la imagen
       console.log('🔍 [VISION-API] Analizando imagen...');
-      const imageAnalysis = await this.getImageDescription(imageUri);
+      const imageAnalysis = await this.getImageDescription(imageUri, language);
       console.log('📊 [VISION-API] Análisis de imagen completo:', imageAnalysis);
       
-      // Luego generar respuesta conversacional basada en el análisis y el mensaje del usuario
-      const contextMessage = `ANÁLISIS DE PLAN DE TRABAJO
-
-El usuario envió una imagen de un plan/horario de trabajo y escribió: "${userMessage}"
+      // Crear mensaje de contexto usando VisionPrompts
+      const contextMessage = `${VisionPrompts.getGeminiVisionPrompt(language, `El usuario envió una imagen de un plan/horario de trabajo y escribió: "${userMessage}"`)}
 
 INFORMACIÓN EXTRAÍDA DE LA IMAGEN:
 ${imageAnalysis}
@@ -686,41 +606,24 @@ INSTRUCCIONES PARA EL ANÁLISIS:
 
 IMPORTANTE: Analiza DIRECTAMENTE el texto extraído de la imagen (sección "TEXTO DETECTADO").
 
-PASO 1 - DETECCIÓN DE PERSONAS:
-🔍 Busca NOMBRES DE PERSONAS en el texto extraído.
+${VisionPrompts.getMultiplePersonsDetection(language)}
 
-SI HAY VARIOS NOMBRES:
-- Lista todos los nombres que encuentres en el texto
-- Pregunta: "Veo varios nombres en este plan: [lista nombres]. ¿De cuál persona quieres que extraiga los horarios?"
-- NO extraigas datos hasta que el usuario especifique
+${VisionPrompts.getSinglePersonAnalysis(language)}
 
-SI HAY UN SOLO NOMBRE O EL USUARIO YA ESPECIFICÓ:
-PASO 2 - EXTRACCIÓN DE DATOS:
-Analiza el TEXTO EXTRAÍDO para identificar:
-1. 📅 Días de trabajo (lunes, martes, etc.) y horarios
-2. 🏖️ Días libres, descansos, "OFF", "LIBRE", etc.
-3. 🏖️ Vacaciones, períodos libres, "VACACIONES", etc.
-4. 🕐 Horarios específicos (8:00-16:00, mañana, tarde, etc.)
-
-FORMATO DE RESPUESTA:
-- PERSONA: [nombre si está visible]
-- DÍAS DE TRABAJO: [extrae del texto]
-- DÍAS LIBRES: [extrae del texto]
-- VACACIONES: [extrae del texto] 
-- OBSERVACIONES: [detalles adicionales del texto]
+${VisionPrompts.getResponseFormat(language)}
 
 Si no hay texto legible, indícalo claramente.`;
 
       console.log('📝 [IMAGEN] Context message generado:', contextMessage);
       console.log('🚀 [IMAGEN] Enviando a Gemini para respuesta final...');
       
-      const finalResponse = await this.getChatResponse(contextMessage);
+      const finalResponse = await this.getChatResponse(contextMessage, language);
       console.log('✅ [IMAGEN] Respuesta final recibida:', finalResponse);
       
       return finalResponse;
     } catch (error) {
       console.error('Error en análisis combinado:', error);
-      return 'Lo siento, hubo un problema al analizar la imagen y generar una respuesta.';
+      return VisionPrompts.getErrorMessage('visionAnalysis', language);
     }
   }
 }
