@@ -46,6 +46,12 @@
       "auto_timer_desc": "Notifications when auto timer starts or pauses",
       "reminder_time": "Reminder Time",
       "reminder_time_desc": "Configure when to receive reminders before your work schedule"
+    },
+    "haptic": {
+      "title": "Haptic Feedback",
+      "description": "Control tactile vibration in buttons and app interactions",
+      "enabled": "Tactile Vibration",
+      "enabled_desc": "Activate vibration when you touch buttons and controls"
     }
   },
   "settings": {
@@ -127,6 +133,9 @@
     "auto_timer_enabled_title": "Auto-timer enabled",
     "auto_timer_enabled_message": "Auto-timer has been successfully enabled for this job.",
     "auto_timer_error": "Could not update auto-timer",
+    "auto_timer_location_required_title": "Location permissions required",
+    "auto_timer_location_required_message": "To use Auto Timer you need to grant location permissions to the app. This allows automatic detection when you arrive or leave work.",
+    "auto_timer_open_settings": "Open Settings",
     "delete_job": "  Delete Job",
     "cancel": "Cancel",
     "delete_confirm_title": "Delete job",
@@ -628,6 +637,18 @@
       "address_required_title": "Address Required",
       "address_required_message": "To enable automatic timer, you first need to add an address in the 'Basic' tab. The address is necessary for automatic location detection.",
       "stopped_no_time": "Timer stopped - no active time was running"
+    },
+    "premium": {
+      "title": "Premium Feature",
+      "message": "This feature requires a premium subscription. Would you like to subscribe now to access all advanced features?",
+      "cancel": "Cancel",
+      "subscribe": "Subscribe",
+      "features": {
+        "schedule": "Advanced schedule configuration",
+        "financial": "Salary and rates management",
+        "billing": "Professional billing system",
+        "auto": "Location-based automatic timer"
+      }
     }
   },
   "jobs_management": {
@@ -779,6 +800,75 @@
       "settings": {
         "title": "Settings",
         "description": "Preferences"
+      },
+      "subscription": {
+        "title": "Subscribe",
+        "description": "Access premium features",
+        "premium_title": "✅ Premium",
+        "premium_description": "Active subscription"
+      }
+    }
+  },
+  "subscription": {
+    "loading": "Loading subscriptions...",
+    "title": "Premium Subscription",
+    "subtitle": "Unlock all features and enhance your experience",
+    "features": {
+      "title": "Premium Features:",
+      "unlimited_access": "✓ Unlimited access to all features",
+      "advanced_reports": "✓ Advanced reports and statistics",
+      "data_export": "✓ Data export in multiple formats",
+      "no_ads": "✓ No ads",
+      "priority_support": "✓ Priority support"
+    },
+    "buttons": {
+      "restore": "Restore Purchases",
+      "cancel": "Cancel",
+      "continue": "Continue to App"
+    },
+    "processing": "Processing purchase...",
+    "success": {
+      "title": "Subscription Successful!",
+      "message": "You now have complete access to all premium features.",
+      "premium_badge": "PREMIUM",
+      "premium_title": "Active Subscription!",
+      "premium_subtitle": "Enjoy all premium features"
+    },
+    "restore_success": {
+      "title": "Purchases Restored",
+      "message": "Your purchases have been successfully restored."
+    },
+    "errors": {
+      "purchase_failed": "Could not complete subscription. Please try again.",
+      "restore_failed": "No previous purchases found to restore."
+    },
+    "buttons": {
+      "subscribe": "Subscribe Now",
+      "restore": "Restore Purchases", 
+      "cancel": "Cancel",
+      "continue": "Continue"
+    },
+    "active": {
+      "account_status": {
+        "title": "Account Status",
+        "active": "Premium Active",
+        "description": "Complete access to all features and priority support"
+      },
+      "user_info": {
+        "title": "User Information",
+        "user_id": "User ID",
+        "member_since": "Member since"
+      },
+      "subscriptions": {
+        "title": "Active Subscriptions",
+        "premium_plan": "Premium Plan",
+        "status_active": "Active"
+      },
+      "features": {
+        "title": "Premium Features",
+        "auto_renewal": "Auto-renewal",
+        "purchased": "Purchased",
+        "expires": "Expires"
       }
     }
   }

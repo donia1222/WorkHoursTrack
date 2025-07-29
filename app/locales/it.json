@@ -46,6 +46,12 @@
       "auto_timer_desc": "Notifiche quando il timer automatico si avvia o si mette in pausa",
       "reminder_time": "Orario Promemoria",
       "reminder_time_desc": "Configura quando ricevere promemoria prima del tuo orario di lavoro"
+    },
+    "haptic": {
+      "title": "Feedback Aptico",
+      "description": "Controlla la vibrazione tattile dei pulsanti e delle interazioni dell'app",
+      "enabled": "Vibrazione Tattile",
+      "enabled_desc": "Attiva la vibrazione quando tocchi pulsanti e controlli"
     }
   },
   "settings": {
@@ -491,6 +497,18 @@
       "address_required_title": "Indirizzo Richiesto",
       "address_required_message": "Per attivare il timer automatico, devi prima aggiungere un indirizzo nella scheda 'Base'. L'indirizzo è necessario per il rilevamento automatico della posizione.",
       "stopped_no_time": "Timer fermato - nessun tempo attivo era in corso"
+    },
+    "premium": {
+      "title": "Funzione Premium",
+      "message": "Questa funzione richiede un abbonamento premium. Vuoi abbonarti ora per accedere a tutte le funzionalità avanzate?",
+      "cancel": "Annulla",
+      "subscribe": "Abbonati",
+      "features": {
+        "schedule": "Configurazione avanzata degli orari",
+        "financial": "Gestione stipendi e tariffe",
+        "billing": "Sistema di fatturazione professionale",
+        "auto": "Timer automatico basato sulla posizione"
+      }
     }
   },
   "jobs_management": {
@@ -634,6 +652,75 @@
       "settings": {
         "title": "Impostazioni",
         "description": "Preferenze"
+      },
+      "subscription": {
+        "title": "Abbonati",
+        "description": "Accedi alle funzioni premium",
+        "premium_title": "✅ Premium",
+        "premium_description": "Abbonamento attivo"
+      }
+    }
+  },
+  "subscription": {
+    "loading": "Caricamento abbonamenti...",
+    "title": "Abbonamento Premium",
+    "subtitle": "Sblocca tutte le funzionalità e migliora la tua esperienza",
+    "features": {
+      "title": "Funzionalità Premium:",
+      "unlimited_access": "✓ Accesso illimitato a tutte le funzionalità",
+      "advanced_reports": "✓ Report avanzati e statistiche",
+      "data_export": "✓ Esportazione dati in più formati",
+      "no_ads": "✓ Senza pubblicità",
+      "priority_support": "✓ Supporto prioritario"
+    },
+    "buttons": {
+      "restore": "Ripristina Acquisti",
+      "cancel": "Annulla",
+      "continue": "Continua all'App"
+    },
+    "processing": "Elaborazione acquisto...",
+    "success": {
+      "title": "Abbonamento Riuscito!",
+      "message": "Ora hai accesso completo a tutte le funzionalità premium.",
+      "premium_badge": "PREMIUM",
+      "premium_title": "Abbonamento Attivo!",
+      "premium_subtitle": "Goditi tutte le funzionalità premium"
+    },
+    "restore_success": {
+      "title": "Acquisti Ripristinati",
+      "message": "I tuoi acquisti sono stati ripristinati con successo."
+    },
+    "errors": {
+      "purchase_failed": "Impossibile completare l'abbonamento. Riprova.",
+      "restore_failed": "Nessun acquisto precedente trovato da ripristinare."
+    },
+    "buttons": {
+      "subscribe": "Abbonati Ora",
+      "restore": "Ripristina Acquisti",
+      "cancel": "Annulla",
+      "continue": "Continua"
+    },
+    "active": {
+      "account_status": {
+        "title": "Stato Account",
+        "active": "Premium Attivo",
+        "description": "Accesso completo a tutte le funzionalità e supporto prioritario"
+      },
+      "user_info": {
+        "title": "Informazioni Utente",
+        "user_id": "ID Utente",
+        "member_since": "Membro dal"
+      },
+      "subscriptions": {
+        "title": "Abbonamenti Attivi",
+        "premium_plan": "Piano Premium",
+        "status_active": "Attivo"
+      },
+      "features": {
+        "title": "Funzionalità Premium",
+        "auto_renewal": "Rinnovo automatico",
+        "purchased": "Acquistato",
+        "expires": "Scade"
       }
     }
   }

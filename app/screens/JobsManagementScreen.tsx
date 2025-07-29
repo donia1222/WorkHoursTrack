@@ -355,6 +355,7 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
           setEditingJob(null);
         }}
         onNavigateToCalendar={() => onNavigate?.('calendar')}
+        onNavigateToSubscription={() => onNavigate?.('subscription')}
       />
     </SafeAreaView>
   );

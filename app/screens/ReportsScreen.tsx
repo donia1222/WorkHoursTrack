@@ -1889,6 +1889,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
             loadJobs();
           }}
           initialTab="billing"
+          onNavigateToSubscription={() => onNavigate('subscription')}
         />
       )}
     </SafeAreaView>

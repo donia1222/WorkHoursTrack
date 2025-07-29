@@ -1406,6 +1406,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         editingJob={selectedJobId ? jobs.find(job => job.id === selectedJobId) : null}
         onSave={handleJobFormSave}
         initialTab="auto"
+        onNavigateToSubscription={() => onNavigate('subscription')}
       />
     </SafeAreaView>
   );

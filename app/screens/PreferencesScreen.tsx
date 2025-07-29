@@ -10,6 +10,8 @@ import {
   TextInput,
   Alert,
   AppState,
+  Platform,
+  Modal,
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
@@ -17,11 +19,14 @@ import { BlurView } from 'expo-blur';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage, languageConfig, SupportedLanguage } from '../contexts/LanguageContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useHapticFeedback } from '../hooks/useHapticFeedback';
+import { useSubscription } from '../hooks/useSubscription';
 import NotificationService from '../services/NotificationService';
 
 interface PreferencesScreenProps {
   onClose?: () => void;
   scrollToNotifications?: boolean;
+  onNavigateToSubscription?: () => void;
 }
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
@@ -269,11 +274,127 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
   },
+  // Premium Modal Styles
+  premiumModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  premiumModalContainer: {
+    backgroundColor: colors.surface,
+    borderRadius: 24,
+    width: '100%',
+    maxWidth: 400,
+    overflow: 'hidden',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+  },
+  premiumModalHeader: {
+    padding: 24,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.separator,
+  },
+  premiumIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FFD700',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    elevation: 4,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  premiumModalTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  premiumModalSubtitle: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  premiumModalContent: {
+    padding: 24,
+  },
+  premiumFeaturesList: {
+    marginBottom: 24,
+  },
+  premiumFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  premiumFeatureIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  premiumFeatureText: {
+    fontSize: 16,
+    color: colors.text,
+    flex: 1,
+    fontWeight: '500',
+  },
+  premiumModalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  premiumCancelButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.separator,
+  },
+  premiumCancelButtonText: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  premiumSubscribeButton: {
+    flex: 2,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: '#FFD700',
+    elevation: 2,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  premiumSubscribeButtonText: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000',
+  },
 });
 
-export default function PreferencesScreen({ onClose, scrollToNotifications }: PreferencesScreenProps) {
+export default function PreferencesScreen({ onClose, scrollToNotifications, onNavigateToSubscription }: PreferencesScreenProps) {
   const { themeMode, setThemeMode, colors, isDark } = useTheme();
   const { language, setLanguage, t } = useLanguage();
+  const { hapticEnabled, updateHapticEnabled } = useHapticFeedback();
+  const { isSubscribed } = useSubscription();
   const { 
     settings: notificationSettings, 
     updateSettings: updateNotificationSettings, 
@@ -288,6 +409,7 @@ export default function PreferencesScreen({ onClose, scrollToNotifications }: Pr
   const [showReminderOptions, setShowReminderOptions] = useState(false);
   const [customMinutes, setCustomMinutes] = useState(notificationSettings.reminderMinutes?.toString() || '15');
   const [permissionStatus, setPermissionStatus] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   const handleThemeChange = (mode: 'auto' | 'light' | 'dark') => {
     setThemeMode(mode);
@@ -549,6 +671,49 @@ export default function PreferencesScreen({ onClose, scrollToNotifications }: Pr
           ))}
         </BlurView>
 
+        {/* Haptic Feedback Section */}
+        {Platform.OS === 'ios' && (
+          <TouchableOpacity 
+            style={[{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingHorizontal: Theme.spacing.lg,
+              paddingVertical: Theme.spacing.md,
+              marginVertical: Theme.spacing.sm,
+              backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+              borderRadius: Theme.borderRadius.md,
+            }]}
+            onPress={() => updateHapticEnabled(!hapticEnabled)}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: 'rgba(255, 45, 85, 0.15)',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+                <IconSymbol size={18} name="hand.tap.fill" color="#FF2D55" />
+              </View>
+              <Text style={{
+                fontSize: 16,
+                fontWeight: '600',
+                color: colors.text,
+              }}>
+                Haptic Feedback
+              </Text>
+            </View>
+            <Switch
+              value={hapticEnabled}
+              onValueChange={updateHapticEnabled}
+              trackColor={{ false: colors.separator, true: colors.primary }}
+              thumbColor={hapticEnabled ? '#FFFFFF' : colors.textSecondary}
+            />
+          </TouchableOpacity>
+        )}
+
         {/* Notifications Section */}
         <View ref={notificationsRef}>
           <BlurView 
@@ -581,87 +746,121 @@ export default function PreferencesScreen({ onClose, scrollToNotifications }: Pr
             </View>
           )}
           
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={() => updateNotificationSettings({ enabled: !notificationSettings.enabled })}
-          >
-            <View style={[styles.settingIcon, styles.notificationIconBg]}>
-              <IconSymbol size={20} name="bell.fill" color={colors.primary} />
-            </View>
-            <View style={styles.settingContent}>
-              <Text style={styles.settingTitle}>{t('preferences.notifications.general')}</Text>
-              <Text style={styles.settingDescription}>
-                {t('preferences.notifications.general_desc')}
-              </Text>
-            </View>
-            <Switch
-              value={notificationSettings.enabled}
-              onValueChange={(value) => updateNotificationSettings({ enabled: value })}
-              trackColor={{ false: colors.separator, true: colors.primary }}
-              thumbColor={notificationSettings.enabled ? '#FFFFFF' : colors.textSecondary}
-            />
-          </TouchableOpacity>
+<TouchableOpacity
+  style={styles.settingItem}
+  onPress={() => {
+    const newValue = !notificationSettings.enabled;
+    if (newValue && !isSubscribed) {
+      setShowPremiumModal(true);
+    } else {
+      updateNotificationSettings({ enabled: newValue });
+    }
+  }}
+>
+  <View style={[styles.settingIcon, styles.notificationIconBg]}>
+    <IconSymbol size={20} name="bell.fill" color={colors.primary} />
+  </View>
+  <View style={styles.settingContent}>
+    <Text style={styles.settingTitle}>General Notifications</Text>
 
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={() => updateNotificationSettings({ autoTimer: !notificationSettings.autoTimer })}
-          >
-            <View style={[styles.settingIcon, styles.autoIconBg]}>
-              <IconSymbol size={20} name="timer" color={colors.warning} />
-            </View>
-            <View style={styles.settingContent}>
-              <Text style={styles.settingTitle}>Timer Automático</Text>
-              <Text style={styles.settingDescription}>
-                Notificaciones cuando el timer automático se inicie o pause
-              </Text>
-            </View>
-            <Switch
-              value={notificationSettings.autoTimer}
-              onValueChange={(value) => updateNotificationSettings({ autoTimer: value })}
-              trackColor={{ false: colors.separator, true: colors.primary }}
-              thumbColor={notificationSettings.autoTimer ? '#FFFFFF' : colors.textSecondary}
-              disabled={!notificationSettings.enabled}
-            />
-          </TouchableOpacity>
+  </View>
+  <Switch
+    value={notificationSettings.enabled}
+    onValueChange={(value) => {
+      if (value && !isSubscribed) {
+        setShowPremiumModal(true);
+      } else {
+        updateNotificationSettings({ enabled: value });
+      }
+    }}
+    trackColor={{ false: colors.separator, true: colors.primary }}
+    thumbColor={notificationSettings.enabled ? '#FFFFFF' : colors.textSecondary}
+  />
+</TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={() => handleWorkRemindersToggle(!notificationSettings.workReminders)}
-          >
-            <View style={[styles.settingIcon, styles.reminderIconBg]}>
-              <IconSymbol size={20} name="clock.fill" color={colors.warning} />
-            </View>
-            <View style={styles.settingContent}>
-              <Text style={styles.settingTitle}>{t('preferences.notifications.schedule')}</Text>
-              <Text style={styles.settingDescription}>
-                {t('preferences.notifications.schedule_desc')}
-              </Text>
-            </View>
-            <Switch
-              value={notificationSettings.workReminders}
-              onValueChange={handleWorkRemindersToggle}
-              trackColor={{ false: colors.separator, true: colors.primary }}
-              thumbColor={notificationSettings.workReminders ? '#FFFFFF' : colors.textSecondary}
-              disabled={!notificationSettings.enabled}
-            />
-          </TouchableOpacity>
+<TouchableOpacity
+  style={styles.settingItem}
+  onPress={() => {
+    const newValue = !notificationSettings.autoTimer;
+    if (newValue && !isSubscribed) {
+      setShowPremiumModal(true);
+    } else {
+      updateNotificationSettings({ autoTimer: newValue });
+    }
+  }}
+>
+  <View style={[styles.settingIcon, styles.autoIconBg]}>
+    <IconSymbol size={20} name="timer" color={colors.warning} />
+  </View>
+  <View style={styles.settingContent}>
+    <Text style={styles.settingTitle}>Auto Timer</Text>
 
-          {/* Reminder Options - Solo se muestran cuando workReminders está activado */}
-          {showReminderOptions && notificationSettings.workReminders && (
-            <View style={styles.reminderOptions}>
-              <Text style={styles.settingTitle}>Tiempo de aviso</Text>
-              <Text style={styles.settingDescription}>
-                Configura cuándo recibir el recordatorio antes de tu horario de trabajo
-              </Text>
-              
+  </View>
+  <Switch
+    value={notificationSettings.autoTimer}
+    onValueChange={(value) => {
+      if (value && !isSubscribed) {
+        setShowPremiumModal(true);
+      } else {
+        updateNotificationSettings({ autoTimer: value });
+      }
+    }}
+    trackColor={{ false: colors.separator, true: colors.primary }}
+    thumbColor={notificationSettings.autoTimer ? '#FFFFFF' : colors.textSecondary}
+    disabled={!notificationSettings.enabled}
+  />
+</TouchableOpacity>
 
-            </View>
-          )}
+<TouchableOpacity
+  style={styles.settingItem}
+  onPress={() => {
+    const newValue = !notificationSettings.workReminders;
+    if (newValue && !isSubscribed) {
+      setShowPremiumModal(true);
+    } else {
+      handleWorkRemindersToggle(newValue);
+    }
+  }}
+>
+  <View style={[styles.settingIcon, styles.reminderIconBg]}>
+    <IconSymbol size={20} name="clock.fill" color={colors.warning} />
+  </View>
+  <View style={styles.settingContent}>
+    <Text style={styles.settingTitle}>Work Schedule Reminders</Text>
+ 
+  </View>
+  <Switch
+    value={notificationSettings.workReminders}
+    onValueChange={(value) => {
+      if (value && !isSubscribed) {
+        setShowPremiumModal(true);
+      } else {
+        handleWorkRemindersToggle(value);
+      }
+    }}
+    trackColor={{ false: colors.separator, true: colors.primary }}
+    thumbColor={notificationSettings.workReminders ? '#FFFFFF' : colors.textSecondary}
+    disabled={!notificationSettings.enabled}
+  />
+</TouchableOpacity>
 
+  
           {/* Test Notification Button */}
           <TouchableOpacity 
-            style={[styles.settingItem, { marginTop: 16, backgroundColor: 'rgba(0, 122, 255, 0.1)', borderRadius: 12 }]}
+            style={[
+              styles.settingItem, 
+              { 
+                marginTop: 16, 
+                backgroundColor: notificationSettings.enabled ? 'rgba(0, 122, 255, 0.1)' : 'rgba(142, 142, 147, 0.1)', 
+                borderRadius: 12,
+                opacity: notificationSettings.enabled ? 1 : 0.5
+              }
+            ]}
             onPress={async () => {
+              if (!notificationSettings.enabled) {
+                console.log('🚫 Test notification blocked - general notifications are disabled');
+                return;
+              }
               console.log('🧪 Test button pressed');
               console.log('📱 Notification settings:', notificationSettings);
               try {
@@ -672,9 +871,10 @@ export default function PreferencesScreen({ onClose, scrollToNotifications }: Pr
                 console.error('❌ Error sending test notification:', error);
               }
             }}
+            disabled={!notificationSettings.enabled}
           >
-            <View style={[styles.settingIcon, { backgroundColor: 'rgba(0, 122, 255, 0.15)' }]}>
-              <IconSymbol size={20} name="paperplane.fill" color={colors.primary} />
+            <View style={[styles.settingIcon, { backgroundColor: notificationSettings.enabled ? 'rgba(0, 122, 255, 0.15)' : 'rgba(142, 142, 147, 0.15)' }]}>
+              <IconSymbol size={20} name="paperplane.fill" color={notificationSettings.enabled ? colors.primary : colors.textSecondary} />
             </View>
             <View style={styles.settingContent}>
               <Text style={styles.settingTitle}>{t('preferences.notifications.test_button')}</Text>
@@ -691,6 +891,95 @@ export default function PreferencesScreen({ onClose, scrollToNotifications }: Pr
         </View>
       
       </ScrollView>
+
+      {/* Premium Modal */}
+      <Modal
+        visible={showPremiumModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowPremiumModal(false)}
+      >
+        <View style={styles.premiumModalOverlay}>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.premiumModalContainer}>
+            <View style={styles.premiumModalHeader}>
+              <View style={styles.premiumIcon}>
+                <IconSymbol size={40} name="crown.fill" color="#000" />
+              </View>
+              <Text style={styles.premiumModalTitle}>
+                {t('job_form.premium.title')}
+              </Text>
+              <Text style={styles.premiumModalSubtitle}>
+                {t('job_form.premium.message')}
+              </Text>
+            </View>
+
+            <View style={styles.premiumModalContent}>
+              <View style={styles.premiumFeaturesList}>
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="timer" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {t('job_form.premium.features.auto')}
+                  </Text>
+                </View>
+                
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="bell.fill" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    Notificaciones avanzadas
+                  </Text>
+                </View>
+
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="clock.fill" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {t('job_form.premium.features.schedule')}
+                  </Text>
+                </View>
+
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="dollarsign.circle.fill" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {t('job_form.premium.features.financial')}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.premiumModalActions}>
+                <TouchableOpacity 
+                  style={styles.premiumCancelButton}
+                  onPress={() => setShowPremiumModal(false)}
+                >
+                  <Text style={styles.premiumCancelButtonText}>
+                    {t('job_form.premium.cancel')}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.premiumSubscribeButton}
+                  onPress={() => {
+                    setShowPremiumModal(false);
+                    if (onNavigateToSubscription) {
+                      onNavigateToSubscription();
+                    }
+                  }}
+                >
+                  <Text style={styles.premiumSubscribeButtonText}>
+                    {t('job_form.premium.subscribe')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </BlurView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

@@ -13,6 +13,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useSubscription } from '../hooks/useSubscription';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -166,11 +167,46 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     ...Theme.typography.footnote,
     color: colors.textSecondary,
   },
+  // Estilos para el chip de suscripción
+  subscriptionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    marginHorizontal: Theme.spacing.md,
+    marginVertical: Theme.spacing.xs,
+    borderRadius: 20,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+  },
+  chipIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Theme.spacing.sm,
+  },
+  chipContent: {
+    flex: 1,
+  },
+  chipTitle: {
+    ...Theme.typography.callout,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  chipDescription: {
+    ...Theme.typography.caption1,
+    color: colors.textSecondary,
+    marginTop: 1,
+  },
 });
 
 export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps) {
   const { colors, isDark } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { isSubscribed } = useSubscription();
   const styles = getStyles(colors, isDark);
   
   const menuItems = [
@@ -210,6 +246,23 @@ export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps
       color: colors.textSecondary,
     },
   ];
+
+  // Elemento de suscripción separado para estilo diferente
+  const subscriptionItem = !isSubscribed ? {
+    id: 'subscription',
+    title: t('side_menu.menu_items.subscription.title'),
+    icon: 'crown.fill',
+    description: t('side_menu.menu_items.subscription.description'),
+    color: '#FFD700', // Gold color
+    isChip: true,
+  } : {
+    id: 'subscription',
+    title: t('side_menu.menu_items.subscription.premium_title'),
+    icon: 'crown.fill',
+    description: t('side_menu.menu_items.subscription.premium_description'),
+    color: '#28a745', // Green color
+    isChip: true,
+  };
   return (
     <Modal
       visible={visible}
@@ -270,6 +323,26 @@ export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps
                   <IconSymbol size={20} name="chevron.right" color={colors.textTertiary} />
                 </TouchableOpacity>
               ))}
+              
+              {/* Botón de suscripción como chip al final */}
+              <TouchableOpacity
+                style={styles.subscriptionChip}
+                onPress={() => {
+                  if (onNavigate) {
+                    onNavigate(subscriptionItem.id);
+                  }
+                  onClose();
+                }}
+              >
+                <View style={[styles.chipIconContainer, { backgroundColor: `${subscriptionItem.color}25` }]}>
+                  <IconSymbol size={16} name={subscriptionItem.icon as any} color={subscriptionItem.color} />
+                </View>
+                <View style={styles.chipContent}>
+                  <Text style={styles.chipTitle}>{subscriptionItem.title}</Text>
+                  <Text style={styles.chipDescription}>{subscriptionItem.description}</Text>
+                </View>
+              </TouchableOpacity>
+              
               {/* Padding bottom para asegurar que todo sea visible */}
               <View style={{ height: isSmallScreen ? 20 : 40 }} />
             </ScrollView>

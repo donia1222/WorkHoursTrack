@@ -12,12 +12,14 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Linking,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useSubscription } from '../hooks/useSubscription';
 import { BlurView } from 'expo-blur';
 import { Job, DEFAULT_COLORS } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
@@ -30,6 +32,8 @@ interface JobFormModalProps {
   onSave: (jobData: any) => void;
   initialTab?: 'basic' | 'schedule' | 'financial' | 'billing' | 'auto';
   onNavigateToCalendar?: () => void; // Optional callback to navigate to calendar
+  onNavigateToSubscription?: () => void; // Callback to navigate to subscription screen
+  isLocationEnabled?: boolean; // Para detectar si hay permisos de ubicación
 }
 
 
@@ -539,11 +543,177 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginTop: 8,
     fontStyle: 'italic',
   },
+  locationDisabledContainer: {
+    alignItems: 'center',
+    padding: 24,
+    backgroundColor: isDark ? 'rgba(255, 59, 48, 0.08)' : 'rgba(255, 59, 48, 0.05)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 59, 48, 0.2)' : 'rgba(255, 59, 48, 0.15)',
+  },
+  locationDisabledIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: isDark ? 'rgba(255, 59, 48, 0.15)' : 'rgba(255, 59, 48, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  locationDisabledTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  locationDisabledDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  settingsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  settingsButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  // Premium Modal Styles
+  premiumModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  premiumModalContainer: {
+    backgroundColor: colors.surface,
+    borderRadius: 24,
+    width: '100%',
+    maxWidth: 400,
+    overflow: 'hidden',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+  },
+  premiumModalHeader: {
+    padding: 24,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.separator,
+  },
+  premiumIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FFD700',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    elevation: 4,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  premiumModalTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  premiumModalSubtitle: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  premiumModalContent: {
+    padding: 24,
+  },
+  premiumFeaturesList: {
+    marginBottom: 24,
+  },
+  premiumFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  premiumFeatureIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  premiumFeatureText: {
+    fontSize: 16,
+    color: colors.text,
+    flex: 1,
+    fontWeight: '500',
+  },
+  premiumModalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  premiumCancelButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.separator,
+  },
+  premiumCancelButtonText: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  premiumSubscribeButton: {
+    flex: 2,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: '#FFD700',
+    elevation: 2,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  premiumSubscribeButtonText: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000',
+  },
 });
 
-export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar }: JobFormModalProps) {
+export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true }: JobFormModalProps) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
+  const { isSubscribed } = useSubscription();
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [previousAutoSchedule, setPreviousAutoSchedule] = useState<boolean | undefined>(undefined);
 
@@ -806,6 +976,16 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       console.warn('Error geocoding address:', error);
     }
     return null;
+  };
+
+  const handleTabPress = (tabKey: 'basic' | 'schedule' | 'financial' | 'billing' | 'auto') => {
+    const premiumTabs = ['schedule', 'financial', 'billing', 'auto'];
+    
+    if (premiumTabs.includes(tabKey) && !isSubscribed) {
+      setCurrentTab(tabKey);
+    } else {
+      setCurrentTab(tabKey);
+    }
   };
 
   const handleSave = async () => {
@@ -1249,10 +1429,14 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             style={[styles.switch, formData.schedule?.enabled && styles.switchActive]}
             onPress={() => {
               const newEnabled = !formData.schedule?.enabled;
-              updateNestedData('schedule', 'enabled', newEnabled);
-              // If disabling schedule, also disable auto schedule
-              if (!newEnabled) {
-                updateNestedData('schedule', 'autoSchedule', false);
+              if (newEnabled && !isSubscribed) {
+                setShowPremiumModal(true);
+              } else {
+                updateNestedData('schedule', 'enabled', newEnabled);
+                // If disabling schedule, also disable auto schedule
+                if (!newEnabled) {
+                  updateNestedData('schedule', 'autoSchedule', false);
+                }
               }
             }}
           >
@@ -1385,7 +1569,14 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           </View>
           <TouchableOpacity
             style={[styles.switch, formData.schedule?.autoSchedule && styles.switchActive]}
-            onPress={() => updateNestedData('schedule', 'autoSchedule', !formData.schedule?.autoSchedule)}
+            onPress={() => {
+              const newValue = !formData.schedule?.autoSchedule;
+              if (newValue && !isSubscribed) {
+                setShowPremiumModal(true);
+              } else {
+                updateNestedData('schedule', 'autoSchedule', newValue);
+              }
+            }}
           >
             <View style={[styles.switchThumb, formData.schedule?.autoSchedule && styles.switchThumbActive]} />
           </TouchableOpacity>
@@ -1413,7 +1604,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             <Text style={styles.label}>{t('job_form.financial.enabled')}</Text>
             <Switch
               value={formData.salary?.enabled}
-              onValueChange={(value) => updateNestedData('salary', 'enabled', value)}
+              onValueChange={(value) => {
+                if (value && !isSubscribed) {
+                  setShowPremiumModal(true);
+                } else {
+                  updateNestedData('salary', 'enabled', value)
+                }
+              }}
               trackColor={{ false: colors.separator, true: colors.primary }}
               thumbColor="#FFFFFF"
             />
@@ -1527,7 +1724,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             <Text style={styles.label}>{t('job_form.billing.enabled')}</Text>
             <Switch
               value={formData.billing?.enabled}
-              onValueChange={(value) => updateNestedData('billing', 'enabled', value)}
+              onValueChange={(value) => {
+                if (value && !isSubscribed) {
+                  setShowPremiumModal(true);
+                } else {
+                  updateNestedData('billing', 'enabled', value)
+                }
+              }}
               trackColor={{ false: colors.separator, true: colors.primary }}
               thumbColor="#FFFFFF"
             />
@@ -1822,6 +2025,10 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     };
 
     const handleAutoTimerToggle = (value: boolean) => {
+      if (!isLocationEnabled) {
+        // No hacer nada si no hay permisos de ubicación
+        return;
+      }
       if (value && !hasAddress()) {
         Alert.alert(
           t('job_form.auto_timer.address_required_title'),
@@ -1833,26 +2040,59 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       updateNestedData('autoTimer', 'enabled', value);
     };
 
+    const openSettings = () => {
+      Linking.openSettings();
+    };
+
     return (
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
           <Text style={styles.sectionTitle}>{t('job_form.auto_timer.title')}</Text>
           <Text style={styles.sectionSubtitle}>{t('job_form.auto_timer.subtitle')}</Text>
 
-          <View style={styles.inputGroup}>
-            <View style={styles.switchRow}>
-              <View style={styles.switchContent}>
-                <Text style={styles.label}>{t('job_form.auto_timer.enabled')}</Text>
-                <Text style={styles.labelDescription}>{t('job_form.auto_timer.enabled_desc')}</Text>
+          {!isLocationEnabled ? (
+            <View style={styles.locationDisabledContainer}>
+              <View style={styles.locationDisabledIcon}>
+                <IconSymbol size={32} name="location.slash" color={colors.error} />
               </View>
-              <Switch
-                value={formData.autoTimer?.enabled || false}
-                onValueChange={handleAutoTimerToggle}
-                trackColor={{ false: colors.separator, true: colors.primary + '40' }}
-                thumbColor={formData.autoTimer?.enabled ? colors.primary : colors.textTertiary}
-              />
+              <Text style={styles.locationDisabledTitle}>
+                {t('maps.auto_timer_location_required_title')}
+              </Text>
+              <Text style={styles.locationDisabledDescription}>
+                {t('maps.auto_timer_location_required_message')}
+              </Text>
+              <TouchableOpacity 
+                style={styles.settingsButton}
+                onPress={openSettings}
+              >
+                <IconSymbol size={18} name="gear" color="#FFFFFF" />
+                <Text style={styles.settingsButtonText}>
+                  {t('maps.auto_timer_open_settings')}
+                </Text>
+              </TouchableOpacity>
             </View>
-          </View>
+          ) : (
+            <View style={styles.inputGroup}>
+              <View style={styles.switchRow}>
+                <View style={styles.switchContent}>
+                  <Text style={styles.label}>{t('job_form.auto_timer.enabled')}</Text>
+                  <Text style={styles.labelDescription}>{t('job_form.auto_timer.enabled_desc')}</Text>
+                </View>
+                <Switch
+                  value={formData.autoTimer?.enabled || false}
+                  onValueChange={(value) => {
+                    if (value && !isSubscribed) {
+                      setShowPremiumModal(true);
+                    } else {
+                      handleAutoTimerToggle(value);
+                    }
+                  }}
+                  trackColor={{ false: colors.separator, true: colors.primary + '40' }}
+                  thumbColor={formData.autoTimer?.enabled ? colors.primary : colors.textTertiary}
+                />
+              </View>
+            </View>
+          )}
 
         {formData.autoTimer?.enabled && (
           <>
@@ -2017,7 +2257,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     styles.tab,
                     isActive && styles.tabActive,
                   ]}
-                  onPress={() => setCurrentTab(tab.key)}
+                  onPress={() => handleTabPress(tab.key)}
                 >
                   <IconSymbol
                     size={20}
@@ -2057,6 +2297,96 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           {currentTab === 'auto' && renderAutoTab()}
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      {/* Premium Modal */}
+      <Modal
+        visible={showPremiumModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowPremiumModal(false)}
+      >
+        <View style={styles.premiumModalOverlay}>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.premiumModalContainer}>
+            <View style={styles.premiumModalHeader}>
+              <View style={styles.premiumIcon}>
+                <IconSymbol size={40} name="crown.fill" color="#000" />
+              </View>
+              <Text style={styles.premiumModalTitle}>
+                {t('job_form.premium.title')}
+              </Text>
+              <Text style={styles.premiumModalSubtitle}>
+                {t('job_form.premium.message')}
+              </Text>
+            </View>
+
+            <View style={styles.premiumModalContent}>
+              <View style={styles.premiumFeaturesList}>
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="clock.fill" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {t('job_form.premium.features.schedule')}
+                  </Text>
+                </View>
+                
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="dollarsign.circle.fill" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {t('job_form.premium.features.financial')}
+                  </Text>
+                </View>
+
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="chart.bar.fill" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {t('job_form.premium.features.billing')}
+                  </Text>
+                </View>
+
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="timer" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {t('job_form.premium.features.auto')}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.premiumModalActions}>
+                <TouchableOpacity 
+                  style={styles.premiumCancelButton}
+                  onPress={() => setShowPremiumModal(false)}
+                >
+                  <Text style={styles.premiumCancelButtonText}>
+                    {t('job_form.premium.cancel')}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.premiumSubscribeButton}
+                  onPress={() => {
+                    setShowPremiumModal(false);
+                    onClose();
+                    if (onNavigateToSubscription) {
+                      onNavigateToSubscription();
+                    }
+                  }}
+                >
+                  <Text style={styles.premiumSubscribeButtonText}>
+                    {t('job_form.premium.subscribe')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </BlurView>
+        </View>
+      </Modal>
     </Modal>
   );
 }

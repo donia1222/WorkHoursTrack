@@ -3,13 +3,16 @@ import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 
 type Props = {
   message?: string;
+  showMessage?: boolean;
 };
 
-export default function Loading({ message = 'Cargando...' }: Props) {
+export default function Loading({ message = 'Cargando...', showMessage = true }: Props) {
   return (
     <View style={styles.center}>
-      <ActivityIndicator size="large" />
-      <Text style={styles.text}>{message}</Text>
+      <ActivityIndicator size="large" color="#007AFF" />
+      {showMessage && message && (
+        <Text style={styles.text}>{message}</Text>
+      )}
     </View>
   );
 }

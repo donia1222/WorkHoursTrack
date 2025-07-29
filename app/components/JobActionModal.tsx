@@ -158,25 +158,9 @@ export default function JobActionModal({
                       onPress={() => onAction('edit')}
                     >
                       <IconSymbol size={24} name="gear" color={colors.textSecondary} />
-                      <View style={styles.actionModalButtonTextContainer}>
-                        <Text style={styles.actionModalButtonText}>
-                          {t('maps.edit_job')}
-                        </Text>
-                        {showAutoTimer && (
-                          <View style={styles.autoTimerSwitchContainer}>
-                            <Text style={styles.autoTimerSwitchLabel}>
-                              {t('maps.auto_timer')}
-                            </Text>
-                            <Switch
-                              value={autoTimerEnabled}
-                              onValueChange={onAutoTimerToggle}
-                              trackColor={{ false: colors.separator, true: colors.success + '40' }}
-                              thumbColor={autoTimerEnabled ? colors.success : colors.textTertiary}
-                              style={styles.autoTimerSwitch}
-                            />
-                          </View>
-                        )}
-                      </View>
+                      <Text style={styles.actionModalButtonText}>
+                        {t('maps.edit_job')}
+                      </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -323,7 +307,7 @@ const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-    marginLeft: 12,
+    marginLeft: 16,
     flex: 1,
   },
   actionModalButtonTextContainer: {

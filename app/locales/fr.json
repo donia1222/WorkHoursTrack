@@ -46,6 +46,12 @@
       "auto_timer_desc": "Notifications quand le minuteur automatique démarre ou se met en pause",
       "reminder_time": "Heure de Rappel",
       "reminder_time_desc": "Configurez quand recevoir des rappels avant votre horaire de travail"
+    },
+    "haptic": {
+      "title": "Retour Haptique",
+      "description": "Contrôlez la vibration tactile des boutons et interactions de l'application",
+      "enabled": "Vibration Tactile",
+      "enabled_desc": "Activez la vibration lorsque vous touchez les boutons et contrôles"
     }
   },
   "settings": {
@@ -491,6 +497,18 @@
       "address_required_title": "Adresse Requise",
       "address_required_message": "Pour activer le minuteur automatique, vous devez d'abord ajouter une adresse dans l'onglet 'De base'. L'adresse est nécessaire pour la détection automatique par localisation.",
       "stopped_no_time": "Minuteur arrêté - aucun temps actif n'était en cours"
+    },
+    "premium": {
+      "title": "Fonction Premium",
+      "message": "Cette fonction nécessite un abonnement premium. Voulez-vous vous abonner maintenant pour accéder à toutes les fonctionnalités avancées ?",
+      "cancel": "Annuler",
+      "subscribe": "S'abonner",
+      "features": {
+        "schedule": "Configuration avancée des horaires",
+        "financial": "Gestion des salaires et tarifs",
+        "billing": "Système de facturation professionnel",
+        "auto": "Timer automatique basé sur la localisation"
+      }
     }
   },
   "jobs_management": {
@@ -617,6 +635,12 @@
       "settings": {
         "title": "Paramètres",
         "description": "Préférences"
+      },
+      "subscription": {
+        "title": "S'abonner",
+        "description": "Accéder aux fonctions premium",
+        "premium_title": "✅ Premium",
+        "premium_description": "Abonnement actif"
       }
     },
     "notifications": {
@@ -643,6 +667,69 @@
       "export_desc": "Créer une sauvegarde de tous vos emplois, heures et paramètres",
       "import_title": "Importer fichier .json",
       "import_desc": "Restaurer les données à partir d'un fichier de sauvegarde"
+    }
+  },
+  "subscription": {
+    "loading": "Chargement des abonnements...",
+    "title": "Abonnement Premium",
+    "subtitle": "Débloquez toutes les fonctionnalités et améliorez votre expérience",
+    "features": {
+      "title": "Fonctionnalités Premium :",
+      "unlimited_access": "✓ Accès illimité à toutes les fonctionnalités",
+      "advanced_reports": "✓ Rapports avancés et statistiques",
+      "data_export": "✓ Exportation de données en plusieurs formats",
+      "no_ads": "✓ Sans publicités",
+      "priority_support": "✓ Support prioritaire"
+    },
+    "buttons": {
+      "restore": "Restaurer les Achats",
+      "cancel": "Annuler",
+      "continue": "Continuer vers l'App"
+    },
+    "processing": "Traitement de l'achat...",
+    "success": {
+      "title": "Abonnement Réussi !",
+      "message": "Vous avez maintenant un accès complet à toutes les fonctionnalités premium.",
+      "premium_badge": "PREMIUM",
+      "premium_title": "Abonnement Actif !",
+      "premium_subtitle": "Profitez de toutes les fonctionnalités premium"
+    },
+    "restore_success": {
+      "title": "Achats Restaurés",
+      "message": "Vos achats ont été restaurés avec succès."
+    },
+    "errors": {
+      "purchase_failed": "Impossible de terminer l'abonnement. Veuillez réessayer.",
+      "restore_failed": "Aucun achat précédent trouvé à restaurer."
+    },
+    "buttons": {
+      "subscribe": "S'abonner Maintenant",
+      "restore": "Restaurer les Achats",
+      "cancel": "Annuler",
+      "continue": "Continuer"
+    },
+    "active": {
+      "account_status": {
+        "title": "Statut du Compte",
+        "active": "Premium Actif",
+        "description": "Accès complet à toutes les fonctionnalités et support prioritaire"
+      },
+      "user_info": {
+        "title": "Informations Utilisateur",
+        "user_id": "ID Utilisateur",
+        "member_since": "Membre depuis"
+      },
+      "subscriptions": {
+        "title": "Abonnements Actifs",
+        "premium_plan": "Plan Premium",
+        "status_active": "Actif"
+      },
+      "features": {
+        "title": "Fonctionnalités Premium",
+        "auto_renewal": "Renouvellement automatique",
+        "purchased": "Acheté",
+        "expires": "Expire"
+      }
     }
   }
 }

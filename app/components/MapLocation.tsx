@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import MapView, { Marker, Circle } from 'react-native-maps';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, Modal, Dimensions, Switch } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming, Easing } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+// Removed gesture handler imports - AutoTimer is now fixed
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -498,6 +498,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
+    marginLeft: 12,
   },
   actionModalButtonTextContainer: {
     flex: 1,
@@ -586,32 +587,34 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   autoTimerStatusOverlay: {
     position: 'absolute',
-    bottom: 140,
-    left: 16,
+    top: 0,
+    left: 0,
+    right: 0,
     zIndex: 1000,
-    width: screenWidth - 32, // Ancho fijo para que sea consistente
   },
   disableButton: {
-    width: 32,
-    height: 32,
+    width: 24,
+    height: 24,
     backgroundColor: '#FF3B30',
-    borderRadius: 16,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.8)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
   },
   autoTimerStatusCard: {
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 24,
+    padding: 12,
     borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: isDark ? 0.3 : 0.12,
     shadowRadius: 12,
     elevation: 8,
   },
@@ -619,72 +622,95 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 6,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
     gap: 8,
   },
   autoTimerStatusTitle: {
-    ...Theme.typography.headline,
+    fontSize: 16,
     color: colors.text,
     fontWeight: '600',
+    letterSpacing: 0.2,
   },
   autoTimerJobRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
-    gap: 10,
+    paddingHorizontal: 10,
+    marginBottom: 6,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
+    borderRadius: 20,
+    borderWidth: 0.5,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+    gap: 8,
     flex: 1,
-    minWidth: 0, // Ensure proper flex behavior
+    minWidth: 0,
   },
   autoTimerJobDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.9)',
   },
   autoTimerJobName: {
-    ...Theme.typography.footnote,
+    fontSize: 15,
     color: colors.text,
     flex: 1,
     fontWeight: '500',
-    minWidth: 0, // Allow text to shrink properly
-    flexShrink: 1, // Allow text to shrink
+    minWidth: 0,
+    flexShrink: 1,
     textAlign: 'left',
   },
   autoTimerJobStatus: {
     ...Theme.typography.caption2,
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
   autoTimerProgressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginTop: 8,
+    gap: 8,
+    marginTop: 4,
+    paddingHorizontal: 4,
   },
   autoTimerProgressBar: {
     flex: 1,
-    height: 6,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-    borderRadius: 3,
+    height: 4,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    borderRadius: 2,
     overflow: 'hidden',
   },
   autoTimerProgressFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 2,
   },
   autoTimerCountdown: {
-    ...Theme.typography.caption2,
-    color: colors.textSecondary,
-    fontWeight: '600',
-    minWidth: 30,
+    fontSize: 16,
+    color: colors.text,
+    fontWeight: '700',
+    minWidth: 28,
     textAlign: 'center',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    overflow: 'hidden',
   },
   activeTimerText: {
-    ...Theme.typography.caption2,
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '600',
     color: colors.success,
-    marginTop: 4,
+    marginTop: 2,
+    backgroundColor: isDark ? 'rgba(52, 199, 89, 0.1)' : 'rgba(52, 199, 89, 0.08)',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    textAlign: 'center',
+    alignSelf: 'flex-start',
   },
   minimizedAutoTimer: {
     width: 90,
@@ -711,6 +737,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showJobForm, setShowJobForm] = useState(false);
+  const [jobFormInitialTab, setJobFormInitialTab] = useState<'basic' | 'schedule' | 'financial' | 'billing' | 'auto'>('basic');
   
   // Animation values for modal
   const modalScale = useSharedValue(0);
@@ -733,9 +760,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [isAutoTimerMinimized, setIsAutoTimerMinimized] = useState(false);
   const mapRef = useRef<MapView>(null);
   
-  // Posiciones de arrastre para AutoTimer
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
+  // AutoTimer position - fixed, no dragging
   
   // Animaciones para minimizar/maximizar
   const scaleValue = useSharedValue(1);
@@ -744,38 +769,11 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const styles = getStyles(colors, isDark);
 
   // Gestión del arrastre para AutoTimer (funciona para ambos estados)
-  const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      const newX = event.translationX;
-      const newY = event.translationY;
-      
-      if (isAutoTimerMinimized) {
-        // Límites para el icono minimizado (más pequeño)
-        const maxX = screenWidth - 90; // Ancho del icono minimizado
-        const maxY = screenHeight - 90; // Alto del icono minimizado
-        
-        translateX.value = Math.max(-screenWidth/2 + 45, Math.min(screenWidth/2 - 45, newX));
-        translateY.value = Math.max(-screenHeight/2 + 90, Math.min(screenHeight/2 - 90, newY));
-      } else {
-        // Límites para el componente expandido
-        const maxX = screenWidth - 200; // Ancho estimado del componente
-        const maxY = screenHeight - 200; // Alto estimado del componente
-        
-        translateX.value = Math.max(-150, Math.min(maxX - 150, newX));
-        translateY.value = Math.max(-100, Math.min(maxY - 200, newY));
-      }
-    })
-    .onEnd(() => {
-      // Efecto de rebote suave al finalizar (para ambos estados)
-      translateX.value = withSpring(translateX.value);
-      translateY.value = withSpring(translateY.value);
-    });
+  // Removed panGesture - AutoTimer is now fixed
 
   const animatedAutoTimerStyle = useAnimatedStyle(() => {
     return {
       transform: [
-        { translateX: translateX.value },
-        { translateY: translateY.value },
         { scale: scaleValue.value * pulseAnimation.value },
       ],
     };
@@ -784,13 +782,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   // Efecto para la animación de pulso cuando está minimizado
   useEffect(() => {
     if (isAutoTimerMinimized) {
-      // Solo posicionar automáticamente la primera vez que se minimiza
-      // Si ya tiene una posición personalizada, mantenerla
-      if (translateX.value === 0 && translateY.value === 0) {
-        const position = getPositionInsideJobCircle();
-        translateX.value = withSpring(position.x);
-        translateY.value = withSpring(position.y);
-      }
+      // AutoTimer is now fixed in footer - no positioning needed
       
       // Iniciar animación de pulso
       pulseAnimation.value = withRepeat(
@@ -1201,7 +1193,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
     setSelectedJob(null);
   };
 
-  const handleJobAction = (job: Job, action: 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map') => {
+  const handleJobAction = (job: Job, action: 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map' | 'edit-auto') => {
     if (action === 'statistics') {
       navigateTo('reports', job);
       closeModal();
@@ -1263,6 +1255,12 @@ export default function MapLocation({ location, onNavigate }: Props) {
         break;
       case 'edit':
         closeModal();
+        setJobFormInitialTab('basic');
+        handleEditJob(job);
+        break;
+      case 'edit-auto':
+        closeModal();
+        setJobFormInitialTab('auto');
         handleEditJob(job);
         break;
     }
@@ -1282,15 +1280,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
   };
 
   const handleAutoTimerToggle = async (job: Job, value: boolean) => {
-    if (value && !hasJobAddress(job)) {
-      Alert.alert(
-        t('maps.auto_timer_address_required_title'),
-        t('maps.auto_timer_address_required_message'),
-        [{ text: 'OK', style: 'default' }]
-      );
-      return;
-    }
-
     try {
       const updatedJob = {
         ...job,
@@ -1308,10 +1297,15 @@ export default function MapLocation({ location, onNavigate }: Props) {
       await loadJobs();
       
       if (value) {
-        Alert.alert(
-          t('maps.auto_timer_enabled_title'),
-          t('maps.auto_timer_enabled_message')
-        );
+        // Auto-navegar al lugar del trabajo cuando se habilita auto timer
+        if (job.location?.latitude && job.location?.longitude && mapRef.current) {
+          mapRef.current.animateToRegion({
+            latitude: job.location.latitude,
+            longitude: job.location.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }, 1000);
+        }
       }
     } catch (error) {
       console.error('Error updating auto-timer:', error);
@@ -1434,7 +1428,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
       {/* Auto Timer Status Indicator */}
       {autoTimerStatus && autoTimerStatus.state !== 'inactive' && jobs.some(job => job.autoTimer?.enabled) && (
-        <GestureDetector gesture={panGesture}>
           <Animated.View style={[styles.autoTimerStatusOverlay, animatedAutoTimerStyle]}>
             {isAutoTimerMinimized ? (
               // Vista minimizada - solo icono con pulso
@@ -1460,20 +1453,41 @@ export default function MapLocation({ location, onNavigate }: Props) {
               // Vista expandida normal
               <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.autoTimerStatusCard}>
             <View style={styles.autoTimerStatusHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                <IconSymbol size={16} name="location.fill" color={colors.success} />
-                <Text style={styles.autoTimerStatusTitle}>
-                  AutoTimer ({jobs.filter(job => job.autoTimer?.enabled).length})
-                </Text>
+              <View style={[styles.autoTimerJobRow, { marginBottom: 0, flex: 1, paddingVertical: 6, paddingHorizontal: 8, borderRadius: 20 }]}>
+                {jobs.filter(job => job.autoTimer?.enabled).length === 1 ? (
+                  <>
+                    <View style={[styles.autoTimerJobDot, { backgroundColor: jobs.filter(job => job.autoTimer?.enabled)[0]?.color }]} />
+                    <Text 
+                      style={styles.autoTimerJobName}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                      allowFontScaling={false}
+                    >
+                      {jobs.filter(job => job.autoTimer?.enabled)[0]?.name || 'Trabajo'}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <View style={[styles.autoTimerJobDot, { backgroundColor: colors.primary }]} />
+                    <Text 
+                      style={styles.autoTimerJobName}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                      allowFontScaling={false}
+                    >
+                      {jobs.filter(job => job.autoTimer?.enabled).length} trabajos
+                    </Text>
+                  </>
+                )}
               </View>
               
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 {/* Botón minimizar */}
                 <TouchableOpacity
                   onPress={() => setIsAutoTimerMinimized(true)}
                   style={[styles.disableButton, { backgroundColor: 'rgba(142, 142, 147, 0.3)' }]}
                 >
-                  <IconSymbol size={14} name="minus" color="#FFFFFF" />
+                  <IconSymbol size={10} name="minus" color="#FFFFFF" />
                 </TouchableOpacity>
                 
                 {/* Botón de acción integrado */}
@@ -1512,7 +1526,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                 ]}
               >
                 <IconSymbol 
-                  size={16} 
+                  size={10} 
                   name={
                     autoTimerStatus?.state === 'cancelled' ? "play.fill" :
                     autoTimerStatus?.state === 'active' ? "stop.fill" :
@@ -1585,32 +1599,33 @@ export default function MapLocation({ location, onNavigate }: Props) {
               
               return (
                 <View key={job.id}>
-                  <View style={styles.autoTimerJobRow}>
-                    <View style={[styles.autoTimerJobDot, { backgroundColor: job.color }]} />
-                    <Text 
-                      style={styles.autoTimerJobName} 
-                      numberOfLines={1} 
-                      ellipsizeMode="tail"
-                      allowFontScaling={false}
-                    >
-                      {job.name}
-                    </Text>
-                 
-                 
-                  </View>
                   {/* Mostrar barra de progreso cuando hay countdown activo */}
                   {isAutoTimerActive && autoTimerStatus.remainingTime > 0 && autoTimerStatus.state !== 'active' && job.autoTimer?.enabled && (
                     <View style={styles.autoTimerProgressContainer}>
-                      <View style={styles.autoTimerProgressBar}>
-                        <Animated.View 
-                          style={[
-                            styles.autoTimerProgressFill,
-                            {
-                              width: `${((autoTimerStatus.totalDelayTime - autoTimerStatus.remainingTime) / autoTimerStatus.totalDelayTime) * 100}%`,
-                              backgroundColor: autoTimerStatus.state === 'entering' ? colors.warning : colors.error
-                            }
-                          ]}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                        <IconSymbol 
+                          size={12} 
+                          name="clock.arrow.circlepath" 
+                          color={autoTimerStatus.state === 'entering' ? colors.warning : colors.error} 
                         />
+                        <Text style={{
+                          fontSize: 10,
+                          color: colors.textSecondary,
+                          fontWeight: '500'
+                        }}>
+                          AutoTimer
+                        </Text>
+                        <View style={[styles.autoTimerProgressBar, { flex: 1 }]}>
+                          <Animated.View 
+                            style={[
+                              styles.autoTimerProgressFill,
+                              {
+                                width: `${((autoTimerStatus.totalDelayTime - autoTimerStatus.remainingTime) / autoTimerStatus.totalDelayTime) * 100}%`,
+                                backgroundColor: autoTimerStatus.state === 'entering' ? colors.warning : colors.error
+                              }
+                            ]}
+                          />
+                        </View>
                       </View>
                       <Text style={styles.autoTimerCountdown}>
                         {Math.ceil(autoTimerStatus.remainingTime / 60)}m
@@ -1619,10 +1634,43 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   )}
                   {/* Mostrar tiempo transcurrido cuando está activo */}
                   {isAutoTimerActive && autoTimerStatus.state === 'active' && (
-                    <View style={styles.activeTimerText}>
-                      <Text style={[styles.activeTimerText, { fontSize: 14, fontWeight: '800' }]}>
-                        ⏱️ {formatTime(elapsedTime)}
-                      </Text>
+                    <View style={[styles.autoTimerProgressContainer, { justifyContent: 'space-between' }]}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <IconSymbol 
+                          size={14} 
+                          name="clock.arrow.circlepath" 
+                          color={colors.success} 
+                        />
+                        <Text style={{
+                          fontSize: 13,
+                          fontWeight: '600',
+                          color: colors.success
+                        }}>
+                          AUTOTIMER
+                        </Text>
+                      </View>
+                      <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4,
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                        borderRadius: 8,
+                        paddingHorizontal: 8,
+                        paddingVertical: 3
+                      }}>
+                        <IconSymbol 
+                          size={11} 
+                          name="clock" 
+                          color={colors.text} 
+                        />
+                        <Text style={{
+                          fontSize: 13,
+                          fontWeight: '600',
+                          color: colors.text
+                        }}>
+                          {formatTime(elapsedTime)}
+                        </Text>
+                      </View>
                     </View>
                   )}
                 </View>
@@ -1631,7 +1679,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
               </BlurView>
             )}
           </Animated.View>
-        </GestureDetector>
       )}
 
       {/* Simple info overlay */}
@@ -1659,15 +1706,16 @@ export default function MapLocation({ location, onNavigate }: Props) {
       {/* Job cards swiper */}
       {jobs.length > 0 && (
         <JobCardsSwiper
+  
           jobs={jobs}
-          onJobPress={handleJobPress}
           isJobCurrentlyActive={isJobCurrentlyActive}
           getJobScheduleStatus={getJobScheduleStatus}
           getJobStatistics={getJobStatistics}
-          onAction={(action, job) => handleJobAction(job, action as 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map')}
+          onAction={(action, job) => handleJobAction(job, action as 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map' | 'edit-auto')}
           showAutoTimer={true}
           autoTimerEnabled={false}
           onAutoTimerToggle={handleAutoTimerToggle}
+          onNavigateToSubscription={() => navigateTo('subscription')}
           t={t}
         />
       )}
@@ -1704,25 +1752,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
                 onPress={() => handleJobAction(selectedJob, 'edit')}
               >
                 <IconSymbol size={24} name="gear" color={colors.textSecondary} />
-                <View style={styles.actionModalButtonTextContainer}>
-                  <Text style={styles.actionModalButtonText}>
-                    {t('maps.edit_job')}
-                  </Text>
-                  {hasJobAddress(selectedJob) && (
-                    <View style={styles.autoTimerSwitchContainer}>
-                      <Text style={styles.autoTimerSwitchLabel}>
-                        {t('maps.auto_timer')}
-                      </Text>
-                      <Switch
-                        value={selectedJob?.autoTimer?.enabled || false}
-                        onValueChange={(value) => handleAutoTimerToggle(selectedJob, value)}
-                        trackColor={{ false: colors.separator, true: colors.success + '40' }}
-                        thumbColor={selectedJob?.autoTimer?.enabled ? colors.success : colors.textTertiary}
-                        style={styles.autoTimerSwitch}
-                      />
-                    </View>
-                  )}
-                </View>
+                <Text style={styles.actionModalButtonText}>
+                  {t('maps.edit_job')}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -1784,12 +1816,15 @@ export default function MapLocation({ location, onNavigate }: Props) {
       <JobFormModal
         visible={showJobForm}
         editingJob={editingJob}
+        initialTab={jobFormInitialTab}
         onClose={() => {
           setShowJobForm(false);
           setEditingJob(null);
+          setJobFormInitialTab('basic');
         }}
         onSave={handleJobFormSave}
         onNavigateToCalendar={() => onNavigate?.('calendar')}
+        onNavigateToSubscription={() => onNavigate?.('subscription')}
       />
       
       {/* Job Statistics Modal */}

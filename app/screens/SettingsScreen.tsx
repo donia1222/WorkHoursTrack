@@ -284,7 +284,13 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
 
   if (showPreferences) {
     return (
-      <PreferencesScreen onClose={() => setShowPreferences(false)} />
+      <PreferencesScreen 
+        onClose={() => setShowPreferences(false)} 
+        onNavigateToSubscription={() => {
+          setShowPreferences(false);
+          onNavigate('subscription');
+        }}
+      />
     );
   }
 
@@ -581,6 +587,7 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
         onSave={handleJobFormSave}
         initialTab={getEditInfo(selectedEditType).tab}
         onNavigateToCalendar={() => onNavigate?.('calendar')}
+        onNavigateToSubscription={() => onNavigate?.('subscription')}
       />
 
       {/* Welcome Modal */}

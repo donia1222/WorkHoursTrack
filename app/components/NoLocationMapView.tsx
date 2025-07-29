@@ -161,15 +161,6 @@ export default function NoLocationMapView({ onNavigate }: Props) {
   };
 
   const handleAutoTimerToggle = async (job: Job, value: boolean) => {
-    if (value && !hasJobAddress(job)) {
-      Alert.alert(
-        'Dirección requerida',
-        'Para activar el timer automático, el trabajo debe tener una dirección configurada.',
-        [{ text: 'OK', style: 'default' }]
-      );
-      return;
-    }
-
     try {
       const updatedJob = {
         ...job,
@@ -187,12 +178,6 @@ export default function NoLocationMapView({ onNavigate }: Props) {
       await loadJobs();
       await loadJobStatistics();
       
-      if (value) {
-        Alert.alert(
-          'Timer automático activado',
-          'El timer se iniciará automáticamente cuando estés cerca del trabajo.'
-        );
-      }
     } catch (error) {
       console.error('Error updating auto-timer:', error);
       Alert.alert(
@@ -243,6 +228,20 @@ export default function NoLocationMapView({ onNavigate }: Props) {
 
   return (
     <View style={styles.container}>
+      {/* Beautiful gradient background */}
+      <LinearGradient
+        colors={isDark 
+          ? ['#2c3e50', '#34495e', '#4a6741', '#5d6d7e'] 
+          : ['#f8faff', '#e3f2fd', '#81c7f5', '#4a90e2']
+        }
+        style={styles.backgroundGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      />
+      
+      {/* Subtle overlay pattern */}
+      <View style={styles.backgroundOverlay} />
+      
                   <BlurView intensity={85} tint={isDark ? "dark" : "light"} style={styles.infoCardInner}>
 
             <View style={styles.infoContent}>
@@ -255,20 +254,7 @@ export default function NoLocationMapView({ onNavigate }: Props) {
             </View>
             
           </BlurView>
-
-      {/* Header info with gradient */}
-      <View style={styles.headerInfo}>
-        <LinearGradient
-          colors={isDark ? ['rgba(0,0,0,0.7)', 'rgba(40,40,40,0.4)'] : ['rgba(255,255,255,0.9)', 'rgba(247,250,252,0.6)']}
-          style={styles.infoCard}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          <BlurView intensity={85} tint={isDark ? "dark" : "light"} style={styles.infoCardInner}>
-
-          </BlurView>
-        </LinearGradient>
-      </View>
+ 
 
       {/* Job Cards or Empty State */}
       {jobs.length === 0 ? (
@@ -313,6 +299,8 @@ export default function NoLocationMapView({ onNavigate }: Props) {
         </View>
       ) : (
         // Job Cards Swiper
+
+
         <JobCardsSwiper
           jobs={jobs}
           onJobPress={handleJobPress}
@@ -329,9 +317,12 @@ export default function NoLocationMapView({ onNavigate }: Props) {
           showAutoTimer={true}
           autoTimerEnabled={false}
           onAutoTimerToggle={handleAutoTimerToggle}
+          onNavigateToSubscription={() => onNavigate?.('subscription')}
           t={t}
         />
       )}
+
+
 
       {/* Job form modal */}
       <JobFormModal
@@ -342,6 +333,8 @@ export default function NoLocationMapView({ onNavigate }: Props) {
         }}
         onSave={handleSaveJob}
         editingJob={editingJob}
+        isLocationEnabled={false}
+        onNavigateToSubscription={() => onNavigate?.('subscription')}
       />
 
       {/* Action Modal */}
@@ -362,6 +355,23 @@ const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: isDark ? 0.4 : 0.3,
+  },
+  backgroundOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.6)',
+    opacity: 0.8,
   },
   headerInfo: {
     padding: 16,
@@ -392,11 +402,13 @@ const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     justifyContent: 'center',
     marginRight: 8,
     
+    
   },
   infoContent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginBottom: 38,
   },
   infoText: {
     fontSize: 14,
@@ -417,6 +429,7 @@ const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 60,
+  
   },
   emptyCard: {
     borderRadius: 32,
@@ -430,6 +443,7 @@ const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     width: '100%',
     borderWidth: 1,
     borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+    
   },
   emptyCardInner: {
     padding: 32,

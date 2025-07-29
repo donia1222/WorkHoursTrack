@@ -46,6 +46,12 @@
       "auto_timer_desc": "Benachrichtigungen wenn Auto-Timer startet oder pausiert",
       "reminder_time": "Erinnerungszeit",
       "reminder_time_desc": "Konfigurieren Sie, wann Sie Erinnerungen vor Ihrem Arbeitsplan erhalten möchten"
+    },
+    "haptic": {
+      "title": "Haptisches Feedback",
+      "description": "Steuern Sie die taktile Vibration bei Schaltflächen und App-Interaktionen",
+      "enabled": "Taktile Vibration",
+      "enabled_desc": "Aktivieren Sie die Vibration beim Berühren von Schaltflächen und Steuerelementen"
     }
   },
   "settings": {
@@ -511,6 +517,18 @@
       "address_required_title": "Adresse Erforderlich",
       "address_required_message": "Um den automatischen Timer zu aktivieren, müssen Sie zuerst eine Adresse im Tab 'Grundlagen' hinzufügen. Die Adresse ist für die automatische Standorterkennung erforderlich.",
       "stopped_no_time": "Timer gestoppt - keine aktive Zeit lief"
+    },
+    "premium": {
+      "title": "Premium-Funktion",
+      "message": "Diese Funktion erfordert ein Premium-Abonnement. Möchten Sie sich jetzt anmelden, um Zugang zu allen erweiterten Funktionen zu erhalten?",
+      "cancel": "Abbrechen",
+      "subscribe": "Abonnieren",
+      "features": {
+        "schedule": "Erweiterte Terminplanung",
+        "financial": "Gehalt- und Tarifverwaltung",
+        "billing": "Professionelles Abrechnungssystem",
+        "auto": "Standortbasierter automatischer Timer"
+      }
     }
   },
   "jobs_management": {
@@ -654,6 +672,12 @@
       "settings": {
         "title": "Einstellungen",
         "description": "Präferenzen"
+      },
+      "subscription": {
+        "title": "Abonnieren",
+        "description": "Premium-Funktionen nutzen",
+        "premium_title": "✅ Premium",
+        "premium_description": "Aktives Abonnement"
       }
     }
   },
@@ -671,6 +695,69 @@
       "hour": "h",
       "month": "Monat",
       "year": "Jahr"
+    }
+  },
+  "subscription": {
+    "loading": "Abonnements werden geladen...",
+    "title": "Premium-Abonnement",
+    "subtitle": "Schalten Sie alle Funktionen frei und verbessern Sie Ihre Erfahrung",
+    "features": {
+      "title": "Premium-Funktionen:",
+      "unlimited_access": "✓ Unbegrenzter Zugang zu allen Funktionen",
+      "advanced_reports": "✓ Erweiterte Berichte und Statistiken",
+      "data_export": "✓ Datenexport in mehreren Formaten",
+      "no_ads": "✓ Keine Werbung",
+      "priority_support": "✓ Prioritäts-Support"
+    },
+    "buttons": {
+      "restore": "Käufe Wiederherstellen",
+      "cancel": "Abbrechen",
+      "continue": "Zur App Fortfahren"
+    },
+    "processing": "Kauf wird verarbeitet...",
+    "success": {
+      "title": "Abonnement Erfolgreich!",
+      "message": "Sie haben jetzt vollständigen Zugang zu allen Premium-Funktionen.",
+      "premium_badge": "PREMIUM",
+      "premium_title": "Aktives Abonnement!",
+      "premium_subtitle": "Genießen Sie alle Premium-Funktionen"
+    },
+    "restore_success": {
+      "title": "Käufe Wiederhergestellt",
+      "message": "Ihre Käufe wurden erfolgreich wiederhergestellt."
+    },
+    "errors": {
+      "purchase_failed": "Abonnement konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
+      "restore_failed": "Keine vorherigen Käufe zum Wiederherstellen gefunden."
+    },
+    "buttons": {
+      "subscribe": "Jetzt Abonnieren",
+      "restore": "Käufe Wiederherstellen",
+      "cancel": "Abbrechen",
+      "continue": "Weiter"
+    },
+    "active": {
+      "account_status": {
+        "title": "Kontostatus",
+        "active": "Premium Aktiv",
+        "description": "Vollständiger Zugang zu allen Funktionen und Prioritäts-Support"
+      },
+      "user_info": {
+        "title": "Benutzerinformationen",
+        "user_id": "Benutzer-ID",
+        "member_since": "Mitglied seit"
+      },
+      "subscriptions": {
+        "title": "Aktive Abonnements",
+        "premium_plan": "Premium-Plan",
+        "status_active": "Aktiv"
+      },
+      "features": {
+        "title": "Premium-Funktionen",
+        "auto_renewal": "Automatische Verlängerung",
+        "purchased": "Gekauft",
+        "expires": "Läuft ab"
+      }
     }
   }
 }

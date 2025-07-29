@@ -17,9 +17,9 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 const STORAGE_KEY = '@notification_settings';
 const DEFAULT_SETTINGS: NotificationSettings = {
-  enabled: true,
-  autoTimer: true,
-  workReminders: true,
+  enabled: false,
+  autoTimer: false,
+  workReminders: false,
   reminderMinutes: 15,
 };
 

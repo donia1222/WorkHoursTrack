@@ -18,11 +18,13 @@ import TimerScreen from '../screens/TimerScreen';
 import EnhancedReportsScreen from '../screens/ReportsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CalendarScreen from '../screens/CalendarScreen';
+import SubscriptionScreen from '../screens/SubscriptionScreen';
 
 import { NavigationProvider, useNavigation, ScreenName } from '../context/NavigationContext';
 import { OnboardingService } from '../services/OnboardingService';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useSubscription } from '../hooks/useSubscription';
 
 // Componente con animaciones suaves para transiciones
 const ScreenWrapper = ({ children, screenKey }: { children: React.ReactNode; screenKey: string }) => {
@@ -30,7 +32,6 @@ const ScreenWrapper = ({ children, screenKey }: { children: React.ReactNode; scr
     <Animated.View 
       key={screenKey}
       entering={FadeIn.duration(300)}
-      exiting={FadeOut.duration(200)}
       style={{ flex: 1 }}
     >
       {children}
@@ -51,6 +52,7 @@ function AppContent() {
   const { currentScreen, navigateTo } = useNavigation();
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
+  const { isSubscribed, isLoading: subscriptionLoading, customerInfo } = useSubscription();
 
   useEffect(() => {
     // Verificar si ya se mostró el onboarding
@@ -58,6 +60,53 @@ function AppContent() {
       setShowOnboarding(value !== 'true'); // true = ya visto
     });
   }, []);
+
+  // Verificar estado de suscripción al iniciar la app
+  useEffect(() => {
+    if (!subscriptionLoading) {
+      console.log('🔍 VERIFICACIÓN DE SUSCRIPCIÓN AL INICIAR:');
+      console.log(`📱 Estado de suscripción: ${isSubscribed ? '✅ SUSCRITO' : '❌ NO SUSCRITO'}`);
+      
+      if (isSubscribed && customerInfo) {
+        console.log('👤 Información del cliente:');
+        console.log(`🆔 User ID: ${customerInfo.originalAppUserId}`);
+        console.log(`📅 Fecha de primera compra: ${customerInfo.firstSeen}`);
+        
+        // Mostrar detalles de suscripciones activas
+        const activeEntitlements = Object.entries(customerInfo.entitlements.active);
+        if (activeEntitlements.length > 0) {
+          console.log('🏆 SUSCRIPCIONES ACTIVAS:');
+          activeEntitlements.forEach(([key, entitlement]) => {
+            console.log(`  📦 Producto: ${entitlement.productIdentifier}`);
+            console.log(`  🏷️ Entitlement: ${entitlement.identifier}`);
+            console.log(`  💰 Comprado: ${new Date(entitlement.latestPurchaseDate).toLocaleString()}`);
+            if (entitlement.expirationDate) {
+              console.log(`  ⏰ Expira: ${new Date(entitlement.expirationDate).toLocaleString()}`);
+            }
+            console.log(`  🔄 Renovación automática: ${entitlement.willRenew ? 'SÍ' : 'NO'}`);
+            console.log('  ---');
+          });
+        }
+
+        // Mostrar productos comprados (con verificación de seguridad)
+        const purchasedProducts = (customerInfo as any).nonSubscriptions ? Object.entries((customerInfo as any).nonSubscriptions) : [];
+        if (purchasedProducts.length > 0) {
+          console.log('🛒 PRODUCTOS COMPRADOS:');
+          purchasedProducts.forEach(([productId, purchases]) => {
+            console.log(`  📦 Producto: ${productId}`);
+            if (purchases && Array.isArray(purchases)) {
+              purchases.forEach((purchase, index) => {
+                console.log(`    🛍️ Compra ${index + 1}: ${new Date(purchase.purchaseDate).toLocaleString()}`);
+              });
+            }
+          });
+        }
+      } else {
+        console.log('💡 Usuario no suscrito - Mostrar opciones premium disponibles');
+      }
+      console.log('🔍 ==========================================');
+    }
+  }, [isSubscribed, subscriptionLoading, customerInfo]);
 
   useEffect(() => {
     // Verificar si debe mostrar welcome modal después del onboarding inicial
@@ -81,9 +130,36 @@ function AppContent() {
   // Listen for app state changes to re-check permissions when user returns from settings
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: string) => {
-      if (nextAppState === 'active' && locationPermissionDenied) {
-        // Re-check permissions when app becomes active and permissions were denied
-        await requestLocationPermission();
+      if (nextAppState === 'active') {
+        // Always check permissions when app becomes active
+        const { status } = await Location.getForegroundPermissionsAsync();
+        
+        if (status === 'granted') {
+          // Permissions are granted
+          if (locationPermissionDenied || useWithoutLocation) {
+            // Was in denied/no-location mode, switch to normal mode
+            setLocationPermissionDenied(false);
+            setUseWithoutLocation(false);
+            setErrorMsg(null);
+            
+            // Get current location
+            try {
+              const loc = await Location.getCurrentPositionAsync({});
+              setLocation(loc.coords);
+            } catch (error) {
+              console.error('Error getting location after permission granted:', error);
+            }
+          }
+        } else {
+          // Permissions are denied
+          if (!locationPermissionDenied && !useWithoutLocation && location) {
+            // Was in normal mode with location, switch to denied mode
+            setLocation(null);
+            setLocationPermissionDenied(true);
+            setUseWithoutLocation(false);
+            setErrorMsg(null);
+          }
+        }
       }
     };
 
@@ -92,7 +168,7 @@ function AppContent() {
     return () => {
       subscription?.remove();
     };
-  }, [locationPermissionDenied]);
+  }, [locationPermissionDenied, useWithoutLocation, location]);
 
   const requestLocationPermission = async () => {
     setIsRequestingLocation(true);
@@ -203,11 +279,6 @@ function AppContent() {
   };
 
   const renderCurrentScreen = () => {
-    // Show loading only when actively requesting location
-    if (isRequestingLocation && currentScreen === 'mapa') {
-      return <Loading message="Obteniendo ubicación actual..." />;
-    }
-
     switch (currentScreen) {
       case 'mapa':
         if (locationPermissionDenied) {
@@ -226,9 +297,17 @@ function AppContent() {
             </ScreenWrapper>
           );
         }
+        // Show loading when requesting location or when no location yet
+        if (isRequestingLocation || !location) {
+          return (
+            <ScreenWrapper screenKey="mapa-loading">
+              <Loading showMessage={false} />
+            </ScreenWrapper>
+          );
+        }
         return (
           <ScreenWrapper screenKey="mapa">
-            {location ? <MapLocation location={location} onNavigate={handleNavigate} /> : <Loading message="Obteniendo ubicación actual..." />}
+            <MapLocation location={location} onNavigate={handleNavigate} />
           </ScreenWrapper>
         );
       case 'timer':
@@ -253,6 +332,12 @@ function AppContent() {
         return (
           <ScreenWrapper screenKey="settings">
             <SettingsScreen onNavigate={handleNavigate} navigationOptions={navigationOptions} onNavigationHandled={() => setNavigationOptions(null)} />
+          </ScreenWrapper>
+        );
+      case 'subscription':
+        return (
+          <ScreenWrapper screenKey="subscription">
+            <SubscriptionScreen />
           </ScreenWrapper>
         );
       default:
@@ -282,6 +367,8 @@ function AppContent() {
         return 'Calendario';
       case 'settings':
         return 'Configuración';
+      case 'subscription':
+        return 'Suscripción';
       default:
         return (
           <View style={styles.workTrackTitle}>
@@ -294,7 +381,7 @@ function AppContent() {
   };
 
   if (showOnboarding === null) {
-    return <Loading message="Cargando..." />;
+    return <Loading showMessage={false} />;
   }
 
   if (showOnboarding) {
@@ -309,24 +396,16 @@ function AppContent() {
   }
 
 
-  // Para pantallas que no son mapa, renderizar directamente
-  if (currentScreen !== 'mapa') {
-    return (
-      <>
-        {renderCurrentScreen()}
-      
-      </>
-    );
-  }
-
-  // Para pantalla de mapa, usar el layout original
+  // Renderizar siempre con header y menu para mantener consistencia
   return (
     <View style={styles.container}>
-      <Header 
-        title={getScreenTitle()} 
-        onProfilePress={() => setShowProfile(true)}
-        onMenuPress={() => setShowMenu(true)}
-      />
+      {currentScreen === 'mapa' && (
+        <Header 
+          title={getScreenTitle()} 
+          onProfilePress={() => setShowProfile(true)}
+          onMenuPress={() => setShowMenu(true)}
+        />
+      )}
       {renderCurrentScreen()}
       <ProfileModal visible={showProfile} onClose={() => setShowProfile(false)} />
       <SideMenu 
@@ -335,8 +414,6 @@ function AppContent() {
         onMenuToggle={() => setShowMenu(!showMenu)}
         onNavigate={handleNavigate}
       />
-
-   
     </View>
   );
 }

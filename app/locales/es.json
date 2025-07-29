@@ -46,6 +46,12 @@
       "auto_timer_desc": "Notificaciones cuando el timer automático se inicie o pause",
       "reminder_time": "Tiempo de aviso",
       "reminder_time_desc": "Configura cuándo recibir el recordatorio antes de tu horario de trabajo"
+    },
+    "haptic": {
+      "title": "Vibración Táctil",
+      "description": "Controla la vibración táctil en botones y interacciones de la app",
+      "enabled": "Vibración Táctil",
+      "enabled_desc": "Activa la vibración cuando tocas botones y controles"
     }
   },
   "settings": {
@@ -127,6 +133,9 @@
     "auto_timer_enabled_title": "Auto-timer activado",
     "auto_timer_enabled_message": "El auto-timer se ha activado correctamente para este trabajo.",
     "auto_timer_error": "No se pudo actualizar el auto-timer",
+    "auto_timer_location_required_title": "Permisos de ubicación requeridos",
+    "auto_timer_location_required_message": "Para usar el Auto Timer necesitas dar permisos de ubicación a la aplicación. Esto permite detectar automáticamente cuando llegas o sales del trabajo.",
+    "auto_timer_open_settings": "Abrir Configuración",
     "delete_job": "  Eliminar Trabajo",
     "cancel": "Cancelar",
     "delete_confirm_title": "Eliminar trabajo",
@@ -639,6 +648,18 @@
       "address_required_title": "Dirección Requerida",
       "address_required_message": "Para activar el timer automático, primero necesitas añadir una dirección en la pestaña 'Básico'. La dirección es necesaria para la detección automática por ubicación.",
       "stopped_no_time": "Timer parado - no había tiempo activo"
+    },
+    "premium": {
+      "title": "Función Premium",
+      "message": "Esta función requiere una suscripción premium. ¿Quieres suscribirte ahora para acceder a todas las funciones avanzadas?",
+      "cancel": "Cancelar",
+      "subscribe": "Suscribirse",
+      "features": {
+        "schedule": "Configuración avanzada de horarios",
+        "financial": "Gestión de salarios y tarifas",
+        "billing": "Sistema de facturación profesional",
+        "auto": "Timer automático por ubicación"
+      }
     }
   },
   "jobs_management": {
@@ -798,6 +819,75 @@
       "settings": {
         "title": "Configuración",
         "description": "Preferencias"
+      },
+      "subscription": {
+        "title": "Suscribe",
+        "description": "Accede a funciones premium",
+        "premium_title": "✅ Premium",
+        "premium_description": "Suscripción activa"
+      }
+    }
+  },
+  "subscription": {
+    "loading": "Cargando suscripciones...",
+    "title": "Suscripción Premium",
+    "subtitle": "Desbloquea todas las funciones y mejora tu experiencia",
+    "features": {
+      "title": "Características Premium:",
+      "unlimited_access": "✓ Acceso ilimitado a todas las funciones",
+      "advanced_reports": "✓ Reportes avanzados y estadísticas",
+      "data_export": "✓ Exportación de datos en múltiples formatos",
+      "no_ads": "✓ Sin anuncios",
+      "priority_support": "✓ Soporte prioritario"
+    },
+    "buttons": {
+      "restore": "Restaurar Compras",
+      "cancel": "Cancelar",
+      "continue": "Continuar a la App"
+    },
+    "processing": "Procesando compra...",
+    "success": {
+      "title": "¡Suscripción Exitosa!",
+      "message": "Ya tienes acceso completo a todas las funciones premium.",
+      "premium_badge": "PREMIUM",
+      "premium_title": "¡Suscripción Activa!",
+      "premium_subtitle": "Disfruta de todas las funciones premium"
+    },
+    "restore_success": {
+      "title": "Compras Restauradas",
+      "message": "Tus compras han sido restauradas exitosamente."
+    },
+    "errors": {
+      "purchase_failed": "No se pudo completar la suscripción. Inténtalo de nuevo.",
+      "restore_failed": "No se encontraron compras previas para restaurar."
+    },
+    "buttons": {
+      "subscribe": "Suscribirse Ahora",
+      "restore": "Restaurar Compras",
+      "cancel": "Cancelar",
+      "continue": "Continuar"
+    },
+    "active": {
+      "account_status": {
+        "title": "Estado de la Cuenta",
+        "active": "Premium Activo",
+        "description": "Acceso completo a todas las funciones y soporte prioritario"
+      },
+      "user_info": {
+        "title": "Información de Usuario",
+        "user_id": "ID de Usuario",
+        "member_since": "Miembro desde"
+      },
+      "subscriptions": {
+        "title": "Suscripciones Activas",
+        "premium_plan": "Premium Plan",
+        "status_active": "Activa"
+      },
+      "features": {
+        "title": "Funciones Premium",
+        "auto_renewal": "Auto-renovación",
+        "purchased": "Comprado",
+        "expires": "Expira"
       }
     }
   }

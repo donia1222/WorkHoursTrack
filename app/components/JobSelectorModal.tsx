@@ -77,7 +77,7 @@ export default function JobSelectorModal({
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <IconSymbol size={28} name="xmark" color={colors.primary} />
+            <IconSymbol size={21} name="xmark" color={colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{title}</Text>
           <View style={styles.placeholder} />
@@ -142,11 +142,7 @@ export default function JobSelectorModal({
                           <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{job.company}</Text>
                         )}
                         <View style={styles.jobMeta}>
-                          {job.schedule && (
-                            <Text style={[styles.jobMetaText, { color: colors.textTertiary }]}>
-                              {job.schedule.startTime} - {job.schedule.endTime}
-                            </Text>
-                          )}
+                    
                           {job.salary && job.salary.amount > 0 && (
                             <Text style={[styles.jobMetaText, { color: colors.textTertiary }]}>
                               • {job.salary.amount} {job.salary.currency}
@@ -157,13 +153,7 @@ export default function JobSelectorModal({
                       </View>
                     </View>
                     <View style={styles.jobActions}>
-                      <TouchableOpacity 
-                        style={styles.statsButton}
-                        onPress={(event) => handleShowStatistics(job, event)}
-                      >
-                        <IconSymbol size={16} name="chart.bar.fill" color={colors.primary} />
-                      </TouchableOpacity>
-                      <IconSymbol size={16} name="chevron.right" color={colors.primary} />
+                      <IconSymbol size={21} name="chevron.right" color={colors.primary} />
                     </View>
                   </BlurView>
                 </TouchableOpacity>
