@@ -19,6 +19,7 @@ import EnhancedReportsScreen from '../screens/ReportsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
+import ChatbotScreen from '../screens/ChatbotScreen';
 
 import { NavigationProvider, useNavigation, ScreenName } from '../context/NavigationContext';
 import { OnboardingService } from '../services/OnboardingService';
@@ -340,6 +341,12 @@ function AppContent() {
             <SubscriptionScreen />
           </ScreenWrapper>
         );
+      case 'chatbot':
+        return (
+          <ScreenWrapper screenKey="chatbot">
+            <ChatbotScreen />
+          </ScreenWrapper>
+        );
       default:
         return location ? (
           <ScreenWrapper screenKey="default">
@@ -369,6 +376,8 @@ function AppContent() {
         return 'Configuración';
       case 'subscription':
         return 'Suscripción';
+      case 'chatbot':
+        return 'Chatbot IA';
       default:
         return (
           <View style={styles.workTrackTitle}>
@@ -399,7 +408,7 @@ function AppContent() {
   // Renderizar siempre con header y menu para mantener consistencia
   return (
     <View style={styles.container}>
-      {currentScreen === 'mapa' && (
+      {(currentScreen === 'mapa' || currentScreen === 'chatbot') && (
         <Header 
           title={getScreenTitle()} 
           onProfilePress={() => setShowProfile(true)}

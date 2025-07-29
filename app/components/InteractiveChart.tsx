@@ -62,7 +62,7 @@ export default function InteractiveChart({
   const scale = useSharedValue(1);
   const translateX = useSharedValue(0);
 
-  const styles = getStyles(colors, isDark);
+  const styles = getStyles(colors);
 
   const chartConfig = {
     backgroundColor: 'transparent',
@@ -115,11 +115,6 @@ export default function InteractiveChart({
     ],
   }));
 
-  const handleDataPointPress = (dataPoint: any, index: number) => {
-    triggerHaptic('selection');
-    setSelectedIndex(index);
-    onDataPointPress?.(safeData[index], index);
-  };
 
   const toggleExpanded = () => {
     triggerHaptic('light');
@@ -167,11 +162,6 @@ export default function InteractiveChart({
             height={Math.max(chartHeight, 200)}
             chartConfig={config}
             bezier={true}
-            onDataPointClick={validData.length > 0 ? ({ index }) => {
-              if (validData[index]) {
-                handleDataPointPress(validData[index], index);
-              }
-            } : undefined}
             withDots={true}
             withShadow={false}
             withScrollableDot={true}
@@ -198,11 +188,8 @@ export default function InteractiveChart({
             height={Math.max(chartHeight, 200)}
             chartConfig={config}
             showValuesOnTopOfBars={true}
-            onDataPointClick={validData.length > 0 ? ({ index }) => {
-              if (validData[index]) {
-                handleDataPointPress(validData[index], index);
-              }
-            } : undefined}
+            yAxisLabel=""
+            yAxisSuffix=""
             style={{
               borderRadius: 16,
               backgroundColor: 'transparent',
@@ -310,7 +297,7 @@ export default function InteractiveChart({
   );
 }
 
-const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     backgroundColor: colors.surface,
     borderRadius: 16,

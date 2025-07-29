@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Job } from '../types/WorkTypes';
 import { useLanguage } from '../contexts/LanguageContext';
 
-export type ScreenName = 'mapa' | 'timer' | 'reports' | 'calendar' | 'settings' | 'subscription';
+export type ScreenName = 'mapa' | 'timer' | 'reports' | 'calendar' | 'settings' | 'subscription' | 'chatbot';
 
 interface NavigationContextType {
   currentScreen: ScreenName;

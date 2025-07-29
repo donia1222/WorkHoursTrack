@@ -69,6 +69,10 @@
 	</array>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>Esta app necesita permisos de notificación para avisarte cuando el timer automático se inicie o pause.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Esta app necesita acceso a la cámara para que puedas tomar fotos y analizarlas con el chatbot IA.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Esta app necesita acceso a tus fotos para que puedas seleccionar imágenes y analizarlas con el chatbot IA.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>bluetooth-peripheral</string>

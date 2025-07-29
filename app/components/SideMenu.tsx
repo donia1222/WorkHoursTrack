@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   Dimensions,
   ScrollView,
+  Animated,
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
@@ -19,6 +20,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
 const isSmallScreen = height < 700;
+const MENU_WIDTH = width * 0.8;
+const MENU_HEIGHT = height * 0.9;
 
 interface SideMenuProps {
   visible: boolean;
@@ -30,27 +33,24 @@ interface SideMenuProps {
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   overlay: {
     flex: 1,
-    flexDirection: 'row',
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
   },
   menuContainer: {
-    width: width * 0.85,
-    maxWidth: 350,
+    position: 'absolute',
+    right: 0,
+    top: '5%',
+    width: MENU_WIDTH,
+    height: MENU_HEIGHT,
     shadowColor: '#000',
     shadowOffset: {
-      width: 4,
+      width: -2,
       height: 0,
     },
-    shadowOpacity: 0.35,
-    shadowRadius: 30,
-    elevation: 25,
-    borderTopRightRadius: 24,
-    borderBottomRightRadius: 24,
-    borderRightWidth: 1,
-    borderRightColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 20,
+    borderRadius: 20,
     overflow: 'hidden',
   },
   safeArea: {
@@ -58,10 +58,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     
   },
   header: {
-    paddingHorizontal: Theme.spacing.xl,
-    paddingVertical: isSmallScreen ? Theme.spacing.md : Theme.spacing.lg,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+    borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
     position: 'relative',
     overflow: 'hidden',
   },
@@ -91,50 +91,51 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: isSmallScreen ? Theme.spacing.lg : Theme.spacing.xl,
-    paddingVertical: isSmallScreen ? Theme.spacing.md : Theme.spacing.lg,
-    marginHorizontal: Theme.spacing.md,
-    marginVertical: isSmallScreen ? Theme.spacing.xs : Theme.spacing.xs,
-    borderRadius: 16,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.15)',
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.25)',
-    backdropFilter: 'blur(20px)',
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.md,
+    marginHorizontal: Theme.spacing.sm,
+    marginVertical: Theme.spacing.sm,
+    borderRadius: 12,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 0.5,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.2)',
   },
   lastMenuItem: {
     borderBottomWidth: 0,
   },
   iconContainer: {
-    width: isSmallScreen ? 44 : 56,
-    height: isSmallScreen ? 44 : 56,
-    borderRadius: isSmallScreen ? 22 : 28,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: isSmallScreen ? Theme.spacing.md : Theme.spacing.lg,
-    borderWidth: 2,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+    marginRight: Theme.spacing.md,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   itemContent: {
     flex: 1,
   },
   itemTitle: {
     ...Theme.typography.headline,
-    fontSize: isSmallScreen ? 16 : 18,
+    fontSize: 15,
     color: colors.text,
-    marginBottom: isSmallScreen ? 1 : 2,
+    marginBottom: 1,
+    fontWeight: '600',
   },
   itemDescription: {
     ...Theme.typography.footnote,
-    fontSize: isSmallScreen ? 12 : 14,
+    fontSize: 12,
     color: colors.textSecondary,
+    lineHeight: 16,
   },
   footer: {
     paddingHorizontal: Theme.spacing.lg,
@@ -171,22 +172,22 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   subscriptionChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Theme.spacing.md,
-    paddingVertical: Theme.spacing.sm,
-    marginHorizontal: Theme.spacing.md,
-    marginVertical: Theme.spacing.xs,
-    borderRadius: 20,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+    paddingHorizontal: Theme.spacing.sm,
+    paddingVertical: Theme.spacing.xs,
+    marginHorizontal: Theme.spacing.sm,
+    marginVertical: Theme.spacing.xs / 2,
+    borderRadius: 16,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.03)',
+    borderWidth: 0.5,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
   },
   chipIconContainer: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: Theme.spacing.sm,
+    marginRight: Theme.spacing.xs,
   },
   chipContent: {
     flex: 1,
@@ -209,6 +210,43 @@ export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps
   const { isSubscribed } = useSubscription();
   const styles = getStyles(colors, isDark);
   
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const slideAnim = useRef(new Animated.Value(MENU_WIDTH)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  
+  useEffect(() => {
+    if (visible) {
+      setIsModalVisible(true);
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: MENU_WIDTH,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setIsModalVisible(false);
+      });
+    }
+  }, [visible]);
+  
   const menuItems = [
     {
       id: 'mapa',
@@ -230,6 +268,13 @@ export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps
       icon: 'clock.fill',
       description: t('side_menu.menu_items.timer.description'),
       color: colors.success,
+    },
+    {
+      id: 'chatbot',
+      title: 'Chatbot IA',
+      icon: 'brain.head.profile',
+      description: 'Analiza imágenes con inteligencia artificial',
+      color: '#FF6B35', // Orange color
     },
     {
       id: 'reports',
@@ -265,19 +310,23 @@ export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps
   };
   return (
     <Modal
-      visible={visible}
-      animationType="fade"
+      visible={isModalVisible}
+      animationType="none"
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
-        <TouchableOpacity 
-          style={styles.backdrop} 
-          activeOpacity={1} 
-          onPress={onClose}
-        />
-        
-        <BlurView intensity={75} tint={isDark ? "dark" : "extraLight"} style={styles.menuContainer}>
+      <TouchableOpacity 
+        style={styles.overlay}
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <Animated.View style={[styles.menuContainer, { transform: [{ translateX: slideAnim }] }]}>
+          <TouchableOpacity 
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+            style={{ flex: 1 }}
+          >
+            <BlurView intensity={80} tint={isDark ? "dark" : "extraLight"} style={{ flex: 1, borderRadius: 20 }}>
           <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
               <LinearGradient
@@ -314,13 +363,13 @@ export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps
                   }}
                 >
                   <View style={[styles.iconContainer, { backgroundColor: `${item.color}25` }]}>
-                    <IconSymbol size={isSmallScreen ? 24 : 28} name={item.icon as any} color={item.color} />
+                    <IconSymbol size={20} name={item.icon as any} color={item.color} />
                   </View>
                   <View style={styles.itemContent}>
                     <Text style={styles.itemTitle}>{item.title}</Text>
                     <Text style={styles.itemDescription}>{item.description}</Text>
                   </View>
-                  <IconSymbol size={20} name="chevron.right" color={colors.textTertiary} />
+                  <IconSymbol size={16} name="chevron.right" color={colors.textTertiary} />
                 </TouchableOpacity>
               ))}
               
@@ -335,7 +384,7 @@ export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps
                 }}
               >
                 <View style={[styles.chipIconContainer, { backgroundColor: `${subscriptionItem.color}25` }]}>
-                  <IconSymbol size={16} name={subscriptionItem.icon as any} color={subscriptionItem.color} />
+                  <IconSymbol size={14} name={subscriptionItem.icon as any} color={subscriptionItem.color} />
                 </View>
                 <View style={styles.chipContent}>
                   <Text style={styles.chipTitle}>{subscriptionItem.title}</Text>
@@ -343,14 +392,15 @@ export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps
                 </View>
               </TouchableOpacity>
               
-              {/* Padding bottom para asegurar que todo sea visible */}
-              <View style={{ height: isSmallScreen ? 20 : 40 }} />
+              <View style={{ height: 20 }} />
             </ScrollView>
 
       
           </SafeAreaView>
-        </BlurView>
-      </View>
+            </BlurView>
+          </TouchableOpacity>
+        </Animated.View>
+      </TouchableOpacity>
     </Modal>
   );
 }
