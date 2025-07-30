@@ -1,7 +1,13 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, ThemeColors } from '@/app/contexts/ThemeContext';
+import { useLanguage } from '@/app/contexts/LanguageContext';
+import { useNavigation } from '@/app/context/NavigationContext';
+import { ChatDataParser } from '@/app/services/ChatDataParser';
+import { JobService } from '@/app/services/JobService';
+import ExportCalendarModal from './ExportCalendarModal';
+import { Job } from '@/app/types/WorkTypes';
 
 export interface ChatMessageData {
   id: number;
@@ -14,6 +20,8 @@ export interface ChatMessageData {
 
 interface ChatMessageProps {
   message: ChatMessageData;
+  jobs?: Job[];
+  onExportToCalendar?: (selectedJobId: string, parsedData: any) => void;
 }
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
@@ -91,16 +99,106 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: isDark ? colors.textSecondary : '#666666',
     textAlign: 'left',
   },
+  exportButton: {
+    marginTop: 12,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  exportButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
 });
 
-export default function ChatMessage({ message }: ChatMessageProps) {
+export default function ChatMessage({ message, jobs = [], onExportToCalendar }: ChatMessageProps) {
   const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
+  const { navigateTo } = useNavigation();
   const styles = getStyles(colors, isDark);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [parsedData, setParsedData] = useState<any>(null);
   
   const messageTime = message.timestamp.toLocaleTimeString([], { 
     hour: '2-digit', 
     minute: '2-digit' 
   });
+
+  // Detectar si el mensaje contiene datos de horarios (solo para mensajes del bot)
+  const hasWorkScheduleData = !message.isUser && ChatDataParser.hasWorkScheduleData(message.text);
+
+  const handleExportPress = () => {
+    if (hasWorkScheduleData) {
+      const parsed = ChatDataParser.parseWorkSchedule(message.text);
+      if (parsed) {
+        setParsedData(parsed);
+        setShowExportModal(true);
+      }
+    }
+  };
+
+  const handleExportConfirm = async (selectedJobId: string, parsedData: any) => {
+    setShowExportModal(false);
+    
+    try {
+      console.log('🚀 [CHAT MESSAGE] Iniciando exportación directa:', { selectedJobId, parsedData });
+      
+      // Convertir datos parseados a WorkDays
+      const newWorkDays = ChatDataParser.convertToWorkDays(parsedData, selectedJobId);
+      console.log('📝 [CHAT MESSAGE] WorkDays convertidos:', newWorkDays);
+      
+      // Guardar cada WorkDay uno por uno para detectar errores
+      console.log('💾 [CHAT MESSAGE] Iniciando guardado de WorkDays...');
+      let savedCount = 0;
+      
+      for (const workDayData of newWorkDays) {
+        try {
+          console.log('💾 [CHAT MESSAGE] Guardando WorkDay:', workDayData.date, workDayData.type);
+          const result = await JobService.addWorkDay(workDayData);
+          console.log('✅ [CHAT MESSAGE] WorkDay guardado exitosamente:', result);
+          savedCount++;
+        } catch (error) {
+          console.error('❌ [CHAT MESSAGE] Error guardando WorkDay:', workDayData.date, error);
+        }
+      }
+      
+      console.log(`✅ [CHAT MESSAGE] ${savedCount}/${newWorkDays.length} WorkDays guardados exitosamente`);
+      
+      // Mostrar mensaje de éxito con opción de ir al calendario
+      Alert.alert(
+        t('chatbot.export_calendar.export_success_title'),
+        t('chatbot.export_calendar.export_success_message', { 
+          count: newWorkDays.length, 
+          personName: parsedData.personName 
+        }),
+        [
+          { text: 'OK' },
+          {
+            text: t('chatbot.export_calendar.view_calendar_button'),
+            onPress: () => {
+              console.log('📅 Navegando al calendario...');
+              navigateTo('calendar');
+            }
+          }
+        ]
+      );
+      
+    } catch (error) {
+      console.error('❌ [CHAT MESSAGE] Error en exportación:', error);
+      Alert.alert(t('chatbot.export_calendar.export_error_title'), t('chatbot.export_calendar.export_error_message'));
+    }
+  };
 
   return (
     <View style={[
@@ -145,6 +243,27 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       ]}>
         {messageTime}
       </Text>
+
+      {/* Botón de exportación para mensajes del bot con datos de horarios */}
+      {hasWorkScheduleData && jobs.length > 0 && (
+        <TouchableOpacity 
+          style={styles.exportButton} 
+          onPress={handleExportPress}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="calendar" size={16} color="#FFFFFF" />
+          <Text style={styles.exportButtonText}>{t('chatbot.export_calendar.export_button')}</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Modal de exportación */}
+      <ExportCalendarModal
+        visible={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        parsedData={parsedData}
+        jobs={jobs}
+        onExport={handleExportConfirm}
+      />
     </View>
   );
 }

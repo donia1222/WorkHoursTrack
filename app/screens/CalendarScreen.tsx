@@ -23,6 +23,7 @@ import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { CalendarSyncService } from '../services/CalendarSyncService';
 import { useNotifications } from '../contexts/NotificationContext';
 import NotificationService from '../services/NotificationService';
+import { ChatDataParser, ParsedWorkData } from '../services/ChatDataParser';
 
 // Custom Day Component
 const CustomDay = ({ date, state, marking, onPress }: any) => {
@@ -404,8 +405,9 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: colors.textSecondary,
   },
   actionButton: {
-    marginVertical: 20,
+
     marginBottom: 24,
+    marginTop: -20,
   },
   actionButtonInner: {
     flexDirection: 'row',
@@ -518,7 +520,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   const [selectedJobId, setSelectedJobId] = useState<string | 'all'>('all');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const { handleBack } = useBackNavigation();
-  const { selectedJob, setSelectedJob } = useNavigation();
+  const { selectedJob, setSelectedJob, setOnExportToCalendar } = useNavigation();
   const { triggerHaptic } = useHapticFeedback();
   
   const styles = getStyles(colors, isDark);
@@ -526,6 +528,21 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Registrar el handler de exportación desde chat
+  useEffect(() => {
+    const handleChatExport = async (jobId: string, parsedData: ParsedWorkData) => {
+      // Ya no necesitamos hacer nada aquí porque la exportación se hace directamente desde ChatMessage
+      console.log('📤 [CALENDAR] Handler registrado, pero exportación se hace directamente desde chat');
+    };
+
+    setOnExportToCalendar(handleChatExport);
+    
+    // Cleanup: deregister handler when component unmounts
+    return () => {
+      setOnExportToCalendar(undefined);
+    };
+  }, [setOnExportToCalendar]);
 
   // Auto-select job if coming from map
   useEffect(() => {
@@ -874,14 +891,14 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
     const marked: any = {};
 
     // Filter workDays by selected job if not "all"
-    // When filtering, show only work days from selected job + all non-work days
+    // When filtering, show only days from selected job (both work and non-work days)
     const filteredWorkDays = selectedJobId !== 'all'
       ? workDays.filter(wd => {
           if (wd.type === 'work') {
             return wd.jobId === selectedJobId;
           }
-          // Always show non-work days (free, vacation, sick)
-          return true;
+          // Show non-work days from the selected job OR legacy days without jobId
+          return wd.jobId === selectedJobId || wd.jobId === undefined;
         })
       : workDays;
 
@@ -916,14 +933,14 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
     const monthKey = currentMonth.toISOString().slice(0, 7);
     
     // Filter workDays by selected job if not "all"
-    // When filtering, show only work days from selected job + all non-work days
+    // When filtering, show only days from selected job (both work and non-work days)
     const filteredWorkDays = selectedJobId !== 'all'
       ? workDays.filter(wd => {
           if (wd.type === 'work') {
             return wd.jobId === selectedJobId;
           }
-          // Always show non-work days (free, vacation, sick)
-          return true;
+          // Show non-work days from the selected job OR legacy days without jobId
+          return wd.jobId === selectedJobId || wd.jobId === undefined;
         })
       : workDays;
     
@@ -1136,6 +1153,16 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
             },
           }}
         />
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={handleSyncCalendar}
+        >
+          <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.actionButtonInner}>
+            <IconSymbol size={24} name="calendar.badge.plus" color={colors.success} />
+            <Text style={styles.actionButtonText}>{t('calendar.sync_to_phone')}</Text>
+            <IconSymbol size={16} name="arrow.right" color={colors.success} />
+          </BlurView>
+        </TouchableOpacity>
 
         <BlurView 
           intensity={98} 
@@ -1231,16 +1258,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           </View>
         </BlurView>
 
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleSyncCalendar}
-        >
-          <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.actionButtonInner}>
-            <IconSymbol size={24} name="calendar.badge.plus" color={colors.success} />
-            <Text style={styles.actionButtonText}>{t('calendar.sync_to_phone')}</Text>
-            <IconSymbol size={16} name="arrow.right" color={colors.success} />
-          </BlurView>
-        </TouchableOpacity>
+
 
         <TouchableOpacity
           style={styles.actionButton}

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Job } from '../types/WorkTypes';
 import { useLanguage } from '../contexts/LanguageContext';
+import { ParsedWorkData } from '../services/ChatDataParser';
 
 export type ScreenName = 'mapa' | 'timer' | 'reports' | 'calendar' | 'settings' | 'subscription' | 'chatbot';
 
@@ -13,6 +14,10 @@ interface NavigationContextType {
   canGoBack: () => boolean;
   getPreviousScreen: () => ScreenName | null;
   setSelectedJob: (job: Job | null) => void;
+  // Chat export functionality
+  exportToCalendar: (jobId: string, parsedData: ParsedWorkData) => void;
+  onExportToCalendar?: (jobId: string, parsedData: ParsedWorkData) => void;
+  setOnExportToCalendar: (callback?: (jobId: string, parsedData: ParsedWorkData) => void) => void;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
@@ -25,6 +30,7 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('mapa');
   const [navigationHistory, setNavigationHistory] = useState<ScreenName[]>(['mapa']);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [onExportToCalendar, setOnExportToCalendar] = useState<((jobId: string, parsedData: ParsedWorkData) => void) | undefined>(undefined);
 
   const navigateTo = (screen: ScreenName, job?: Job) => {
     if (screen !== currentScreen) {
@@ -64,6 +70,14 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
     return navigationHistory.length > 0 ? navigationHistory[navigationHistory.length - 1] : null;
   };
 
+  const exportToCalendar = (jobId: string, parsedData: ParsedWorkData) => {
+    if (onExportToCalendar) {
+      onExportToCalendar(jobId, parsedData);
+    } else {
+      console.warn('No export handler registered');
+    }
+  };
+
   const value: NavigationContextType = {
     currentScreen,
     navigationHistory,
@@ -73,6 +87,9 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
     canGoBack,
     getPreviousScreen,
     setSelectedJob,
+    exportToCalendar,
+    onExportToCalendar,
+    setOnExportToCalendar,
   };
 
   return (

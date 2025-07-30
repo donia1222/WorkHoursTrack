@@ -135,9 +135,10 @@ export default function WelcomeMessage() {
         <Text style={styles.title}>{t('chatbot.welcome_title')}</Text>
       </View>
       
-    <Text style={styles.subtitle}>
+      <Text style={styles.subtitle}>
         {t('chatbot.welcome_subtitle')}
       </Text>
+
       <View style={styles.featuresList}>
         <View style={styles.featureItem}>
           <View style={styles.featureIcon}>
@@ -166,6 +167,20 @@ export default function WelcomeMessage() {
           </View>
           <Text style={styles.featureText}>{t('chatbot.feature_detect')}</Text>
         </View>
+
+        <View style={styles.featureItem}>
+          <View style={styles.featureIcon}>
+            <Ionicons name="download" size={16} color={colors.primary} />
+          </View>
+          <Text style={styles.featureText}>{t('chatbot.feature_export')}</Text>
+        </View>
+
+        <View style={styles.featureItem}>
+          <View style={styles.featureIcon}>
+            <Ionicons name="sync" size={16} color={colors.primary} />
+          </View>
+          <Text style={styles.featureText}>{t('chatbot.feature_sync')}</Text>
+        </View>
       </View>
 
       <View style={styles.divider} />
@@ -181,6 +196,11 @@ export default function WelcomeMessage() {
         <View style={styles.actionItem}>
           <Ionicons name="document" size={18} color={colors.primary} style={styles.actionIcon} />
           <Text style={styles.actionText}>{t('chatbot.action_document')}</Text>
+        </View>
+
+        <View style={styles.actionItem}>
+          <Ionicons name="calendar" size={18} color={colors.primary} style={styles.actionIcon} />
+          <Text style={styles.actionText}>{t('chatbot.action_export')}</Text>
         </View>
 
         <View style={styles.actionItem}>

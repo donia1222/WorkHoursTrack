@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,8 @@ import ImagePreview from '@/app/components/ImagePreview';
 import WelcomeMessage from '@/app/components/WelcomeMessage';
 import { useLanguage } from '@/app/contexts/LanguageContext';
 import { useTheme, ThemeColors } from '@/app/contexts/ThemeContext';
+import { useNavigation } from '@/app/context/NavigationContext';
+import { JobService } from '@/app/services/JobService';
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
@@ -154,6 +156,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
 export default function ChatbotScreen() {
   const { language, t } = useLanguage(); // Obtener idioma actual y función de traducción
   const { colors, isDark } = useTheme(); // Obtener colores del tema actual
+  const { exportToCalendar } = useNavigation(); // Obtener función de exportación
   const styles = getStyles(colors, isDark); // Generar estilos dinámicos
   
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
@@ -161,12 +164,27 @@ export default function ChatbotScreen() {
   const [selectedImage, setSelectedImage] = useState<{ uri: string } | undefined>(undefined);
   const [selectedDocument, setSelectedDocument] = useState<{ uri: string; name: string; type: string } | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
+  const [jobs, setJobs] = useState<any[]>([]);
   const flatListRef = useRef<FlatList>(null);
   
   // Estado para mantener contexto de la última imagen/documento analizado
   const [lastAnalyzedImage, setLastAnalyzedImage] = useState<{ uri: string } | null>(null);
   const [lastAnalyzedDocument, setLastAnalyzedDocument] = useState<{ uri: string; name: string; type: string } | null>(null);
   const [waitingForPersonSelection, setWaitingForPersonSelection] = useState(false);
+
+  // Cargar trabajos al inicializar
+  useEffect(() => {
+    const loadJobs = async () => {
+      try {
+        const loadedJobs = await JobService.getJobs();
+        setJobs(loadedJobs);
+      } catch (error) {
+        console.error('Error loading jobs:', error);
+      }
+    };
+    
+    loadJobs();
+  }, []);
   
   // Función para detectar si el bot está preguntando por múltiples nombres (multiidioma)
   const isAskingForPersonSelection = (text: string): boolean => {
@@ -512,7 +530,13 @@ export default function ChatbotScreen() {
     if (messages.length === 0 && index === 0) {
       return <WelcomeMessage />;
     }
-    return <ChatMessage message={item} />;
+    return (
+      <ChatMessage 
+        message={item} 
+        jobs={jobs} 
+        onExportToCalendar={exportToCalendar}
+      />
+    );
   };
 
   const renderWelcomeHeader = () => {
@@ -535,7 +559,13 @@ export default function ChatbotScreen() {
           if (messages.length === 0) {
             return <WelcomeMessage />;
           }
-          return <ChatMessage message={item} />;
+          return (
+            <ChatMessage 
+              message={item} 
+              jobs={jobs} 
+              onExportToCalendar={exportToCalendar}
+            />
+          );
         }}
         keyExtractor={(item, index) => messages.length === 0 ? 'welcome' : item.id.toString()}
         style={styles.messagesContainer}
