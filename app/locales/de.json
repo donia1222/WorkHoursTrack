@@ -3,7 +3,9 @@
     "no_jobs_title": "Keine Jobs Konfiguriert",
     "no_jobs_message": "Sie müssen mindestens einen Job erstellen, bevor Sie den Timer, Kalender oder Berichte verwenden können. Beginnen Sie mit der Einrichtung Ihres ersten Jobs.",
     "create_first_job": "Ersten Job Erstellen",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "loading": "Synchronisiert...",
+    "error": "Fehler"
   },
   "preferences": {
     "title": "Einstellungen",
@@ -286,6 +288,7 @@
     "tap_to_register": "Tippen Sie auf einen Tag zum Registrieren",
     "view_detailed_reports": "Detaillierte Berichte anzeigen",
     "sync_to_phone": "Mit Telefon synchronisieren",
+    "clear_month": "Monat löschen",
     "sync_title": "Kalender synchronisieren",
     "sync_message": "Wie möchten Sie {{count}} Arbeitstage mit dem Kalender Ihres Telefons synchronisieren?",
     "sync_native": "Nativer Kalender",
@@ -294,6 +297,12 @@
     "sync_success": "{{count}} Tage erfolgreich synchronisiert",
     "sync_error": "Fehler beim Synchronisieren des Kalenders",
     "no_work_days": "Keine Arbeitstage in diesem Monat zum Synchronisieren",
+    "clear_month_title": "Gesamten Monat löschen",
+    "clear_month_message": "Sind Sie sicher, dass Sie alle {{count}} registrierten Tage in diesem Monat löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "clear_month_message_job": "Sind Sie sicher, dass Sie alle {{count}} Arbeitstage von \"{{jobName}}\" in diesem Monat löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "clear_month_success": "{{count}} Tage erfolgreich aus dem Monat entfernt",
+    "clear_month_error": "Fehler beim Löschen des Monats",
+    "no_days_to_clear": "Keine registrierten Tage in diesem Monat zum Löschen",
     "save_workday_error": "Arbeitstag konnte nicht gespeichert werden",
     "delete_workday_error": "Arbeitstag konnte nicht gelöscht werden",
     "work_event_title": "Arbeit",

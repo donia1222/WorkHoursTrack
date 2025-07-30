@@ -3,7 +3,9 @@
     "no_jobs_title": "No Jobs Configured",
     "no_jobs_message": "You need to create at least one job before you can use the timer, calendar, or reports. Start by setting up your first job.",
     "create_first_job": "Create First Job",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "loading": "Syncing...",
+    "error": "Error"
   },
   "preferences": {
     "title": "Preferences",
@@ -281,6 +283,7 @@
     "tap_to_register": "Tap any day to register",
     "view_detailed_reports": "View detailed reports",
     "sync_to_phone": "Sync to phone",
+    "clear_month": "Clear month",
     "sync_title": "Sync calendar",
     "sync_message": "How would you like to sync {{count}} work days to your phone's calendar?",
     "sync_native": "Native calendar",
@@ -289,6 +292,12 @@
     "sync_success": "{{count}} days synced successfully",
     "sync_error": "Error syncing calendar",
     "no_work_days": "No work days in this month to sync",
+    "clear_month_title": "Clear entire month",
+    "clear_month_message": "Are you sure you want to delete all {{count}} registered days in this month? This action cannot be undone.",
+    "clear_month_message_job": "Are you sure you want to delete all {{count}} work days from \"{{jobName}}\" in this month? This action cannot be undone.",
+    "clear_month_success": "{{count}} days removed from month successfully",
+    "clear_month_error": "Error clearing month",
+    "no_days_to_clear": "No registered days in this month to clear",
     "save_workday_error": "Could not save work day",
     "delete_workday_error": "Could not delete work day",
     "work_event_title": "Work",

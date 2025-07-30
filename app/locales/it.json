@@ -3,7 +3,9 @@
     "no_jobs_title": "Nessun Lavoro Configurato",
     "no_jobs_message": "Devi creare almeno un lavoro prima di poter utilizzare il timer, il calendario o i report. Inizia configurando il tuo primo lavoro.",
     "create_first_job": "Crea Primo Lavoro",
-    "cancel": "Annulla"
+    "cancel": "Annulla",
+    "loading": "Sincronizzazione...",
+    "error": "Errore"
   },
   "preferences": {
     "title": "Preferenze",
@@ -275,6 +277,7 @@
     "tap_to_register": "Tocca qualsiasi giorno per registrare",
     "view_detailed_reports": "Visualizza report dettagliati",
     "sync_to_phone": "Sincronizza al telefono",
+    "clear_month": "Pulisci mese",
     "sync_title": "Sincronizza calendario",
     "sync_message": "Come vuoi sincronizzare {{count}} giorni lavorativi al calendario del tuo telefono?",
     "sync_native": "Calendario nativo",
@@ -283,6 +286,12 @@
     "sync_success": "{{count}} giorni sincronizzati con successo",
     "sync_error": "Errore durante la sincronizzazione del calendario",
     "no_work_days": "Nessun giorno lavorativo in questo mese da sincronizzare",
+    "clear_month_title": "Pulisci intero mese",
+    "clear_month_message": "Sei sicuro di voler eliminare tutti i {{count}} giorni registrati in questo mese? Questa azione non può essere annullata.",
+    "clear_month_message_job": "Sei sicuro di voler eliminare tutti i {{count}} giorni di lavoro da \"{{jobName}}\" in questo mese? Questa azione non può essere annullata.",
+    "clear_month_success": "{{count}} giorni rimossi dal mese con successo",
+    "clear_month_error": "Errore durante la pulizia del mese",
+    "no_days_to_clear": "Nessun giorno registrato in questo mese da pulire",
     "save_workday_error": "Non è stato possibile salvare il giorno lavorativo",
     "delete_workday_error": "Non è stato possibile eliminare il giorno lavorativo",
     "delete_workday": "Elimina record",

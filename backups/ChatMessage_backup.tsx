@@ -35,8 +35,6 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   userMessage: {
     alignSelf: 'flex-end',
     backgroundColor: colors.primary,
-    minWidth: 200,
-    marginBottom: 12,
   },
   botMessage: {
     alignSelf: 'flex-start',

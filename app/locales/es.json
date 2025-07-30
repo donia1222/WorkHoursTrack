@@ -3,7 +3,9 @@
     "no_jobs_title": "Sin Trabajos Configurados",
     "no_jobs_message": "Necesitas crear al menos un trabajo antes de poder usar el cronómetro, calendario o reportes. Comienza configurando tu primer trabajo.",
     "create_first_job": "Crear Primer Trabajo",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "loading": "Sincronizando...",
+    "error": "Error"
   },
   "preferences": {
     "title": "Preferencias",
@@ -293,6 +295,7 @@
     "tap_to_register": "Toca cualquier día para registrar",
     "view_detailed_reports": "Ver reportes detallados",
     "sync_to_phone": "Sincronizar al teléfono",
+    "clear_month": "Limpiar mes",
     "sync_title": "Sincronizar calendario",
     "sync_message": "¿Cómo quieres sincronizar {{count}} días de trabajo al calendario de tu teléfono?",
     "sync_native": "Calendario nativo",
@@ -301,6 +304,12 @@
     "sync_success": "{{count}} días sincronizados correctamente",
     "sync_error": "Error al sincronizar el calendario",
     "no_work_days": "No hay días de trabajo en este mes para sincronizar",
+    "clear_month_title": "Limpiar mes completo",
+    "clear_month_message": "¿Estás seguro de que quieres eliminar todos los {{count}} días registrados en este mes? Esta acción no se puede deshacer.",
+    "clear_month_message_job": "¿Estás seguro de que quieres eliminar todos los {{count}} días de trabajo de \"{{jobName}}\" en este mes? Esta acción no se puede deshacer.",
+    "clear_month_success": "Se eliminaron {{count}} días del mes correctamente",
+    "clear_month_error": "Error al limpiar el mes",
+    "no_days_to_clear": "No hay días registrados en este mes para limpiar",
     "save_workday_error": "No se pudo guardar el día de trabajo",
     "delete_workday_error": "No se pudo eliminar el día de trabajo",
     "work_event_title": "Trabajo",

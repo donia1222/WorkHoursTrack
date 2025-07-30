@@ -3,7 +3,9 @@
     "no_jobs_title": "Aucun Emploi Configuré",
     "no_jobs_message": "Vous devez créer au moins un emploi avant de pouvoir utiliser le minuteur, le calendrier ou les rapports. Commencez par configurer votre premier emploi.",
     "create_first_job": "Créer Premier Emploi",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "loading": "Synchronisation...",
+    "error": "Erreur"
   },
   "preferences": {
     "title": "Préférences",
@@ -275,6 +277,7 @@
     "tap_to_register": "Touchez n'importe quel jour pour enregistrer",
     "view_detailed_reports": "Voir les rapports détaillés",
     "sync_to_phone": "Synchroniser au téléphone",
+    "clear_month": "Vider le mois",
     "sync_title": "Synchroniser le calendrier",
     "sync_message": "Comment souhaitez-vous synchroniser {{count}} jours de travail au calendrier de votre téléphone ?",
     "sync_native": "Calendrier natif",
@@ -283,6 +286,12 @@
     "sync_success": "{{count}} jours synchronisés avec succès",
     "sync_error": "Erreur lors de la synchronisation du calendrier",
     "no_work_days": "Aucun jour de travail ce mois-ci à synchroniser",
+    "clear_month_title": "Vider tout le mois",
+    "clear_month_message": "Êtes-vous sûr de vouloir supprimer tous les {{count}} jours enregistrés ce mois-ci ? Cette action ne peut pas être annulée.",
+    "clear_month_message_job": "Êtes-vous sûr de vouloir supprimer tous les {{count}} jours de travail de \"{{jobName}}\" ce mois-ci ? Cette action ne peut pas être annulée.",
+    "clear_month_success": "{{count}} jours supprimés du mois avec succès",
+    "clear_month_error": "Erreur lors du vidage du mois",
+    "no_days_to_clear": "Aucun jour enregistré ce mois-ci à vider",
     "save_workday_error": "Impossible de sauvegarder le jour de travail",
     "delete_workday_error": "Impossible de supprimer le jour de travail",
     "delete_workday": "Supprimer l'enregistrement",

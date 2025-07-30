@@ -1019,6 +1019,85 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
     }
   };
 
+  const handleClearMonth = async () => {
+    try {
+      // Get current month work days (filtered by selected job if not "all")
+      const monthKey = currentMonth.toISOString().slice(0, 7);
+      let monthDays = workDays.filter(day => day.date.startsWith(monthKey));
+      
+      // Filter by selected job if not "all"
+      if (selectedJobId !== 'all') {
+        monthDays = monthDays.filter(day => {
+          if (day.type === 'work') {
+            return day.jobId === selectedJobId;
+          }
+          // For non-work days, we can't easily associate them with a specific job
+          // so we skip them when a specific job is selected
+          return false;
+        });
+      }
+
+      if (monthDays.length === 0) {
+        Alert.alert(t('calendar.clear_month_title'), t('calendar.no_days_to_clear'));
+        return;
+      }
+
+      // Show confirmation dialog
+      const selectedJob = jobs.find(j => j.id === selectedJobId);
+      const confirmationMessage = selectedJobId !== 'all' && selectedJob
+        ? t('calendar.clear_month_message_job', { count: monthDays.length, jobName: selectedJob.name })
+        : t('calendar.clear_month_message', { count: monthDays.length });
+        
+      Alert.alert(
+        t('calendar.clear_month_title'),
+        confirmationMessage,
+        [
+          {
+            text: t('calendar.cancel'),
+            style: 'cancel'
+          },
+          {
+            text: t('calendar.delete'),
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                let deletedCount = 0;
+                
+                // Delete each work day
+                for (const workDay of monthDays) {
+                  try {
+                    await JobService.deleteWorkDay(workDay.id);
+                    deletedCount++;
+                  } catch (error) {
+                    console.error(`Error deleting work day ${workDay.id}:`, error);
+                  }
+                }
+
+                // Refresh work days
+                await loadData();
+
+                if (deletedCount > 0) {
+                  Alert.alert(
+                    t('calendar.clear_month_title'),
+                    t('calendar.clear_month_success', { count: deletedCount })
+                  );
+                } else {
+                  Alert.alert(t('common.error'), t('calendar.clear_month_error'));
+                }
+              } catch (error) {
+                console.error('Error clearing month:', error);
+                Alert.alert(t('common.error'), t('calendar.clear_month_error'));
+              }
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Error in handleClearMonth:', error);
+      Alert.alert(t('common.error'), t('calendar.clear_month_error'));
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -1161,6 +1240,17 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
             <IconSymbol size={24} name="calendar.badge.plus" color={colors.success} />
             <Text style={styles.actionButtonText}>{t('calendar.sync_to_phone')}</Text>
             <IconSymbol size={16} name="arrow.right" color={colors.success} />
+          </BlurView>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={handleClearMonth}
+        >
+          <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.actionButtonInner}>
+            <IconSymbol size={24} name="trash" color={colors.error} />
+            <Text style={[styles.actionButtonText, { color: colors.error }]}>{t('calendar.clear_month')}</Text>
+            <IconSymbol size={16} name="arrow.right" color={colors.error} />
           </BlurView>
         </TouchableOpacity>
 

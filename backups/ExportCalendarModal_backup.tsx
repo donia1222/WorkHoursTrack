@@ -9,14 +9,12 @@ import {
   Alert,
   ActionSheetIOS,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, ThemeColors } from '@/app/contexts/ThemeContext';
 import { useLanguage } from '@/app/contexts/LanguageContext';
 import { Job } from '@/app/types/WorkTypes';
 import { ParsedWorkData, ChatDataParser } from '@/app/services/ChatDataParser';
-import { CalendarSyncService } from '@/app/services/CalendarSyncService';
 
 interface ExportCalendarModalProps {
   visible: boolean;
@@ -36,7 +34,6 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   modalContainer: {
     width: '90%',
     maxWidth: 400,
-    maxHeight: 700,
     borderRadius: 20,
     backgroundColor: isDark ? colors.surface : '#FFFFFF',
     shadowColor: '#000000',
@@ -44,7 +41,6 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 20,
     elevation: 10,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 0,
   },
   modalContent: {
     padding: 24,
@@ -176,16 +172,16 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontWeight: '500',
   },
   buttonContainer: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     gap: 12,
     marginTop: 8,
   },
   button: {
+    flex: 1,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
   },
   cancelButton: {
     backgroundColor: isDark ? colors.card : '#F9FAFB',
@@ -195,14 +191,6 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   exportButton: {
     backgroundColor: colors.primary,
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  nativeExportButton: {
-    backgroundColor: colors.success,
-    shadowColor: colors.success,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -260,7 +248,6 @@ export default function ExportCalendarModal({
   const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   
   const styles = getStyles(colors, isDark);
 
@@ -271,11 +258,6 @@ export default function ExportCalendarModal({
     } else if (visible) {
       // Reset selection cuando se abre el modal
       setSelectedJobId('');
-    }
-    
-    // Reset loading state cuando el modal se abre o cierra
-    if (!visible) {
-      setIsLoading(false);
     }
   }, [visible, jobs]);
 
@@ -297,60 +279,6 @@ export default function ExportCalendarModal({
     }
 
     onExport(selectedJobId, finalParsedData);
-  };
-
-  const handleExportToNativeCalendar = async () => {
-    if (!selectedJobId || !parsedData) {
-      Alert.alert(t('chatbot.export_calendar.export_error_title'), t('chatbot.export_calendar.select_job_error'));
-      return;
-    }
-
-    setIsLoading(true);
-
-    let finalParsedData = parsedData;
-    
-    // Si necesitamos mes/año, actualizar las fechas
-    if (parsedData.needsMonthYear) {
-      finalParsedData = ChatDataParser.updateDatesWithMonthYear(
-        parsedData,
-        selectedYear,
-        selectedMonth
-      );
-    }
-
-    try {
-      // Convertir datos a WorkDays
-      const workDays = ChatDataParser.convertToWorkDays(finalParsedData, selectedJobId);
-      const selectedJob = jobs.find(job => job.id === selectedJobId);
-      
-      // Filtrar solo días de trabajo para calendario nativo
-      const workDaysOnly = workDays.filter(day => day.type === 'work');
-      
-      if (workDaysOnly.length === 0) {
-        Alert.alert(t('chatbot.export_calendar.export_error_title'), t('calendar.no_work_days'));
-        setIsLoading(false);
-        return;
-      }
-
-      // Exportar al calendario nativo
-      const syncCount = await CalendarSyncService.syncMultipleWorkDays(workDaysOnly, jobs);
-      
-      setIsLoading(false);
-      
-      if (syncCount > 0) {
-        Alert.alert(
-          t('calendar.sync_complete'),
-          t('calendar.sync_success', { count: syncCount }),
-          [{ text: 'OK', onPress: onClose }]
-        );
-      } else {
-        Alert.alert(t('common.error'), t('calendar.sync_error'));
-      }
-    } catch (error) {
-      console.error('Error exporting to native calendar:', error);
-      setIsLoading(false);
-      Alert.alert(t('common.error'), t('calendar.sync_error'));
-    }
   };
 
   const getMonthName = (month: number) => {
@@ -545,11 +473,23 @@ export default function ExportCalendarModal({
               </View>
             )}
 
-    
+            {/* Warning */}
+            <View style={styles.warningBox}>
+              <Text style={styles.warningText}>
+                {t('chatbot.export_calendar.warning_message', { totalDays })}
+              </Text>
+            </View>
 
             {/* Buttons */}
             <View style={styles.buttonContainer}>
-      
+              <TouchableOpacity 
+                style={[styles.button, styles.cancelButton]} 
+                onPress={onClose}
+              >
+                <Text style={[styles.buttonText, styles.cancelButtonText]}>
+                  {t('chatbot.export_calendar.cancel_button')}
+                </Text>
+              </TouchableOpacity>
               
               <TouchableOpacity 
                 style={[
@@ -560,37 +500,8 @@ export default function ExportCalendarModal({
                 onPress={handleExport}
                 disabled={!selectedJobId && jobs.length > 1}
               >
-                <Ionicons name="calendar" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
                 <Text style={[styles.buttonText, styles.exportButtonText]}>
                   {t('chatbot.export_calendar.sync_button')}
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[
-                  styles.button, 
-                  styles.nativeExportButton,
-                  ((!selectedJobId && jobs.length > 1) || isLoading) && styles.disabledButton
-                ]} 
-                onPress={handleExportToNativeCalendar}
-                disabled={(!selectedJobId && jobs.length > 1) || isLoading}
-              >
-                {isLoading ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
-                ) : (
-                  <Ionicons name="phone-portrait" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-                )}
-                <Text style={[styles.buttonText, styles.exportButtonText]}>
-                  {isLoading ? t('common.loading') || 'Sincronizando...' : t('calendar.sync_to_phone')}
-                </Text>
-              </TouchableOpacity>
-
-                      <TouchableOpacity 
-                style={[styles.button, styles.cancelButton]} 
-                onPress={onClose}
-              >
-                <Text style={[styles.buttonText, styles.cancelButtonText]}>
-                  {t('chatbot.export_calendar.cancel_button')}
                 </Text>
               </TouchableOpacity>
             </View>

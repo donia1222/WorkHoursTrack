@@ -60,19 +60,63 @@ export default function WorkDayModal({
       descriptionTranslation: t('preferences.notifications.enable_work_reminders_description')
     });
     
+    const alertTitle = (() => {
+      switch (language) {
+        case 'es': return 'Activar Recordatorios';
+        case 'en': return 'Enable Reminders';
+        case 'de': return 'Erinnerungen Aktivieren';
+        case 'fr': return 'Activer les Rappels';
+        case 'it': return 'Attiva Promemoria';
+        default: return 'Enable Reminders';
+      }
+    })();
+
+    const alertMessage = (() => {
+      switch (language) {
+        case 'es': return '¿Quieres activar los recordatorios de horario para recibir notificaciones antes de tu hora de trabajo?';
+        case 'en': return 'Would you like to enable work reminders to receive notifications before your work time?';
+        case 'de': return 'Möchten Sie Arbeitserinnerungen aktivieren, um Benachrichtigungen vor Ihrer Arbeitszeit zu erhalten?';
+        case 'fr': return 'Voulez-vous activer les rappels de travail pour recevoir des notifications avant votre heure de travail?';
+        case 'it': return 'Vuoi attivare i promemoria di lavoro per ricevere notifiche prima del tuo orario di lavoro?';
+        default: return 'Would you like to enable work reminders to receive notifications before your work time?';
+      }
+    })();
+
+    const cancelText = (() => {
+      switch (language) {
+        case 'es': return 'Cancelar';
+        case 'en': return 'Cancel';
+        case 'de': return 'Abbrechen';
+        case 'fr': return 'Annuler';
+        case 'it': return 'Annulla';
+        default: return 'Cancel';
+      }
+    })();
+
+    const preferencesText = (() => {
+      switch (language) {
+        case 'es': return 'Ir a Preferencias';
+        case 'en': return 'Go to Preferences';
+        case 'de': return 'Zu Einstellungen Gehen';
+        case 'fr': return 'Aller aux Préférences';
+        case 'it': return 'Vai alle Preferenze';
+        default: return 'Go to Preferences';
+      }
+    })();
+
     Alert.alert(
-      t('preferences.notifications.enable_work_reminders_title') || 'Activar Recordatorios',
-      t('preferences.notifications.enable_work_reminders_message') || '¿Quieres activar los recordatorios de horario para recibir notificaciones antes de tu hora de trabajo?',
+      alertTitle,
+      alertMessage,
       [
         {
-          text: t('common.cancel') || 'Cancelar',
+          text: cancelText,
           style: 'cancel',
           onPress: () => {
             console.log('🔍 WorkDayModal: Cancel button pressed');
           },
         },
         {
-          text: t('preferences.notifications.go_to_preferences') || 'Ir a Preferencias',
+          text: preferencesText,
           onPress: () => {
             console.log('🔍 WorkDayModal: Go to Preferences button pressed');
             onClose();
@@ -721,10 +765,28 @@ export default function WorkDayModal({
                   <IconSymbol name="bell.badge" size={20} color={Theme.colors.primary} />
                   <View style={styles.notificationSuggestionText}>
                     <Text style={styles.notificationSuggestionTitle}>
-                      {t('preferences.notifications.enable_work_reminders_suggestion') || 'Activar recordatorios de horario'}
+                      {(() => {
+                        switch (language) {
+                          case 'es': return 'Activar recordatorios de horario';
+                          case 'en': return 'Enable work reminders';
+                          case 'de': return 'Arbeitserinnerungen aktivieren';
+                          case 'fr': return 'Activer les rappels de travail';
+                          case 'it': return 'Attiva promemoria di lavoro';
+                          default: return 'Enable work reminders';
+                        }
+                      })()}
                     </Text>
                     <Text style={styles.notificationSuggestionDescription}>
-                      {t('preferences.notifications.enable_work_reminders_description') || 'Recibe avisos antes de tu hora de entrada'}
+                      {(() => {
+                        switch (language) {
+                          case 'es': return 'Recibe avisos antes de tu hora de entrada';
+                          case 'en': return 'Get alerts before your work time';
+                          case 'de': return 'Erhalten Sie Benachrichtigungen vor Ihrer Arbeitszeit';
+                          case 'fr': return 'Recevez des alertes avant votre heure de travail';
+                          case 'it': return 'Ricevi avvisi prima dell\'orario di lavoro';
+                          default: return 'Get alerts before your work time';
+                        }
+                      })()}
                     </Text>
                   </View>
                   <IconSymbol name="chevron.right" size={14} color={Theme.colors.textSecondary} />

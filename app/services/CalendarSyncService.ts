@@ -56,6 +56,34 @@ export class CalendarSyncService {
   }
 
   /**
+   * Get start and end times for a work day, using specific times if available or defaults
+   */
+  private static getWorkDayTimes(workDay: WorkDay): { startHour: number, startMinute: number, endHour: number, endMinute: number, isAllDay: boolean } {
+    let startHour = 9, startMinute = 0, endHour = 17, endMinute = 0;
+    let isAllDay = false;
+    
+    // If specific start/end times are available, use them
+    if (workDay.startTime && workDay.endTime) {
+      const [startH, startM] = workDay.startTime.split(':').map(Number);
+      const [endH, endM] = workDay.endTime.split(':').map(Number);
+      
+      startHour = startH;
+      startMinute = startM;
+      endHour = endH;
+      endMinute = endM;
+    } else {
+      // When no specific schedule, create all-day event
+      isAllDay = true;
+      startHour = 0;
+      startMinute = 0;
+      endHour = 0;
+      endMinute = 0;
+    }
+    
+    return { startHour, startMinute, endHour, endMinute, isAllDay };
+  }
+
+  /**
    * Check calendar permissions using expo-calendar
    */
   static async checkCalendarPermissions(): Promise<boolean> {
@@ -198,12 +226,20 @@ export class CalendarSyncService {
         return false;
       }
 
-      const startDate = new Date(workDate);
-      startDate.setHours(9, 0, 0, 0); // 9:00 AM
+      const { startHour, startMinute, endHour, endMinute, isAllDay } = this.getWorkDayTimes(workDay);
       
+      const startDate = new Date(workDate);
       const endDate = new Date(workDate);
-      const endHour = Math.min(9 + (workDay.hours || 8), 23);
-      endDate.setHours(endHour, 0, 0, 0);
+      
+      if (isAllDay) {
+        // For all-day events, use midnight to midnight of next day
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setDate(endDate.getDate() + 1);
+        endDate.setHours(0, 0, 0, 0);
+      } else {
+        startDate.setHours(startHour, startMinute, 0, 0);
+        endDate.setHours(endHour, endMinute, 0, 0);
+      }
 
       // Ensure end date is after start date
       if (endDate <= startDate) {
@@ -218,6 +254,7 @@ export class CalendarSyncService {
         notes: `${workDay.hours || 0} horas trabajadas${workDay.overtime ? ' (incluye horas extra)' : ''}${workDay.notes ? '\n\nNotas: ' + workDay.notes : ''}`,
         location: job.address || '',
         alarms: [], // No alarms by default
+        allDay: isAllDay, // Set allDay flag for events without specific schedule
       };
 
       console.log('Creating calendar event with data:', {
@@ -307,12 +344,20 @@ export class CalendarSyncService {
       
       // Create date objects
       const workDate = new Date(workDay.date + 'T00:00:00');
-      const startDate = new Date(workDate);
-      startDate.setHours(9, 0, 0, 0);
+      const { startHour, startMinute, endHour, endMinute, isAllDay } = this.getWorkDayTimes(workDay);
       
+      const startDate = new Date(workDate);
       const endDate = new Date(workDate);
-      const endHour = Math.min(9 + workDay.hours, 23);
-      endDate.setHours(endHour, 0, 0, 0);
+      
+      if (isAllDay) {
+        // For all-day events, use midnight to midnight of next day
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setDate(endDate.getDate() + 1);
+        endDate.setHours(0, 0, 0, 0);
+      } else {
+        startDate.setHours(startHour, startMinute, 0, 0);
+        endDate.setHours(endHour, endMinute, 0, 0);
+      }
 
       // Build calendar intent URL
       const workEventTitle = await this.getWorkEventTitle();
@@ -352,12 +397,20 @@ export class CalendarSyncService {
       console.log('Using iOS calendar approach');
       
       const workDate = new Date(workDay.date + 'T00:00:00');
-      const startDate = new Date(workDate);
-      startDate.setHours(9, 0, 0, 0);
+      const { startHour, startMinute, endHour, endMinute, isAllDay } = this.getWorkDayTimes(workDay);
       
+      const startDate = new Date(workDate);
       const endDate = new Date(workDate);
-      const endHour = Math.min(9 + workDay.hours, 23);
-      endDate.setHours(endHour, 0, 0, 0);
+      
+      if (isAllDay) {
+        // For all-day events, use midnight to midnight of next day
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setDate(endDate.getDate() + 1);
+        endDate.setHours(0, 0, 0, 0);
+      } else {
+        startDate.setHours(startHour, startMinute, 0, 0);
+        endDate.setHours(endHour, endMinute, 0, 0);
+      }
 
       // Use iOS calendar URL scheme
       const workEventTitle = await this.getWorkEventTitle();
@@ -431,14 +484,30 @@ export class CalendarSyncService {
    * Generates an ICS file content for a work day
    */
   static async generateICSFile(workDay: WorkDay, job: Job): Promise<string> {
-    const formatDate = (date: string, hours = 0): string => {
+    const { startHour, startMinute, endHour, endMinute, isAllDay } = this.getWorkDayTimes(workDay);
+    
+    const formatDate = (date: string, isStartTime = true): string => {
       const d = new Date(date);
-      d.setUTCHours(9 + hours, 0, 0, 0); // Start at 9 AM, add hours for end time
+      if (isAllDay) {
+        // For all-day events, use date format without time
+        if (isStartTime) {
+          d.setUTCHours(0, 0, 0, 0);
+        } else {
+          d.setUTCDate(d.getUTCDate() + 1);
+          d.setUTCHours(0, 0, 0, 0);
+        }
+      } else {
+        if (isStartTime) {
+          d.setUTCHours(startHour, startMinute, 0, 0);
+        } else {
+          d.setUTCHours(endHour, endMinute, 0, 0);
+        }
+      }
       return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     };
 
-    const startDate = formatDate(workDay.date);
-    const endDate = formatDate(workDay.date, workDay.hours);
+    const startDate = formatDate(workDay.date, true);
+    const endDate = formatDate(workDay.date, false);
     const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     const workEventTitle = await this.getWorkEventTitle();
 
@@ -466,8 +535,16 @@ END:VCALENDAR`;
    */
   static async openCalendarApp(workDay: WorkDay, job: Job): Promise<void> {
     try {
-      const startTime = new Date(`${workDay.date}T09:00:00`);
-      const endTime = new Date(`${workDay.date}T${9 + workDay.hours}:00:00`);
+      const { startHour, startMinute, endHour, endMinute, isAllDay } = this.getWorkDayTimes(workDay);
+      
+      let startTime, endTime;
+      if (isAllDay) {
+        startTime = new Date(`${workDay.date}T00:00:00`);
+        endTime = new Date(`${workDay.date}T23:59:59`);
+      } else {
+        startTime = new Date(`${workDay.date}T${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}:00`);
+        endTime = new Date(`${workDay.date}T${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}:00`);
+      }
       
       let calendarUrl = '';
       
@@ -606,13 +683,7 @@ END:VCALENDAR`;
         }
       }
       
-      if (successCount > 0) {
-        Alert.alert(
-          'Eventos añadidos', 
-          `Se han añadido ${successCount} eventos de trabajo al calendario.`,
-          [{ text: 'Perfecto' }]
-        );
-      } else {
+      if (successCount === 0) {
         Alert.alert('Error', 'No se pudo añadir ningún evento al calendario');
       }
       
