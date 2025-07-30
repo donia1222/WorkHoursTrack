@@ -49,6 +49,40 @@
       "reminder_time": "Heure de Rappel",
       "reminder_time_desc": "Configurez quand recevoir des rappels avant votre horaire de travail"
     },
+    "auto_backup": {
+      "title": "Sauvegarde Automatique",
+      "description": "Générer des sauvegardes automatiquement selon la fréquence configurée",
+      "enable": "Activer la sauvegarde automatique",
+      "enabled": "Sauvegarde auto",
+      "enabled_desc": "Créer des sauvegardes automatiquement",
+      "frequency": "Fréquence",
+      "frequency_desc": "À quelle fréquence créer les sauvegardes automatiques",
+      "frequencies": {
+        "daily": "Quotidien",
+        "weekly": "Hebdomadaire", 
+        "monthly": "Mensuel"
+      },
+      "daily": "Quotidien",
+      "weekly": "Hebdomadaire", 
+      "monthly": "Mensuel",
+      "status": "Statut",
+      "available_backups": "Sauvegardes disponibles",
+      "available_backups_desc": "Copies de sauvegarde générées automatiquement",
+      "no_backups": "Aucune sauvegarde créée",
+      "no_backups_desc": "Seront créées automatiquement selon la configuration",
+      "no_backups_available": "Aucune sauvegarde disponible",
+      "download": "Télécharger",
+      "created_on": "Créé le",
+      "size": "Taille",
+      "delete_all": "Supprimer toutes",
+      "delete_all_confirm": "Supprimer toutes les sauvegardes automatiques?",
+      "delete_all_desc": "Cette action ne peut pas être annulée",
+      "backup_created": "Sauvegarde créée",
+      "backup_error": "Erreur lors de la création de la sauvegarde",
+      "last_backup": "Dernière sauvegarde: {{date}}",
+      "never": "Jamais",
+      "save": "Enregistrer"
+    },
     "haptic": {
       "title": "Retour Haptique",
       "description": "Contrôlez la vibration tactile des boutons et interactions de l'application",
@@ -188,7 +222,11 @@
       "disable_auto": "Désactiver Auto",
       "disabled_title": "AutoTimer Désactivé",
       "disabled_message": "Minuteur automatique désactivé pour \"{{jobName}}\"",
-      "disable_error": "Impossible de désactiver le minuteur automatique"
+      "disable_error": "Impossible de désactiver le minuteur automatique",
+      "background_notice": "Le minuteur automatique ne fonctionne que lorsque l'app est ouverte en arrière-plan. Si vous fermez complètement l'app, il arrêtera de compter pour des raisons de confidentialité.",
+      "privacy_notice": "Pour des raisons de confidentialité, l'auto timer ne fonctionne pas quand l'app est fermée. Gardez l'app en arrière-plan pour un fonctionnement correct.",
+      "dismiss_notice": "Compris",
+      "dismiss_privacy_notice": "Ne plus afficher"
     }
   },
   "reports": {
@@ -237,7 +275,21 @@
     "include_invoice_details_desc": "Générer automatiquement le numéro de facture et la date actuelle",
     "no_billing_data": "Aucunes données de facturation",
     "no_billing_data_desc": "Configurez les données de facturation pour les inclure dans vos rapports PDF",
-    "configure_billing": "Ajouter les données de facturation au PDF"
+    "configure_billing": "Ajouter les données de facturation au PDF",
+    "include_salary_calculation": "Inclure le total salarial",
+    "include_salary_calculation_desc": "Calculer et afficher le montant total à payer basé sur les heures travaillées",
+    "billing_period": "Période de facturation:",
+    "billing_per_hour": "Par heure",
+    "billing_per_week": "Par semaine",
+    "billing_per_month": "Par mois",
+    "calculation_preview": "Aperçu du Calcul:",
+    "preview_rate": "Tarif:",
+    "preview_period": "Période:",
+    "preview_total": "Total:",
+    "no_salary_config": "Aucune configuration salariale",
+    "no_salary_config_desc": "Activez la configuration salariale dans votre travail pour inclure les calculs automatiques",
+    "activate_salary_config": "Activer la configuration salariale",
+    "configure_amounts_message": "Configurez les montants pour voir le total"
   },
   "calendar": {
     "title": "Mon Calendrier",
@@ -351,6 +403,14 @@
     "back": "Retour",
     "home": "Accueil"
   },
+  "job_cards": {
+    "buttons": {
+      "timer": "Minuteur",
+      "calendar": "Calendrier", 
+      "statistics": "Statistiques",
+      "settings": "Paramètres"
+    }
+  },
   "job_form": {
     "title_edit": "Éditer l'emploi",
     "title_new": "Nouvel emploi",
@@ -360,7 +420,8 @@
       "schedule": "Horaire", 
       "financial": "Financier",
       "billing": "Facturation",
-      "auto": "Auto"
+      "auto": "Auto",
+      "delete": "Supprimer"
     },
     "basic": {
       "title": "Informations de base",
@@ -507,6 +568,28 @@
       "address_required_message": "Pour activer le minuteur automatique, vous devez d'abord ajouter une adresse dans l'onglet 'De base'. L'adresse est nécessaire pour la détection automatique par localisation.",
       "stopped_no_time": "Minuteur arrêté - aucun temps actif n'était en cours"
     },
+    "delete": {
+      "title": "Supprimer l'Emploi",
+      "subtitle": "Cette action ne peut pas être annulée",
+      "warning_title": "⚠️ Avertissement",
+      "warning_message": "Supprimer cet emploi supprimera définitivement toutes les données associées, y compris :",
+      "warning_items": [
+        "• Tous les jours de travail enregistrés",
+        "• Configuration des horaires et salaires", 
+        "• Configuration du minuteur automatique",
+        "• Données de facturation et rapports"
+      ],
+      "confirmation_title": "Confirmer la Suppression",
+      "confirmation_message": "Pour confirmer que vous voulez supprimer cet emploi, tapez le nom exact de l'emploi :",
+      "job_name_placeholder": "Tapez le nom de l'emploi ici",
+      "delete_button": "Supprimer Définitivement",
+      "cancel_button": "Annuler",
+      "name_mismatch": "Le nom ne correspond pas. Veuillez vérifier que vous avez tapé exactement : {{jobName}}",
+      "success_title": "Emploi Supprimé",
+      "success_message": "L'emploi '{{jobName}}' a été supprimé avec succès.",
+      "error_title": "Erreur de Suppression",
+      "error_message": "Une erreur s'est produite lors de la suppression de l'emploi. Veuillez réessayer."
+    },
     "premium": {
       "title": "Fonction Premium",
       "message": "Cette fonction nécessite un abonnement premium. Voulez-vous vous abonner maintenant pour accéder à toutes les fonctionnalités avancées ?",
@@ -613,13 +696,30 @@
     }
   },
   "preferences": {
+    "title": "Préférences",
+    "subtitle": "Personnalisez votre expérience de travail",
+    "appearance": {
+      "title": "Apparence",
+      "description": "Configurez le thème visuel de l'application",
+      "auto": "Auto",
+      "light": "Clair",
+      "dark": "Sombre"
+    },
+    "language": {
+      "title": "Langue",
+      "description": "Sélectionnez votre langue préférée",
+      "default": "Langue actuelle",
+      "change_to": "Changer vers {{language}}"
+    },
     "data_management": {
       "title": "Gestion des Données",
       "description": "⚠️ IMPORTANT : Cette application stocke toutes les données uniquement sur votre appareil. Nous n'utilisons pas de serveurs ou de bases de données cloud. Pour cette raison, vous devez créer des sauvegardes régulièrement et les importer si vous réinstallez l'application.",
       "export_title": "Créer fichier .json",
       "export_desc": "Créer une sauvegarde de tous vos emplois, heures et paramètres",
       "import_title": "Importer fichier .json",
-      "import_desc": "Restaurer les données à partir d'un fichier de sauvegarde"
+      "import_desc": "Restaurer les données à partir d'un fichier de sauvegarde",
+      "auto_backup_title": "Sauvegardes Automatiques",
+      "auto_backup_desc": "Configurer des sauvegardes automatiques quotidiennes, hebdomadaires ou mensuelles"
     }
   },
   "side_menu": {
@@ -660,6 +760,9 @@
       "title": "Notifications",
       "description": "Configurer les rappels et alertes de travail",
       "general": "Notifications générales",
+      "general_notifications": "Notifications Générales",
+      "auto_timer": "Timer Automatique",
+      "work_schedule_reminders": "Rappels d'Horaire de Travail",
       "general_desc": "Activer toutes les notifications",
       "schedule": "Rappels d'horaire",
       "schedule_desc": "Notifications d'entrée et de sortie",
@@ -743,6 +846,22 @@
         "purchased": "Acheté",
         "expires": "Expire"
       }
+    }
+  },
+  "auto_backup": {
+    "title": "Sauvegardes Automatiques",
+    "enable": "Activer la sauvegarde automatique",
+    "frequency": "Fréquence",
+    "status": "Statut",
+    "available_backups": "Sauvegardes disponibles",
+    "no_backups": "Aucune sauvegarde créée",
+    "no_backups_available": "Aucune sauvegarde disponible",
+    "last_backup": "Dernière sauvegarde: {{date}}",
+    "save": "Enregistrer",
+    "frequencies": {
+      "daily": "Quotidien",
+      "weekly": "Hebdomadaire",
+      "monthly": "Mensuel"
     }
   },
   "chatbot": {

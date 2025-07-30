@@ -1738,7 +1738,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                 {/* Salary Calculation Section */}
                 <View style={styles.salarySection}>
                   <Text style={styles.salarySectionTitle}>
-                    💰 Cálculo Salarial
+                   
                   </Text>
                   
                   {getSalaryData() ? (
@@ -1747,10 +1747,10 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                         <View style={styles.switchRow}>
                           <View style={styles.switchContent}>
                             <Text style={styles.switchLabel}>
-                              Incluir total salarial
+                              {t('reports.include_salary_calculation')}
                             </Text>
                             <Text style={styles.switchDescription}>
-                              Calcular y mostrar el total a pagar basado en las horas trabajadas
+                              {t('reports.include_salary_calculation_desc')}
                             </Text>
                           </View>
                           <TouchableOpacity
@@ -1765,12 +1765,12 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                       {includeSalaryCalculation && (
                         <>
                           <View style={styles.periodSelectorSection}>
-                            <Text style={styles.periodSelectorLabel}>Período de facturación:</Text>
+                            <Text style={styles.periodSelectorLabel}>{t('reports.billing_period')}</Text>
                             <View style={styles.salaryPeriodSelector}>
                               {[
-                                { key: 'hour', label: 'Por horas' },
-                                { key: 'week', label: 'Por semana' },
-                                { key: 'month', label: 'Por mes' },
+                                { key: 'hour', label: t('reports.billing_per_hour') },
+                                { key: 'week', label: t('reports.billing_per_week') },
+                                { key: 'month', label: t('reports.billing_per_month') },
                               ].map((option) => (
                                 <TouchableOpacity
                                   key={option.key}
@@ -1795,21 +1795,21 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
                           {calculateSalaryTotal() && (
                             <View style={styles.salaryCalculationPreview}>
-                              <Text style={styles.salaryPreviewTitle}>Vista Previa del Cálculo:</Text>
+                              <Text style={styles.salaryPreviewTitle}>{t('reports.calculation_preview')}</Text>
                               <View style={styles.salaryPreviewCard}>
                                 <Text style={styles.salaryPreviewItem}>
-                                  📊 Tarifa: <Text style={styles.salaryPreviewValue}>{calculateSalaryTotal()?.rate}</Text>
+                                  📊 {t('reports.preview_rate')} <Text style={styles.salaryPreviewValue}>{calculateSalaryTotal()?.rate}</Text>
                                 </Text>
                                 <Text style={styles.salaryPreviewItem}>
-                                  ⏱️ Período: <Text style={styles.salaryPreviewValue}>{calculateSalaryTotal()?.period}</Text>
+                                  ⏱️ {t('reports.preview_period')} <Text style={styles.salaryPreviewValue}>{calculateSalaryTotal()?.period}</Text>
                                 </Text>
                                 <Text style={styles.salaryPreviewTotal}>
-                                  💰 Total: <Text style={styles.salaryPreviewTotalValue}>
+                                  💰 {t('reports.preview_total')} <Text style={styles.salaryPreviewTotalValue}>
                                     {(() => {
                                       const total = calculateSalaryTotal();
                                       return total?.amount && total.amount > 0 
                                         ? `${total.amount.toFixed(2)} ${total.currency}`
-                                        : 'Configura las cantidades para ver el total';
+                                        : t('reports.configure_amounts_message');
                                     })()}
                                   </Text>
                                 </Text>
@@ -1823,10 +1823,10 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                     <View style={styles.noSalaryDataSection}>
                       <IconSymbol size={48} name="dollarsign.circle" color={colors.textSecondary} />
                       <Text style={styles.noSalaryDataTitle}>
-                        Sin configuración salarial
+                        {t('reports.no_salary_config')}
                       </Text>
                       <Text style={styles.noSalaryDataMessage}>
-                        Activa la configuración salarial en tu trabajo para incluir cálculos automáticos
+                        {t('reports.no_salary_config_desc')}
                       </Text>
                       
                       <TouchableOpacity
@@ -1835,7 +1835,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                       >
                         <IconSymbol size={20} name="gear" color="#FFFFFF" />
                         <Text style={styles.configureSalaryButtonText}>
-                          Activar configuración salarial
+                          {t('reports.activate_salary_config')}
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -2701,6 +2701,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
+    marginBottom: 40,
   },
   exportButtonText: {
     fontSize: 16,
@@ -2741,8 +2742,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   // Salary calculation styles
   salarySection: {
-    marginTop: 20,
-    paddingTop: 20,
+    marginTop: -40,
+
     borderTopWidth: 1,
     borderTopColor: colors.separator,
   },

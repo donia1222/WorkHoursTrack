@@ -1,0 +1,59 @@
+{
+  "de": {
+    "preferences": {
+      "title": "Einstellungen",
+      "subtitle": "Passen Sie Ihre Arbeitserfahrung an",
+      "appearance": {
+        "title": "Erscheinungsbild",
+        "description": "Konfigurieren Sie das visuelle Design der App",
+        "auto": "Auto",
+        "light": "Hell",
+        "dark": "Dunkel"
+      },
+      "language": {
+        "title": "Sprache",
+        "description": "Wählen Sie Ihre bevorzugte Sprache",
+        "default": "Aktuelle Sprache",
+        "change_to": "Wechseln zu {{language}}"
+      }
+    }
+  },
+  "fr": {
+    "preferences": {
+      "title": "Préférences",
+      "subtitle": "Personnalisez votre expérience de travail",
+      "appearance": {
+        "title": "Apparence",
+        "description": "Configurez le thème visuel de l'application",
+        "auto": "Auto",
+        "light": "Clair",
+        "dark": "Sombre"
+      },
+      "language": {
+        "title": "Langue",
+        "description": "Sélectionnez votre langue préférée",
+        "default": "Langue actuelle",
+        "change_to": "Changer vers {{language}}"
+      }
+    }
+  },
+  "it": {
+    "preferences": {
+      "title": "Preferenze",
+      "subtitle": "Personalizza la tua esperienza lavorativa",
+      "appearance": {
+        "title": "Aspetto",
+        "description": "Configura il tema visivo dell'applicazione",
+        "auto": "Auto",
+        "light": "Chiaro",
+        "dark": "Scuro"
+      },
+      "language": {
+        "title": "Lingua",
+        "description": "Seleziona la tua lingua preferita",
+        "default": "Lingua attuale",
+        "change_to": "Cambia a {{language}}"
+      }
+    }
+  }
+}

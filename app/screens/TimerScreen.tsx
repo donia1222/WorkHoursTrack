@@ -916,7 +916,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
             onPress: async () => {
               await stopTimer();
               // Set auto timer to manual mode
-              autoTimerService.setManualMode();
+              await autoTimerService.setManualMode();
             }
           }
         ]
@@ -1144,8 +1144,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
               ) : autoTimerStatus.state === 'entering' || autoTimerStatus.state === 'leaving' ? (
                 // Countdown activo: mostrar botón parar
                 <TouchableOpacity 
-                  onPress={() => {
-                    autoTimerService.cancelPendingAction();
+                  onPress={async () => {
+                    await autoTimerService.cancelPendingAction();
                   }}
                   style={[styles.cancelAutoTimerButton, { backgroundColor: colors.warning + '20' }]}
                 >
@@ -1169,8 +1169,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
               ) : (
                 // Estado inactivo: botón para desactivar
                 <TouchableOpacity 
-                  onPress={() => {
-                    autoTimerService.setManualMode();
+                  onPress={async () => {
+                    await autoTimerService.setManualMode();
                   }}
                   style={styles.cancelAutoTimerButton}
                 >
@@ -1265,6 +1265,9 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                     </View>
                   </TouchableOpacity>
                 </View>
+                <Text style={[styles.quickActionText, { textAlign: 'center', marginTop: 8, fontSize: 11, lineHeight: 14 }]}>
+                  {t('timer.auto_timer.privacy_notice')}
+                </Text>
               </View>
             )}
 

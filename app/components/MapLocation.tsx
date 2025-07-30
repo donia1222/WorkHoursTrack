@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MapView, { Marker, Circle } from 'react-native-maps';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, Modal, Dimensions, Switch } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming, Easing } from 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming, Easing, runOnJS } from 'react-native-reanimated';
 // Removed gesture handler imports - AutoTimer is now fixed
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
@@ -291,14 +292,18 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   mainActionBadge: {
     position: 'absolute',
-    top: 20,
-    right: 20,
+    top: -8,
+    right: 4,
     backgroundColor: colors.primary,
     borderRadius: 12,
     minWidth: 24,
     height: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.surface,
+    zIndex: 10,
+    elevation: 10,
   },
   mainActionBadgeText: {
     color: '#FFFFFF',
@@ -550,7 +555,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     alignItems: 'center',
     borderWidth: 3,
     borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.8)',
-    overflow: 'hidden',
+    overflow: 'visible',
   },
   fabGradient: {
     position: 'absolute',
@@ -726,6 +731,156 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderWidth: 4,
     borderColor: 'rgba(255, 255, 255, 0.4)',
   },
+  privacyNoticeContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 999,
+    paddingHorizontal: 16,
+    paddingTop: 60,
+  },
+  privacyNoticeCard: {
+    backgroundColor: isDark ? 'rgba(255, 149, 0, 0.95)' : 'rgba(255, 149, 0, 0.95)',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  privacyNoticeContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  privacyNoticeIcon: {
+    marginRight: 12,
+  },
+  privacyNoticeText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    flex: 1,
+    lineHeight: 18,
+  },
+  privacyNoticeCloseButton: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.6)',
+    minWidth: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  privacyNoticeButtonText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  miniCalendarContainer: {
+    position: 'absolute',
+    top: -30,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    paddingHorizontal: 16,
+    paddingTop: 60,
+  },
+  miniCalendarCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+  },
+  miniCalendarBlur: {
+    padding: 16,
+  },
+  miniCalendarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  miniCalendarTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  miniCalendarGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  miniCalendarDay: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    position: 'relative',
+  },
+  miniCalendarDayText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  miniCalendarDot: {
+    position: 'absolute',
+    bottom: 2,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+  },
+  miniCalendarBadge: {
+    position: 'absolute',
+    bottom: 2,
+    width: 16,
+    height: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  miniCalendarBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: '700',
+  },
+  miniCalendarButton: {
+    backgroundColor: colors.primary + '20',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  miniCalendarButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
+  },
 });
 
 
@@ -758,6 +913,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [autoTimerService] = useState(() => AutoTimerService.getInstance());
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isAutoTimerMinimized, setIsAutoTimerMinimized] = useState(false);
+  const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
+  const [hasShownPrivacyNotice, setHasShownPrivacyNotice] = useState(false);
+  const [miniCalendarData, setMiniCalendarData] = useState<any[]>([]);
+  const [showJobCardsModal, setShowJobCardsModal] = useState(false);
+  const [shouldShowMiniCalendar, setShouldShowMiniCalendar] = useState(true);
+  const [wasJobCardsModalOpen, setWasJobCardsModalOpen] = useState(false);
+  const [shouldReopenJobCardsModal, setShouldReopenJobCardsModal] = useState(false);
   const mapRef = useRef<MapView>(null);
   
   // AutoTimer position - fixed, no dragging
@@ -765,6 +927,15 @@ export default function MapLocation({ location, onNavigate }: Props) {
   // Animaciones para minimizar/maximizar
   const scaleValue = useSharedValue(1);
   const pulseAnimation = useSharedValue(1);
+  
+  // Animaciones para mini calendario
+  const miniCalendarOpacity = useSharedValue(0);
+  const miniCalendarTranslateY = useSharedValue(-30);
+  const miniCalendarScale = useSharedValue(0.95);
+  
+  // Animaciones para notificación de privacidad
+  const privacyNoticeOpacity = useSharedValue(0);
+  const privacyNoticeTranslateY = useSharedValue(-20);
   
   const styles = getStyles(colors, isDark);
 
@@ -775,6 +946,25 @@ export default function MapLocation({ location, onNavigate }: Props) {
     return {
       transform: [
         { scale: scaleValue.value * pulseAnimation.value },
+      ],
+    };
+  });
+
+  const animatedMiniCalendarStyle = useAnimatedStyle(() => {
+    return {
+      opacity: miniCalendarOpacity.value,
+      transform: [
+        { translateY: miniCalendarTranslateY.value },
+        { scale: miniCalendarScale.value },
+      ],
+    };
+  });
+
+  const animatedPrivacyNoticeStyle = useAnimatedStyle(() => {
+    return {
+      opacity: privacyNoticeOpacity.value,
+      transform: [
+        { translateY: privacyNoticeTranslateY.value },
       ],
     };
   });
@@ -803,11 +993,98 @@ export default function MapLocation({ location, onNavigate }: Props) {
   useEffect(() => {
     loadJobs();
     checkActiveTimer();
+    loadPrivacyNoticeState();
+    loadMiniCalendarData();
+    
+    // Initial animation for mini calendar
+    setTimeout(() => {
+      miniCalendarOpacity.value = withTiming(1, { duration: 600 });
+      miniCalendarTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+      miniCalendarScale.value = withSpring(1, { damping: 15, stiffness: 150 });
+    }, 200);
     
     // Check active timer every 30 seconds
     const interval = setInterval(checkActiveTimer, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const loadMiniCalendarData = async () => {
+    try {
+      const currentDate = new Date();
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      const today = currentDate.getDate();
+      
+      // Obtener días de trabajo del mes actual
+      const workDays = await JobService.getWorkDaysForMonth(year, month);
+      console.log('📅 Mini Calendar MapLocation: Loaded', workDays.length, 'work days for', year, month);
+      
+      // Crear array de 7 días centrados en el día actual
+      const calendarDays = [];
+      for (let i = -3; i <= 3; i++) {
+        const dayNum = today + i;
+        const dateStr = `${year}-${month.toString().padStart(2, '0')}-${dayNum.toString().padStart(2, '0')}`;
+        
+        // Buscar si hay trabajo este día
+        const workDay = workDays.find(wd => wd.date === dateStr);
+        const job = workDay ? jobs.find(j => j.id === workDay.jobId) : null;
+        
+        calendarDays.push({
+          day: dayNum,
+          isToday: i === 0,
+          workDay,
+          job,
+          isValidDay: dayNum > 0 && dayNum <= new Date(year, month, 0).getDate()
+        });
+      }
+      
+      setMiniCalendarData(calendarDays);
+    } catch (error) {
+      console.error('Error loading mini calendar data:', error);
+    }
+  };
+
+  // Load privacy notice dismissal state
+  const loadPrivacyNoticeState = async () => {
+    try {
+      const dismissed = await AsyncStorage.getItem('auto_timer_privacy_notice_shown');
+      setHasShownPrivacyNotice(dismissed === 'true');
+    } catch (error) {
+      console.error('Error loading privacy notice state:', error);
+    }
+  };
+
+  // Handle privacy notice dismissal
+  const handleDismissPrivacyNotice = async () => {
+    console.log('🔔 MapLocation: Dismissing privacy notice');
+    triggerHaptic('medium');
+    
+    // Animate privacy notice out
+    privacyNoticeOpacity.value = withTiming(0, { duration: 300 });
+    privacyNoticeTranslateY.value = withTiming(-20, { duration: 300 });
+    
+    try {
+      await AsyncStorage.setItem('auto_timer_privacy_notice_shown', 'true');
+      setHasShownPrivacyNotice(true);
+      
+      // Hide after animation completes
+      setTimeout(() => {
+        setShowPrivacyNotice(false);
+      }, 300);
+      
+      console.log('🔔 MapLocation: Privacy notice dismissed and saved');
+    } catch (error) {
+      console.error('Error saving privacy notice state:', error);
+      setHasShownPrivacyNotice(true);
+      
+      // Hide after animation completes
+      setTimeout(() => {
+        setShowPrivacyNotice(false);
+      }, 300);
+      
+      console.log('🔔 MapLocation: Privacy notice dismissed (save failed but still hidden)');
+    }
+  };
 
   // Update selectedJob when jobs change to keep it in sync
   useEffect(() => {
@@ -903,6 +1180,64 @@ export default function MapLocation({ location, onNavigate }: Props) {
       }
     };
   }, [autoTimerStatus?.state, autoTimerStatus?.jobId]);
+
+  // Show privacy notice when auto timer activates for the first time
+  useEffect(() => {
+    console.log('🔔 MapLocation: Privacy notice effect - checking conditions:', {
+      hasAutoTimerStatus: !!autoTimerStatus,
+      autoTimerState: autoTimerStatus?.state,
+      hasEnabledAutoTimer: jobs.some(job => job.autoTimer?.enabled),
+      hasShownPrivacyNotice,
+      showPrivacyNotice
+    });
+    
+    if (autoTimerStatus && 
+        autoTimerStatus.state !== 'inactive' && 
+        jobs.some(job => job.autoTimer?.enabled) && 
+        !hasShownPrivacyNotice && 
+        !showPrivacyNotice) {
+      console.log('🔔 MapLocation: Showing privacy notice');
+      setShowPrivacyNotice(true);
+      // Animate privacy notice in
+      privacyNoticeOpacity.value = withTiming(1, { duration: 400 });
+      privacyNoticeTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+    }
+  }, [autoTimerStatus, jobs, hasShownPrivacyNotice, showPrivacyNotice]);
+
+  // Effect to animate mini calendar appearance/disappearance
+  useEffect(() => {
+    const shouldShow = (!autoTimerStatus || autoTimerStatus.state === 'inactive' || !jobs.some(job => job.autoTimer?.enabled)) && !showPrivacyNotice;
+    
+    console.log('📅 MapLocation: Mini calendar visibility check:', {
+      shouldShow,
+      currentlyShowing: shouldShowMiniCalendar,
+      autoTimerActive: autoTimerStatus?.state !== 'inactive',
+      hasEnabledAutoTimer: jobs.some(job => job.autoTimer?.enabled),
+      showPrivacyNotice
+    });
+
+    if (shouldShow !== shouldShowMiniCalendar) {
+      if (shouldShow) {
+        // Show animation: fade in and slide down
+        console.log('📅 MapLocation: Animating mini calendar IN');
+        setShouldShowMiniCalendar(true);
+        miniCalendarOpacity.value = withTiming(1, { duration: 400 });
+        miniCalendarTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+        miniCalendarScale.value = withSpring(1, { damping: 15, stiffness: 150 });
+      } else {
+        // Hide animation: fade out and slide up
+        console.log('📅 MapLocation: Animating mini calendar OUT');
+        miniCalendarOpacity.value = withTiming(0, { duration: 300 });
+        miniCalendarTranslateY.value = withTiming(-30, { duration: 300 });
+        miniCalendarScale.value = withTiming(0.95, { duration: 300, easing: Easing.inOut(Easing.ease) });
+        
+        // Hide after animation completes
+        setTimeout(() => {
+          setShouldShowMiniCalendar(false);
+        }, 300);
+      }
+    }
+  }, [autoTimerStatus, jobs, showPrivacyNotice, shouldShowMiniCalendar]);
 
   const calculateJobStatistics = async (job: Job): Promise<{ thisMonthHours: number; thisMonthDays: number }> => {
     try {
@@ -1188,9 +1523,18 @@ export default function MapLocation({ location, onNavigate }: Props) {
   };
 
   const handleEditJob = (job: Job) => {
+    console.log('🟡 MapLocation: handleEditJob called for job:', job.name);
+    console.log('🟡 MapLocation: showJobCardsModal was:', showJobCardsModal);
+    console.log('🟡 MapLocation: shouldReopenJobCardsModal:', shouldReopenJobCardsModal);
+    
     setEditingJob(job);
     setShowJobForm(true);
+    // Remember if job cards modal was open and close it
+    setWasJobCardsModalOpen(showJobCardsModal);
+    setShowJobCardsModal(false);
     setSelectedJob(null);
+    
+    console.log('🟡 MapLocation: States after handleEditJob - showJobForm: true, showJobCardsModal: false');
   };
 
   const handleJobAction = (job: Job, action: 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map' | 'edit-auto') => {
@@ -1213,6 +1557,11 @@ export default function MapLocation({ location, onNavigate }: Props) {
       return;
     }
 
+    if (action === 'edit') {
+      handleEditJob(job);
+      closeModal();
+      return;
+    }
     if (action === 'delete') {
       if (!job) {
         Alert.alert(t('maps.error'), t('maps.no_job_selected'));
@@ -1253,11 +1602,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
         navigateTo('calendar', job);
         closeModal();
         break;
-      case 'edit':
-        closeModal();
-        setJobFormInitialTab('basic');
-        handleEditJob(job);
-        break;
       case 'edit-auto':
         closeModal();
         setJobFormInitialTab('auto');
@@ -1267,9 +1611,31 @@ export default function MapLocation({ location, onNavigate }: Props) {
   };
 
   const handleJobFormSave = async () => {
-    await loadJobs();
-    setShowJobForm(false);
-    setEditingJob(null);
+    try {
+      console.log('💾 MapLocation: Saving job data');
+      console.log('💾 MapLocation: Is editing?', !!editingJob);
+      
+      const wasEditing = !!editingJob;
+      
+      await loadJobs();
+      setShowJobForm(false);
+      setEditingJob(null);
+      
+      // If we were editing a job and the modal was open, reopen it (but not if coming from settings button)
+      if (wasEditing && wasJobCardsModalOpen && shouldReopenJobCardsModal) {
+        setTimeout(() => {
+          setShowJobCardsModal(true);
+          setWasJobCardsModalOpen(false);
+          setShouldReopenJobCardsModal(false);
+        }, 100);
+      } else {
+        // Reset flags
+        setWasJobCardsModalOpen(false);
+        setShouldReopenJobCardsModal(false);
+      }
+    } catch (error) {
+      console.error('Error saving job:', error);
+    }
   };
 
   const hasJobAddress = (job: Job) => {
@@ -1365,6 +1731,82 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
   return (
     <View style={styles.container}>
+      
+      {/* Mini Calendar - Animated appearance/disappearance */}
+      {shouldShowMiniCalendar && (
+        <Animated.View style={[styles.miniCalendarContainer, ]}>
+          <View style={styles.miniCalendarCard}>
+            <BlurView intensity={80} tint={isDark ? "dark" : "light"} style={styles.miniCalendarBlur}>
+            <View style={styles.miniCalendarHeader}>
+              <IconSymbol size={16} name="calendar" color={colors.primary} />
+              <Text style={styles.miniCalendarTitle}>{t('calendar.title')}</Text>
+            </View>
+            <View style={styles.miniCalendarGrid}>
+              {miniCalendarData.map((dayData, i) => {
+                if (!dayData.isValidDay) {
+                  return <View key={i} style={styles.miniCalendarDay} />;
+                }
+                
+                // Determinar color del badge basado en el tipo de día de trabajo
+                let badgeColor = null;
+                let badgeText = '';
+                
+                if (dayData.workDay) {
+                  switch (dayData.workDay.type) {
+                    case 'work':
+                      badgeColor = '#10B981'; // Verde para días de trabajo
+                      badgeText = 'W';
+                      break;
+                    case 'free':
+                      badgeColor = '#3B82F6'; // Azul para días libres
+                      badgeText = 'F';
+                      break;
+                    case 'vacation':
+                      badgeColor = '#F59E0B'; // Amarillo para vacaciones
+                      badgeText = 'V';
+                      break;
+                    case 'sick':
+                      badgeColor = '#EF4444'; // Rojo para enfermedad
+                      badgeText = 'S';
+                      break;
+                  }
+                }
+                
+                return (
+                  <View key={i} style={styles.miniCalendarDay}>
+                    <Text style={[
+                      styles.miniCalendarDayText, 
+                      { 
+                        color: dayData.isToday ? colors.primary : colors.textSecondary,
+                        fontWeight: dayData.isToday ? '700' : '500'
+                      }
+                    ]}>
+                      {dayData.day}
+                    </Text>
+                    {badgeColor && (
+                      <View style={[styles.miniCalendarBadge, { backgroundColor: badgeColor }]}>
+                        <Text style={styles.miniCalendarBadgeText}>{badgeText}</Text>
+                      </View>
+                    )}
+                    {dayData.isToday && !badgeColor && (
+                      <View style={[styles.miniCalendarDot, { backgroundColor: colors.primary }]} />
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+            <TouchableOpacity 
+              style={styles.miniCalendarButton}
+              onPress={() => onNavigate?.('calendar')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.miniCalendarButtonText}>{t('maps.view_calendar')}</Text>
+            </TouchableOpacity>
+            </BlurView>
+          </View>
+        </Animated.View>
+      )}
+
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -1425,9 +1867,37 @@ export default function MapLocation({ location, onNavigate }: Props) {
         
       </MapView>
 
+      {/* Privacy Notice for Auto Timer - Shows once when auto timer activates */}
+      {showPrivacyNotice && (
+        <Animated.View style={[styles.privacyNoticeContainer, animatedPrivacyNoticeStyle]}>
+          <View style={styles.privacyNoticeCard}>
+            <View style={styles.privacyNoticeContent}>
+              <IconSymbol 
+                size={20} 
+                name="info.circle.fill" 
+                color="#FFFFFF" 
+                style={styles.privacyNoticeIcon}
+              />
+              <Text style={styles.privacyNoticeText}>
+                {t('timer.auto_timer.privacy_notice')}
+              </Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.privacyNoticeCloseButton}
+              onPress={handleDismissPrivacyNotice}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.privacyNoticeButtonText}>
+                {t('timer.auto_timer.dismiss_notice')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      )}
+
 
       {/* Auto Timer Status Indicator */}
-      {autoTimerStatus && autoTimerStatus.state !== 'inactive' && jobs.some(job => job.autoTimer?.enabled) && (
+      {autoTimerStatus && autoTimerStatus.state !== 'inactive' && jobs.some(job => job.autoTimer?.enabled) && !showPrivacyNotice && (
           <Animated.View style={[styles.autoTimerStatusOverlay, animatedAutoTimerStyle]}>
             {isAutoTimerMinimized ? (
               // Vista minimizada - solo icono con pulso
@@ -1504,7 +1974,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                       console.log('AutoTimer reactivado manualmente');
                     } else if (status.state === 'entering' || status.state === 'leaving') {
                       // Cancelar countdown
-                      autoTimerService.cancelPendingAction();
+                      await autoTimerService.cancelPendingAction();
                       console.log('Countdown cancelado por usuario');
                     } else if (status.state === 'active') {
                       // Timer corriendo: navegar a TimerScreen
@@ -1681,6 +2151,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
           </Animated.View>
       )}
 
+
       {/* Simple info overlay */}
       {jobs.length === 0 && (
         <View style={styles.overlay}>
@@ -1703,22 +2174,57 @@ export default function MapLocation({ location, onNavigate }: Props) {
         </View>
       )}
 
-      {/* Job cards swiper */}
+      {/* Floating job cards button */}
       {jobs.length > 0 && (
-        <JobCardsSwiper
-  
-          jobs={jobs}
-          isJobCurrentlyActive={isJobCurrentlyActive}
-          getJobScheduleStatus={getJobScheduleStatus}
-          getJobStatistics={getJobStatistics}
-          onAction={(action, job) => handleJobAction(job, action as 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map' | 'edit-auto')}
-          showAutoTimer={true}
-          autoTimerEnabled={false}
-          onAutoTimerToggle={handleAutoTimerToggle}
-          onNavigateToSubscription={() => navigateTo('subscription')}
-          t={t}
-        />
+        <TouchableOpacity
+          style={[styles.floatingAddButton, { bottom: 120 }]} // Moved up to avoid conflict
+          onPress={() => setShowJobCardsModal(true)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.floatingAddButtonInner}>
+            <LinearGradient
+              colors={isDark 
+                ? [colors.primary + '90', colors.primary + '60'] 
+                : [colors.primary + '90', colors.primary + '70']
+              }
+              style={styles.fabGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
+            <IconSymbol size={32} name="briefcase.fill" color="#FFFFFF" />
+            {jobs.length > 1 && (
+              <View style={styles.mainActionBadge}>
+                <Text style={styles.mainActionBadgeText}>{jobs.length}</Text>
+              </View>
+            )}
+          </View>
+        </TouchableOpacity>
       )}
+
+      {/* Job cards modal swiper */}
+      <JobCardsSwiper
+        visible={showJobCardsModal}
+        onClose={() => setShowJobCardsModal(false)}
+        jobs={jobs}
+        isJobCurrentlyActive={isJobCurrentlyActive}
+        getJobScheduleStatus={getJobScheduleStatus}
+        getJobStatistics={getJobStatistics}
+        onAction={(action, job) => {
+          console.log('🔴 MapLocation: onAction called with:', { action, jobName: job.name });
+          if (action === 'edit') {
+            // When coming from settings button, don't reopen the modal automatically
+            setShouldReopenJobCardsModal(false);
+            handleJobAction(job, action as 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map' | 'edit-auto');
+          } else {
+            handleJobAction(job, action as 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map' | 'edit-auto');
+          }
+        }}
+        showAutoTimer={true}
+        autoTimerEnabled={false}
+        onAutoTimerToggle={handleAutoTimerToggle}
+        onNavigateToSubscription={() => navigateTo('subscription')}
+        t={t}
+      />
 
       {/* Job action modal */}
       <Modal
@@ -1818,9 +2324,22 @@ export default function MapLocation({ location, onNavigate }: Props) {
         editingJob={editingJob}
         initialTab={jobFormInitialTab}
         onClose={() => {
+          console.log('🟡 MapLocation: JobFormModal closing');
           setShowJobForm(false);
           setEditingJob(null);
           setJobFormInitialTab('basic');
+          // If the modal was open before editing, reopen it (but not if coming from settings button)
+          if (wasJobCardsModalOpen && shouldReopenJobCardsModal) {
+            setTimeout(() => {
+              setShowJobCardsModal(true);
+              setWasJobCardsModalOpen(false);
+              setShouldReopenJobCardsModal(false);
+            }, 100);
+          } else {
+            // Reset flags
+            setWasJobCardsModalOpen(false);
+            setShouldReopenJobCardsModal(false);
+          }
         }}
         onSave={handleJobFormSave}
         onNavigateToCalendar={() => onNavigate?.('calendar')}

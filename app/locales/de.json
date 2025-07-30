@@ -49,6 +49,40 @@
       "reminder_time": "Erinnerungszeit",
       "reminder_time_desc": "Konfigurieren Sie, wann Sie Erinnerungen vor Ihrem Arbeitsplan erhalten möchten"
     },
+    "auto_backup": {
+      "title": "Automatische Sicherung",
+      "description": "Erstelle automatisch Sicherungen nach konfigurierter Häufigkeit",
+      "enable": "Automatische Sicherung aktivieren",
+      "enabled": "Auto-Backup",
+      "enabled_desc": "Automatisch Sicherungen erstellen",
+      "frequency": "Häufigkeit",
+      "frequency_desc": "Wie oft automatische Sicherungen erstellt werden sollen",
+      "frequencies": {
+        "daily": "Täglich",
+        "weekly": "Wöchentlich", 
+        "monthly": "Monatlich"
+      },
+      "daily": "Täglich",
+      "weekly": "Wöchentlich", 
+      "monthly": "Monatlich",
+      "status": "Status",
+      "available_backups": "Verfügbare Sicherungen",
+      "available_backups_desc": "Automatisch generierte Sicherungskopien",
+      "no_backups": "Noch keine Sicherungen erstellt",
+      "no_backups_desc": "Werden automatisch entsprechend der Konfiguration erstellt",
+      "no_backups_available": "Keine Sicherungen verfügbar",
+      "download": "Herunterladen",
+      "created_on": "Erstellt am",
+      "size": "Größe",
+      "delete_all": "Alle löschen",
+      "delete_all_confirm": "Alle automatischen Sicherungen löschen?",
+      "delete_all_desc": "Diese Aktion kann nicht rückgängig gemacht werden",
+      "backup_created": "Sicherung erstellt",
+      "backup_error": "Fehler beim Erstellen der Sicherung",
+      "last_backup": "Letzte Sicherung: {{date}}",
+      "never": "Nie",
+      "save": "Speichern"
+    },
     "haptic": {
       "title": "Haptisches Feedback",
       "description": "Steuern Sie die taktile Vibration bei Schaltflächen und App-Interaktionen",
@@ -192,7 +226,11 @@
       "disable_auto": "Auto Deaktivieren",
       "disabled_title": "AutoTimer Deaktiviert",
       "disabled_message": "Automatischer Timer deaktiviert für \"{{jobName}}\"",
-      "disable_error": "Automatischer Timer konnte nicht deaktiviert werden"
+      "disable_error": "Automatischer Timer konnte nicht deaktiviert werden",
+      "background_notice": "Der automatische Timer funktioniert nur, wenn die App im Hintergrund läuft. Wenn Sie die App vollständig schließen, stoppt die Zeitählung aus Datenschutzgründen.",
+      "privacy_notice": "Aus Datenschutzgründen funktioniert der Auto-Timer nicht, wenn die App geschlossen ist. Lassen Sie die App im Hintergrund für ordnungsgemäßen Betrieb.",
+      "dismiss_notice": "Verstanden",
+      "dismiss_privacy_notice": "Nicht mehr anzeigen"
     }
   },
   "reports": {
@@ -242,6 +280,20 @@
     "no_billing_data": "Keine Abrechnungsdaten",
     "no_billing_data_desc": "Konfigurieren Sie Abrechnungsdaten, um sie in Ihre PDF-Berichte einzuschließen",
     "configure_billing": "Abrechnungsdaten zum PDF hinzufügen",
+    "include_salary_calculation": "Gehaltsberechnung einschließen",
+    "include_salary_calculation_desc": "Gesamtbetrag basierend auf geleisteten Stunden berechnen und anzeigen",
+    "billing_period": "Abrechnungszeitraum:",
+    "billing_per_hour": "Pro Stunde",
+    "billing_per_week": "Pro Woche",
+    "billing_per_month": "Pro Monat",
+    "calculation_preview": "Berechnungsvorschau:",
+    "preview_rate": "Tarif:",
+    "preview_period": "Zeitraum:",
+    "preview_total": "Gesamt:",
+    "no_salary_config": "Keine Gehaltskonfiguration",
+    "no_salary_config_desc": "Aktivieren Sie die Gehaltskonfiguration in Ihrem Job, um automatische Berechnungen einzuschließen",
+    "activate_salary_config": "Gehaltskonfiguration aktivieren",
+    "configure_amounts_message": "Konfigurieren Sie Beträge, um die Gesamtsumme zu sehen",
     "pdf_title": "Arbeitsbericht",
     "analysis_date": "Analysedatum",
     "days": "Tage",
@@ -371,6 +423,14 @@
     "back": "Zurück",
     "home": "Startseite"
   },
+  "job_cards": {
+    "buttons": {
+      "timer": "Timer",
+      "calendar": "Kalender", 
+      "statistics": "Statistiken",
+      "settings": "Einstellungen"
+    }
+  },
   "job_form": {
     "title_edit": "Arbeit bearbeiten",
     "title_new": "Neue Arbeit",
@@ -380,7 +440,8 @@
       "schedule": "Zeitplan", 
       "financial": "Finanziell",
       "billing": "Abrechnung",
-      "auto": "Auto"
+      "auto": "Auto",
+      "delete": "Löschen"
     },
     "basic": {
       "title": "Grundinformationen",
@@ -527,6 +588,28 @@
       "address_required_message": "Um den automatischen Timer zu aktivieren, müssen Sie zuerst eine Adresse im Tab 'Grundlagen' hinzufügen. Die Adresse ist für die automatische Standorterkennung erforderlich.",
       "stopped_no_time": "Timer gestoppt - keine aktive Zeit lief"
     },
+    "delete": {
+      "title": "Arbeit Löschen",
+      "subtitle": "Diese Aktion kann nicht rückgängig gemacht werden",
+      "warning_title": "⚠️ Warnung",
+      "warning_message": "Das Löschen dieser Arbeit wird alle zugehörigen Daten dauerhaft entfernen, einschließlich:",
+      "warning_items": [
+        "• Alle aufgezeichneten Arbeitstage",
+        "• Zeitplan- und Gehaltskonfiguration", 
+        "• Automatische Timer-Konfiguration",
+        "• Abrechnungs- und Berichtsdaten"
+      ],
+      "confirmation_title": "Löschung Bestätigen",
+      "confirmation_message": "Um zu bestätigen, dass Sie diese Arbeit löschen möchten, geben Sie den genauen Arbeitsnamen ein:",
+      "job_name_placeholder": "Geben Sie hier den Arbeitsnamen ein",
+      "delete_button": "Dauerhaft Löschen",
+      "cancel_button": "Abbrechen",
+      "name_mismatch": "Name stimmt nicht überein. Bitte überprüfen Sie, dass Sie genau eingegeben haben: {{jobName}}",
+      "success_title": "Arbeit Gelöscht",
+      "success_message": "Arbeit '{{jobName}}' wurde erfolgreich gelöscht.",
+      "error_title": "Löschfehler",
+      "error_message": "Ein Fehler ist beim Löschen der Arbeit aufgetreten. Bitte versuchen Sie es erneut."
+    },
     "premium": {
       "title": "Premium-Funktion",
       "message": "Diese Funktion erfordert ein Premium-Abonnement. Möchten Sie sich jetzt anmelden, um Zugang zu allen erweiterten Funktionen zu erhalten?",
@@ -633,18 +716,38 @@
     }
   },
   "preferences": {
+    "title": "Einstellungen",
+    "subtitle": "Passen Sie Ihre Arbeitserfahrung an",
+    "appearance": {
+      "title": "Erscheinungsbild",
+      "description": "Konfigurieren Sie das visuelle Design der App",
+      "auto": "Auto",
+      "light": "Hell",
+      "dark": "Dunkel"
+    },
+    "language": {
+      "title": "Sprache",
+      "description": "Wählen Sie Ihre bevorzugte Sprache",
+      "default": "Aktuelle Sprache",
+      "change_to": "Wechseln zu {{language}}"
+    },
     "data_management": {
       "title": "Datenverwaltung",
       "description": "⚠️ WICHTIG: Diese App speichert alle Daten nur auf Ihrem Gerät. Wir verwenden keine Server oder Cloud-Datenbanken. Aus diesem Grund müssen Sie regelmäßig Backups erstellen und bei einer Neuinstallation der App importieren.",
       "export_title": ".json-Datei erstellen",
       "export_desc": "Backup aller Ihrer Jobs, Stunden und Einstellungen erstellen",
       "import_title": ".json-Datei importieren",
-      "import_desc": "Daten aus einer Backup-Datei wiederherstellen"
+      "import_desc": "Daten aus einer Backup-Datei wiederherstellen",
+      "auto_backup_title": "Automatische Sicherungen",
+      "auto_backup_desc": "Tägliche, wöchentliche oder monatliche automatische Backups konfigurieren"
     },
     "notifications": {
       "title": "Benachrichtigungen",
       "description": "Arbeitserinnerungen und Warnungen konfigurieren",
       "general": "Allgemeine Benachrichtigungen",
+      "general_notifications": "Allgemeine Benachrichtigungen",
+      "auto_timer": "Auto Timer",
+      "work_schedule_reminders": "Arbeitszeit-Erinnerungen",
       "general_desc": "Alle Benachrichtigungen aktivieren",
       "schedule": "Zeitplan-Erinnerungen",
       "schedule_desc": "Ein- und Ausgangsbenachrichtigungen",
@@ -771,6 +874,22 @@
         "purchased": "Gekauft",
         "expires": "Läuft ab"
       }
+    }
+  },
+  "auto_backup": {
+    "title": "Automatische Sicherungen",
+    "enable": "Automatische Sicherung aktivieren",
+    "frequency": "Häufigkeit",
+    "status": "Status",
+    "available_backups": "Verfügbare Sicherungen",
+    "no_backups": "Noch keine Sicherungen erstellt",
+    "no_backups_available": "Keine Sicherungen verfügbar",
+    "last_backup": "Letzte Sicherung: {{date}}",
+    "save": "Speichern",
+    "frequencies": {
+      "daily": "Täglich",
+      "weekly": "Wöchentlich",
+      "monthly": "Monatlich"
     }
   },
   "chatbot": {

@@ -49,6 +49,40 @@
       "reminder_time": "Orario Promemoria",
       "reminder_time_desc": "Configura quando ricevere promemoria prima del tuo orario di lavoro"
     },
+    "auto_backup": {
+      "title": "Backup Automatico",
+      "description": "Genera backup automaticamente secondo la frequenza configurata",
+      "enable": "Attiva backup automatico",
+      "enabled": "Backup auto",
+      "enabled_desc": "Creare backup automaticamente",
+      "frequency": "Frequenza",
+      "frequency_desc": "Quanto spesso creare backup automatici",
+      "frequencies": {
+        "daily": "Giornaliero",
+        "weekly": "Settimanale", 
+        "monthly": "Mensile"
+      },
+      "daily": "Giornaliero",
+      "weekly": "Settimanale", 
+      "monthly": "Mensile",
+      "status": "Stato",
+      "available_backups": "Backup disponibili",
+      "available_backups_desc": "Copie di backup generate automaticamente",
+      "no_backups": "Nessun backup creato ancora",
+      "no_backups_desc": "Saranno creati automaticamente secondo la configurazione",
+      "no_backups_available": "Nessun backup disponibile",
+      "download": "Scarica",
+      "created_on": "Creato il",
+      "size": "Dimensione",
+      "delete_all": "Elimina tutti",
+      "delete_all_confirm": "Eliminare tutti i backup automatici?",
+      "delete_all_desc": "Questa azione non può essere annullata",
+      "backup_created": "Backup creato",
+      "backup_error": "Errore nella creazione del backup",
+      "last_backup": "Ultimo backup: {{date}}",
+      "never": "Mai",
+      "save": "Salva"
+    },
     "haptic": {
       "title": "Feedback Aptico",
       "description": "Controlla la vibrazione tattile dei pulsanti e delle interazioni dell'app",
@@ -188,7 +222,11 @@
       "disable_auto": "Disattiva Auto",
       "disabled_title": "AutoTimer Disattivato",
       "disabled_message": "Timer automatico disattivato per \"{{jobName}}\"",
-      "disable_error": "Impossibile disattivare il timer automatico"
+      "disable_error": "Impossibile disattivare il timer automatico",
+      "background_notice": "Il timer automatico funziona solo con l'app aperta in background. Se chiudi completamente l'app, smetterà di contare per motivi di privacy.",
+      "privacy_notice": "Per motivi di privacy, l'auto timer non funziona quando l'app è chiusa. Mantieni l'app in background per il corretto funzionamento.",
+      "dismiss_notice": "Capito",
+      "dismiss_privacy_notice": "Non mostrare più"
     }
   },
   "reports": {
@@ -237,7 +275,21 @@
     "include_invoice_details_desc": "Genera automaticamente numero fattura e data corrente",
     "no_billing_data": "Nessun dato di fatturazione",
     "no_billing_data_desc": "Configura i dati di fatturazione per includerli nei tuoi report PDF",
-    "configure_billing": "Aggiungi dati di fatturazione al PDF"
+    "configure_billing": "Aggiungi dati di fatturazione al PDF",
+    "include_salary_calculation": "Includi totale stipendio",
+    "include_salary_calculation_desc": "Calcola e mostra il totale da pagare basato sulle ore lavorate",
+    "billing_period": "Periodo di fatturazione:",
+    "billing_per_hour": "Per ora",
+    "billing_per_week": "Per settimana",
+    "billing_per_month": "Per mese",
+    "calculation_preview": "Anteprima Calcolo:",
+    "preview_rate": "Tariffa:",
+    "preview_period": "Periodo:",
+    "preview_total": "Totale:",
+    "no_salary_config": "Nessuna configurazione stipendio",
+    "no_salary_config_desc": "Attiva la configurazione stipendio nel tuo lavoro per includere calcoli automatici",
+    "activate_salary_config": "Attiva configurazione stipendio",
+    "configure_amounts_message": "Configura gli importi per vedere il totale"
   },
   "calendar": {
     "title": "Il Mio Calendario",
@@ -351,6 +403,14 @@
     "back": "Indietro",
     "home": "Inizio"
   },
+  "job_cards": {
+    "buttons": {
+      "timer": "Timer",
+      "calendar": "Calendario", 
+      "statistics": "Statistiche",
+      "settings": "Impostazioni"
+    }
+  },
   "job_form": {
     "title_edit": "Modifica lavoro",
     "title_new": "Nuovo lavoro",
@@ -360,7 +420,8 @@
       "schedule": "Orario", 
       "financial": "Finanziario",
       "billing": "Fatturazione",
-      "auto": "Auto"
+      "auto": "Auto",
+      "delete": "Elimina"
     },
     "basic": {
       "title": "Informazioni di base",
@@ -507,6 +568,28 @@
       "address_required_message": "Per attivare il timer automatico, devi prima aggiungere un indirizzo nella scheda 'Base'. L'indirizzo è necessario per il rilevamento automatico della posizione.",
       "stopped_no_time": "Timer fermato - nessun tempo attivo era in corso"
     },
+    "delete": {
+      "title": "Elimina Lavoro",
+      "subtitle": "Questa azione non può essere annullata",
+      "warning_title": "⚠️ Avviso",
+      "warning_message": "Eliminare questo lavoro rimuoverà permanentemente tutti i dati associati, inclusi:",
+      "warning_items": [
+        "• Tutti i giorni lavorativi registrati",
+        "• Configurazione di orari e stipendi", 
+        "• Configurazione del timer automatico",
+        "• Dati di fatturazione e report"
+      ],
+      "confirmation_title": "Conferma Eliminazione",
+      "confirmation_message": "Per confermare che vuoi eliminare questo lavoro, digita il nome esatto del lavoro:",
+      "job_name_placeholder": "Digita qui il nome del lavoro",
+      "delete_button": "Elimina Permanentemente",
+      "cancel_button": "Annulla",
+      "name_mismatch": "Il nome non corrisponde. Verifica di aver digitato esattamente: {{jobName}}",
+      "success_title": "Lavoro Eliminato",
+      "success_message": "Il lavoro '{{jobName}}' è stato eliminato con successo.",
+      "error_title": "Errore di Eliminazione",
+      "error_message": "Si è verificato un errore durante l'eliminazione del lavoro. Riprova."
+    },
     "premium": {
       "title": "Funzione Premium",
       "message": "Questa funzione richiede un abbonamento premium. Vuoi abbonarti ora per accedere a tutte le funzionalità avanzate?",
@@ -613,18 +696,38 @@
     }
   },
   "preferences": {
+    "title": "Preferenze",
+    "subtitle": "Personalizza la tua esperienza lavorativa",
+    "appearance": {
+      "title": "Aspetto",
+      "description": "Configura il tema visivo dell'applicazione",
+      "auto": "Auto",
+      "light": "Chiaro",
+      "dark": "Scuro"
+    },
+    "language": {
+      "title": "Lingua",
+      "description": "Seleziona la tua lingua preferita",
+      "default": "Lingua attuale",
+      "change_to": "Cambia a {{language}}"
+    },
     "data_management": {
       "title": "Gestione Dati",
       "description": "⚠️ IMPORTANTE: Questa app memorizza tutti i dati solo sul tuo dispositivo. Non utilizziamo server o database cloud. Per questo motivo, devi creare backup regolarmente e importarli se reinstalli l'applicazione.",
       "export_title": "Crea file .json",
       "export_desc": "Crea backup di tutti i tuoi lavori, ore e impostazioni",
       "import_title": "Importa file .json",
-      "import_desc": "Ripristina dati da un file di backup"
+      "import_desc": "Ripristina dati da un file di backup",
+      "auto_backup_title": "Backup Automatici",
+      "auto_backup_desc": "Configura backup automatici giornalieri, settimanali o mensili"
     },
     "notifications": {
       "title": "Notifiche",
       "description": "Configura promemoria e avvisi di lavoro",
       "general": "Notifiche generali",
+      "general_notifications": "Notifiche Generali",
+      "auto_timer": "Timer Automatico",
+      "work_schedule_reminders": "Promemoria Orario di Lavoro",
       "general_desc": "Attiva tutte le notifiche",
       "schedule": "Promemoria orari",
       "schedule_desc": "Notifiche di entrata e uscita",
@@ -735,6 +838,22 @@
         "purchased": "Acquistato",
         "expires": "Scade"
       }
+    }
+  },
+  "auto_backup": {
+    "title": "Backup Automatici",
+    "enable": "Attiva backup automatico",
+    "frequency": "Frequenza",
+    "status": "Stato",
+    "available_backups": "Backup disponibili",
+    "no_backups": "Nessun backup creato ancora",
+    "no_backups_available": "Nessun backup disponibile",
+    "last_backup": "Ultimo backup: {{date}}",
+    "save": "Salva",
+    "frequencies": {
+      "daily": "Giornaliero",
+      "weekly": "Settimanale",
+      "monthly": "Mensile"
     }
   },
   "chatbot": {

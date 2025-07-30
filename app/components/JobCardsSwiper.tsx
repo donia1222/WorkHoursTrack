@@ -8,7 +8,17 @@ import {
   Switch,
   Animated,
   Modal,
+  Dimensions,
 } from 'react-native';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import ReanimatedAnimated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  useAnimatedGestureHandler, 
+  withSpring, 
+  withTiming,
+  runOnJS 
+} from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,9 +29,11 @@ import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { useSubscription } from '../hooks/useSubscription';
 
 
-interface JobCardsSwiperProps {
+// JobCardsSwiper Props Interface
+export interface JobCardsSwiperProps {
   jobs: Job[];
-
+  visible: boolean;
+  onClose: () => void;
   isJobCurrentlyActive: (job: Job) => boolean;
   getJobScheduleStatus: (job: Job) => string | null;
   onTimerToggle?: (job: Job) => void;
@@ -29,16 +41,21 @@ interface JobCardsSwiperProps {
   onAction?: (action: string, job: Job) => void;
   showAutoTimer?: boolean;
   autoTimerEnabled?: boolean;
-  onAutoTimerToggle?: (job: Job, value: boolean) => void;
+  onAutoTimerToggle?: (job: Job, value: boolean) => void | Promise<void>;
   onNavigateToSubscription?: () => void;
-  t: (key: string) => string;
+  t: (key: string, options?: any) => string;
 }
 
-const EXPANDED_CARD_HEIGHT = 370;
+const EXPANDED_CARD_HEIGHT = 320;
+
+interface GestureContext extends Record<string, unknown> {
+  startY: number;
+}
 
 export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
   jobs,
-
+  visible,
+  onClose,
   isJobCurrentlyActive,
   getJobScheduleStatus,
   onTimerToggle,
@@ -54,174 +71,55 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
   const { triggerHaptic } = useHapticFeedback();
   const { isSubscribed } = useSubscription();
   const scrollViewRef = useRef<ScrollView>(null);
-  const [activeJobId, setActiveJobId] = useState<string | null>(null);
-  const [isMinimized, setIsMinimized] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const screenWidth = Dimensions.get('window').width;
+  const screenHeight = Dimensions.get('window').height;
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   
-  // Animation values
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const opacityAnim = useRef(new Animated.Value(1)).current;
-  const translateYAnim = useRef(new Animated.Value(0)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const badgeNumberAnim = useRef(new Animated.Value(1)).current;
-
-  // Load minimize state from AsyncStorage on component mount
-  useEffect(() => {
-    const loadMinimizeState = async () => {
-      try {
-        const savedState = await AsyncStorage.getItem('jobCardsSwiperMinimized');
-        if (savedState !== null) {
-          const saved = JSON.parse(savedState);
-          setIsMinimized(saved);
-          
-          // Initialize animation values based on saved state
-          if (!saved) {
-            // If expanded, set animation to expanded state
-            scaleAnim.setValue(1);
-            opacityAnim.setValue(1);
-            translateYAnim.setValue(0);
-            rotateAnim.setValue(1);
-            badgeNumberAnim.setValue(1);
-          } else {
-            // If minimized, set animation to minimized state
-            scaleAnim.setValue(1);
-            opacityAnim.setValue(1);
-            translateYAnim.setValue(0);
-            rotateAnim.setValue(0);
-            badgeNumberAnim.setValue(1);
-          }
-        } else {
-          // Default state is minimized
-          scaleAnim.setValue(1);
-          opacityAnim.setValue(1);
-          translateYAnim.setValue(0);
-          rotateAnim.setValue(0);
-          badgeNumberAnim.setValue(1);
-        }
-      } catch (error) {
-        console.error('Error loading minimize state:', error);
+  // Modal animation values
+  const translateY = useSharedValue(screenHeight * 0.6); // Start from bottom
+  const opacity = useSharedValue(0);
+  
+  // Gesture handler for drag to close
+  const gestureHandler = useAnimatedGestureHandler<any, GestureContext>({
+    onStart: (_, context) => {
+      context.startY = translateY.value;
+    },
+    onActive: (event, context) => {
+      const newTranslateY = context.startY + event.translationY;
+      if (newTranslateY >= 0) {
+        translateY.value = newTranslateY;
       }
-    };
-    loadMinimizeState();
-  }, []);
-
-  // Subtle pulse animation when jobs change (but don't auto-reopen)
-  useEffect(() => {
-    if (jobs.length > 0 && isMinimized) {
-      // Only add a subtle pulse animation to indicate activity
-      const pulseAnimation = Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1.15,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]);
+    },
+    onEnd: (event) => {
+      const shouldClose = event.translationY > 100 || event.velocityY > 500;
       
-      // Start the pulse animation only once
-      pulseAnimation.start();
-
-      return () => {
-        pulseAnimation.stop();
-      };
-    }
-  }, [jobs.length, isMinimized, scaleAnim]); // Trigger when jobs array changes
-
-  // Modern animation function for minimize/expand
-  const animateTransition = (toMinimized: boolean) => {
-    if (toMinimized) {
-      // Minimizing animation - smooth and slower
-      return Animated.sequence([
-        // First phase: slight scale up
-        Animated.timing(scaleAnim, {
-          toValue: 1.05,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-        // Second phase: scale down and fade out
-        Animated.parallel([
-          Animated.timing(scaleAnim, {
-            toValue: 0.3,
-            duration: 350,
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacityAnim, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(translateYAnim, {
-            toValue: 50,
-            duration: 350,
-            useNativeDriver: true,
-          }),
-        ]),
-      ]);
-    } else {
-      // Expanding animation - modern pop-in effect
-      return Animated.parallel([
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 100,
-          friction: 8,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.spring(translateYAnim, {
-          toValue: 0,
-          tension: 80,
-          friction: 6,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rotateAnim, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-      ]);
-    }
-  };
-
-  // Save minimize state to AsyncStorage when it changes
-  const toggleMinimized = async (newState: boolean) => {
-    try {
-      if (!newState) {
-        // Expanding - Update state first, then animate
-        setIsMinimized(newState);
-        
-        // Reset animation values for expansion
-        scaleAnim.setValue(0.8);
-        opacityAnim.setValue(0);
-        translateYAnim.setValue(30);
-        rotateAnim.setValue(0);
-        
-        // Start expansion animation
-        setTimeout(() => {
-          const animation = animateTransition(newState);
-          animation.start();
-        }, 50);
+      if (shouldClose) {
+        translateY.value = withTiming(screenHeight * 0.6, { duration: 300 });
+        opacity.value = withTiming(0, { duration: 300 });
+        runOnJS(onClose)();
       } else {
-        // Minimizing - Start animation first, then update state
-        const animation = animateTransition(newState);
-        animation.start(() => {
-          // Update state after animation completes
-          setIsMinimized(newState);
-        });
+        translateY.value = withSpring(0, { damping: 15, stiffness: 150 });
       }
-      
-      await AsyncStorage.setItem('jobCardsSwiperMinimized', JSON.stringify(newState));
-    } catch (error) {
-      console.error('Error saving minimize state:', error);
+    },
+  });
+  
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+    opacity: opacity.value,
+  }));
+
+  // Modal visibility effect
+  useEffect(() => {
+    if (visible) {
+      translateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+      opacity.value = withTiming(1, { duration: 300 });
+    } else {
+      translateY.value = withTiming(screenHeight * 0.6, { duration: 300 });
+      opacity.value = withTiming(0, { duration: 300 });
     }
-  };
+  }, [visible]);
+
 
 
 
@@ -229,145 +127,76 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
 
   const styles = createStyles(colors, isDark);
 
-  // Vista minimizada
-  if (isMinimized) {
-    const rotateInterpolate = rotateAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: ['0deg', '360deg'],
-    });
-
-    return (
-      <Animated.View
-        style={[
-          styles.minimizedButton,
-          {
-            transform: [
-              { scale: scaleAnim },
-              { rotateZ: rotateInterpolate },
-            ],
-          },
-        ]}
-      >
-        <TouchableOpacity 
-          style={styles.minimizedButtonTouchable}
-          onPress={() => {
-            triggerHaptic('medium');
-            toggleMinimized(false);
-          }}
-          activeOpacity={0.8}
-        >
-          <View style={styles.minimizedButtonInner}>
-            <IconSymbol size={32} name="briefcase.fill" color={colors.primary} />
-            {jobs.length > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{jobs.length}</Text>
-              </View>
-            )}
-          </View>
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  }
-
   return (
-    <Animated.View 
-      style={[
-        styles.container,
-        {
-          transform: [
-            { scale: scaleAnim },
-            { translateY: translateYAnim },
-          ],
-          opacity: opacityAnim,
-        },
-      ]}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
+      statusBarTranslucent
     >
-      <View style={styles.fixedContainer}>
-        <ScrollView
-          ref={scrollViewRef}
-          horizontal={false}
-          showsVerticalScrollIndicator={true}
-          contentContainerStyle={styles.scrollContainer}
-          style={styles.scrollView}
-          bounces={true}
-        >
-          {jobs.slice().reverse().map((job, index) => {
-            const isActive = isJobCurrentlyActive(job);
-            const jobStats = getJobStatistics ? getJobStatistics(job) : null;
-
-            return (
-              <View
-                key={job.id}
-                style={[
-                  styles.card,
-                  isActive && styles.cardActive,
-                  { 
-                    height: EXPANDED_CARD_HEIGHT, 
-                    justifyContent: 'flex-end',
-                    marginTop: index === 0 ? 0 : 0,
-                    marginRight: 0,
-                    width: '100%'
-                  },
-                ]}
+      <View style={styles.modalOverlay}>
+        <TouchableOpacity
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={onClose}
+        />
+        
+        <PanGestureHandler onGestureEvent={gestureHandler}>
+          <ReanimatedAnimated.View style={[styles.modalContainer, animatedStyle]}>
+            {/* Drag handle */}
+            <View style={styles.dragHandle} />
+             <ScrollView
+                ref={scrollViewRef}
+                horizontal={true}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContainer}
+                style={styles.scrollView}
+                bounces={true}
+                pagingEnabled={true}
+                onScroll={(event) => {
+                  const contentOffsetX = event.nativeEvent.contentOffset.x;
+                  const index = Math.round(contentOffsetX / screenWidth);
+                  const validIndex = Math.max(0, Math.min(index, jobs.length - 1));
+                  setCurrentIndex(validIndex);
+                }}
+                scrollEventThrottle={16}
               >
-                  <TouchableOpacity
-                    onPress={() => {
-                      console.log('🟢 JobCardsSwiper: TouchableOpacity pressed for job:', job.name);
-                   
-                    }}
-                    activeOpacity={0.9}
-                    style={{ flex: 1 }}
-                  >
-                    <BlurView 
-                      intensity={isDark ? 90 : 98} 
-                      tint={isDark ? "dark" : "light"} 
-                      style={styles.cardInner}
+                {jobs.slice().reverse().map((job, index) => {
+                  const isActive = isJobCurrentlyActive(job);
+                  const jobStats = getJobStatistics ? getJobStatistics(job) : null;
+
+                  return (
+                    <View
+                      key={job.id}
+                      style={[
+                        styles.jobContainer,
+                        { width: screenWidth }
+                      ]}
                     >
-                      <LinearGradient
-                        colors={isDark 
-                          ? [`${job.color}15`, `${job.color}05`, 'transparent'] 
-                          : [`${job.color}10`, `${job.color}03`, 'transparent']
-                        }
-                        style={styles.gradientOverlay}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                      />
-                      
-                      <View style={[styles.colorAccent, { backgroundColor: job.color }]} />
-                      
-                      <View style={styles.cardContent}>
-                            
-                          {/* Header with job info */}
-                          <View style={styles.cardHeader}>
-                            <View style={styles.jobInfo}>
-                              <View style={[styles.jobNameChip, { backgroundColor: `${job.color}20`, borderColor: `${job.color}40` }]}>
-                                <Text style={[styles.jobName, isActive && styles.jobNameActive, { color: job.color }]} numberOfLines={1}>
-                                  {job.name}
-                                </Text>
-                              </View>
-                              {job.company && (
-                                <Text style={styles.companyName} numberOfLines={1}>
-                                  {job.company}
-                                </Text>
-                              )}
+
+                      <View style={styles.jobContent}>
+                  
+
+                           <View style={styles.jobHeader}>
+                          <View style={[styles.jobColorDot, { backgroundColor: job.color }]} />
+                   
+                            <Text style={[styles.jobName, { color: job.color }]} numberOfLines={1}>
+                              {job.name}
+                            </Text>
+                            {job.company && (
+                              <Text style={styles.companyName} numberOfLines={1}>
+                                {job.company}
+                              </Text>
+                            )}
+                
+                          {isActive && (
+                            <View style={styles.activeIndicator}>
+                              <IconSymbol size={12} name="circle.fill" color={colors.success} />
                             </View>
-                          </View>
-
-                          {/* Botón cerrar solo en la primera tarjeta */}
-                          {index === 0 && (
-                            <TouchableOpacity 
-                              style={styles.minimizeButton}
-                              onPress={() => {
-                                triggerHaptic('light');
-                                toggleMinimized(true);
-                              }}
-                              activeOpacity={0.7}
-                            >
-                              <IconSymbol size={16} name="xmark" color={isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)'} />
-                            </TouchableOpacity>
                           )}
-
-                          {showAutoTimer && onAutoTimerToggle && (
+                        </View>
+                        {showAutoTimer && onAutoTimerToggle && (
                             <View style={styles.autoTimerContainer}>
                               <Text style={styles.autoTimerLabel}>
                                 {t('maps.auto_timer')}
@@ -457,7 +286,12 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                                   }
                                 }}
                               >
-                                <IconSymbol size={28} name="clock.fill" color="#00C851" />
+                                <View style={styles.gridButtonContent}>
+                                  <IconSymbol size={24} name="clock.fill" color="#00C851" />
+                                  <Text style={[styles.gridButtonText, { color: '#00C851' }]}>
+                                    {t('job_cards.buttons.timer')}
+                                  </Text>
+                                </View>
                               </TouchableOpacity>
 
                               {/* Calendar Button */}
@@ -465,7 +299,12 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                                 style={[styles.gridButton, styles.calendarGridButton]}
                                 onPress={() => onAction && onAction('calendar', job)}
                               >
-                                <IconSymbol size={26} name="calendar" color="#007AFF" />
+                                <View style={styles.gridButtonContent}>
+                                  <IconSymbol size={24} name="calendar" color="#007AFF" />
+                                  <Text style={[styles.gridButtonText, { color: '#007AFF' }]}>
+                                    {t('job_cards.buttons.calendar')}
+                                  </Text>
+                                </View>
                               </TouchableOpacity>
            
                               {/* Stats Button */}
@@ -473,21 +312,52 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                                 style={[styles.gridButton, styles.statsGridButton]}
                                 onPress={() => onAction && onAction('statistics', job)}
                               >
-                                <IconSymbol size={26} name="chart.bar.fill" color="#FF9500" />
+                                <View style={styles.gridButtonContent}>
+                                  <IconSymbol size={24} name="chart.bar.fill" color="#FF9500" />
+                                  <Text style={[styles.gridButtonText, { color: '#FF9500' }]}>
+                                    {t('job_cards.buttons.statistics')}
+                                  </Text>
+                                </View>
                               </TouchableOpacity>
                                                
                               {/* Edit Button */}
                               <TouchableOpacity 
                                 style={[styles.gridButton, styles.editGridButton]}
-                                onPress={() => onAction && onAction('edit', job)}
+                                onPress={() => {
+                                  console.log('🔧 JobCardsSwiper: Settings button pressed for job:', job.name);
+                                  onAction && onAction('edit', job);
+                                }}
                               >
                                 <View style={styles.gridButtonContent}>
-                                  <IconSymbol size={26} name="gearshape.fill" color="#8E8E93" />
+                                  <IconSymbol size={24} name="gearshape.fill" color="#8E8E93" />
+                                  <Text style={[styles.gridButtonText, { color: '#8E8E93' }]}>
+                                    {t('job_cards.buttons.settings')}
+                                  </Text>
                                 </View>
                               </TouchableOpacity>
                             </View>
                           </View>
-
+          {/* Dots Indicator - Only if multiple jobs */}
+              {jobs.length > 1 && (
+                <View style={styles.dotsContainer}>
+                  {jobs.map((_, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.dot,
+                        index === currentIndex && styles.dotActive
+                      ]}
+                      onPress={() => {
+                        scrollViewRef.current?.scrollTo({
+                          x: index * screenWidth,
+                          animated: true
+                        });
+                        setCurrentIndex(index);
+                      }}
+                    />
+                  ))}
+                </View>
+              )}
                           {/* Footer - solo mostrar si hay onTimerToggle */}
                           {onTimerToggle && (
                             <View style={styles.footer}>
@@ -518,125 +388,178 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                             </View>
                           )}
                       </View>
-                    </BlurView>
-                  </TouchableOpacity>
-                </View>
-            );
-          })}
-        </ScrollView>
+                    </View>
+                  );
+                })}
+              </ScrollView>
+  
+            
+            {/* Premium Modal */}
+            <Modal
+              visible={showPremiumModal}
+              transparent={true}
+              animationType="fade"
+              onRequestClose={() => setShowPremiumModal(false)}
+            >
+              <View style={styles.premiumModalOverlay}>
+                <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.premiumModalContainer}>
+                  <View style={styles.premiumModalHeader}>
+                    <View style={styles.premiumIcon}>
+                      <IconSymbol size={40} name="crown.fill" color="#000" />
+                    </View>
+                    <Text style={styles.premiumModalTitle}>
+                      {t('job_form.premium.title')}
+                    </Text>
+                    <Text style={styles.premiumModalSubtitle}>
+                      {t('job_form.premium.message')}
+                    </Text>
+                  </View>
+
+                  <View style={styles.premiumModalContent}>
+                    <View style={styles.premiumFeaturesList}>
+                      <View style={styles.premiumFeatureItem}>
+                        <View style={styles.premiumFeatureIcon}>
+                          <IconSymbol size={18} name="location.fill" color={colors.primary} />
+                        </View>
+                        <Text style={styles.premiumFeatureText}>
+                          {t('job_form.premium.features.auto')}
+                        </Text>
+                      </View>
+                      
+                      <View style={styles.premiumFeatureItem}>
+                        <View style={styles.premiumFeatureIcon}>
+                          <IconSymbol size={18} name="clock.fill" color={colors.primary} />
+                        </View>
+                        <Text style={styles.premiumFeatureText}>
+                          {t('job_form.premium.features.schedule')}
+                        </Text>
+                      </View>
+
+                      <View style={styles.premiumFeatureItem}>
+                        <View style={styles.premiumFeatureIcon}>
+                          <IconSymbol size={18} name="dollarsign.circle.fill" color={colors.primary} />
+                        </View>
+                        <Text style={styles.premiumFeatureText}>
+                          {t('job_form.premium.features.financial')}
+                        </Text>
+                      </View>
+
+                      <View style={styles.premiumFeatureItem}>
+                        <View style={styles.premiumFeatureIcon}>
+                          <IconSymbol size={18} name="chart.bar.fill" color={colors.primary} />
+                        </View>
+                        <Text style={styles.premiumFeatureText}>
+                          {t('job_form.premium.features.billing')}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.premiumModalActions}>
+                      <TouchableOpacity 
+                        style={styles.premiumCancelButton}
+                        onPress={() => setShowPremiumModal(false)}
+                      >
+                        <Text style={styles.premiumCancelButtonText}>
+                          {t('job_form.premium.cancel')}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity 
+                        style={styles.premiumSubscribeButton}
+                        onPress={() => {
+                          setShowPremiumModal(false);
+                          if (onNavigateToSubscription) {
+                            onNavigateToSubscription();
+                          }
+                        }}
+                      >
+                        <Text style={styles.premiumSubscribeButtonText}>
+                          {t('job_form.premium.subscribe')}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </BlurView>
+              </View>
+            </Modal>
+          </ReanimatedAnimated.View>
+        </PanGestureHandler>
       </View>
-      
-      {/* Premium Modal */}
-      <Modal
-        visible={showPremiumModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowPremiumModal(false)}
-      >
-        <View style={styles.premiumModalOverlay}>
-          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.premiumModalContainer}>
-            <View style={styles.premiumModalHeader}>
-              <View style={styles.premiumIcon}>
-                <IconSymbol size={40} name="crown.fill" color="#000" />
-              </View>
-              <Text style={styles.premiumModalTitle}>
-                {t('job_form.premium.title')}
-              </Text>
-              <Text style={styles.premiumModalSubtitle}>
-                {t('job_form.premium.message')}
-              </Text>
-            </View>
-
-            <View style={styles.premiumModalContent}>
-              <View style={styles.premiumFeaturesList}>
-                <View style={styles.premiumFeatureItem}>
-                  <View style={styles.premiumFeatureIcon}>
-                    <IconSymbol size={18} name="location.fill" color={colors.primary} />
-                  </View>
-                  <Text style={styles.premiumFeatureText}>
-                    {t('job_form.premium.features.auto')}
-                  </Text>
-                </View>
-                
-                <View style={styles.premiumFeatureItem}>
-                  <View style={styles.premiumFeatureIcon}>
-                    <IconSymbol size={18} name="clock.fill" color={colors.primary} />
-                  </View>
-                  <Text style={styles.premiumFeatureText}>
-                    {t('job_form.premium.features.schedule')}
-                  </Text>
-                </View>
-
-                <View style={styles.premiumFeatureItem}>
-                  <View style={styles.premiumFeatureIcon}>
-                    <IconSymbol size={18} name="dollarsign.circle.fill" color={colors.primary} />
-                  </View>
-                  <Text style={styles.premiumFeatureText}>
-                    {t('job_form.premium.features.financial')}
-                  </Text>
-                </View>
-
-                <View style={styles.premiumFeatureItem}>
-                  <View style={styles.premiumFeatureIcon}>
-                    <IconSymbol size={18} name="chart.bar.fill" color={colors.primary} />
-                  </View>
-                  <Text style={styles.premiumFeatureText}>
-                    {t('job_form.premium.features.billing')}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.premiumModalActions}>
-                <TouchableOpacity 
-                  style={styles.premiumCancelButton}
-                  onPress={() => setShowPremiumModal(false)}
-                >
-                  <Text style={styles.premiumCancelButtonText}>
-                    {t('job_form.premium.cancel')}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  style={styles.premiumSubscribeButton}
-                  onPress={() => {
-                    setShowPremiumModal(false);
-                    if (onNavigateToSubscription) {
-                      onNavigateToSubscription();
-                    }
-                  }}
-                >
-                  <Text style={styles.premiumSubscribeButtonText}>
-                    {t('job_form.premium.subscribe')}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </BlurView>
-        </View>
-      </Modal>
-    </Animated.View>
+    </Modal>
   );
 };
 
 const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
-  container: {
+  modalOverlay: {
+    flex: 1,
+  
+    justifyContent: 'flex-end',
+  },
+  modalBackdrop: {
     position: 'absolute',
-    bottom: -50,
+    top: 0,
     left: 0,
     right: 0,
-    maxHeight: '60%', // Máximo 60% de la pantalla
-
+    bottom: 0,
+  },
+  modalContainer: {
+    backgroundColor: colors.surfaces,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: '55%',
+    paddingTop: 8,
+    paddingBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: isDark ? 0.4 : 0.15,
+    shadowRadius: 16,
+    elevation: 20,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 8,
+  },
+  modalContent: {
+    paddingHorizontal: 0,
   },
   scrollView: {
     maxHeight: '100%',
   },
   fixedContainer: {
-    maxHeight: '100%',
+    // No height constraint, let it size to content
   },
   scrollContainer: {
-    paddingVertical: 20,
-    paddingBottom: 40, // Espacio extra abajo
-    justifyContent: 'flex-end',
+    flexDirection: 'row',
+  },
+  jobContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    
+  },
+  jobContent: {
+    flex: 1,
+    paddingTop: 20,
+    
+  },
+  jobHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+  },
+  jobColorDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 12,
   },
   card: {
     borderRadius: 20,
@@ -648,6 +571,8 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     shadowRadius: 12,
     borderWidth: 1,
     borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+    
+
   },
   cardActive: {
     transform: [{ scale: 1.03 }],
@@ -687,8 +612,6 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   },
   jobInfo: {
     flex: 1,
-    marginRight: 12,
-    alignItems: 'flex-start',
   },
   jobNameChip: {
     paddingHorizontal: 16,
@@ -703,10 +626,9 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     elevation: 2,
   },
   jobName: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    textAlign: 'left',
-    marginBottom: 0,
+    flex: 1,
     letterSpacing: 0.3,
   },
   jobNameActive: {
@@ -789,39 +711,54 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   },
   gridButton: {
     width: '48%',
-    height: 50,
+    height: 60,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.6)',
+    backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.85)',
     borderWidth: 1,
-    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.9)',
+    shadowColor: isDark ? '#000' : '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: isDark ? 0.3 : 0.08,
+    shadowRadius: 12,
+    elevation: 6,
+    backdropFilter: 'blur(20px)',
   },
   gridButtonContent: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
+    gap: 4,
+  },
+  gridButtonText: {
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   timerGridButton: {
-    backgroundColor: isDark ? 'rgba(0,200,81,0.15)' : 'rgba(0,200,81,0.1)',
-    borderColor: isDark ? 'rgba(0,200,81,0.3)' : 'rgba(0,200,81,0.2)',
+    backgroundColor: isDark ? 'rgba(0,200,81,0.2)' : 'rgba(0,200,81,0.15)',
+    borderColor: isDark ? 'rgba(0,200,81,0.4)' : 'rgba(0,200,81,0.3)',
+    shadowColor: '#00C851',
+    shadowOpacity: isDark ? 0.2 : 0.1,
   },
   calendarGridButton: {
-    backgroundColor: isDark ? 'rgba(0,122,255,0.15)' : 'rgba(0,122,255,0.1)',
-    borderColor: isDark ? 'rgba(0,122,255,0.3)' : 'rgba(0,122,255,0.2)',
+    backgroundColor: isDark ? 'rgba(0,122,255,0.2)' : 'rgba(0,122,255,0.15)',
+    borderColor: isDark ? 'rgba(0,122,255,0.4)' : 'rgba(0,122,255,0.3)',
+    shadowColor: '#007AFF',
+    shadowOpacity: isDark ? 0.2 : 0.1,
   },
   editGridButton: {
-    backgroundColor: isDark ? 'rgba(142,142,147,0.15)' : 'rgba(142,142,147,0.1)',
-    borderColor: isDark ? 'rgba(142,142,147,0.3)' : 'rgba(142,142,147,0.2)',
+    backgroundColor: isDark ? 'rgba(142,142,147,0.2)' : 'rgba(142,142,147,0.15)',
+    borderColor: isDark ? 'rgba(142,142,147,0.4)' : 'rgba(142,142,147,0.3)',
+    shadowColor: '#8E8E93',
+    shadowOpacity: isDark ? 0.2 : 0.1,
   },
   statsGridButton: {
-    backgroundColor: isDark ? 'rgba(255,149,0,0.15)' : 'rgba(255,149,0,0.1)',
-    borderColor: isDark ? 'rgba(255,149,0,0.3)' : 'rgba(255,149,0,0.2)',
+    backgroundColor: isDark ? 'rgba(255,149,0,0.2)' : 'rgba(255,149,0,0.15)',
+    borderColor: isDark ? 'rgba(255,149,0,0.4)' : 'rgba(255,149,0,0.3)',
+    shadowColor: '#FF9500',
+    shadowOpacity: isDark ? 0.2 : 0.1,
   },
   autoTimerContainer: {
     flexDirection: 'row',
@@ -829,19 +766,24 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 10,
     marginTop: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     width: '100%',
     backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
-    borderRadius: 16,
-    shadowRadius: 4,
-    elevation: 2,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   autoTimerLabel: {
     fontSize: 13,
     color: colors.text,
-    fontWeight: '400',
+    fontWeight: '500',
     flex: 1,
-    marginLeft: 6,
   },
   autoTimerSwitch: {
     transform: [{ scale: 0.7 }],
@@ -990,78 +932,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     shadowRadius: 2,
     elevation: 3,
   },
-  minimizedButton: {
-    position: 'absolute',
-    bottom: 50,
-    right: 24,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    elevation: 12,
-    shadowColor: colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-  },
-  minimizedButtonTouchable: {
-    flex: 1,
-    borderRadius: 30,
-  },
-  minimizedButtonInner: {
-    flex: 1,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.8)',
-    backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)', // Fondo azulado suave
-    overflow: 'visible',
-  },
-  badge: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    minWidth: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: isDark ? '#000' : '#fff',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  minimizeButton: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)',
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    zIndex: 10,
-  },
+
   // Premium Modal Styles
   premiumModalOverlay: {
     flex: 1,
@@ -1175,5 +1046,28 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#000',
+  },
+  // Dots Indicator Styles
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingTop: 4,
+    paddingBottom: 12,
+    gap: 8,
+    backgroundColor: 'transparent',
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+    opacity: 0.5,
+  },
+  dotActive: {
+    width: 20,
+    backgroundColor: colors.primary,
+    opacity: 1,
   },
 });

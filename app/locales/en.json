@@ -49,6 +49,40 @@
       "reminder_time": "Reminder Time",
       "reminder_time_desc": "Configure when to receive reminders before your work schedule"
     },
+    "auto_backup": {
+      "title": "Automatic Backup",
+      "description": "Generate backups automatically according to configured frequency",
+      "enable": "Enable automatic backup",
+      "enabled": "Auto backup",
+      "enabled_desc": "Create backups automatically",
+      "frequency": "Frequency",
+      "frequency_desc": "How often to create automatic backups",
+      "frequencies": {
+        "daily": "Daily",
+        "weekly": "Weekly", 
+        "monthly": "Monthly"
+      },
+      "daily": "Daily",
+      "weekly": "Weekly", 
+      "monthly": "Monthly",
+      "status": "Status",
+      "available_backups": "Available backups",
+      "available_backups_desc": "Automatically generated backup copies",
+      "no_backups": "No backups created yet",
+      "no_backups_desc": "Will be created automatically according to configuration",
+      "no_backups_available": "No backups available",
+      "download": "Download",
+      "created_on": "Created on",
+      "size": "Size",
+      "delete_all": "Delete all",
+      "delete_all_confirm": "Delete all automatic backups?",
+      "delete_all_desc": "This action cannot be undone",
+      "backup_created": "Backup created",
+      "backup_error": "Error creating backup",
+      "last_backup": "Last backup: {{date}}",
+      "never": "Never",
+      "save": "Save"
+    },
     "haptic": {
       "title": "Haptic Feedback",
       "description": "Control tactile vibration in buttons and app interactions",
@@ -194,7 +228,11 @@
       "disable_auto": "Disable Auto",
       "disabled_title": "AutoTimer Disabled",
       "disabled_message": "Automatic timer disabled for \"{{jobName}}\"",
-      "disable_error": "Could not disable automatic timer"
+      "disable_error": "Could not disable automatic timer",
+      "background_notice": "Auto timer only works with the app running in the background. If you completely close the app, it will stop counting for privacy reasons.",
+      "privacy_notice": "For privacy reasons, auto timer doesn't work when the app is closed. Keep the app in background for proper operation.",
+      "dismiss_privacy_notice": "Don't show again",
+      "dismiss_notice": "Got it"
     }
   },
   "reports": {
@@ -243,7 +281,21 @@
     "include_invoice_details_desc": "Automatically generate invoice number and current date",
     "no_billing_data": "No billing data",
     "no_billing_data_desc": "Configure billing data to include it in your PDF reports",
-    "configure_billing": "Add billing data to PDF"
+    "configure_billing": "Add billing data to PDF",
+    "include_salary_calculation": "Include salary total",
+    "include_salary_calculation_desc": "Calculate and show total amount to pay based on hours worked",
+    "billing_period": "Billing period:",
+    "billing_per_hour": "Per hour",
+    "billing_per_week": "Per week",
+    "billing_per_month": "Per month",
+    "calculation_preview": "Calculation Preview:",
+    "preview_rate": "Rate:",
+    "preview_period": "Period:",
+    "preview_total": "Total:",
+    "no_salary_config": "No salary configuration",
+    "no_salary_config_desc": "Enable salary configuration in your job to include automatic calculations",
+    "activate_salary_config": "Activate salary configuration",
+    "configure_amounts_message": "Configure amounts to see the total"
   },
   "calendar": {
     "title": "My Calendar",
@@ -464,6 +516,22 @@
     "title": "Welcome!",
     "subtitle": "Learn how to use the app in {{steps}} steps"
   },
+  "auto_backup": {
+    "title": "Automatic Backups",
+    "enable": "Enable automatic backup",
+    "frequency": "Frequency",
+    "status": "Status",
+    "available_backups": "Available backups",
+    "no_backups": "No backups created yet",
+    "no_backups_available": "No backups available",
+    "last_backup": "Last backup: {{date}}",
+    "save": "Save",
+    "frequencies": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    }
+  },
   "navigation": {
     "back_to": "Back to {{screen}}",
     "screens": {
@@ -476,6 +544,14 @@
     "back": "Back",
     "home": "Home"
   },
+  "job_cards": {
+    "buttons": {
+      "timer": "Timer",
+      "calendar": "Calendar", 
+      "statistics": "Statistics",
+      "settings": "Settings"
+    }
+  },
   "job_form": {
     "title_edit": "Edit Job",
     "title_new": "New Job",
@@ -485,7 +561,8 @@
       "schedule": "Schedule", 
       "financial": "Financial",
       "billing": "Billing",
-      "auto": "Auto"
+      "auto": "Auto",
+      "delete": "Delete"
     },
     "basic": {
       "title": "Basic Information",
@@ -647,6 +724,28 @@
       "address_required_message": "To enable automatic timer, you first need to add an address in the 'Basic' tab. The address is necessary for automatic location detection.",
       "stopped_no_time": "Timer stopped - no active time was running"
     },
+    "delete": {
+      "title": "Delete Job",
+      "subtitle": "This action cannot be undone",
+      "warning_title": "⚠️ Warning",
+      "warning_message": "Deleting this job will permanently remove all associated data, including:",
+      "warning_items": [
+        "• All recorded work days",
+        "• Schedule and salary configuration", 
+        "• Automatic timer configuration",
+        "• Billing and report data"
+      ],
+      "confirmation_title": "Confirm Deletion",
+      "confirmation_message": "To confirm you want to delete this job, type the exact job name:",
+      "job_name_placeholder": "Type the job name here",
+      "delete_button": "Delete Permanently",
+      "cancel_button": "Cancel",
+      "name_mismatch": "Name doesn't match. Please verify you've typed exactly: {{jobName}}",
+      "success_title": "Job Deleted",
+      "success_message": "Job '{{jobName}}' has been successfully deleted.",
+      "error_title": "Delete Error",
+      "error_message": "An error occurred while deleting the job. Please try again."
+    },
     "premium": {
       "title": "Premium Feature",
       "message": "This feature requires a premium subscription. Would you like to subscribe now to access all advanced features?",
@@ -771,6 +870,9 @@
     "notifications": {
       "title": "Notifications",
       "description": "Configure work reminders and alerts",
+      "general_notifications": "General Notifications",
+      "auto_timer": "Auto Timer",
+      "work_schedule_reminders": "Work Schedule Reminders",
       "work_reminders": "Work reminders",
       "work_reminders_desc": "Receive reminders before work starts",
       "reminder_time": "Reminder time",
@@ -784,7 +886,9 @@
       "export_title": "Create .json file",
       "export_desc": "Create backup of all your jobs, hours and settings",
       "import_title": "Import .json file",
-      "import_desc": "Restore data from a backup file"
+      "import_desc": "Restore data from a backup file",
+      "auto_backup_title": "Automatic Backups",
+      "auto_backup_desc": "Configure automatic daily, weekly or monthly backups"
     }
   },
   "side_menu": {

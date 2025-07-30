@@ -1,25 +1,39 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
-  Dimensions,
   StyleSheet,
   Switch,
-  Alert,
   Animated,
+  Modal,
+  Dimensions,
 } from 'react-native';
-import { GestureHandlerRootView, PanGestureHandler } from 'react-native-gesture-handler';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import ReanimatedAnimated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  useAnimatedGestureHandler, 
+  withSpring, 
+  withTiming,
+  runOnJS 
+} from 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useTheme } from '../contexts/ThemeContext';
 import { Job } from '../types/WorkTypes';
+import { useHapticFeedback } from '../hooks/useHapticFeedback';
+import { useSubscription } from '../hooks/useSubscription';
 
-interface JobCardsSwiperProps {
+
+// JobCardsSwiper Props Interface
+export interface JobCardsSwiperProps {
   jobs: Job[];
-  onJobPress: (job: Job) => void;
+  visible: boolean;
+  onClose: () => void;
   isJobCurrentlyActive: (job: Job) => boolean;
   getJobScheduleStatus: (job: Job) => string | null;
   onTimerToggle?: (job: Job) => void;
@@ -27,18 +41,21 @@ interface JobCardsSwiperProps {
   onAction?: (action: string, job: Job) => void;
   showAutoTimer?: boolean;
   autoTimerEnabled?: boolean;
-  onAutoTimerToggle?: (job: Job, value: boolean) => void;
-  t: (key: string) => string;
+  onAutoTimerToggle?: (job: Job, value: boolean) => void | Promise<void>;
+  onNavigateToSubscription?: () => void;
+  t: (key: string, options?: any) => string;
 }
 
-const { width: screenWidth } = Dimensions.get('window');
-const CARD_WIDTH = screenWidth - 60; // 30px margin on each side
-const CARD_HEIGHT = 150;
-const EXPANDED_CARD_HEIGHT = 470;
+const EXPANDED_CARD_HEIGHT = 320;
+
+interface GestureContext extends Record<string, unknown> {
+  startY: number;
+}
 
 export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
   jobs,
-  onJobPress,
+  visible,
+  onClose,
   isJobCurrentlyActive,
   getJobScheduleStatus,
   onTimerToggle,
@@ -47,474 +64,459 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
   showAutoTimer = false,
   autoTimerEnabled = false,
   onAutoTimerToggle,
+  onNavigateToSubscription,
   t,
 }) => {
   const { colors, isDark } = useTheme();
+  const { triggerHaptic } = useHapticFeedback();
+  const { isSubscribed } = useSubscription();
   const scrollViewRef = useRef<ScrollView>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [expandedJobId, setExpandedJobId] = useState<string | null>(jobs.length > 0 ? jobs[0].id : null);
+  const screenWidth = Dimensions.get('window').width;
+  const screenHeight = Dimensions.get('window').height;
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   
-  // Create individual animated values for each job
-  const jobAnimations = useRef(new Map()).current;
+  // Modal animation values
+  const translateY = useSharedValue(screenHeight * 0.6); // Start from bottom
+  const opacity = useSharedValue(0);
   
-  const getJobAnimation = (jobId: string) => {
-    if (!jobAnimations.has(jobId)) {
-      const isFirstJob = jobs.length > 0 && jobs[0].id === jobId;
-      jobAnimations.set(jobId, {
-        height: new Animated.Value(isFirstJob ? EXPANDED_CARD_HEIGHT : CARD_HEIGHT),
-        opacity: new Animated.Value(isFirstJob ? 1 : 0),
-        dragY: new Animated.Value(0),
-      });
-    }
-    return jobAnimations.get(jobId);
-  };
-
-  const handleScroll = (event: any) => {
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / (CARD_WIDTH + 20)); // 20px gap between cards
-    setCurrentIndex(index);
-  };
-
-  const scrollTo = (index: number) => {
-    scrollViewRef.current?.scrollTo({
-      x: index * (CARD_WIDTH + 20),
-      animated: true,
-    });
-  };
-
-  const handleExpandCard = (jobId: string) => {
-    const isCurrentlyExpanded = expandedJobId === jobId;
-    const animations = getJobAnimation(jobId);
-    
-    if (isCurrentlyExpanded) {
-      // Collapse - cambiar estado inmediatamente para evitar flicker
-      setExpandedJobId(null);
-      Animated.parallel([
-        Animated.spring(animations.height, {
-          toValue: CARD_HEIGHT,
-          useNativeDriver: false,
-          tension: 100,
-          friction: 8,
-        }),
-        Animated.timing(animations.opacity, {
-          toValue: 0,
-          duration: 150,
-          useNativeDriver: true,
-        })
-      ]).start();
-    } else {
-      // Expand
-      setExpandedJobId(jobId);
-      Animated.parallel([
-        Animated.spring(animations.height, {
-          toValue: EXPANDED_CARD_HEIGHT,
-          useNativeDriver: false,
-          tension: 100,
-          friction: 8,
-        }),
-        Animated.timing(animations.opacity, {
-          toValue: 1,
-          duration: 250,
-          useNativeDriver: true,
-        })
-      ]).start();
-    }
-  };
-
-  // Crear el gesto animado que sigue el dedo
-  const createGestureHandler = (jobId: string) => {
-    const animations = getJobAnimation(jobId);
-    
-    return Animated.event(
-      [{ nativeEvent: { translationY: animations.dragY } }],
-      { 
-        useNativeDriver: false,
-        listener: (event: any) => {
-          const { translationY } = event.nativeEvent;
-          const isCurrentlyExpanded = expandedJobId === jobId;
-          const maxDrag = 180;
-          
-          let progress = 0;
-          let newHeight = CARD_HEIGHT;
-          
-          if (!isCurrentlyExpanded) {
-            // Expandiendo hacia abajo
-            if (translationY > 0) {
-              progress = Math.max(0, Math.min(1, translationY / maxDrag));
-              newHeight = CARD_HEIGHT + (EXPANDED_CARD_HEIGHT - CARD_HEIGHT) * progress;
-            } else {
-              newHeight = CARD_HEIGHT;
-              progress = 0;
-            }
-          } else {
-            // Colapsando hacia arriba
-            if (translationY < 0) {
-              progress = Math.max(0, Math.min(1, -translationY / maxDrag));
-              newHeight = EXPANDED_CARD_HEIGHT - (EXPANDED_CARD_HEIGHT - CARD_HEIGHT) * progress;
-            } else {
-              newHeight = EXPANDED_CARD_HEIGHT;
-              progress = 0;
-            }
-          }
-          
-          animations.height.setValue(newHeight);
-          animations.opacity.setValue(isCurrentlyExpanded ? 1 - progress : progress);
-        }
+  // Gesture handler for drag to close
+  const gestureHandler = useAnimatedGestureHandler<any, GestureContext>({
+    onStart: (_, context) => {
+      context.startY = translateY.value;
+    },
+    onActive: (event, context) => {
+      const newTranslateY = context.startY + event.translationY;
+      if (newTranslateY >= 0) {
+        translateY.value = newTranslateY;
       }
-    );
-  };
-
-  const onHandlerStateChange = (event: any, jobId: string) => {
-    const { state, translationY, velocityY } = event.nativeEvent;
-    const isCurrentlyExpanded = expandedJobId === jobId;
-    const animations = getJobAnimation(jobId);
-    
-    if (state === 5) { // END
-      const threshold = 60; // píxeles de umbral
-      const velocityThreshold = 500;
+    },
+    onEnd: (event) => {
+      const shouldClose = event.translationY > 100 || event.velocityY > 500;
       
-      if (!isCurrentlyExpanded) {
-        // Intentando expandir
-        if (translationY > threshold || velocityY > velocityThreshold) {
-          // Expandir
-          setExpandedJobId(jobId);
-          Animated.parallel([
-            Animated.spring(animations.height, {
-              toValue: EXPANDED_CARD_HEIGHT,
-              useNativeDriver: false,
-              tension: 80,
-              friction: 8,
-            }),
-            Animated.timing(animations.opacity, {
-              toValue: 1,
-              duration: 300,
-              useNativeDriver: true,
-            })
-          ]).start();
-        } else {
-          // Volver al estado colapsado
-          Animated.parallel([
-            Animated.spring(animations.height, {
-              toValue: CARD_HEIGHT,
-              useNativeDriver: false,
-              tension: 80,
-              friction: 8,
-            }),
-            Animated.timing(animations.opacity, {
-              toValue: 0,
-              duration: 200,
-              useNativeDriver: true,
-            })
-          ]).start();
-        }
+      if (shouldClose) {
+        translateY.value = withTiming(screenHeight * 0.6, { duration: 300 });
+        opacity.value = withTiming(0, { duration: 300 });
+        runOnJS(onClose)();
       } else {
-        // Intentando colapsar
-        if (translationY < -threshold || velocityY < -velocityThreshold) {
-          // Colapsar
-          setExpandedJobId(null);
-          Animated.parallel([
-            Animated.spring(animations.height, {
-              toValue: CARD_HEIGHT,
-              useNativeDriver: false,
-              tension: 80,
-              friction: 8,
-            }),
-            Animated.timing(animations.opacity, {
-              toValue: 0,
-              duration: 200,
-              useNativeDriver: true,
-            })
-          ]).start();
-        } else {
-          // Volver al estado expandido
-          Animated.parallel([
-            Animated.spring(animations.height, {
-              toValue: EXPANDED_CARD_HEIGHT,
-              useNativeDriver: false,
-              tension: 80,
-              friction: 8,
-            }),
-            Animated.timing(animations.opacity, {
-              toValue: 1,
-              duration: 300,
-              useNativeDriver: true,
-            })
-          ]).start();
-        }
+        translateY.value = withSpring(0, { damping: 15, stiffness: 150 });
       }
-      
-      // Reset del valor de arrastre
-      animations.dragY.setValue(0);
+    },
+  });
+  
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+    opacity: opacity.value,
+  }));
+
+  // Modal visibility effect
+  useEffect(() => {
+    if (visible) {
+      translateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+      opacity.value = withTiming(1, { duration: 300 });
+    } else {
+      translateY.value = withTiming(screenHeight * 0.6, { duration: 300 });
+      opacity.value = withTiming(0, { duration: 300 });
     }
-  };
+  }, [visible]);
+
+
+
 
   if (jobs.length === 0) return null;
 
   const styles = createStyles(colors, isDark);
-  
-  // Calculate dynamic container height based on expanded state
-  const containerHeight = expandedJobId ? EXPANDED_CARD_HEIGHT + 80 : CARD_HEIGHT + 60;
-  const scrollViewHeight = expandedJobId ? EXPANDED_CARD_HEIGHT + 20 : CARD_HEIGHT;
 
   return (
-    <GestureHandlerRootView style={[styles.container, { height: containerHeight }]}>
-      <ScrollView
-        ref={scrollViewRef}
-        horizontal
-        pagingEnabled={false}
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={handleScroll}
-        contentContainerStyle={styles.scrollContainer}
-        style={[styles.scrollView, { height: scrollViewHeight }]}
-        decelerationRate="fast"
-        snapToInterval={CARD_WIDTH + 20}
-        snapToAlignment="start"
-        showsVerticalScrollIndicator={false}
-        bounces={true}
-      >
-        {jobs.map((job, index) => {
-          const isActive = isJobCurrentlyActive(job);
-          const scheduleStatus = getJobScheduleStatus(job);
-          const jobStats = getJobStatistics ? getJobStatistics(job) : null;
-          const isExpanded = expandedJobId === job.id;
-          const animations = getJobAnimation(job.id);
-          
-          return (
-            <PanGestureHandler
-              key={job.id}
-              onGestureEvent={createGestureHandler(job.id)}
-              onHandlerStateChange={(event) => onHandlerStateChange(event, job.id)}
-              activeOffsetY={[-10, 10]}
-              failOffsetX={[-20, 20]}
-            >
-              <Animated.View
-                style={[
-                  styles.card,
-                  isActive && styles.cardActive,
-                  index === 0 && styles.firstCard,
-                  { height: isExpanded ? animations.height : CARD_HEIGHT },
-                ]}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      <View style={styles.modalOverlay}>
+        <TouchableOpacity
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={onClose}
+        />
+        
+        <PanGestureHandler onGestureEvent={gestureHandler}>
+          <ReanimatedAnimated.View style={[styles.modalContainer, animatedStyle]}>
+            {/* Drag handle */}
+            <View style={styles.dragHandle} />
+             <ScrollView
+                ref={scrollViewRef}
+                horizontal={true}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContainer}
+                style={styles.scrollView}
+                bounces={true}
+                pagingEnabled={true}
+                onScroll={(event) => {
+                  const contentOffsetX = event.nativeEvent.contentOffset.x;
+                  const index = Math.round(contentOffsetX / screenWidth);
+                  const validIndex = Math.max(0, Math.min(index, jobs.length - 1));
+                  setCurrentIndex(validIndex);
+                }}
+                scrollEventThrottle={16}
               >
-                <TouchableOpacity
-                  onPress={() => {
-                    console.log('🟢 JobCardsSwiper: TouchableOpacity pressed for job:', job.name);
-                    // No abrir modal automáticamente
-                  }}
-                  activeOpacity={0.9}
-                  style={{ flex: 1 }}
-                >
-                  <BlurView 
-                    intensity={isDark ? 90 : 98} 
-                    tint={isDark ? "dark" : "light"} 
-                    style={styles.cardInner}
-                  >
-                    {/* Gradient overlay */}
-                    <LinearGradient
-                      colors={isDark 
-                        ? [`${job.color}15`, `${job.color}05`, 'transparent'] 
-                        : [`${job.color}10`, `${job.color}03`, 'transparent']
-                      }
-                      style={styles.gradientOverlay}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    />
-                    
-                    {/* Color accent */}
-                    <View style={[styles.colorAccent, { backgroundColor: job.color }]} />
-                    
-                    {/* Card content */}
-                    <View style={styles.cardContent}>
-                      {/* Header with job info */}
-                      <View style={styles.cardHeader}>
-                        <View style={styles.jobInfo}>
-                          <View style={[styles.jobNameChip, { backgroundColor: `${job.color}20`, borderColor: `${job.color}40` }]}>
-                            <Text style={[styles.jobName, isActive && styles.jobNameActive, { color: job.color }]} numberOfLines={1}>
+                {jobs.slice().reverse().map((job, index) => {
+                  const isActive = isJobCurrentlyActive(job);
+                  const jobStats = getJobStatistics ? getJobStatistics(job) : null;
+
+                  return (
+                    <View
+                      key={job.id}
+                      style={[
+                        styles.jobContainer,
+                        { width: screenWidth }
+                      ]}
+                    >
+
+                      <View style={styles.jobContent}>
+                  
+
+                           <View style={styles.jobHeader}>
+                          <View style={[styles.jobColorDot, { backgroundColor: job.color }]} />
+                   
+                            <Text style={[styles.jobName, { color: job.color }]} numberOfLines={1}>
                               {job.name}
                             </Text>
-                          </View>
-                          {job.company && (
-                            <Text style={styles.companyName} numberOfLines={1}>
-                              {job.company}
-                            </Text>
+                            {job.company && (
+                              <Text style={styles.companyName} numberOfLines={1}>
+                                {job.company}
+                              </Text>
+                            )}
+                
+                          {isActive && (
+                            <View style={styles.activeIndicator}>
+                              <IconSymbol size={12} name="circle.fill" color={colors.success} />
+                            </View>
                           )}
                         </View>
-                   
+                       
+
+                          {/* Statistics */}
+                          {jobStats && (
+                            <View style={styles.statsContainer}>
+                              <View style={styles.statsRow}>
+                                <View style={styles.statItem}>
+                                  <View style={styles.statTopRow}>
+                                    <View style={[styles.statIcon, { backgroundColor: `${job.color}20` }]}>
+                                      <IconSymbol size={14} name="clock.fill" color={job.color} />
+                                    </View>
+                                    <Text style={[styles.statValue, { color: job.color }]}>
+                                      {Math.floor(jobStats.thisMonthHours)}h {Math.round((jobStats.thisMonthHours - Math.floor(jobStats.thisMonthHours)) * 60)}m
+                                    </Text>
+                                  </View>
+                                  <Text style={styles.statLabel}>{t('reports.this_month')}</Text>
+                                </View>
+                                <View style={styles.statItem}>
+                                  <View style={styles.statTopRow}>
+                                    <View style={[styles.statIcon, { backgroundColor: `${job.color}20` }]}>
+                                      <IconSymbol size={14} name="calendar" color={job.color} />
+                                    </View>
+                                    <Text style={[styles.statValue, { color: job.color }]}>{jobStats.thisMonthDays}</Text>
+                                  </View>
+                                  <Text style={styles.statLabel}>{t('calendar.worked_days')}</Text>
+                                </View>
+                              </View>
+                            </View>
+                          )}
+
+                          {/* Expanded content */}
+                          <View style={styles.expandedContent}>
+                            <View style={styles.expandedGrid}>
+                              {/* Timer Button */}
+                              <TouchableOpacity 
+                                style={[styles.gridButton, styles.timerGridButton]}
+                                onPress={() => {
+                                  console.log('🟡 Timer button pressed', { job: job.name, hasOnAction: !!onAction });
+                                  if (onAction) {
+                                    onAction('timer', job);
+                                  } else if (onTimerToggle) {
+                                    onTimerToggle(job);
+                                  }
+                                }}
+                              >
+                                <View style={styles.gridButtonContent}>
+                                  <IconSymbol size={24} name="clock.fill" color="#00C851" />
+                                  <Text style={[styles.gridButtonText, { color: '#00C851' }]}>
+                                    {t('job_cards.buttons.timer')}
+                                  </Text>
+                                </View>
+                              </TouchableOpacity>
+
+                              {/* Calendar Button */}
+                              <TouchableOpacity 
+                                style={[styles.gridButton, styles.calendarGridButton]}
+                                onPress={() => onAction && onAction('calendar', job)}
+                              >
+                                <View style={styles.gridButtonContent}>
+                                  <IconSymbol size={24} name="calendar" color="#007AFF" />
+                                  <Text style={[styles.gridButtonText, { color: '#007AFF' }]}>
+                                    {t('job_cards.buttons.calendar')}
+                                  </Text>
+                                </View>
+                              </TouchableOpacity>
+           
+                              {/* Stats Button */}
+                              <TouchableOpacity 
+                                style={[styles.gridButton, styles.statsGridButton]}
+                                onPress={() => onAction && onAction('statistics', job)}
+                              >
+                                <View style={styles.gridButtonContent}>
+                                  <IconSymbol size={24} name="chart.bar.fill" color="#FF9500" />
+                                  <Text style={[styles.gridButtonText, { color: '#FF9500' }]}>
+                                    {t('job_cards.buttons.statistics')}
+                                  </Text>
+                                </View>
+                              </TouchableOpacity>
+                                               
+                              {/* Edit Button */}
+                              <TouchableOpacity 
+                                style={[styles.gridButton, styles.editGridButton]}
+                                onPress={() => {
+                                  console.log('🔧 JobCardsSwiperNoslocation: Settings button pressed for job:', job.name);
+                                  onAction && onAction('edit', job);
+                                }}
+                              >
+                                <View style={styles.gridButtonContent}>
+                                  <IconSymbol size={24} name="gearshape.fill" color="#8E8E93" />
+                                  <Text style={[styles.gridButtonText, { color: '#8E8E93' }]}>
+                                    {t('job_cards.buttons.settings')}
+                                  </Text>
+                                </View>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+          {/* Dots Indicator - Only if multiple jobs */}
+              {jobs.length > 1 && (
+                <View style={styles.dotsContainer}>
+                  {jobs.map((_, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.dot,
+                        index === currentIndex && styles.dotActive
+                      ]}
+                      onPress={() => {
+                        scrollViewRef.current?.scrollTo({
+                          x: index * screenWidth,
+                          animated: true
+                        });
+                        setCurrentIndex(index);
+                      }}
+                    />
+                  ))}
+                </View>
+              )}
+                          {/* Footer - solo mostrar si hay onTimerToggle */}
+                          {onTimerToggle && (
+                            <View style={styles.footer}>
+                              <View style={styles.timerButton}>
+                                <IconSymbol 
+                                  size={14} 
+                                  name={isActive ? "pause.fill" : "play.fill"} 
+                                  color={isActive ? "#FFFFFF" : job.color} 
+                                />
+                                <Text style={[
+                                  styles.timerButtonText, 
+                                  { color: isActive ? "#FFFFFF" : job.color }
+                                ]}>
+                                  {isActive ? t('timer.pause') : t('timer.start')}
+                                </Text>
+                              </View>
+                              <Switch
+                                value={isActive}
+                                onValueChange={() => onTimerToggle && onTimerToggle(job)}
+                                trackColor={{ 
+                                  false: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)', 
+                                  true: job.color + '40' 
+                                }}
+                                thumbColor={isActive ? job.color : (isDark ? '#f4f3f4' : '#f4f3f4')}
+                                ios_backgroundColor={isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)'}
+                                style={styles.timerSwitch}
+                              />
+                            </View>
+                          )}
+                      </View>
+                    </View>
+                  );
+                })}
+              </ScrollView>
+  
+            
+            {/* Premium Modal */}
+            <Modal
+              visible={showPremiumModal}
+              transparent={true}
+              animationType="fade"
+              onRequestClose={() => setShowPremiumModal(false)}
+            >
+              <View style={styles.premiumModalOverlay}>
+                <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.premiumModalContainer}>
+                  <View style={styles.premiumModalHeader}>
+                    <View style={styles.premiumIcon}>
+                      <IconSymbol size={40} name="crown.fill" color="#000" />
+                    </View>
+                    <Text style={styles.premiumModalTitle}>
+                      {t('job_form.premium.title')}
+                    </Text>
+                    <Text style={styles.premiumModalSubtitle}>
+                      {t('job_form.premium.message')}
+                    </Text>
+                  </View>
+
+                  <View style={styles.premiumModalContent}>
+                    <View style={styles.premiumFeaturesList}>
+                      <View style={styles.premiumFeatureItem}>
+                        <View style={styles.premiumFeatureIcon}>
+                          <IconSymbol size={18} name="location.fill" color={colors.primary} />
+                        </View>
+                        <Text style={styles.premiumFeatureText}>
+                          {t('job_form.premium.features.auto')}
+                        </Text>
+                      </View>
+                      
+                      <View style={styles.premiumFeatureItem}>
+                        <View style={styles.premiumFeatureIcon}>
+                          <IconSymbol size={18} name="clock.fill" color={colors.primary} />
+                        </View>
+                        <Text style={styles.premiumFeatureText}>
+                          {t('job_form.premium.features.schedule')}
+                        </Text>
                       </View>
 
-
-
-                                
-                      {/* Statistics */}
-                      {jobStats && (
-                        <View style={styles.statsContainer}>
-                          <View style={styles.statsRow}>
-                            <View style={styles.statItem}>
-                              <View style={[styles.statIcon, { backgroundColor: `${job.color}20` }]}>
-                                <IconSymbol size={16} name="clock.fill" color={job.color} />
-                              </View>
-                              <View style={styles.statText}>
-                                <Text style={[styles.statValue, { color: job.color }]}>
-                                  {Math.floor(jobStats.thisMonthHours)}h {Math.round((jobStats.thisMonthHours - Math.floor(jobStats.thisMonthHours)) * 60)}m
-                                </Text>
-                                <Text style={styles.statLabel}>{t('reports.this_month')}</Text>
-                              </View>
-                            </View>
-                            <View style={styles.statItem}>
-                              <View style={[styles.statIcon, { backgroundColor: `${job.color}20` }]}>
-                                <IconSymbol size={16} name="calendar" color={job.color} />
-                              </View>
-                              <View style={styles.statText}>
-                                <Text style={[styles.statValue, { color: job.color }]}>{jobStats.thisMonthDays}</Text>
-                                <Text style={styles.statLabel}>{t('calendar.worked_days')}</Text>
-                              </View>
-                            </View>
-                          </View>
-                          
+                      <View style={styles.premiumFeatureItem}>
+                        <View style={styles.premiumFeatureIcon}>
+                          <IconSymbol size={18} name="dollarsign.circle.fill" color={colors.primary} />
                         </View>
-                      )}
+                        <Text style={styles.premiumFeatureText}>
+                          {t('job_form.premium.features.financial')}
+                        </Text>
+                      </View>
 
-                      {/* Expanded content */}
-                      {isExpanded && (
-                        <Animated.View style={[styles.expandedContent, { opacity: animations.opacity }]}>
-                          <View style={styles.expandedGrid}>
-                            {/* Timer Button */}
-                            <TouchableOpacity 
-                              style={[styles.gridButton, styles.timerGridButton]}
-                              onPress={() => {
-                                console.log('🟡 Timer button pressed', { job: job.name, hasOnAction: !!onAction });
-                                if (onAction) {
-                                  onAction('timer', job);
-                                } else if (onTimerToggle) {
-                                  onTimerToggle(job);
-                                }
-                              }}
-                            >
-                              <View style={styles.gridButtonContent}>
-                                <Text style={[styles.gridButtonText, { color: '#00C851' }]}>
-                                  {t('maps.start_timer')}
-                                </Text>
-                                <IconSymbol size={20} name="clock.fill" color="#00C851" />
-                              </View>
-                            </TouchableOpacity>
-
-                  
-                            
-                            {/* Calendar Button */}
-                            <TouchableOpacity 
-                              style={[styles.gridButton, styles.calendarGridButton]}
-                              onPress={() => onAction && onAction('calendar', job)}
-                            >
-                              <View style={styles.gridButtonContent}>
-                                <Text style={[styles.gridButtonText, { color: '#007AFF' }]}>
-                                  {t('maps.view_calendar')}
-                                </Text>
-                                <IconSymbol size={20} name="calendar" color="#007AFF" />
-                              </View>
-                            </TouchableOpacity>
-           
-                            {/* Stats Button */}
-                            <TouchableOpacity 
-                              style={[styles.gridButton, styles.statsGridButton]}
-                              onPress={() => onAction && onAction('statistics', job)}
-                            >
-                              <View style={styles.gridButtonContent}>
-                                <Text style={[styles.gridButtonText, { color: '#FF9500' }]}>
-                                  Estadísticas
-                                </Text>
-                                <IconSymbol size={20} name="chart.bar.fill" color="#FF9500" />
-                              </View>
-                            </TouchableOpacity>
-                                             
-                            {/* Edit Button */}
-                            <TouchableOpacity 
-                              style={[styles.gridButton, styles.editGridButton]}
-                              onPress={() => onAction && onAction('edit', job)}
-                            >
-                              <View style={styles.gridButtonContent}>
-                                <Text style={[styles.gridButtonText, { color: '#8E8E93' }]}>
-                                  {t('maps.edit_job')}
-                                </Text>
-                                <IconSymbol size={20} name="gearshape.fill" color="#8E8E93" />
-                              </View>
-                            </TouchableOpacity>
-
-                            
-                          </View>
-                          
-                          {/* Collapse indicator */}
-                          <View style={styles.collapseIndicator}>
-                            <View style={styles.collapseBar} />
-                          </View>
-                        </Animated.View>
-                      )}
-
-                      {/* Footer */}
-                      {onTimerToggle && !isExpanded ? (
-                        <View style={styles.footer}>
-                          <View style={styles.timerButton}>
-                            <IconSymbol 
-                              size={14} 
-                              name={isActive ? "pause.fill" : "play.fill"} 
-                              color={isActive ? "#FFFFFF" : job.color} 
-                            />
-                            <Text style={[
-                              styles.timerButtonText, 
-                              { color: isActive ? "#FFFFFF" : job.color }
-                            ]}>
-                              {isActive ? t('timer.pause') : t('timer.start')}
-                            </Text>
-                          </View>
-                          <Switch
-                            value={isActive}
-                            onValueChange={() => onTimerToggle(job)}
-                            trackColor={{ 
-                              false: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)', 
-                              true: job.color + '40' 
-                            }}
-                            thumbColor={isActive ? job.color : (isDark ? '#f4f3f4' : '#f4f3f4')}
-                            ios_backgroundColor={isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)'}
-                            style={styles.timerSwitch}
-                          />
+                      <View style={styles.premiumFeatureItem}>
+                        <View style={styles.premiumFeatureIcon}>
+                          <IconSymbol size={18} name="chart.bar.fill" color={colors.primary} />
                         </View>
-                      ) : !isExpanded ? (
-                        <View style={styles.footerExpandIndicator}>
-                          <View style={styles.expandIndicatorBar} />
-                        </View>
-                      ) : null}
+                        <Text style={styles.premiumFeatureText}>
+                          {t('job_form.premium.features.billing')}
+                        </Text>
+                      </View>
                     </View>
-                  </BlurView>
-                </TouchableOpacity>
-              </Animated.View>
-            </PanGestureHandler>
-          );
-        })}
-      </ScrollView>
-    </GestureHandlerRootView>
+
+                    <View style={styles.premiumModalActions}>
+                      <TouchableOpacity 
+                        style={styles.premiumCancelButton}
+                        onPress={() => setShowPremiumModal(false)}
+                      >
+                        <Text style={styles.premiumCancelButtonText}>
+                          {t('job_form.premium.cancel')}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity 
+                        style={styles.premiumSubscribeButton}
+                        onPress={() => {
+                          setShowPremiumModal(false);
+                          if (onNavigateToSubscription) {
+                            onNavigateToSubscription();
+                          }
+                        }}
+                      >
+                        <Text style={styles.premiumSubscribeButtonText}>
+                          {t('job_form.premium.subscribe')}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </BlurView>
+              </View>
+            </Modal>
+          </ReanimatedAnimated.View>
+        </PanGestureHandler>
+      </View>
+    </Modal>
   );
 };
 
 const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
-  container: {
+  modalOverlay: {
+    flex: 1,
+
+    justifyContent: 'flex-end',
+  },
+  modalBackdrop: {
     position: 'absolute',
-    top: 100,
+    top: 0,
     left: 0,
     right: 0,
-    height: CARD_HEIGHT + 60,
+    bottom: 0,
+  },
+  modalContainer: {
+    backgroundColor: colors.surfaces,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: '48%',
+    paddingTop: 8,
+    paddingBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: isDark ? 0.4 : 0.15,
+    shadowRadius: 16,
+    elevation: 20,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 8,
+  },
+  modalContent: {
+    paddingHorizontal: 0,
   },
   scrollView: {
-    height: CARD_HEIGHT,
+    maxHeight: '100%',
+  },
+  fixedContainer: {
+    // No height constraint, let it size to content
   },
   scrollContainer: {
-    paddingHorizontal: 30,
-    paddingRight: 50,
+    flexDirection: 'row',
   },
-  firstCard: {
-    marginLeft: 0,
+  jobContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    
+  },
+  jobContent: {
+    flex: 1,
+    paddingTop: 20,
+    
+  },
+  jobHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+  },
+  jobColorDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 12,
   },
   card: {
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
-    marginRight: 20,
     borderRadius: 20,
     overflow: 'hidden',
     elevation: 8,
@@ -524,6 +526,8 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     shadowRadius: 12,
     borderWidth: 1,
     borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+    
+
   },
   cardActive: {
     transform: [{ scale: 1.03 }],
@@ -559,18 +563,17 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
+    marginTop: 16,
   },
   jobInfo: {
     flex: 1,
-    marginRight: 12,
-    alignItems: 'center',
   },
   jobNameChip: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    marginBottom: 4,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -578,10 +581,9 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     elevation: 2,
   },
   jobName: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 0,
+    flex: 1,
     letterSpacing: 0.3,
   },
   jobNameActive: {
@@ -592,7 +594,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     color: colors.textSecondary,
     fontWeight: '500',
     opacity: 0.8,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   activeIndicator: {
     width: 24,
@@ -608,6 +610,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   },
   statsContainer: {
     marginVertical: 8,
+    marginHorizontal: 10,
   },
   statsRow: {
     flexDirection: 'row',
@@ -615,129 +618,102 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   },
   statItem: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
     borderRadius: 12,
     padding: 8,
     borderWidth: 1,
     borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+    gap: 2,
+  },
+  statTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   statIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
-  },
-  statText: {
-    flex: 1,
   },
   statValue: {
     fontSize: 14,
     fontWeight: '700',
-    marginBottom: 1,
+    textAlign: 'center',
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: 12,
     color: colors.textSecondary,
     fontWeight: '500',
+    textAlign: 'center',
   },
   expandedContent: {
-    marginTop: 12,
+    marginTop: 0,
     paddingHorizontal: 8,
     paddingBottom: 12,
+    paddingTop: 8,
+    position: 'relative',
   },
   expandedGrid: {
-    flexDirection: 'column',
-    gap: 16,
-    marginBottom: 20,
-    paddingHorizontal: 4,
-    marginTop: 16,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 8,
   },
   gridButton: {
-    width: '100%',
-    height: 50,
-    borderRadius: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.85)',
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.9)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: isDark ? 0.3 : 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-    gridButtonMap: {
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    width: '48%',
+    height: 60,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    flexDirection: 'row',
-    gap: 6,
-    backgroundColor: isDark ? 'rgba(52,199,89,0.15)' : 'rgba(52,199,89,0.1)',
+    backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.85)',
     borderWidth: 1,
-    borderColor: isDark ? 'rgba(52,199,89,0.3)' : 'rgba(52,199,89,0.2)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.9)',
+    shadowColor: isDark ? '#000' : '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: isDark ? 0.3 : 0.08,
+    shadowRadius: 12,
+    elevation: 6,
+    backdropFilter: 'blur(20px)',
   },
-  mapButtonText: {
-    fontSize: 12,
-    color: '#34C759',
+  gridButtonContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    gap: 4,
+  },
+  gridButtonText: {
+    fontSize: 11,
     fontWeight: '600',
+    textAlign: 'center',
   },
   timerGridButton: {
     backgroundColor: isDark ? 'rgba(0,200,81,0.2)' : 'rgba(0,200,81,0.15)',
     borderColor: isDark ? 'rgba(0,200,81,0.4)' : 'rgba(0,200,81,0.3)',
     shadowColor: '#00C851',
-    shadowOpacity: isDark ? 0.3 : 0.2,
+    shadowOpacity: isDark ? 0.2 : 0.1,
   },
   calendarGridButton: {
     backgroundColor: isDark ? 'rgba(0,122,255,0.2)' : 'rgba(0,122,255,0.15)',
     borderColor: isDark ? 'rgba(0,122,255,0.4)' : 'rgba(0,122,255,0.3)',
     shadowColor: '#007AFF',
-    shadowOpacity: isDark ? 0.3 : 0.2,
+    shadowOpacity: isDark ? 0.2 : 0.1,
   },
   editGridButton: {
     backgroundColor: isDark ? 'rgba(142,142,147,0.2)' : 'rgba(142,142,147,0.15)',
     borderColor: isDark ? 'rgba(142,142,147,0.4)' : 'rgba(142,142,147,0.3)',
     shadowColor: '#8E8E93',
-    shadowOpacity: isDark ? 0.3 : 0.2,
+    shadowOpacity: isDark ? 0.2 : 0.1,
   },
   statsGridButton: {
     backgroundColor: isDark ? 'rgba(255,149,0,0.2)' : 'rgba(255,149,0,0.15)',
     borderColor: isDark ? 'rgba(255,149,0,0.4)' : 'rgba(255,149,0,0.3)',
     shadowColor: '#FF9500',
-    shadowOpacity: isDark ? 0.3 : 0.2,
-  },
-  mapGridButton: {
-    backgroundColor: isDark ? 'rgba(52,199,89,0.15)' : 'rgba(52,199,89,0.1)',
-    borderColor: isDark ? 'rgba(52,199,89,0.3)' : 'rgba(52,199,89,0.2)',
-  },
-  gridButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flex: 1,
-  },
-  gridButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'left',
-    flex: 1,
-    letterSpacing: 0.1,
-  },
-  editButtonExpanded: {
-    height: 110,
+    shadowOpacity: isDark ? 0.2 : 0.1,
   },
   autoTimerContainer: {
     flexDirection: 'row',
@@ -745,33 +721,40 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 10,
     marginTop: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     width: '100%',
     backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
-    borderRadius: 16,
-    shadowRadius: 4,
-    elevation: 2,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   autoTimerLabel: {
     fontSize: 13,
     color: colors.text,
-    fontWeight: '400',
+    fontWeight: '500',
     flex: 1,
-    marginLeft: 6,
   },
   autoTimerSwitch: {
     transform: [{ scale: 0.7 }],
-     marginRight: -6,
+    marginRight: -6,
   },
   collapseIndicator: {
     alignItems: 'center',
-    paddingVertical: 20,
-    paddingTop: 24,
+    paddingVertical: 4,
+    marginTop: -9,
+    paddingBottom: 4,
+    zIndex: 10,
   },
   collapseBar: {
-    width: 36,
+    width: 40,
     height: 4,
-    backgroundColor: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
+    backgroundColor: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
     borderRadius: 2,
   },
   footer: {
@@ -799,11 +782,247 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   footerExpandIndicator: {
     alignItems: 'center',
     paddingVertical: 8,
+    paddingBottom: 16,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
   },
   expandIndicatorBar: {
     width: 40,
     height: 4,
     backgroundColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
     borderRadius: 2,
+  },
+  collapsedLayout: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    position: 'relative',
+  },
+  collapsedContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    flex: 1,
+  },
+  collapsedJobChip: {
+    marginBottom: 0,
+    shadowOpacity: isDark ? 0.4 : 0.2,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  collapsedJobChipContainer: {
+    flex: 1,
+    minWidth: 0,
+    maxWidth: '70%',
+  },
+  collapsedJobName: {
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  collapsedExpandIndicator: {
+    position: 'absolute',
+    top: -8,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingVertical: 0,
+  },
+  collapsedRightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  autoTimerIndicator: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 2,
+  },
+  autoTimerDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#34C759',
+  },
+  autoTimerMiniText: {
+    fontSize: 8,
+    fontWeight: '700',
+    color: '#34C759',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  collapsedSettingsButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 20,
+  },
+  closeButtonInner: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+
+  // Premium Modal Styles
+  premiumModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  premiumModalContainer: {
+    backgroundColor: colors.surface,
+    borderRadius: 24,
+    width: '100%',
+    maxWidth: 400,
+    overflow: 'hidden',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+  },
+  premiumModalHeader: {
+    padding: 24,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.separator,
+  },
+  premiumIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FFD700',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    elevation: 4,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  premiumModalTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  premiumModalSubtitle: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  premiumModalContent: {
+    padding: 24,
+  },
+  premiumFeaturesList: {
+    marginBottom: 24,
+  },
+  premiumFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  premiumFeatureIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  premiumFeatureText: {
+    fontSize: 16,
+    color: colors.text,
+    flex: 1,
+    fontWeight: '500',
+  },
+  premiumModalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  premiumCancelButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.separator,
+  },
+  premiumCancelButtonText: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  premiumSubscribeButton: {
+    flex: 2,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: '#FFD700',
+    elevation: 2,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  premiumSubscribeButtonText: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000',
+  },
+  // Dots Indicator Styles
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingTop: 4,
+    paddingBottom: 12,
+    gap: 8,
+    backgroundColor: 'transparent',
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+    opacity: 0.5,
+  },
+  dotActive: {
+    width: 20,
+    backgroundColor: colors.primary,
+    opacity: 1,
   },
 });

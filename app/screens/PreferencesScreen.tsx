@@ -761,7 +761,7 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
     <IconSymbol size={20} name="bell.fill" color={colors.primary} />
   </View>
   <View style={styles.settingContent}>
-    <Text style={styles.settingTitle}>General Notifications</Text>
+    <Text style={styles.settingTitle}>{t('preferences.notifications.general_notifications')}</Text>
 
   </View>
   <Switch
@@ -793,7 +793,7 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
     <IconSymbol size={20} name="timer" color={colors.warning} />
   </View>
   <View style={styles.settingContent}>
-    <Text style={styles.settingTitle}>Auto Timer</Text>
+    <Text style={styles.settingTitle}>{t('preferences.notifications.auto_timer')}</Text>
 
   </View>
   <Switch
@@ -826,7 +826,7 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
     <IconSymbol size={20} name="clock.fill" color={colors.warning} />
   </View>
   <View style={styles.settingContent}>
-    <Text style={styles.settingTitle}>Work Schedule Reminders</Text>
+    <Text style={styles.settingTitle}>{t('preferences.notifications.work_schedule_reminders')}</Text>
  
   </View>
   <Switch

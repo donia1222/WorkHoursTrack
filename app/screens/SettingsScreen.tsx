@@ -12,10 +12,12 @@ import { JobService } from '../services/JobService';
 import JobFormModal from '../components/JobFormModal';
 import JobSelectorModal from '../components/JobSelectorModal';
 import WelcomeModal from '../components/WelcomeModal';
+import AutoBackupModal from '../components/AutoBackupModal';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { DataExportService } from '../services/DataExportService';
+import { AutoBackupService, BackupFrequency } from '../services/AutoBackupService';
 
 interface SettingsScreenProps {
   onNavigate: (screen: string) => void;
@@ -208,6 +210,13 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
   const [selectedEditType, setSelectedEditType] = useState<'schedule' | 'location' | 'financial' | 'billing'>('schedule');
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const { handleBack } = useBackNavigation();
+  
+  // Auto Backup State
+  const [autoBackupEnabled, setAutoBackupEnabled] = useState(false);
+  const [autoBackupFrequency, setAutoBackupFrequency] = useState<BackupFrequency>('daily');
+  const [availableBackups, setAvailableBackups] = useState<any[]>([]);
+  const [lastBackupDate, setLastBackupDate] = useState<string | null>(null);
+  const [showAutoBackupModal, setShowAutoBackupModal] = useState(false);
 
   // Handle navigation options
   React.useEffect(() => {
@@ -217,6 +226,35 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
       onNavigationHandled?.();
     }
   }, [navigationOptions, onNavigationHandled]);
+
+  // Check for auto backup when Settings screen mounts
+  React.useEffect(() => {
+    const checkAutoBackup = async () => {
+      try {
+        await AutoBackupService.checkAndCreateBackupIfNeeded();
+      } catch (error) {
+        console.error('Error checking auto backup in settings:', error);
+      }
+    };
+
+    checkAutoBackup();
+    loadAutoBackupConfig();
+  }, []);
+
+  // Auto Backup Functions
+  const loadAutoBackupConfig = async () => {
+    try {
+      const config = await AutoBackupService.getConfig();
+      setAutoBackupEnabled(config.enabled);
+      setAutoBackupFrequency(config.frequency);
+      setLastBackupDate(config.lastBackupDate || null);
+      
+      const backups = await AutoBackupService.getAvailableBackups();
+      setAvailableBackups(backups);
+    } catch (error) {
+      console.error('Error loading auto backup config:', error);
+    }
+  };
 
   const handleEditCategory = (category: 'schedule' | 'location' | 'financial' | 'billing') => {
     setSelectedEditType(category);
@@ -562,6 +600,23 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
             </View>
             <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
           </TouchableOpacity>
+
+          {/* Auto Backup */}
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => setShowAutoBackupModal(true)}
+          >
+            <View style={[styles.settingIcon, { backgroundColor: 'rgba(52, 199, 89, 0.15)' }]}>
+              <IconSymbol size={24} name="clock.arrow.circlepath" color={colors.success} />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>{t('preferences.data_management.auto_backup_title')}</Text>
+              <Text style={styles.settingDescription}>
+                {t('preferences.data_management.auto_backup_desc')}
+              </Text>
+            </View>
+            <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
+          </TouchableOpacity>
         </BlurView>
 
 
@@ -594,6 +649,31 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
       <WelcomeModal
         visible={showWelcomeModal}
         onClose={() => setShowWelcomeModal(false)}
+      />
+
+      {/* Auto Backup Modal */}
+      <AutoBackupModal
+        visible={showAutoBackupModal}
+        onClose={() => setShowAutoBackupModal(false)}
+        enabled={autoBackupEnabled}
+        frequency={autoBackupFrequency}
+        availableBackups={availableBackups}
+        lastBackupDate={lastBackupDate}
+        onConfigChange={async (enabled, frequency) => {
+          try {
+            await AutoBackupService.updateConfig({ enabled, frequency });
+            await loadAutoBackupConfig();
+          } catch (error) {
+            console.error('Error updating auto backup config:', error);
+          }
+        }}
+        onDownloadBackup={async (backup) => {
+          try {
+            await AutoBackupService.downloadBackup(backup.fileName);
+          } catch (error) {
+            console.error('Error downloading backup:', error);
+          }
+        }}
       />
 
     </SafeAreaView>

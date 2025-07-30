@@ -8,9 +8,23 @@ Notifications.setNotificationHandler({
     console.log('🔔 Notification handler called:', notification.request.identifier);
     console.log('   Content:', notification.request.content.title);
     console.log('   Type:', notification.request.content.data?.type);
+    console.log('   App State:', AppState.currentState);
+    
+    const notificationType = notification.request.content.data?.type;
+    
+    // For auto-timer notifications, always show regardless of app state
+    if (notificationType && notificationType.startsWith('timer_')) {
+      console.log('🔔 Auto-timer notification - showing with high priority');
+      return {
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        priority: Notifications.AndroidNotificationPriority.HIGH,
+      };
+    }
     
     // For work reminders, check if it's actually time
-    if (notification.request.content.data?.type === 'work_reminder') {
+    if (notificationType === 'work_reminder') {
       console.log('⏰ Work reminder detected - checking timing...');
       
       const scheduledTime = notification.request.content.data?.timestamp;
@@ -52,7 +66,7 @@ Notifications.setNotificationHandler({
       };
     }
     
-    // For other notifications (test, auto-timer), show normally
+    // For other notifications (test, etc.), show normally
     return {
       shouldShowAlert: true,
       shouldPlaySound: true,
@@ -86,6 +100,7 @@ class NotificationService {
     workReminders: true,
     reminderMinutes: 15,
   };
+  private pendingBackgroundNotifications: Map<string, any> = new Map();
 
   private constructor() {
     this.initializeService();
@@ -126,8 +141,47 @@ class NotificationService {
       if (nextAppState === 'background' || nextAppState === 'inactive') {
         console.log('📲 App going to background - scheduling pending work reminders');
         this.schedulePendingWorkReminders();
+      } else if (nextAppState === 'active') {
+        console.log('📲 App became active - checking for missed auto-timer notifications');
+        this.checkMissedAutoTimerNotifications();
       }
     });
+  }
+
+  /**
+   * Check for auto-timer notifications that might have been missed while in background
+   */
+  private async checkMissedAutoTimerNotifications(): Promise<void> {
+    try {
+      const now = Date.now();
+      for (const [identifier, notificationData] of this.pendingBackgroundNotifications.entries()) {
+        const timeSinceSent = now - notificationData.timestamp;
+        
+        // If notification is older than 30 seconds and might have been missed
+        if (timeSinceSent > 30000 && timeSinceSent < 5 * 60 * 1000) {
+          console.log('🔔 Potentially missed auto-timer notification, checking delivery...');
+          
+          // Check if the notification was actually delivered
+          const deliveredNotifications = await Notifications.getPresentedNotificationsAsync();
+          const wasDelivered = deliveredNotifications.some(n => n.request.identifier === identifier);
+          
+          if (!wasDelivered) {
+            console.log('🔔 Re-sending missed auto-timer notification');
+            // Re-send with immediate trigger
+            await Notifications.scheduleNotificationAsync({
+              ...notificationData.config,
+              identifier: `${identifier}_resend`,
+              trigger: { seconds: 1 },
+            });
+          }
+          
+          // Mark as processed
+          this.pendingBackgroundNotifications.delete(identifier);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking missed notifications:', error);
+    }
   }
 
   /**
@@ -184,6 +238,12 @@ class NotificationService {
               allowCriticalAlerts: false,
               provideAppNotificationSettings: false,
               allowProvisional: false,
+              allowAnnouncements: false,
+            },
+            android: {
+              allowAlert: true,
+              allowBadge: true,
+              allowSound: true,
             },
           });
           finalStatus = status;
@@ -247,6 +307,71 @@ class NotificationService {
   }
 
   /**
+   * Schedule a notification for a specific time
+   */
+  async scheduleNotificationForTime(
+    type: NotificationType,
+    jobName: string,
+    scheduledTime: Date,
+    extraData?: { minutes?: number }
+  ): Promise<void> {
+    try {
+      console.log('📅 scheduleNotificationForTime called with:', { 
+        type, 
+        jobName, 
+        scheduledTime: scheduledTime.toLocaleString(), 
+        extraData 
+      });
+      
+      if (!this.canSendNotifications()) {
+        console.log('📵 Notifications disabled or no permissions');
+        return;
+      }
+
+      // Check if auto-timer notifications are enabled
+      if (type.startsWith('timer_') && !this.settings.autoTimer) {
+        console.log('📵 Auto-timer notifications disabled');
+        return;
+      }
+
+      const { title, body } = this.getNotificationContent(type, jobName, extraData);
+      const identifier = `${type}_${Date.now()}_scheduled`;
+
+      // Calculate seconds until notification should fire
+      const now = Date.now();
+      const scheduledTimeMs = scheduledTime.getTime();
+      const secondsUntilNotification = Math.max(1, Math.floor((scheduledTimeMs - now) / 1000));
+
+      console.log(`📅 Scheduling notification "${title}" for ${secondsUntilNotification} seconds from now`);
+
+      await Notifications.scheduleNotificationAsync({
+        identifier,
+        content: {
+          title,
+          body,
+          sound: true,
+          priority: Notifications.AndroidNotificationPriority.HIGH,
+          autoDismiss: false,
+          vibrate: [0, 250, 250, 250],
+          data: {
+            type,
+            jobName,
+            timestamp: new Date().toISOString(),
+            scheduledFor: scheduledTime.toISOString(),
+          },
+        },
+        trigger: {
+          seconds: secondsUntilNotification,
+        },
+      });
+
+      console.log(`📅 Notification scheduled successfully: ${title} - ${body} (in ${secondsUntilNotification}s)`);
+    } catch (error) {
+      console.error('Error scheduling notification:', error);
+    }
+  }
+
+  /**
    * Send a local notification
    */
   async sendNotification(
@@ -276,21 +401,43 @@ class NotificationService {
       const { title, body } = this.getNotificationContent(type, jobName, extraData);
       const identifier = `${type}_${Date.now()}`;
 
-      await Notifications.scheduleNotificationAsync({
+      // Special configuration for auto-timer notifications to ensure background delivery
+      const isAutoTimer = type.startsWith('timer_');
+      const notificationConfig = {
         identifier,
         content: {
           title,
           body,
           sound: true,
           priority: Notifications.AndroidNotificationPriority.HIGH,
+          autoDismiss: false,
+          vibrate: isAutoTimer ? [0, 250, 250, 250] : undefined,
           data: {
             type,
             jobName,
             timestamp: new Date().toISOString(),
           },
         },
-        trigger: null, // Send immediately
-      });
+        trigger: {
+          seconds: isAutoTimer ? 2 : 1, // Slightly longer delay for auto-timer notifications
+        },
+      };
+
+      await Notifications.scheduleNotificationAsync(notificationConfig);
+
+      // For auto-timer notifications, store them for potential re-delivery
+      if (isAutoTimer) {
+        this.pendingBackgroundNotifications.set(identifier, {
+          config: notificationConfig,
+          timestamp: Date.now(),
+          delivered: false,
+        });
+        
+        // Clean up old notifications after 5 minutes
+        setTimeout(() => {
+          this.pendingBackgroundNotifications.delete(identifier);
+        }, 5 * 60 * 1000);
+      }
 
       console.log(`📱 Notification sent: ${title} - ${body}`);
     } catch (error) {
@@ -431,7 +578,9 @@ class NotificationService {
           sound: true,
           priority: Notifications.AndroidNotificationPriority.HIGH,
         },
-        trigger: null, // Send immediately
+        trigger: {
+          seconds: 1, // Delay 1 second to help with background delivery
+        },
       });
       
       console.log('✅ Test notification sent');
@@ -636,6 +785,37 @@ class NotificationService {
       
     } catch (error) {
       console.error('Error cancelling work reminders:', error);
+    }
+  }
+
+  /**
+   * Cancel scheduled notifications by job and type
+   */
+  async cancelScheduledNotifications(jobName: string, types?: NotificationType[]): Promise<void> {
+    try {
+      console.log(`🗑️ Cancelling scheduled notifications for ${jobName}`, types ? `of types: ${types.join(', ')}` : 'of all types');
+      
+      // Get all scheduled notifications
+      const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+      
+      // Filter notifications to cancel
+      const notificationsToCancel = scheduledNotifications.filter(notification => {
+        const data = notification.content.data;
+        const matchesJob = data?.jobName === jobName;
+        const matchesType = !types || types.includes(data?.type as NotificationType);
+        return matchesJob && matchesType;
+      });
+      
+      console.log(`🗑️ Found ${notificationsToCancel.length} notifications to cancel`);
+      
+      // Cancel each notification
+      for (const notification of notificationsToCancel) {
+        await Notifications.cancelScheduledNotificationAsync(notification.identifier);
+        console.log(`🗑️ Cancelled notification: ${notification.identifier}`);
+      }
+      
+    } catch (error) {
+      console.error('Error cancelling scheduled notifications:', error);
     }
   }
 

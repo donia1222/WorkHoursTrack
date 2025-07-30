@@ -30,7 +30,7 @@ interface JobFormModalProps {
   onClose: () => void;
   editingJob?: Job | null;
   onSave: (jobData: any) => void;
-  initialTab?: 'basic' | 'schedule' | 'financial' | 'billing' | 'auto';
+  initialTab?: 'basic' | 'schedule' | 'financial' | 'billing' | 'auto' | 'delete';
   onNavigateToCalendar?: () => void; // Optional callback to navigate to calendar
   onNavigateToSubscription?: () => void; // Callback to navigate to subscription screen
   isLocationEnabled?: boolean; // Para detectar si hay permisos de ubicación
@@ -782,7 +782,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     },
   });
 
-  const [currentTab, setCurrentTab] = useState<'basic' | 'schedule' | 'financial' | 'billing' | 'auto'>(initialTab || 'basic');
+  const [currentTab, setCurrentTab] = useState<'basic' | 'schedule' | 'financial' | 'billing' | 'auto' | 'delete'>(initialTab || 'basic');
+  const [confirmationName, setConfirmationName] = useState('');
   
   const styles = getStyles(colors, isDark);
 
@@ -978,7 +979,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     return null;
   };
 
-  const handleTabPress = (tabKey: 'basic' | 'schedule' | 'financial' | 'billing' | 'auto') => {
+  const handleTabPress = (tabKey: 'basic' | 'schedule' | 'financial' | 'billing' | 'auto' | 'delete') => {
     const premiumTabs = ['schedule', 'financial', 'billing', 'auto'];
     
     if (premiumTabs.includes(tabKey) && !isSubscribed) {
@@ -2072,26 +2073,42 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               </TouchableOpacity>
             </View>
           ) : (
-            <View style={styles.inputGroup}>
-              <View style={styles.switchRow}>
-                <View style={styles.switchContent}>
-                  <Text style={styles.label}>{t('job_form.auto_timer.enabled')}</Text>
-                  <Text style={styles.labelDescription}>{t('job_form.auto_timer.enabled_desc')}</Text>
+            <>
+              <View style={styles.inputGroup}>
+                <View style={styles.switchRow}>
+                  <View style={styles.switchContent}>
+                    <Text style={styles.label}>{t('job_form.auto_timer.enabled')}</Text>
+                    <Text style={styles.labelDescription}>{t('job_form.auto_timer.enabled_desc')}</Text>
+                  </View>
+                  <Switch
+                    value={formData.autoTimer?.enabled || false}
+                    onValueChange={(value) => {
+                      if (value && !isSubscribed) {
+                        setShowPremiumModal(true);
+                      } else {
+                        handleAutoTimerToggle(value);
+                      }
+                    }}
+                    trackColor={{ false: colors.separator, true: colors.primary + '40' }}
+                    thumbColor={formData.autoTimer?.enabled ? colors.primary : colors.textTertiary}
+                  />
                 </View>
-                <Switch
-                  value={formData.autoTimer?.enabled || false}
-                  onValueChange={(value) => {
-                    if (value && !isSubscribed) {
-                      setShowPremiumModal(true);
-                    } else {
-                      handleAutoTimerToggle(value);
-                    }
-                  }}
-                  trackColor={{ false: colors.separator, true: colors.primary + '40' }}
-                  thumbColor={formData.autoTimer?.enabled ? colors.primary : colors.textTertiary}
-                />
               </View>
-            </View>
+              
+              {/* Privacy Notice */}
+              <View style={styles.inputGroup}>
+                <Text style={[styles.labelDescription, { 
+                  textAlign: 'center', 
+                  fontSize: 11, 
+                  lineHeight: 14, 
+                  color: colors.textSecondary,
+                  fontStyle: 'italic',
+                  marginTop: 8
+                }]}>
+                  {t('timer.auto_timer.privacy_notice')}
+                </Text>
+              </View>
+            </>
           )}
 
         {formData.autoTimer?.enabled && (
@@ -2220,16 +2237,158 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     );
   };
 
-  const tabs = [
+  const renderDeleteTab = () => {
+    const handleDeleteJob = async () => {
+      if (!editingJob) return;
+      
+      if (confirmationName.trim() !== editingJob.name.trim()) {
+        Alert.alert(
+          t('job_form.delete.error_title'),
+          t('job_form.delete.name_mismatch', { jobName: editingJob.name })
+        );
+        return;
+      }
+      
+      try {
+        await JobService.deleteJob(editingJob.id);
+        Alert.alert(
+          t('job_form.delete.success_title'),
+          t('job_form.delete.success_message', { jobName: editingJob.name }),
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                onSave(null); // Signal that job was deleted
+                onClose();
+              }
+            }
+          ]
+        );
+      } catch (error) {
+        console.error('Error deleting job:', error);
+        Alert.alert(
+          t('job_form.delete.error_title'),
+          t('job_form.delete.error_message')
+        );
+      }
+    };
+
+    return (
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('job_form.delete.title')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('job_form.delete.subtitle')}</Text>
+
+          {/* Warning Section */}
+          <View style={[styles.inputGroup, { backgroundColor: isDark ? 'rgba(255, 149, 0, 0.1)' : 'rgba(255, 149, 0, 0.05)', borderRadius: 16, padding: 20 }]}>
+            <Text style={[styles.label, { color: colors.warning, fontSize: 18, marginBottom: 12 }]}>
+              {t('job_form.delete.warning_title')}
+            </Text>
+            <Text style={[styles.labelDescription, { marginBottom: 16 }]}>
+              {t('job_form.delete.warning_message')}
+            </Text>
+            
+            {(t('job_form.delete.warning_items') as unknown as string[]).map((item: string, index: number) => (
+              <Text key={index} style={[styles.labelDescription, { marginBottom: 8, fontSize: 14 }]}>
+                {item}
+              </Text>
+            ))}
+          </View>
+
+          {/* Confirmation Section */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.error, fontSize: 16, marginBottom: 8 }]}>
+              {t('job_form.delete.confirmation_title')}
+            </Text>
+            <Text style={[styles.labelDescription, { marginBottom: 16 }]}>
+              {t('job_form.delete.confirmation_message')}
+            </Text>
+            
+            <Text style={[styles.labelDescription, { fontWeight: '600', marginBottom: 8, color: colors.text }]}>
+              "{editingJob?.name}"
+            </Text>
+            
+            <TextInput
+              style={[styles.input, { 
+                borderColor: confirmationName.trim() === editingJob?.name.trim() ? colors.success : colors.error,
+                borderWidth: 2
+              }]}
+              value={confirmationName}
+              onChangeText={setConfirmationName}
+              placeholder={t('job_form.delete.job_name_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+            />
+          </View>
+
+          {/* Delete Button */}
+          <View style={styles.inputGroup}>
+            <TouchableOpacity
+              style={[
+                styles.detectLocationButton,
+                { 
+                  backgroundColor: confirmationName.trim() === editingJob?.name.trim() 
+                    ? 'rgba(255, 59, 48, 0.15)' 
+                    : 'rgba(142, 142, 147, 0.1)',
+                  borderRadius: 16,
+                  padding: 20,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 12
+                }
+              ]}
+              onPress={handleDeleteJob}
+              disabled={confirmationName.trim() !== editingJob?.name.trim()}
+            >
+              <IconSymbol size={24} name="trash.fill" color={colors.error} />
+              <Text style={[styles.detectLocationText, { color: colors.error }]}>
+                {t('job_form.delete.delete_button')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <TouchableOpacity
+              style={[
+                styles.detectLocationButton,
+                { 
+                  backgroundColor: colors.surface, 
+                  borderRadius: 16, 
+                  padding: 20,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 12
+                }
+              ]}
+              onPress={onClose}
+            >
+              <IconSymbol size={24} name="xmark" color={colors.textSecondary} />
+              <Text style={[styles.detectLocationText, { color: colors.textSecondary }]}>
+                {t('job_form.delete.cancel_button')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </BlurView>
+      </ScrollView>
+    );
+  };
+
+  const baseTabs = [
     { key: 'basic', label: t('job_form.tabs.basic'), icon: 'gear' },
     { key: 'auto', label: t('job_form.tabs.auto'), icon: 'location.fill' },
     { key: 'schedule', label: t('job_form.tabs.schedule'), icon: 'clock.fill' },
     { key: 'financial', label: t('job_form.tabs.financial'), icon: 'dollarsign.circle.fill' },
     { key: 'billing', label: t('job_form.tabs.billing'), icon: 'chart.bar.fill' },
-  ] as const;
+  ];
+
+  // Add delete tab only when editing existing job
+  const tabs = editingJob 
+    ? [...baseTabs, { key: 'delete', label: t('job_form.tabs.delete'), icon: 'trash.fill' }]
+    : baseTabs;
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -2257,7 +2416,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     styles.tab,
                     isActive && styles.tabActive,
                   ]}
-                  onPress={() => handleTabPress(tab.key)}
+                  onPress={() => handleTabPress(tab.key as 'basic' | 'schedule' | 'financial' | 'billing' | 'auto' | 'delete')}
                 >
                   <IconSymbol
                     size={20}
@@ -2295,6 +2454,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           {currentTab === 'financial' && renderFinancialTab()}
           {currentTab === 'billing' && renderBillingTab()}
           {currentTab === 'auto' && renderAutoTab()}
+          {currentTab === 'delete' && renderDeleteTab()}
         </KeyboardAvoidingView>
       </SafeAreaView>
 

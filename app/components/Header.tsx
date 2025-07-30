@@ -118,6 +118,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   profileButton: {
     padding: 6,
+    zIndex: 100,
   },
   profileButtonInner: {
     width: 50,

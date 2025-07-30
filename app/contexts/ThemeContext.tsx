@@ -12,6 +12,7 @@ export interface ThemeColors {
   error: string;
   background: string;
   surface: string;
+   surfaces: string;
   card: string;
   text: string;
   textSecondary: string;
@@ -30,6 +31,7 @@ const lightColors: ThemeColors = {
   error: '#FF3B30',
   background: '#FFFFFF',
   surface: '#FFFFFF',
+  surfaces: 'rgba(255, 255, 255, 0.86)',
   card: '#FFFFFF',
   text: '#1C1C1E',
   textSecondary: '#8E8E93',
@@ -48,6 +50,7 @@ const darkColors: ThemeColors = {
   error: '#FF453A',
   background: '#000000ff',
   surface: '#1C1C1E',
+  surfaces: 'rgba(0, 0, 0, 0.57)',
   card: '#2C2C2E',
   text: '#FFFFFF',
   textSecondary: '#8E8E93',

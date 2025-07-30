@@ -397,10 +397,10 @@ export default function ExportCalendarModal({
       Alert.alert(
         t('chatbot.export_calendar.select_month_title'),
         '',
-        months.map((month, index) => ({
+        [...months.map((month, index) => ({
           text: month,
           onPress: () => setSelectedMonth(index + 1)
-        })).concat([{ text: t('chatbot.export_calendar.cancel_button'), style: 'cancel' }])
+        })), { text: t('chatbot.export_calendar.cancel_button'), style: 'cancel' as any }]
       );
     }
   };
@@ -424,10 +424,10 @@ export default function ExportCalendarModal({
       Alert.alert(
         t('chatbot.export_calendar.select_year_title'),
         '',
-        years.map((year) => ({
+        [...years.map((year) => ({
           text: year,
           onPress: () => setSelectedYear(parseInt(year))
-        })).concat([{ text: t('chatbot.export_calendar.cancel_button'), style: 'cancel' }])
+        })), { text: t('chatbot.export_calendar.cancel_button'), style: 'cancel' as any }]
       );
     }
   };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
@@ -23,17 +23,104 @@ export default function NoLocationMapView({ onNavigate }: Props) {
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showActionModal, setShowActionModal] = useState(false);
+  const [showJobCardsModal, setShowJobCardsModal] = useState(false);
+  const [wasJobCardsModalOpen, setWasJobCardsModalOpen] = useState(false);
+  const [miniCalendarData, setMiniCalendarData] = useState<any[]>([]);
+  const button1Opacity = React.useRef(new Animated.Value(1)).current; // Ver trabajos
+  const button2Opacity = React.useRef(new Animated.Value(1)).current; // Estadísticas  
+  const button3Opacity = React.useRef(new Animated.Value(1)).current; // Chat IA
 
   // Debug state changes
   React.useEffect(() => {
     console.log('🔴 NoLocationMapView: showActionModal changed to:', showActionModal, 'selectedJob:', selectedJob?.name);
   }, [showActionModal, selectedJob]);
+  
+  React.useEffect(() => {
+    console.log('🟡 NoLocationMapView: showJobForm changed to:', showJobForm, 'editingJob:', editingJob?.name);
+  }, [showJobForm, editingJob]);
+  
+  React.useEffect(() => {
+    console.log('🟢 NoLocationMapView: showJobCardsModal changed to:', showJobCardsModal);
+  }, [showJobCardsModal]);
   const [jobStatistics, setJobStatistics] = useState<Map<string, { thisMonthHours: number; thisMonthDays: number }>>(new Map());
+
+  // Animación escalonada de opacidad para los botones
+  React.useEffect(() => {
+    if (showJobCardsModal) {
+      // Cuando se abre el modal, ocultar todos los botones rápidamente
+      Animated.parallel([
+        Animated.timing(button1Opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+        Animated.timing(button2Opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+        Animated.timing(button3Opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+      ]).start();
+    } else {
+      // Cuando se cierra el modal, mostrar botones uno por uno con retraso
+      Animated.sequence([
+        Animated.timing(button1Opacity, { 
+          toValue: 1, 
+          duration: 400, 
+          useNativeDriver: true 
+        }),
+        Animated.timing(button2Opacity, { 
+          toValue: 1, 
+          duration: 400, 
+          useNativeDriver: true 
+        }),
+        Animated.timing(button3Opacity, { 
+          toValue: 1, 
+          duration: 400, 
+          useNativeDriver: true 
+        }),
+      ]).start();
+    }
+  }, [showJobCardsModal]);
 
   useEffect(() => {
     loadJobs();
     loadJobStatistics();
+    loadMiniCalendarData();
   }, []);
+
+  const loadMiniCalendarData = async () => {
+    try {
+      const currentDate = new Date();
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      const today = currentDate.getDate();
+      
+      // Obtener días de trabajo del mes actual
+      const workDays = await JobService.getWorkDaysForMonth(year, month);
+      console.log('📅 Mini Calendar: Loaded', workDays.length, 'work days for', year, month);
+      console.log('📅 Mini Calendar: Sample workDays:', workDays.slice(0, 3));
+      
+      // Crear array de 7 días centrados en el día actual
+      const calendarDays = [];
+      for (let i = -3; i <= 3; i++) {
+        const dayNum = today + i;
+        const dateStr = `${year}-${month.toString().padStart(2, '0')}-${dayNum.toString().padStart(2, '0')}`;
+        
+        // Buscar si hay trabajo este día
+        const workDay = workDays.find(wd => wd.date === dateStr);
+        const job = workDay ? jobs.find(j => j.id === workDay.jobId) : null;
+        
+        if (workDay) {
+          console.log('📅 Found workDay for', dateStr, ':', workDay.type, 'job:', job?.name);
+        }
+        
+        calendarDays.push({
+          day: dayNum,
+          isToday: i === 0,
+          workDay,
+          job,
+          isValidDay: dayNum > 0 && dayNum <= new Date(year, month, 0).getDate()
+        });
+      }
+      
+      setMiniCalendarData(calendarDays);
+    } catch (error) {
+      console.error('Error loading mini calendar data:', error);
+    }
+  };
 
   const loadJobStatistics = async () => {
     try {
@@ -74,6 +161,8 @@ export default function NoLocationMapView({ onNavigate }: Props) {
       
       console.log('📋 NoLocationMapView: Valid jobs after filtering:', validJobs);
       setJobs(validJobs);
+      // Recargar datos del calendario miniatura cuando cambien los trabajos
+      setTimeout(() => loadMiniCalendarData(), 100);
     } catch (error) {
       console.error('Error loading jobs:', error);
     }
@@ -83,6 +172,8 @@ export default function NoLocationMapView({ onNavigate }: Props) {
     try {
       console.log('💾 NoLocationMapView: Saving job data:', jobData);
       console.log('💾 NoLocationMapView: Is editing?', !!editingJob);
+      
+      const wasEditing = !!editingJob;
       
       if (editingJob) {
         console.log('💾 NoLocationMapView: Updating job:', editingJob.id);
@@ -96,6 +187,14 @@ export default function NoLocationMapView({ onNavigate }: Props) {
       setEditingJob(null);
       await loadJobs();
       await loadJobStatistics();
+      
+      // If we were editing a job and the modal was open, reopen it
+      if (wasEditing && wasJobCardsModalOpen) {
+        setTimeout(() => {
+          setShowJobCardsModal(true);
+          setWasJobCardsModalOpen(false);
+        }, 100);
+      }
     } catch (error) {
       console.error('Error saving job:', error);
       Alert.alert('Error', 'No se pudo guardar el trabajo');
@@ -103,8 +202,16 @@ export default function NoLocationMapView({ onNavigate }: Props) {
   };
 
   const handleEditJob = (job: Job) => {
+    console.log('🟡 NoLocationMapView: handleEditJob called for job:', job.name);
+    console.log('🟡 NoLocationMapView: showJobCardsModal was:', showJobCardsModal);
+    
     setEditingJob(job);
     setShowJobForm(true);
+    // Remember if job cards modal was open and close it
+    setWasJobCardsModalOpen(showJobCardsModal);
+    setShowJobCardsModal(false);
+    
+    console.log('🟡 NoLocationMapView: States after handleEditJob - showJobForm: true, showJobCardsModal: false');
   };
 
   const handleDeleteJob = async (job: Job) => {
@@ -256,27 +363,175 @@ export default function NoLocationMapView({ onNavigate }: Props) {
           </BlurView>
  
 
+      {/* Quick Access Section */}
+      <View style={styles.quickAccessSection}>
+        
+        {/* Mini Calendar - Siempre visible */}
+        <View style={styles.miniCalendarContainer}>
+          <BlurView intensity={80} tint={isDark ? "dark" : "light"} style={styles.miniCalendarBlur}>
+            <View style={styles.miniCalendarHeader}>
+              <IconSymbol size={16} name="calendar" color={colors.primary} />
+              <Text style={styles.miniCalendarTitle}>{t('calendar.title')}</Text>
+            </View>
+            <View style={styles.miniCalendarGrid}>
+              {miniCalendarData.map((dayData, i) => {
+                if (!dayData.isValidDay) {
+                  return <View key={i} style={styles.miniCalendarDay} />;
+                }
+                
+                // Determinar color del badge basado en el tipo de día de trabajo
+                let badgeColor = null;
+                let badgeText = '';
+                
+                if (dayData.workDay) {
+                  switch (dayData.workDay.type) {
+                    case 'work':
+                      badgeColor = '#10B981'; // Verde para días de trabajo
+                      badgeText = 'W';
+                      break;
+                    case 'free':
+                      badgeColor = '#3B82F6'; // Azul para días libres
+                      badgeText = 'F';
+                      break;
+                    case 'vacation':
+                      badgeColor = '#F59E0B'; // Amarillo para vacaciones
+                      badgeText = 'V';
+                      break;
+                    case 'sick':
+                      badgeColor = '#EF4444'; // Rojo para enfermedad
+                      badgeText = 'S';
+                      break;
+                  }
+                }
+                
+                return (
+                  <View key={i} style={styles.miniCalendarDay}>
+                    <Text style={[
+                      styles.miniCalendarDayText, 
+                      { 
+                        color: dayData.isToday ? colors.primary : colors.textSecondary,
+                        fontWeight: dayData.isToday ? '700' : '500'
+                      }
+                    ]}>
+                      {dayData.day}
+                    </Text>
+                    {badgeColor && (
+                      <View style={[styles.miniCalendarBadge, { backgroundColor: badgeColor }]}>
+                        <Text style={styles.miniCalendarBadgeText}>{badgeText}</Text>
+                      </View>
+                    )}
+                    {dayData.isToday && !badgeColor && (
+                      <View style={[styles.miniCalendarDot, { backgroundColor: colors.primary }]} />
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+            <TouchableOpacity 
+              style={styles.miniCalendarButton}
+              onPress={() => onNavigate?.('calendar')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.miniCalendarButtonText}>{t('maps.view_calendar')}</Text>
+            </TouchableOpacity>
+          </BlurView>
+        </View>
+
+        {/* Ver Trabajos Button - Solo mostrar si hay trabajos */}
+        {jobs.length > 0 && (
+          <Animated.View style={{ opacity: button1Opacity }}>
+            <TouchableOpacity
+              style={styles.viewJobsButton}
+              onPress={() => setShowJobCardsModal(true)}
+              activeOpacity={0.8}
+              disabled={showJobCardsModal}
+            >
+            <LinearGradient
+              colors={[colors.primary + '40', colors.primary + '20', colors.primary + '10']}
+              style={styles.viewJobsButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.viewJobsButtonContent}>
+                <View style={styles.viewJobsIcon}>
+                  <IconSymbol size={24} name="list.bullet" color={colors.primary} />
+                </View>
+                <View style={styles.viewJobsTextContainer}>
+                  <Text style={styles.viewJobsButtonTitle}>Ver trabajos ({jobs.length})</Text>
+                  <Text style={styles.viewJobsButtonSubtitle}>Gestionar tus trabajos</Text>
+                </View>
+                <IconSymbol size={16} name="chevron.right" color={colors.primary} />
+              </View>
+            </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+
+        {/* Estadísticas Button */}
+        <Animated.View style={{ opacity: button2Opacity }}>
+          <TouchableOpacity
+            style={styles.statsButton}
+            onPress={() => onNavigate?.('reports')}
+            activeOpacity={0.8}
+            disabled={showJobCardsModal}
+          >
+          <LinearGradient
+            colors={['#1E3A8A', '#1E40AF', '#3B82F6']}
+            style={styles.statsButtonGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <View style={styles.statsButtonContent}>
+              <View style={styles.statsIcon}>
+                <IconSymbol size={24} name="chart.bar.fill" color="#FFFFFF" />
+              </View>
+              <View style={styles.statsTextContainer}>
+                <Text style={styles.statsButtonTitle}>Estadísticas</Text>
+                <Text style={styles.statsButtonSubtitle}>Ver reportes y métricas</Text>
+              </View>
+              <IconSymbol size={16} name="chevron.right" color="#FFFFFF" />
+            </View>
+          </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Chat IA Button */}
+        <Animated.View style={{ opacity: button3Opacity }}>
+          <TouchableOpacity
+            style={styles.chatIAButton}
+            onPress={() => onNavigate?.('chatbot')}
+            activeOpacity={0.8}
+            disabled={showJobCardsModal}
+          >
+          <LinearGradient
+            colors={[colors.primary, '#4A90E2', '#81C7F5']}
+            style={styles.chatIAButtonGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <View style={styles.chatIAButtonContent}>
+              <View style={styles.chatIAIcon}>
+                <IconSymbol size={24} name="brain.head.profile" color="#FFFFFF" />
+              </View>
+              <View style={styles.chatIATextContainer}>
+                <Text style={styles.chatIAButtonTitle}>{t('side_menu.menu_items.chatbot.title')}</Text>
+                <Text style={styles.chatIAButtonSubtitle}>{t('side_menu.menu_items.chatbot.description')}</Text>
+              </View>
+              <IconSymbol size={16} name="chevron.right" color="#FFFFFF" />
+            </View>
+          </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+
       {/* Job Cards or Empty State */}
       {jobs.length === 0 ? (
         // No jobs state with enhanced design
         <View style={styles.emptyState}>
-          <LinearGradient
-            colors={isDark ? ['rgba(40,40,40,0.9)', 'rgba(20,20,20,0.6)'] : ['rgba(255,255,255,0.95)', 'rgba(250,252,255,0.8)']}
-            style={styles.emptyCard}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.emptyCardInner}>
-              <View style={styles.emptyIconContainer}>
-                <LinearGradient
-                  colors={[colors.primary, colors.primary + '80']}
-                  style={styles.emptyIconBackground}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <IconSymbol size={48} name="briefcase" color="#FFFFFF" />
-                </LinearGradient>
-              </View>
+  
+
+      
+             
               <Text style={styles.emptyTitle}>{t('maps.add_job')}</Text>
               <Text style={styles.emptySubtitle}>{t('maps.add_job_desc')}</Text>
               <TouchableOpacity
@@ -294,8 +549,8 @@ export default function NoLocationMapView({ onNavigate }: Props) {
                   <Text style={styles.addButtonText}>{t('maps.add_job')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
-            </BlurView>
-          </LinearGradient>
+      
+    
         </View>
       ) : (
         // Job Cards Swiper
@@ -303,15 +558,29 @@ export default function NoLocationMapView({ onNavigate }: Props) {
 
         <JobCardsSwiper
           jobs={jobs}
-          onJobPress={handleJobPress}
+          visible={showJobCardsModal}
+          onClose={() => setShowJobCardsModal(false)}
           isJobCurrentlyActive={isJobCurrentlyActive}
           getJobScheduleStatus={getJobScheduleStatus}
           getJobStatistics={getJobStatistics}
           onAction={(action, job) => {
-            if (action === 'edit') {
-              handleEditJob(job);
-            } else {
-              handleModalAction(action);
+            console.log('🔴 NoLocationMapView: onAction called with:', { action, jobName: job.name });
+            switch (action) {
+              case 'edit':
+                handleEditJob(job);
+                break;
+              case 'timer':
+                onNavigate?.('timer');
+                break;
+              case 'calendar':
+                onNavigate?.('calendar');
+                break;
+              case 'statistics':
+                onNavigate?.('reports');
+                break;
+              default:
+                console.log('🔴 NoLocationMapView: Unknown action:', action);
+                break;
             }
           }}
           showAutoTimer={true}
@@ -324,29 +593,41 @@ export default function NoLocationMapView({ onNavigate }: Props) {
 
 
 
-      {/* Job form modal */}
-      <JobFormModal
-        visible={showJobForm}
-        onClose={() => {
-          setShowJobForm(false);
-          setEditingJob(null);
-        }}
-        onSave={handleSaveJob}
-        editingJob={editingJob}
-        isLocationEnabled={false}
-        onNavigateToSubscription={() => onNavigate?.('subscription')}
-      />
+      {/* Job form modal - Only render when needed */}
+      {showJobForm && (
+        <JobFormModal
+          visible={showJobForm}
+          onClose={() => {
+            console.log('🟡 NoLocationMapView: JobFormModal closing');
+            setShowJobForm(false);
+            setEditingJob(null);
+            // If the modal was open before editing, reopen it
+            if (wasJobCardsModalOpen) {
+              setTimeout(() => {
+                setShowJobCardsModal(true);
+                setWasJobCardsModalOpen(false);
+              }, 100);
+            }
+          }}
+          onSave={handleSaveJob}
+          editingJob={editingJob}
+          isLocationEnabled={false}
+          onNavigateToSubscription={() => onNavigate?.('subscription')}
+        />
+      )}
 
-      {/* Action Modal */}
-      <JobActionModal
-        visible={showActionModal}
-        job={selectedJob}
-        onClose={handleCloseModal}
-        onAction={handleModalAction}
-        showAutoTimer={selectedJob ? hasJobAddress(selectedJob) : false}
-        autoTimerEnabled={selectedJob?.autoTimer?.enabled || false}
-        onAutoTimerToggle={(value) => selectedJob && handleAutoTimerToggle(selectedJob, value)}
-      />
+      {/* Action Modal - Only render when needed */}
+      {showActionModal && selectedJob && (
+        <JobActionModal
+          visible={showActionModal}
+          job={selectedJob}
+          onClose={handleCloseModal}
+          onAction={handleModalAction}
+          showAutoTimer={hasJobAddress(selectedJob)}
+          autoTimerEnabled={selectedJob?.autoTimer?.enabled || false}
+          onAutoTimerToggle={(value) => handleAutoTimerToggle(selectedJob, value)}
+        />
+      )}
     </View>
   );
 }
@@ -354,7 +635,7 @@ export default function NoLocationMapView({ onNavigate }: Props) {
 const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+   
   },
   backgroundGradient: {
     position: 'absolute',
@@ -362,15 +643,14 @@ const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    opacity: isDark ? 0.4 : 0.3,
+
   },
   backgroundOverlay: {
-    position: 'absolute',
+
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.6)',
     opacity: 0.8,
   },
   headerInfo: {
@@ -378,7 +658,7 @@ const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   },
   infoCard: {
     borderRadius: 20,
-    overflow: 'hidden',
+ 
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -416,6 +696,225 @@ const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     fontWeight: '500',
     flex: 1,
   },
+  showJobsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: colors.primary + '20',
+    borderRadius: 12,
+    marginLeft: 8,
+    gap: 4,
+  },
+  showJobsButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  quickAccessSection: {
+    paddingHorizontal: 16,
+    paddingTop: 0,
+    paddingBottom: 20,
+    gap: 16,
+    marginTop: -10,
+  },
+  miniCalendarContainer: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+  },
+  miniCalendarBlur: {
+    padding: 16,
+  },
+  miniCalendarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  miniCalendarTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  miniCalendarGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  miniCalendarDay: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    position: 'relative',
+  },
+  miniCalendarDayText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  miniCalendarDot: {
+    position: 'absolute',
+    bottom: 2,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+  },
+  miniCalendarBadge: {
+    position: 'absolute',
+    bottom: 2,
+    width: 16,
+    height: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  miniCalendarBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: '700',
+  },
+  miniCalendarButton: {
+    backgroundColor: colors.primary + '20',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  miniCalendarButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  chatIAButton: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 10,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+  },
+  chatIAButtonGradient: {
+    padding: 18,
+  },
+  chatIAButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  chatIAIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chatIATextContainer: {
+    flex: 1,
+  },
+  chatIAButtonTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  chatIAButtonSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: '500',
+  },
+  viewJobsButton: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.primary + '30',
+  },
+  viewJobsButtonGradient: {
+    padding: 18,
+  },
+  viewJobsButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  viewJobsIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.primary + '40',
+  },
+  viewJobsTextContainer: {
+    flex: 1,
+  },
+  viewJobsButtonTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.primary,
+    marginBottom: 2,
+  },
+  viewJobsButtonSubtitle: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  statsButton: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 8,
+    shadowColor: '#1E3A8A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+  },
+  statsButtonGradient: {
+    padding: 18,
+  },
+  statsButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  statsIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statsTextContainer: {
+    flex: 1,
+  },
+  statsButtonTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  statsButtonSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: '500',
+  },
   content: {
     flex: 1,
     paddingHorizontal: 16,
@@ -433,7 +932,7 @@ const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   },
   emptyCard: {
     borderRadius: 32,
-    overflow: 'hidden',
+   
     elevation: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },

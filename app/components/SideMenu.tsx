@@ -33,6 +33,7 @@ interface SideMenuProps {
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   overlay: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'flex-end',
   },
@@ -206,7 +207,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
 
 export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps) {
   const { colors, isDark } = useTheme();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { isSubscribed } = useSubscription();
   const styles = getStyles(colors, isDark);
   
@@ -314,6 +315,7 @@ export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps
       animationType="none"
       transparent={true}
       onRequestClose={onClose}
+      statusBarTranslucent={true}
     >
       <TouchableOpacity 
         style={styles.overlay}
@@ -326,7 +328,7 @@ export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps
             onPress={(e) => e.stopPropagation()}
             style={{ flex: 1 }}
           >
-            <BlurView intensity={80} tint={isDark ? "dark" : "extraLight"} style={{ flex: 1, borderRadius: 20 }}>
+            <BlurView intensity={95} tint={isDark ? "dark" : "extraLight"} style={{ flex: 1, borderRadius: 20 }}>
           <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
               <LinearGradient

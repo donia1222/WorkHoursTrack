@@ -84,7 +84,7 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
         style={{
           fontSize: 16,
           fontWeight: isToday ? '600' : '500',
-          color: isDisabled ? '#CCCCCC' : isToday ? colors.primary : '#333333',
+          color: isDisabled ? colors.textTertiary : isToday ? colors.primary : colors.text,
           marginBottom: 2,
         }}
       >
@@ -118,7 +118,7 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
             <Text
               style={{
                 fontSize: 7,
-                color: '#555555',
+                color: colors.textSecondary,
                 fontWeight: '500',
                 marginTop: 1,
                 textAlign: 'center',
@@ -306,10 +306,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   calendar: {
     marginVertical: 20,
     borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    shadowColor: "#000", 
+    backgroundColor: colors.surface,
+    shadowColor: isDark ? "#FFFFFF" : "#000", 
     shadowOffset: { width: 0, height: 2 }, 
-    shadowOpacity: 0.1, 
+    shadowOpacity: isDark ? 0.05 : 0.1, 
     shadowRadius: 8, 
     elevation: 4,
     overflow: 'hidden',
@@ -908,14 +908,14 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
       marked[workDay.date] = {
         customStyles: {
           container: {
-            backgroundColor: '#FFFFFF',
+            backgroundColor: colors.surface,
             alignItems: 'center',
             justifyContent: 'center',
             width: 42,
             height: 42,
           },
           text: {
-            color: '#333333',
+            color: colors.text,
             fontWeight: '500',
             fontSize: 16,
             marginBottom: 2,
@@ -1144,19 +1144,19 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           markedDates={getMarkedDates()}
           dayComponent={CustomDay}
           theme={{
-            backgroundColor: '#FFFFFF',
-            calendarBackground: '#FFFFFF',
-            textSectionTitleColor: '#FFFFFF',
-            textSectionTitleDisabledColor: '#FFFFFF',
+            backgroundColor: colors.surface,
+            calendarBackground: colors.surface,
+            textSectionTitleColor: colors.surface,
+            textSectionTitleDisabledColor: colors.surface,
             selectedDayBackgroundColor: colors.primary,
             selectedDayTextColor: '#ffffff',
             todayTextColor: colors.primary,
-            dayTextColor: '#333333',
-            textDisabledColor: '#CCCCCC',
+            dayTextColor: colors.text,
+            textDisabledColor: colors.textTertiary,
             dotColor: colors.primary,
             selectedDotColor: '#ffffff',
             arrowColor: colors.primary,
-            monthTextColor: '#333333',
+            monthTextColor: colors.text,
             indicatorColor: colors.primary,
             textDayFontFamily: 'System',
             textMonthFontFamily: 'System',
@@ -1169,7 +1169,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
             textDayHeaderFontSize: 13,
             'stylesheet.calendar.header': {
               header: {
-                backgroundColor: '#FFFFFF',
+                backgroundColor: colors.surface,
                 paddingVertical: 12,
                 paddingHorizontal: 0,
                 flexDirection: 'row',
@@ -1183,14 +1183,14 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
                 textAlign: 'center',
                 fontSize: 13,
                 fontWeight: '600',
-                color: '#333333',
+                color: colors.text,
               },
               week: {
                 marginTop: 0,
                 marginBottom: 0,
                 flexDirection: 'row',
                 justifyContent: 'space-around',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: colors.surface,
                 paddingBottom: 8,
               },
             },
@@ -1206,7 +1206,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
                 fontSize: 16,
                 fontFamily: 'System',
                 fontWeight: '500',
-                color: '#333333',
+                color: colors.text,
                 backgroundColor: 'transparent',
               },
               today: {
@@ -1219,14 +1219,14 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
             },
             'stylesheet.calendar.main': {
               container: {
-                backgroundColor: '#FFFFFF',
+                backgroundColor: colors.surface,
               },
               week: {
                 marginTop: 0,
                 marginBottom: 0,
                 flexDirection: 'row',
                 justifyContent: 'space-around',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: colors.surface,
                 paddingVertical: 4,
               },
             },

@@ -49,6 +49,40 @@
       "reminder_time": "Tiempo de aviso",
       "reminder_time_desc": "Configura cuándo recibir el recordatorio antes de tu horario de trabajo"
     },
+    "auto_backup": {
+      "title": "Copia de Seguridad Automática",
+      "description": "Genera copias de seguridad automáticamente según la frecuencia configurada",
+      "enable": "Activar backup automático",
+      "enabled": "Backup automático",
+      "enabled_desc": "Crear copias de seguridad automáticamente",
+      "frequency": "Frecuencia",
+      "frequency_desc": "Con qué frecuencia crear las copias automáticas",
+      "frequencies": {
+        "daily": "Diario",
+        "weekly": "Semanal", 
+        "monthly": "Mensual"
+      },
+      "daily": "Diario",
+      "weekly": "Semanal", 
+      "monthly": "Mensual",
+      "status": "Estado",
+      "available_backups": "Copias disponibles",
+      "available_backups_desc": "Copias de seguridad generadas automáticamente",
+      "no_backups": "No hay copias realizadas",
+      "no_backups_desc": "Se crearán automáticamente según la configuración",
+      "no_backups_available": "No hay copias disponibles",
+      "download": "Descargar",
+      "created_on": "Creado el",
+      "size": "Tamaño",
+      "delete_all": "Eliminar todas",
+      "delete_all_confirm": "¿Eliminar todas las copias automáticas?",
+      "delete_all_desc": "Esta acción no se puede deshacer",
+      "backup_created": "Copia de seguridad creada",
+      "backup_error": "Error al crear la copia",
+      "last_backup": "Último backup: {{date}}",
+      "never": "Nunca",
+      "save": "Guardar"
+    },
     "haptic": {
       "title": "Vibración Táctil",
       "description": "Controla la vibración táctil en botones y interacciones de la app",
@@ -199,7 +233,11 @@
       "disable_auto": "Desactivar Auto",
       "disabled_title": "AutoTimer Desactivado",
       "disabled_message": "Timer automático desactivado para \"{{jobName}}\"",
-      "disable_error": "No se pudo desactivar el timer automático"
+      "disable_error": "No se pudo desactivar el timer automático",
+      "background_notice": "El timer automático solo funciona con la app abierta en segundo plano. Si cierras la app completamente, dejará de contar por motivos de privacidad.",
+      "privacy_notice": "Por motivos de privacidad, el auto timer no funciona con la app cerrada. Mantén la app en segundo plano para el funcionamiento correcto.",
+      "dismiss_notice": "Entendido",
+      "dismiss_privacy_notice": "No mostrar más"
     }
   },
   "reports": {
@@ -255,7 +293,21 @@
     "include_invoice_details_desc": "Generar automáticamente número de factura y fecha actual",
     "no_billing_data": "Sin datos de facturación",
     "no_billing_data_desc": "Configura los datos de facturación para incluirlos en tus reportes PDF",
-    "configure_billing": "Añadir datos de facturación al PDF"
+    "configure_billing": "Añadir datos de facturación al PDF",
+    "include_salary_calculation": "Incluir total salarial",
+    "include_salary_calculation_desc": "Calcular y mostrar el total a pagar basado en las horas trabajadas",
+    "billing_period": "Período de facturación:",
+    "billing_per_hour": "Por horas",
+    "billing_per_week": "Por semana",
+    "billing_per_month": "Por mes",
+    "calculation_preview": "Vista Previa del Cálculo:",
+    "preview_rate": "Tarifa:",
+    "preview_period": "Período:",
+    "preview_total": "Total:",
+    "no_salary_config": "Sin configuración salarial",
+    "no_salary_config_desc": "Activa la configuración salarial en tu trabajo para incluir cálculos automáticos",
+    "activate_salary_config": "Activar configuración salarial",
+    "configure_amounts_message": "Configura las cantidades para ver el total"
   },
   "calendar": {
     "title": "Mi Calendario",
@@ -475,6 +527,22 @@
     "title": "¡Bienvenido!",
     "subtitle": "Aprende a usar la app en {{steps}} pasos"
   },
+  "auto_backup": {
+    "title": "Copias Automáticas",
+    "enable": "Activar backup automático",
+    "frequency": "Frecuencia",
+    "status": "Estado",
+    "available_backups": "Copias disponibles",
+    "no_backups": "No hay copias realizadas",
+    "no_backups_available": "No hay copias disponibles",
+    "last_backup": "Último backup: {{date}}",
+    "save": "Guardar",
+    "frequencies": {
+      "daily": "Diario",
+      "weekly": "Semanal",
+      "monthly": "Mensual"
+    }
+  },
   "navigation": {
     "back_to": "Volver a {{screen}}",
     "screens": {
@@ -487,6 +555,14 @@
     "back": "Atrás",
     "home": "Inicio"
   },
+  "job_cards": {
+    "buttons": {
+      "timer": "Cronómetro",
+      "calendar": "Calendario", 
+      "statistics": "Estadísticas",
+      "settings": "Ajustes"
+    }
+  },
   "job_form": {
     "title_edit": "Editar Trabajo",
     "title_new": "Nuevo Trabajo", 
@@ -496,7 +572,8 @@
       "schedule": "Horario", 
       "financial": "Financiero",
       "billing": "Facturación",
-      "auto": "Auto"
+      "auto": "Auto",
+      "delete": "Eliminar"
     },
     "basic": {
       "title": "Información Básica",
@@ -658,6 +735,28 @@
       "address_required_message": "Para activar el timer automático, primero necesitas añadir una dirección en la pestaña 'Básico'. La dirección es necesaria para la detección automática por ubicación.",
       "stopped_no_time": "Timer parado - no había tiempo activo"
     },
+    "delete": {
+      "title": "Eliminar Trabajo",
+      "subtitle": "Esta acción no se puede deshacer",
+      "warning_title": "⚠️ Advertencia",
+      "warning_message": "Eliminar este trabajo borrará permanentemente todos los datos asociados, incluyendo:",
+      "warning_items": [
+        "• Todos los días trabajados registrados",
+        "• Configuración de horarios y salarios", 
+        "• Configuración de timer automático",
+        "• Datos de facturación y reportes"
+      ],
+      "confirmation_title": "Confirmar Eliminación",
+      "confirmation_message": "Para confirmar que quieres eliminar este trabajo, escribe el nombre exacto del trabajo:",
+      "job_name_placeholder": "Escribe el nombre del trabajo aquí",
+      "delete_button": "Eliminar Permanentemente",
+      "cancel_button": "Cancelar",
+      "name_mismatch": "El nombre no coincide. Verifica que has escrito exactamente: {{jobName}}",
+      "success_title": "Trabajo Eliminado",
+      "success_message": "El trabajo '{{jobName}}' ha sido eliminado exitosamente.",
+      "error_title": "Error al Eliminar",
+      "error_message": "Ocurrió un error al eliminar el trabajo. Inténtalo de nuevo."
+    },
     "premium": {
       "title": "Función Premium",
       "message": "Esta función requiere una suscripción premium. ¿Quieres suscribirte ahora para acceder a todas las funciones avanzadas?",
@@ -784,6 +883,9 @@
       "title": "Notificaciones",
       "description": "Configura recordatorios y alertas",
       "general": "Notificaciones generales",
+      "general_notifications": "Notificaciones Generales",
+      "auto_timer": "Timer Automático",
+      "work_schedule_reminders": "Recordatorios de Horario",
       "general_desc": "Activar todas las notificaciones",
       "schedule": "Recordatorios de horario",
       "schedule_desc": "Notificaciones de entrada y salida",
@@ -803,7 +905,9 @@
       "export_title": "Crear archivo .json",
       "export_desc": "Crear backup de todos tus trabajos, horas y configuración",
       "import_title": "Importar archivo.json",
-      "import_desc": "Restaurar datos desde un archivo de backup"
+      "import_desc": "Restaurar datos desde un archivo de backup",
+      "auto_backup_title": "Copias Automáticas",
+      "auto_backup_desc": "Configurar backups automáticos diarios, semanales o mensuales"
     }
   },
   "side_menu": {
