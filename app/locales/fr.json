@@ -296,6 +296,15 @@
     "title_filtered": "{{jobName}} - Calendrier",
     "subtitle": "Jours travaillés et statistiques",
     "subtitle_filtered": "Jours travaillés dans {{jobName}}",
+    "days_short": {
+      "monday": "L",
+      "tuesday": "M", 
+      "wednesday": "M",
+      "thursday": "J",
+      "friday": "V",
+      "saturday": "S",
+      "sunday": "D"
+    },
     "filter_by_job": "Filtrer par emploi",
     "all_jobs": "Tous",
     "month_stats": "Statistiques du mois",
@@ -746,7 +755,7 @@
         "description": "Préférences"
       },
       "chatbot": {
-        "title": "Chatbot IA",
+        "title": "Analyze-Bot",
         "description": "Analyser les images avec l'intelligence artificielle"
       },
       "subscription": {

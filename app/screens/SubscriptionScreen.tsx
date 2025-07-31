@@ -79,6 +79,15 @@ export default function SubscriptionScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <LinearGradient
+          colors={isDark 
+            ? ['rgba(59, 130, 246, 0.08)', 'rgba(99, 102, 241, 0.06)', 'rgba(139, 92, 246, 0.04)'] 
+            : ['rgba(59, 130, 246, 0.05)', 'rgba(99, 102, 241, 0.04)', 'rgba(139, 92, 246, 0.03)']
+          }
+          style={styles.backgroundGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.text }]}>{t('subscription.loading')}</Text>
@@ -90,14 +99,16 @@ export default function SubscriptionScreen() {
   if (isSubscribed) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Header con gradiente */}
+
+
+
+        <ScrollView 
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+                  {/* Header con gradiente */}
         <View style={[styles.premiumHeader, { backgroundColor: colors.primary }]}>
-          <TouchableOpacity
-            style={[styles.closeButton, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
-            onPress={() => navigateTo('mapa')}
-          >
-            <IconSymbol size={20} name="xmark" color="#FFFFFF" />
-          </TouchableOpacity>
           
           <View style={styles.headerContent}>
             <View style={styles.premiumBadge}>
@@ -110,20 +121,23 @@ export default function SubscriptionScreen() {
             </Text>
           </View>
         </View>
-
-        <ScrollView 
-          style={styles.scrollContainer}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
           {/* Tarjetas de información con diseño moderno */}
           {customerInfo && (
             <>
               {/* Estado actual */}
-              <View style={[styles.modernCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.modernCard, { borderColor: colors.border }]}>
+                <LinearGradient
+                  colors={isDark 
+                    ? ['rgba(34, 197, 94, 0.08)', 'rgba(34, 197, 94, 0.04)', 'transparent'] 
+                    : ['rgba(34, 197, 94, 0.06)', 'rgba(34, 197, 94, 0.03)', 'transparent']
+                  }
+                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 24 }}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
                 <View style={[styles.cardHeader, { borderBottomColor: colors.separator }]}>
                   <View style={[styles.cardIconContainer, { backgroundColor: colors.success + '20' }]}>
-                    <IconSymbol size={20} name="checkmark.circle.fill" color={colors.success} />
+                    <IconSymbol size={22} name="checkmark.circle.fill" color={colors.success} />
                   </View>
                   <Text style={[styles.cardHeaderTitle, { color: colors.text }]}>{t('subscription.active.account_status.title')}</Text>
                 </View>
@@ -136,13 +150,22 @@ export default function SubscriptionScreen() {
                     {t('subscription.active.account_status.description')}
                   </Text>
                 </View>
-              </View>
+              </BlurView>
 
               {/* Información del usuario */}
-              <View style={[styles.modernCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.modernCard, { borderColor: colors.border }]}>
+                <LinearGradient
+                  colors={isDark 
+                    ? ['rgba(59, 130, 246, 0.08)', 'rgba(59, 130, 246, 0.04)', 'transparent'] 
+                    : ['rgba(59, 130, 246, 0.06)', 'rgba(59, 130, 246, 0.03)', 'transparent']
+                  }
+                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 24 }}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
                 <View style={[styles.cardHeader, { borderBottomColor: colors.separator }]}>
                   <View style={[styles.cardIconContainer, { backgroundColor: colors.primary + '20' }]}>
-                    <IconSymbol size={20} name="person.circle.fill" color={colors.primary} />
+                    <IconSymbol size={22} name="person.circle.fill" color={colors.primary} />
                   </View>
                   <Text style={[styles.cardHeaderTitle, { color: colors.text }]}>{t('subscription.active.user_info.title')}</Text>
                 </View>
@@ -162,7 +185,7 @@ export default function SubscriptionScreen() {
                     </Text>
                   </View>
                 </View>
-              </View>
+              </BlurView>
 
               {/* Suscripciones activas */}
               {customerInfo.activeSubscriptions && Object.keys(customerInfo.activeSubscriptions).length > 0 && (
@@ -251,8 +274,8 @@ export default function SubscriptionScreen() {
       {/* Gradient Background */}
       <LinearGradient
         colors={isDark 
-          ? ['#1a1a2e', '#16213e', '#0f3460'] 
-          : ['#667eea', '#764ba2', '#f093fb']
+          ? ['rgba(59, 130, 246, 0.08)', 'rgba(99, 102, 241, 0.06)', 'rgba(139, 92, 246, 0.04)'] 
+          : ['rgba(59, 130, 246, 0.05)', 'rgba(99, 102, 241, 0.04)', 'rgba(139, 92, 246, 0.03)']
         }
         style={styles.backgroundGradient}
         start={{ x: 0, y: 0 }}
@@ -262,6 +285,15 @@ export default function SubscriptionScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Hero Section */}
         <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.heroCard}>
+          <LinearGradient
+            colors={isDark 
+              ? ['rgba(255, 215, 0, 0.12)', 'rgba(255, 165, 0, 0.08)', 'transparent'] 
+              : ['rgba(255, 215, 0, 0.08)', 'rgba(255, 165, 0, 0.06)', 'transparent']
+            }
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 24 }}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
           <View style={styles.premiumIconContainer}>
             <LinearGradient
               colors={['#FFD700', '#FFA500']}
@@ -281,30 +313,49 @@ export default function SubscriptionScreen() {
 
         {/* Features Section */}
         <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.featuresCard}>
+          <LinearGradient
+            colors={isDark 
+              ? ['rgba(99, 102, 241, 0.08)', 'rgba(139, 92, 246, 0.06)', 'transparent'] 
+              : ['rgba(99, 102, 241, 0.06)', 'rgba(139, 92, 246, 0.04)', 'transparent']
+            }
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 20 }}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
           <Text style={[styles.featuresTitle, { color: colors.text }]}>{t('subscription.features.title')}</Text>
           
           <View style={styles.premiumFeature}>
-      
+            <View style={styles.featureIconContainer}>
+              <IconSymbol size={18} name="infinity" color={colors.primary} />
+            </View>
             <Text style={[styles.featureText, { color: colors.text }]}>{t('subscription.features.unlimited_access')}</Text>
           </View>
           
           <View style={styles.premiumFeature}>
-     
+            <View style={styles.featureIconContainer}>
+              <IconSymbol size={18} name="chart.bar.fill" color={colors.primary} />
+            </View>
             <Text style={[styles.featureText, { color: colors.text }]}>{t('subscription.features.advanced_reports')}</Text>
           </View>
           
           <View style={styles.premiumFeature}>
-     
+            <View style={styles.featureIconContainer}>
+              <IconSymbol size={18} name="square.and.arrow.up.fill" color={colors.primary} />
+            </View>
             <Text style={[styles.featureText, { color: colors.text }]}>{t('subscription.features.data_export')}</Text>
           </View>
           
           <View style={styles.premiumFeature}>
-       
+            <View style={styles.featureIconContainer}>
+              <IconSymbol size={18} name="eye.slash.fill" color={colors.primary} />
+            </View>
             <Text style={[styles.featureText, { color: colors.text }]}>{t('subscription.features.no_ads')}</Text>
           </View>
           
           <View style={styles.premiumFeature}>
-          
+            <View style={styles.featureIconContainer}>
+              <IconSymbol size={18} name="headphones" color={colors.primary} />
+            </View>
             <Text style={[styles.featureText, { color: colors.text }]}>{t('subscription.features.priority_support')}</Text>
           </View>
         </BlurView>
@@ -409,7 +460,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    opacity: 0.3,
+    
   },
   loadingContainer: {
     flex: 1,
@@ -427,6 +478,9 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
     paddingHorizontal: 20,
     position: 'relative',
+    marginBottom: 40,
+    marginTop: -20,
+    borderRadius: 24,
   },
   closeButton: {
     position: 'absolute',
@@ -478,45 +532,57 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingTop: 10,
+
   },
 
   // Modern Card Styles
   modernCard: {
-    borderRadius: 16,
-    marginBottom: 16,
+    borderRadius: 24,
+    marginBottom: 20,
+    marginHorizontal: 4,
     borderWidth: 1,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 8,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 20,
+    paddingBottom: 16,
     borderBottomWidth: 1,
   },
   cardIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cardHeaderTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     flex: 1,
+    letterSpacing: -0.2,
   },
   cardContent: {
-    padding: 16,
+    padding: 20,
+    paddingTop: 16,
   },
 
   // Status Styles
@@ -658,6 +724,8 @@ const styles = StyleSheet.create({
   },
   featureText: {
     fontSize: 16,
+    flex: 1,
+    flexWrap: 'wrap',
   },
   packagesContainer: {
     marginBottom: 30,

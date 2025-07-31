@@ -16,6 +16,8 @@ import {
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
 import { BlurView } from 'expo-blur';
+import Header from '../components/Header';
+import LoadingOverlay from '../components/LoadingOverlay';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage, languageConfig, SupportedLanguage } from '../contexts/LanguageContext';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -101,7 +103,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flex: 1,
     borderRadius: Theme.borderRadius.md,
     padding: Theme.spacing.md,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+
     alignItems: 'center',
     position: 'relative',
   },
@@ -388,6 +390,16 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontWeight: '700',
     color: '#000',
   },
+  screenTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  screenTitleText: {
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+  },
 });
 
 export default function PreferencesScreen({ onClose, scrollToNotifications, onNavigateToSubscription }: PreferencesScreenProps) {
@@ -410,9 +422,17 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
   const [customMinutes, setCustomMinutes] = useState(notificationSettings.reminderMinutes?.toString() || '15');
   const [permissionStatus, setPermissionStatus] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   const handleThemeChange = (mode: 'auto' | 'light' | 'dark') => {
     setThemeMode(mode);
+  };
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose?.();
+    }, 100);
   };
 
   const handleLanguageChange = (lang: SupportedLanguage) => {
@@ -567,24 +587,17 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.placeholder} />
-          <View style={styles.headerText}>
-            <View style={styles.titleContainer}>
-              <IconSymbol size={26} name="gear" color={colors.primary} />
-              <Text style={styles.headerTitle}>{t('preferences.title')}</Text>
-            </View>
-            <Text style={styles.headerSubtitle}>{t('preferences.subtitle')}</Text>
+      <Header 
+        title={
+          <View style={styles.screenTitle}>
+            <IconSymbol size={20} name="gear" color="#8E8E93" />
+            <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('preferences.title')}</Text>
           </View>
-          <TouchableOpacity 
-            onPress={onClose}
-            style={styles.closeButton}
-          >
-            <IconSymbol size={24} name="xmark" color={colors.primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
+        }
+        onProfilePress={() => {}}
+        showCloseButton={true}
+        onClosePress={handleClose}
+      />
 
       <ScrollView 
         ref={scrollViewRef}
@@ -980,6 +993,8 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
           </BlurView>
         </View>
       </Modal>
+
+      <LoadingOverlay visible={isClosing} />
     </SafeAreaView>
   );
 }

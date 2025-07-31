@@ -273,6 +273,7 @@ function AppContent() {
   };
 
   const [navigationOptions, setNavigationOptions] = useState<any>(null);
+  const [hideHeader, setHideHeader] = useState(false);
 
   const handleWelcomeModalClose = async () => {
     setShowWelcomeModal(false);
@@ -332,7 +333,7 @@ function AppContent() {
       case 'settings':
         return (
           <ScreenWrapper screenKey="settings">
-            <SettingsScreen onNavigate={handleNavigate} navigationOptions={navigationOptions} onNavigationHandled={() => setNavigationOptions(null)} />
+            <SettingsScreen onNavigate={handleNavigate} navigationOptions={navigationOptions} onNavigationHandled={() => setNavigationOptions(null)} onHideHeader={setHideHeader} />
           </ScreenWrapper>
         );
       case 'subscription':
@@ -395,12 +396,7 @@ function AppContent() {
           </View>
         );
       case 'subscription':
-        return (
-          <View style={styles.screenTitle}>
-            <IconSymbol size={20} name="crown.fill" color="#FFD700" />
-            <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('subscription.title')}</Text>
-          </View>
-        );
+        return t('subscription.title') || 'Suscripción';
       case 'chatbot':
         return t('chatbot.title') || 'Chatbot IA';
       default:
@@ -433,7 +429,7 @@ function AppContent() {
   // Renderizar siempre con header y menu para mantener consistencia
   return (
     <View style={styles.container}>
-      {(currentScreen === 'mapa' || currentScreen === 'chatbot' || currentScreen === 'timer' || currentScreen === 'reports' || currentScreen === 'calendar' || currentScreen === 'settings' || currentScreen === 'subscription') && (
+      {!hideHeader && (currentScreen === 'mapa' || currentScreen === 'chatbot' || currentScreen === 'timer' || currentScreen === 'reports' || currentScreen === 'calendar' || currentScreen === 'settings') && (
         <Header 
           title={getScreenTitle()} 
           onProfilePress={() => setShowProfile(true)}

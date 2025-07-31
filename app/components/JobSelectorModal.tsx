@@ -76,11 +76,11 @@ export default function JobSelectorModal({
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <IconSymbol size={21} name="xmark" color={colors.primary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{title}</Text>
           <View style={styles.placeholder} />
+          <Text style={styles.headerTitle}>{title}</Text>
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <IconSymbol size={21} name="xmark" color={colors.textSecondary} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.content}>
@@ -196,11 +196,13 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     elevation: 4,
   },
   closeButton: {
-    padding: 16,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
   },
   headerTitle: {
     fontSize: 20,

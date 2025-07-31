@@ -314,6 +314,15 @@
     "title_filtered": "{{jobName}} - Calendario", 
     "subtitle": "Días trabajados y estadísticas",
     "subtitle_filtered": "Días trabajados en {{jobName}}",
+    "days_short": {
+      "monday": "L",
+      "tuesday": "M", 
+      "wednesday": "M",
+      "thursday": "J",
+      "friday": "V",
+      "saturday": "S",
+      "sunday": "D"
+    },
     "filter_by_job": "Filtrar por trabajo",
     "all_jobs": "Todos",
     "month_stats": "Estadísticas del mes",
@@ -934,7 +943,7 @@
         "description": "Preferencias"
       },
       "chatbot": {
-        "title": "Chatbot IA",
+        "title": "Analyze-Bot",
         "description": "Analiza imágenes con inteligencia artificial"
       },
       "subscription": {
@@ -1009,6 +1018,8 @@
     }
   },
   "chatbot": {
+    "title": "Analyze-Bot",
+    "subtitle": "Analiza imágenes con inteligencia artificial",
     "welcome_message": "¡Hola! Soy tu asistente especializado en análisis de planes de trabajo. Puedo:\n\n📅 Analizar imágenes y documentos PDF de horarios laborales\n🔍 Extraer días de trabajo, horarios y turnos\n🏖️ Identificar días libres y vacaciones\n👥 Detectar múltiples personas y preguntar de quién extraer datos\n🧠 Recordar el contexto de nuestra conversación\n📊 Organizar la información de forma clara\n\n📸 Envía una foto o 📄 documento PDF de tu plan de trabajo.\n💡 Escribe \"reset\" para empezar de nuevo.",
     "welcome_title": "Asistente IA de Planes de Trabajo",
     "welcome_subtitle": "¡Hola! Soy tu asistente especializado en análisis de horarios laborales. Te ayudo a extraer y organizar información de tus planes de trabajo.",
@@ -1057,6 +1068,8 @@
     "pdf_document": "Documento PDF",
     "cancel": "Cancelar",
     "error_processing_request": "Lo siento, hubo un error al procesar tu solicitud. Por favor, intenta de nuevo.",
+    "selected_image": "Imagen seleccionada",
+    "image_load_error": "Error al cargar imagen",
     "export_calendar": {
       "export_button": "Exportar al Calendario",
       "modal_title": "Exportar al Calendario",

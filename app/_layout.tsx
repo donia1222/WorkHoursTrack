@@ -89,7 +89,7 @@ export default function RootLayout() {
       <LanguageProvider>
         <ThemeProvider>
           <NotificationProvider>
-            <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <NavigationThemeProvider value={DefaultTheme}>
               <AppWithStatusBar />
             </NavigationThemeProvider>
           </NotificationProvider>

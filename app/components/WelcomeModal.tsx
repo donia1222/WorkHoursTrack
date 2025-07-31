@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -31,8 +32,27 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
   },
+  backgroundGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   header: {
-    borderBottomWidth: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(142, 142, 147, 0.12)',
   },
   headerContent: {
     flexDirection: 'row',
@@ -74,33 +94,64 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     alignItems: 'center',
   },
   stepCard: {
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 24,
+    padding: 32,
     alignItems: 'center',
     width: '100%',
+    marginHorizontal: 16,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    overflow: 'hidden',
+  },
+  stepCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
   },
   stepHeader: {
     alignItems: 'center',
   },
   iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    overflow: 'hidden',
+  },
+  iconGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 60,
   },
   stepTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: '800',
     textAlign: 'center',
     marginBottom: 16,
+    letterSpacing: -0.5,
   },
   stepDescription: {
-    fontSize: 16,
+    fontSize: 17,
     textAlign: 'center',
-    lineHeight: 24,
-    maxWidth: '90%',
+    lineHeight: 26,
+    maxWidth: '85%',
+    letterSpacing: -0.2,
   },
   indicatorsContainer: {
     alignItems: 'center',
@@ -124,14 +175,30 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontWeight: '600',
   },
   featuresCard: {
-    marginVertical: 16,
-    borderRadius: 16,
-    padding: 20,
+    marginVertical: 20,
+    marginHorizontal: 16,
+    borderRadius: 20,
+    padding: 24,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    overflow: 'hidden',
+  },
+  featuresCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 20,
   },
   featuresTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 20,
+    letterSpacing: -0.3,
   },
   featuresList: {
     gap: 12,
@@ -139,39 +206,78 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 16,
+    paddingVertical: 4,
+  },
+  featureIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(34, 197, 94, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   featureText: {
     fontSize: 16,
     flex: 1,
+    letterSpacing: -0.1,
+    lineHeight: 22,
   },
   tipsCard: {
-    marginVertical: 16,
-    marginBottom: 24,
-    borderRadius: 16,
-    padding: 20,
+    marginVertical: 20,
+    marginHorizontal: 16,
+    marginBottom: 32,
+    borderRadius: 20,
+    padding: 24,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    overflow: 'hidden',
+  },
+  tipsCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 20,
   },
   tipsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 20,
+    letterSpacing: -0.3,
   },
   tipItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
+    gap: 16,
+    marginBottom: 16,
+  },
+  tipIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 122, 255, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   tipText: {
-    fontSize: 14,
+    fontSize: 15,
     flex: 1,
+    lineHeight: 21,
+    letterSpacing: -0.1,
   },
   navigationContainer: {
     flexDirection: 'row',
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 24,
     gap: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
   },
   navigationButton: {
     flex: 1,
@@ -180,9 +286,15 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
+    padding: 18,
     borderRadius: 16,
     gap: 12,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    overflow: 'hidden',
   },
   previousButton: {},
   nextButton: {},
@@ -198,9 +310,23 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
+    padding: 18,
     borderRadius: 16,
     gap: 12,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    overflow: 'hidden',
+  },
+  nextButtonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 16,
   },
 });
 
@@ -273,18 +399,46 @@ export default function WelcomeModal({ visible, onClose }: WelcomeModalProps) {
       onRequestClose={onClose}
     >
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={[styles.header, { borderBottomColor: colors.border }]}>
-
- 
+        {/* Background Gradient */}
+        <LinearGradient
+          colors={isDark 
+            ? ['rgba(99, 102, 241, 0.06)', 'rgba(139, 92, 246, 0.04)', 'rgba(59, 130, 246, 0.02)'] 
+            : ['rgba(99, 102, 241, 0.04)', 'rgba(139, 92, 246, 0.03)', 'rgba(59, 130, 246, 0.02)']
+          }
+          style={styles.backgroundGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+        
+        {/* Header with Close Button */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <IconSymbol size={18} name="xmark" color={colors.textSecondary} />
+          </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.stepContainer}>
-            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.stepCard, { backgroundColor: colors.surface }]}>
+            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.stepCard}>
+              <LinearGradient
+                colors={isDark 
+                  ? [`${currentStepData.color}15`, `${currentStepData.color}08`, 'transparent'] 
+                  : [`${currentStepData.color}12`, `${currentStepData.color}06`, 'transparent']
+                }
+                style={styles.stepCardGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
               <View style={styles.stepHeader}>
-                <View style={[styles.iconContainer, { backgroundColor: `${currentStepData.color}20` }]}>
+                <View style={styles.iconContainer}>
+                  <LinearGradient
+                    colors={[`${currentStepData.color}25`, `${currentStepData.color}15`]}
+                    style={styles.iconGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  />
                   <IconSymbol 
-                    size={48} 
+                    size={56} 
                     name={currentStepData.icon as any} 
                     color={currentStepData.color} 
                   />
@@ -315,49 +469,83 @@ export default function WelcomeModal({ visible, onClose }: WelcomeModalProps) {
           </View>
 
           {/* Features overview */}
-          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.featuresCard, { backgroundColor: colors.surface }]}>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.featuresCard}>
+            <LinearGradient
+              colors={isDark 
+                ? ['rgba(34, 197, 94, 0.08)', 'rgba(34, 197, 94, 0.04)', 'transparent'] 
+                : ['rgba(34, 197, 94, 0.06)', 'rgba(34, 197, 94, 0.03)', 'transparent']
+              }
+              style={styles.featuresCardGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
             <Text style={[styles.featuresTitle, { color: colors.text }]}>{t('onboarding.features.title')}</Text>
             <View style={styles.featuresList}>
               <View style={styles.featureItem}>
-                <IconSymbol size={16} name="checkmark.circle.fill" color={colors.success} />
+                <View style={styles.featureIconContainer}>
+                  <IconSymbol size={14} name="checkmark" color={colors.success} />
+                </View>
                 <Text style={[styles.featureText, { color: colors.textSecondary }]}>{t('onboarding.features.smart_timer')}</Text>
               </View>
               <View style={styles.featureItem}>
-                <IconSymbol size={16} name="checkmark.circle.fill" color={colors.success} />
+                <View style={styles.featureIconContainer}>
+                  <IconSymbol size={14} name="checkmark" color={colors.success} />
+                </View>
                 <Text style={[styles.featureText, { color: colors.textSecondary }]}>{t('onboarding.features.visual_calendar')}</Text>
               </View>
               <View style={styles.featureItem}>
-                <IconSymbol size={16} name="checkmark.circle.fill" color={colors.success} />
+                <View style={styles.featureIconContainer}>
+                  <IconSymbol size={14} name="checkmark" color={colors.success} />
+                </View>
                 <Text style={[styles.featureText, { color: colors.textSecondary }]}>{t('onboarding.features.interactive_map')}</Text>
               </View>
               <View style={styles.featureItem}>
-                <IconSymbol size={16} name="checkmark.circle.fill" color={colors.success} />
+                <View style={styles.featureIconContainer}>
+                  <IconSymbol size={14} name="checkmark" color={colors.success} />
+                </View>
                 <Text style={[styles.featureText, { color: colors.textSecondary }]}>{t('onboarding.features.detailed_stats')}</Text>
               </View>
               <View style={styles.featureItem}>
-                <IconSymbol size={16} name="checkmark.circle.fill" color={colors.success} />
+                <View style={styles.featureIconContainer}>
+                  <IconSymbol size={14} name="checkmark" color={colors.success} />
+                </View>
                 <Text style={[styles.featureText, { color: colors.textSecondary }]}>{t('onboarding.features.data_export')}</Text>
               </View>
             </View>
           </BlurView>
 
           {/* Tips card */}
-          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.tipsCard, { backgroundColor: colors.surface }]}>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.tipsCard}>
+            <LinearGradient
+              colors={isDark 
+                ? ['rgba(0, 122, 255, 0.08)', 'rgba(0, 122, 255, 0.04)', 'transparent'] 
+                : ['rgba(0, 122, 255, 0.06)', 'rgba(0, 122, 255, 0.03)', 'transparent']
+              }
+              style={styles.tipsCardGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
             <Text style={[styles.tipsTitle, { color: colors.text }]}>{t('onboarding.tips.title')}</Text>
             <View style={styles.tipItem}>
-              <IconSymbol size={16} name="hand.tap" color={colors.primary} />
+              <View style={styles.tipIconContainer}>
+                <IconSymbol size={14} name="hand.tap.fill" color={colors.primary} />
+              </View>
               <Text style={[styles.tipText, { color: colors.textSecondary }]}>
                 {t('onboarding.tips.long_press')}
               </Text>
             </View>
             <View style={styles.tipItem}>
-              <IconSymbol size={16} name="square.and.arrow.up" color={colors.primary} />
+              <View style={styles.tipIconContainer}>
+                <IconSymbol size={14} name="square.and.arrow.up.fill" color={colors.primary} />
+              </View>
               <Text style={[styles.tipText, { color: colors.textSecondary }]}>
                 {t('onboarding.tips.share_stats')}
               </Text>
             </View>
             <View style={styles.tipItem}>
-              <IconSymbol size={16} name="arrow.down" color={colors.primary} />
+              <View style={styles.tipIconContainer}>
+                <IconSymbol size={14} name="arrow.down.circle.fill" color={colors.primary} />
+              </View>
               <Text style={[styles.tipText, { color: colors.textSecondary }]}>
                 {t('onboarding.tips.swipe_close')}
               </Text>
@@ -366,13 +554,13 @@ export default function WelcomeModal({ visible, onClose }: WelcomeModalProps) {
         </ScrollView>
 
         {/* Navigation buttons */}
-        <View style={[styles.navigationContainer, { borderTopColor: colors.border }]}>
+        <View style={styles.navigationContainer}>
           <TouchableOpacity
             style={[styles.navigationButton, styles.previousButton]}
             onPress={handlePrevious}
             disabled={currentStep === 0}
           >
-            <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={[styles.navigationButtonInner, { backgroundColor: colors.surface }]}>
+            <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.navigationButtonInner}>
               <IconSymbol 
                 size={20} 
                 name="chevron.left" 
@@ -393,7 +581,13 @@ export default function WelcomeModal({ visible, onClose }: WelcomeModalProps) {
             style={[styles.navigationButton, styles.nextButton]}
             onPress={handleNext}
           >
-            <View style={[styles.nextButtonInner, { backgroundColor: colors.primary }]}>
+            <View style={styles.nextButtonInner}>
+              <LinearGradient
+                colors={['#007AFF', '#0056CC', '#003D99']}
+                style={styles.nextButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
               <Text style={[styles.nextButtonText, { color: '#FFFFFF' }]}>
                 {currentStep === onboardingSteps.length - 1 ? t('onboarding.navigation.start') : t('onboarding.navigation.next')}
               </Text>

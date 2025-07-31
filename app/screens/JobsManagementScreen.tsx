@@ -15,6 +15,8 @@ import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { BlurView } from 'expo-blur';
+import Header from '../components/Header';
+import LoadingOverlay from '../components/LoadingOverlay';
 import { Job } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import JobFormModal from '../components/JobFormModal';
@@ -185,6 +187,16 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
   },
+  screenTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  screenTitleText: {
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+  },
 });
 
 export default function JobsManagementScreen({ onNavigate, onClose, openAddModal = false, editJob, initialTab }: JobsManagementScreenProps) {
@@ -194,6 +206,7 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
   const [jobs, setJobs] = useState<Job[]>([]);
   const [showAddModal, setShowAddModal] = useState(openAddModal);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [isClosing, setIsClosing] = useState(false);
   
   const styles = getStyles(colors, isDark);
 
@@ -267,25 +280,26 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
   const activeJobs = (jobs || []).filter(job => job && job.isActive);
   const inactiveJobs = (jobs || []).filter(job => job && !job.isActive);
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose?.();
+    }, 100);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerText}>
-            <View style={styles.titleContainer}>
-              <IconSymbol size={20} name="briefcase.fill" color={colors.primary} />
-              <Text style={styles.headerTitle}>{t('jobs_management.title')}</Text>
-            </View>
-            <Text style={styles.headerSubtitle}>{t('jobs_management.subtitle')}</Text>
+      <Header 
+        title={
+          <View style={styles.screenTitle}>
+            <IconSymbol size={20} name="briefcase.fill" color={colors.primary} />
+            <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('jobs_management.title')}</Text>
           </View>
-          <TouchableOpacity 
-            onPress={() => { triggerHaptic('light'); onClose?.(); }}
-            style={styles.closeButton}
-          >
-            <IconSymbol size={24} name="xmark" color={colors.primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
+        }
+        onProfilePress={() => {}}
+        showCloseButton={true}
+        onClosePress={() => { triggerHaptic('light'); handleClose(); }}
+      />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Active jobs */}
@@ -357,6 +371,8 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
         onNavigateToCalendar={() => onNavigate?.('calendar')}
         onNavigateToSubscription={() => onNavigate?.('subscription')}
       />
+
+      <LoadingOverlay visible={isClosing} />
     </SafeAreaView>
   );
 }

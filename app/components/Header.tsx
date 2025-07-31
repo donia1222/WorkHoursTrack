@@ -12,11 +12,14 @@ interface HeaderProps {
   onMenuPress?: () => void;
   onBackPress?: () => void;
   showBackButton?: boolean;
+  showCloseButton?: boolean;
+  onClosePress?: () => void;
 }
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   safeArea: {
-    backgroundColor: isDark ? colors.surface : colors.background,
+    marginTop: -20,
+    backgroundColor: colors.background,
   },
   blurContainer: {
     elevation: 8,
@@ -30,6 +33,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
     overflow: 'hidden',
+    backgroundColor: isDark ? '#000000' : 'transparent',
   },
   blurGradient: {
     position: 'absolute',
@@ -42,9 +46,9 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingLeft: 20,
-    paddingRight: 20,
-    paddingVertical: 4,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    paddingTop: 24,
     position: 'relative',
     zIndex: 1,
   },
@@ -87,10 +91,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     paddingLeft: 8,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     color: colors.text,
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
     textShadowColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
@@ -185,18 +189,30 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     left: 3,
     backgroundColor: '#007AFF',
   },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: -8,
+  },
 });
 
-export default function Header({ title, onProfilePress, onMenuPress, onBackPress, showBackButton }: HeaderProps) {
+export default function Header({ title, onProfilePress, onMenuPress, onBackPress, showBackButton, showCloseButton, onClosePress }: HeaderProps) {
   const { colors, isDark } = useTheme();
   const { triggerHaptic } = useHapticFeedback();
   const styles = getStyles(colors, isDark);
   
   return (
     <SafeAreaView style={styles.safeArea}>
-      <BlurView intensity={isDark ? 90 : 95} tint={isDark ? "dark" : "light"} style={styles.blurContainer}>
+      <BlurView intensity={isDark ? 0 : 90} tint={isDark ? "dark" : "light"} style={styles.blurContainer}>
         <LinearGradient
-          colors={isDark ? ['rgba(0, 0, 0, 0.15)', 'rgba(0, 0, 0, 0.05)'] : ['rgba(255, 255, 255, 0.4)', 'rgba(255, 255, 255, 0.15)']}
+          colors={isDark 
+            ? ['#000000', '#000000', '#000000'] 
+            : ['rgba(0, 122, 255, 0.06)', 'rgba(0, 122, 255, 0.02)', 'transparent']
+          }
           style={styles.blurGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -234,22 +250,31 @@ export default function Header({ title, onProfilePress, onMenuPress, onBackPress
             </View>
           </View>
           
-          <TouchableOpacity onPress={() => { triggerHaptic('light'); onMenuPress?.(); }} style={styles.profileButton}>
-            <View style={styles.profileButtonInner}>
-              <LinearGradient
-                colors={isDark ? ['rgba(0, 122, 255, 0.25)', 'rgba(0, 122, 255, 0.08)'] : ['rgba(0, 122, 255, 0.18)', 'rgba(0, 122, 255, 0.06)']}
-                style={styles.profileButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              />
-              <View style={styles.modernMenuIcon}>
-                <View style={[styles.menuShape, styles.menuShape1]} />
-                <View style={[styles.menuShape, styles.menuShape2]} />
-                <View style={[styles.menuShape, styles.menuShape3]} />
-                <View style={[styles.menuShape, styles.menuShape4]} />
+          {showCloseButton && onClosePress ? (
+            <TouchableOpacity 
+              onPress={() => { triggerHaptic('light'); onClosePress(); }}
+              style={styles.closeButton}
+            >
+              <IconSymbol size={24} name="xmark" color={colors.primary} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => { triggerHaptic('light'); onMenuPress?.(); }} style={styles.profileButton}>
+              <View style={styles.profileButtonInner}>
+                <LinearGradient
+                  colors={isDark ? ['rgba(0, 122, 255, 0.25)', 'rgba(0, 122, 255, 0.08)'] : ['rgba(0, 122, 255, 0.18)', 'rgba(0, 122, 255, 0.06)']}
+                  style={styles.profileButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
+                <View style={styles.modernMenuIcon}>
+                  <View style={[styles.menuShape, styles.menuShape1]} />
+                  <View style={[styles.menuShape, styles.menuShape2]} />
+                  <View style={[styles.menuShape, styles.menuShape3]} />
+                  <View style={[styles.menuShape, styles.menuShape4]} />
+                </View>
               </View>
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          )}
         </View>
       </BlurView>
     </SafeAreaView>

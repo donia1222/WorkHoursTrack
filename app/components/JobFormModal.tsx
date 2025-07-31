@@ -24,6 +24,7 @@ import { BlurView } from 'expo-blur';
 import { Job, DEFAULT_COLORS } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import { AutoScheduleService } from '../services/AutoScheduleService';
+import AutoTimerService from '../services/AutoTimerService';
 
 interface JobFormModalProps {
   visible: boolean;
@@ -51,19 +52,23 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.separator,
   },
-  closeButton: {
-    padding: Theme.spacing.sm,
-  },
   headerTitle: {
     ...Theme.typography.headline,
     color: colors.text,
     fontWeight: '600',
+    flex: 1,
+    textAlign: 'center',
   },
-  saveButton: {
-    paddingHorizontal: Theme.spacing.md,
-    paddingVertical: Theme.spacing.sm,
+  closeButton: {
+    padding: Theme.spacing.sm,
+  },
+  closeButtonCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: colors.primary,
-    borderRadius: Theme.borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   saveButtonText: {
     ...Theme.typography.footnote,
@@ -773,13 +778,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       address: '',
       radius: 100,
     },
-    autoTimer: {
-      enabled: false,
-      geofenceRadius: 50,
-      delayStart: 1,
-      delayStop: 1,
-      notifications: true,
-    },
+
   });
 
   const [currentTab, setCurrentTab] = useState<'basic' | 'schedule' | 'financial' | 'billing' | 'auto' | 'delete'>(initialTab || 'basic');
@@ -989,9 +988,20 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     }
   };
 
+  const handleClose = async () => {
+    // If there's a name, save the job
+    if (formData.name?.trim()) {
+      await handleSave();
+    } else {
+      // If no name, just close without saving
+      onClose();
+    }
+  };
+
   const handleSave = async () => {
+    // Only save if there's a name, otherwise just close
     if (!formData.name?.trim()) {
-      Alert.alert(t('job_form.errors.error_title'), t('job_form.errors.name_required'));
+      onClose();
       return;
     }
 
@@ -2025,7 +2035,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 formData.postalCode?.trim());
     };
 
-    const handleAutoTimerToggle = (value: boolean) => {
+    const handleAutoTimerToggle = async (value: boolean) => {
       if (!isLocationEnabled) {
         // No hacer nada si no hay permisos de ubicación
         return;
@@ -2038,6 +2048,24 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         );
         return;
       }
+      
+      // Si se está desactivando el AutoTimer, parar el timer activo si existe
+      if (!value && editingJob) {
+        try {
+          const activeSession = await JobService.getActiveSession();
+          if (activeSession && activeSession.jobId === editingJob.id) {
+            console.log('🛑 JobFormModal: Stopping active timer because AutoTimer was disabled');
+            await JobService.clearActiveSession();
+          }
+          
+          // También cancelar cualquier AutoTimer activo para este trabajo
+          const autoTimerService = AutoTimerService.getInstance();
+          await autoTimerService.cancelPendingAction();
+        } catch (error) {
+          console.error('Error stopping timer when disabling AutoTimer:', error);
+        }
+      }
+      
       updateNestedData('autoTimer', 'enabled', value);
     };
 
@@ -2111,6 +2139,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             </>
           )}
 
+
+
         {formData.autoTimer?.enabled && (
           <>
             <View style={styles.inputGroup}>
@@ -2143,8 +2173,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 </TouchableOpacity>
               </View>
             </View>
-
-            <View style={styles.inputGroup}>
+<View style={styles.inputGroup}>
               <Text style={styles.label}>{t('job_form.auto_timer.delay_start')}</Text>
               <Text style={styles.labelDescription}>{t('job_form.auto_timer.delay_start_desc')}</Text>
               <View style={styles.counterContainer}>
@@ -2206,6 +2235,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               </View>
             </View>
 
+            
             <View style={styles.inputGroup}>
               <View style={styles.switchRow}>
                 <View style={styles.switchContent}>
@@ -2220,8 +2250,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 />
               </View>
             </View>
-
-            <View style={styles.previewCard}>
+   <View style={styles.previewCard}>
               <Text style={styles.previewTitle}>📍 Vista Previa</Text>
               <Text style={styles.previewText}>
                 {t('job_form.auto_timer.preview', {
@@ -2391,14 +2420,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <IconSymbol size={24} name="xmark" color={colors.primary} />
-          </TouchableOpacity>
           <Text style={styles.headerTitle}>
             {editingJob ? t('job_form.title_edit') : t('job_form.title_new')}
           </Text>
-          <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-            <Text style={styles.saveButtonText}>{t('job_form.save')}</Text>
+          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+            <View style={styles.closeButtonCircle}>
+              <IconSymbol size={20} name={formData.name?.trim() ? "checkmark" : "xmark"} color="#FFFFFF" />
+            </View>
           </TouchableOpacity>
         </View>
 

@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   TextInput,
+  StatusBar,
 } from 'react-native';
 import Animated, { 
   useSharedValue, 
@@ -55,39 +56,51 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   header: {
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    overflow: 'hidden',
+  },
+  headerGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    paddingTop: 24,
   },
   backButton: {
+    position: 'absolute',
+    left: 24,
     padding: 8,
-    marginRight: -8,
   },
   headerText: {
-    flex: 1,
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
+    marginBottom: 2,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 2,
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 4,
     color: colors.text,
+    letterSpacing: -0.3,
+    textAlign: 'center',
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.textSecondary,
-  },
-  placeholder: {
-    width: 40,
+    fontWeight: '500',
+    letterSpacing: -0.1,
+    textAlign: 'center',
   },
   content: {
     flex: 1,
@@ -662,7 +675,10 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         state: status.state,
         jobId: status.jobId,
         jobName: status.jobName,
-        remainingTime: status.remainingTime
+        remainingTime: status.remainingTime,
+        remainingFormatted: status.remainingTime >= 60 
+          ? `${Math.floor(status.remainingTime / 60)}:${Math.floor(status.remainingTime % 60).toString().padStart(2, '0')}`
+          : `${Math.floor(status.remainingTime)}s`
       });
       setAutoTimerStatus(status);
     };
@@ -776,18 +792,24 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       const sessionData: StoredActiveSession | null = await JobService.getActiveSession();
       console.log('📱 TimerScreen loadActiveSession result:', sessionData ? 'found session' : 'no session');
       if (sessionData) {
-        console.log('🔄 TimerScreen setting active session and isRunning=true for job:', sessionData.jobId);
+        const isPaused = (sessionData as any).isPaused || false;
+        console.log('🔄 TimerScreen setting active session, isPaused:', isPaused, 'for job:', sessionData.jobId);
+        
         setActiveSession({
           ...sessionData,
           startTime: new Date(sessionData.startTime),
         });
         setSelectedJobId(sessionData.jobId);
         setNotes(sessionData.notes || '');
-        setIsRunning(true);
+        setIsRunning(!isPaused); // Si está pausado, no está corriendo
         
         const now = new Date();
         const elapsed = Math.floor((now.getTime() - new Date(sessionData.startTime).getTime()) / 1000);
         setElapsedTime(elapsed);
+        
+        if (isPaused) {
+          console.log('⏸️ Timer cargado en estado pausado');
+        }
       }
     } catch (error) {
       console.error('Error loading active session:', error);
@@ -867,10 +889,53 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         };
         
         await JobService.updateWorkDay(existingWorkDay.id, updatedWorkDay);
-        Alert.alert(t('maps.success'), t('timer.session_added_to_existing', { 
-          sessionHours: parseFloat(hours.toFixed(2)), 
-          totalHours: parseFloat(updatedHours.toFixed(2))
-        }));
+        
+        // Check if AutoTimer was active
+        const wasAutoTimerActive = autoTimerStatus?.state === 'active';
+        
+        Alert.alert(
+          t('maps.success'), 
+          t('timer.session_added_to_existing', { 
+            sessionHours: parseFloat(hours.toFixed(2)), 
+            totalHours: parseFloat(updatedHours.toFixed(2))
+          }),
+          [
+            {
+              text: 'OK',
+              onPress: async () => {
+                // If AutoTimer was active, disable it completely
+                if (wasAutoTimerActive && activeSession?.jobId) {
+                  console.log('🚫 Disabling AutoTimer completely for job after manual stop');
+                  
+                  // Get the job and disable its AutoTimer
+                  const jobs = await JobService.getJobs();
+                  const job = jobs.find(j => j.id === activeSession.jobId);
+                  
+                  if (job) {
+                    // Disable AutoTimer for this job
+                    const updatedJob = {
+                      ...job,
+                      autoTimer: {
+                        ...job.autoTimer,
+                        enabled: false,
+                        geofenceRadius: job.autoTimer?.geofenceRadius || 100,
+                        delayStart: job.autoTimer?.delayStart || 2,
+                        delayStop: job.autoTimer?.delayStop || 2,
+                        notifications: job.autoTimer?.notifications !== false
+                      }
+                    };
+                    
+                    await JobService.updateJob(job.id, updatedJob);
+                    console.log(`✅ AutoTimer disabled for job: ${job.name}`);
+                    
+                    // Stop the AutoTimer service
+                    autoTimerService.stop();
+                  }
+                }
+              }
+            }
+          ]
+        );
       } else {
         // Create new work day
         const workDay: Omit<WorkDay, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -883,7 +948,50 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         };
 
         await JobService.addWorkDay(workDay);
-        Alert.alert(t('maps.success'), t('timer.session_saved', { hours: parseFloat(hours.toFixed(2)) }));
+        
+        // Check if AutoTimer was active
+        const wasAutoTimerActive = autoTimerStatus?.state === 'active';
+        
+        Alert.alert(
+          t('maps.success'), 
+          t('timer.session_saved', { hours: parseFloat(hours.toFixed(2)) }),
+          [
+            {
+              text: 'OK',
+              onPress: async () => {
+                // If AutoTimer was active, disable it completely
+                if (wasAutoTimerActive && activeSession?.jobId) {
+                  console.log('🚫 Disabling AutoTimer completely for job after manual stop');
+                  
+                  // Get the job and disable its AutoTimer
+                  const jobs = await JobService.getJobs();
+                  const job = jobs.find(j => j.id === activeSession.jobId);
+                  
+                  if (job) {
+                    // Disable AutoTimer for this job
+                    const updatedJob = {
+                      ...job,
+                      autoTimer: {
+                        ...job.autoTimer,
+                        enabled: false,
+                        geofenceRadius: job.autoTimer?.geofenceRadius || 100,
+                        delayStart: job.autoTimer?.delayStart || 2,
+                        delayStop: job.autoTimer?.delayStop || 2,
+                        notifications: job.autoTimer?.notifications !== false
+                      }
+                    };
+                    
+                    await JobService.updateJob(job.id, updatedJob);
+                    console.log(`✅ AutoTimer disabled for job: ${job.name}`);
+                    
+                    // Stop the AutoTimer service
+                    autoTimerService.stop();
+                  }
+                }
+              }
+            }
+          ]
+        );
       }
       
       await JobService.clearActiveSession();
@@ -941,7 +1049,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   const getAutoTimerMessage = (status: AutoTimerStatus): string => {
     const messageParts = status.message.split(':');
     const messageType = messageParts[0];
-    const minutes = messageParts[1];
+    const seconds = parseInt(messageParts[1] || '0');
+    const minutes = Math.ceil(seconds / 60);
 
     switch (messageType) {
       case 'inactive':
@@ -1079,32 +1188,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.placeholder} />
-          <View style={styles.headerText}>
-            <View style={styles.titleContainer}>
-              <IconSymbol size={26} name="clock.fill" color={colors.primary} />
-              <Text style={styles.headerTitle}>{t('timer.title')}</Text>
-            </View>
-            <Text style={styles.headerSubtitle}>
-              {isRunning ? 
-                (autoTimerStatus?.state === 'active' ? 
-                  t('timer.auto_timer.started_auto') : 
-                  t('timer.active_session')
-                ) : 
-                t('timer.ready_to_work')
-              }
-            </Text>
-          </View>
-          <TouchableOpacity 
-            onPress={() => { triggerHaptic('light'); handleBack(); }}
-            style={styles.backButton}
-          >
-            <IconSymbol size={24} name="xmark" color={colors.primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
 
       {/* Auto Timer Status */}
       {autoTimerStatus && autoTimerStatus.state !== 'inactive' && (() => {
@@ -1195,7 +1278,16 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                   />
                 </View>
                 <Text style={styles.autoTimerCountdown}>
-                  {Math.ceil(autoTimerStatus.remainingTime / 60)}m
+                  {(() => {
+                    const totalSeconds = Math.floor(autoTimerStatus.remainingTime);
+                    if (totalSeconds >= 60) {
+                      const minutes = Math.floor(totalSeconds / 60);
+                      const seconds = totalSeconds % 60;
+                      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    } else {
+                      return `${totalSeconds}s`;
+                    }
+                  })()}
                 </Text>
               </View>
             )}

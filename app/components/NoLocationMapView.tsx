@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
 import { Job } from '../types/WorkTypes';
@@ -26,6 +28,15 @@ export default function NoLocationMapView({ onNavigate }: Props) {
   const [showJobCardsModal, setShowJobCardsModal] = useState(false);
   const [wasJobCardsModalOpen, setWasJobCardsModalOpen] = useState(false);
   const [miniCalendarData, setMiniCalendarData] = useState<any[]>([]);
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + mondayOffset);
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+  });
   const button1Opacity = React.useRef(new Animated.Value(1)).current; // Ver trabajos
   const button2Opacity = React.useRef(new Animated.Value(1)).current; // Estadísticas  
   const button3Opacity = React.useRef(new Animated.Value(1)).current; // Chat IA
@@ -81,38 +92,55 @@ export default function NoLocationMapView({ onNavigate }: Props) {
     loadMiniCalendarData();
   }, []);
 
+  useEffect(() => {
+    loadMiniCalendarData();
+  }, [currentWeekStart, jobs]);
+
   const loadMiniCalendarData = async () => {
     try {
-      const currentDate = new Date();
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth() + 1;
-      const today = currentDate.getDate();
+      const today = new Date();
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth() + 1;
       
-      // Obtener días de trabajo del mes actual
-      const workDays = await JobService.getWorkDaysForMonth(year, month);
-      console.log('📅 Mini Calendar: Loaded', workDays.length, 'work days for', year, month);
-      console.log('📅 Mini Calendar: Sample workDays:', workDays.slice(0, 3));
+      // Get work days for current month and adjacent months to handle cross-month weeks
+      const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+      const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+      const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+      const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
       
-      // Crear array de 7 días centrados en el día actual
+      const [currentMonthWorkDays, prevMonthWorkDays, nextMonthWorkDays] = await Promise.all([
+        JobService.getWorkDaysForMonth(currentYear, currentMonth),
+        JobService.getWorkDaysForMonth(prevYear, prevMonth),
+        JobService.getWorkDaysForMonth(nextYear, nextMonth)
+      ]);
+      
+      const allWorkDays = [...prevMonthWorkDays, ...currentMonthWorkDays, ...nextMonthWorkDays];
+      
+      // Create array of 7 days for the current week (Monday to Sunday)
       const calendarDays = [];
-      for (let i = -3; i <= 3; i++) {
-        const dayNum = today + i;
-        const dateStr = `${year}-${month.toString().padStart(2, '0')}-${dayNum.toString().padStart(2, '0')}`;
+      for (let i = 0; i < 7; i++) {
+        const dayDate = new Date(currentWeekStart);
+        dayDate.setDate(currentWeekStart.getDate() + i);
         
-        // Buscar si hay trabajo este día
-        const workDay = workDays.find(wd => wd.date === dateStr);
+        const dateStr = `${dayDate.getFullYear()}-${(dayDate.getMonth() + 1).toString().padStart(2, '0')}-${dayDate.getDate().toString().padStart(2, '0')}`;
+        
+        // Find work day for this date
+        const workDay = allWorkDays.find(wd => wd.date === dateStr);
         const job = workDay ? jobs.find(j => j.id === workDay.jobId) : null;
         
+        const isToday = dayDate.toDateString() === today.toDateString();
+        
         if (workDay) {
-          console.log('📅 Found workDay for', dateStr, ':', workDay.type, 'job:', job?.name);
+          console.log('📅 NoLocationMapView workDay found:', dateStr, 'type:', workDay.type, 'job:', job?.name);
         }
         
         calendarDays.push({
-          day: dayNum,
-          isToday: i === 0,
+          date: dayDate,
+          day: dayDate.getDate(),
+          isToday,
           workDay,
           job,
-          isValidDay: dayNum > 0 && dayNum <= new Date(year, month, 0).getDate()
+          dayOfWeek: i // 0 = Monday, 6 = Sunday
         });
       }
       
@@ -144,6 +172,13 @@ export default function NoLocationMapView({ onNavigate }: Props) {
     } catch (error) {
       console.error('Error loading job statistics:', error);
     }
+  };
+
+  const navigateWeek = (direction: 'prev' | 'next') => {
+    const newWeekStart = new Date(currentWeekStart);
+    const offset = direction === 'next' ? 7 : -7;
+    newWeekStart.setDate(currentWeekStart.getDate() + offset);
+    setCurrentWeekStart(newWeekStart);
   };
 
   const loadJobs = async () => {
@@ -239,12 +274,6 @@ export default function NoLocationMapView({ onNavigate }: Props) {
   };
 
   // Functions for JobCardsSwiper
-  const handleJobPress = (job: Job) => {
-    console.log('🔵 NoLocationMapView: handleJobPress called with job:', job.name);
-    console.log('🔵 NoLocationMapView: Setting selectedJob and showActionModal to true');
-    setSelectedJob(job);
-    setShowActionModal(true);
-  };
 
   const isJobCurrentlyActive = (_job: Job) => {
     // In no-location mode, no jobs are currently active
@@ -367,27 +396,62 @@ export default function NoLocationMapView({ onNavigate }: Props) {
       <View style={styles.quickAccessSection}>
         
         {/* Mini Calendar - Siempre visible */}
-        <View style={styles.miniCalendarContainer}>
-          <BlurView intensity={80} tint={isDark ? "dark" : "light"} style={styles.miniCalendarBlur}>
+        <GestureDetector gesture={Gesture.Pan()
+          .onEnd((event) => {
+            const { velocityX } = event;
+            if (Math.abs(velocityX) > 500) {
+              if (velocityX > 0) {
+                runOnJS(navigateWeek)('prev');
+              } else {
+                runOnJS(navigateWeek)('next');
+              }
+            }
+          })}>
+          <View style={styles.miniCalendarContainer}>
+            <BlurView intensity={80} tint={isDark ? "dark" : "light"} style={styles.miniCalendarBlur}>
             <View style={styles.miniCalendarHeader}>
-              <IconSymbol size={16} name="calendar" color={colors.primary} />
-              <Text style={styles.miniCalendarTitle}>{t('calendar.title')}</Text>
+              <TouchableOpacity onPress={() => navigateWeek('prev')} style={styles.miniCalendarArrow}>
+                <IconSymbol size={16} name="chevron.left" color={colors.primary} />
+              </TouchableOpacity>
+              <View style={styles.miniCalendarTitleContainer}>
+                <IconSymbol size={16} name="calendar" color={colors.primary} />
+                <Text style={styles.miniCalendarTitle}>{t('calendar.title')}</Text>
+              </View>
+              <TouchableOpacity onPress={() => navigateWeek('next')} style={styles.miniCalendarArrow}>
+                <IconSymbol size={16} name="chevron.right" color={colors.primary} />
+              </TouchableOpacity>
             </View>
+            
+            {/* Day labels */}
+            <View style={styles.miniCalendarDayLabels}>
+              {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day, index) => (
+                <Text key={index} style={styles.miniCalendarDayLabel}>
+                  {t(`calendar.days_short.${day}`)}
+                </Text>
+              ))}
+            </View>
+            
             <View style={styles.miniCalendarGrid}>
               {miniCalendarData.map((dayData, i) => {
-                if (!dayData.isValidDay) {
-                  return <View key={i} style={styles.miniCalendarDay} />;
-                }
-                
                 // Determinar color del badge basado en el tipo de día de trabajo
                 let badgeColor = null;
                 let badgeText = '';
+                let timeText = '';
                 
                 if (dayData.workDay) {
+                  console.log('📅 Badge rendering for day', dayData.day, 'type:', dayData.workDay.type);
                   switch (dayData.workDay.type) {
                     case 'work':
                       badgeColor = '#10B981'; // Verde para días de trabajo
                       badgeText = 'W';
+                      // Mostrar horario si existe
+                      if (dayData.workDay.startTime && dayData.workDay.endTime) {
+                        timeText = `${dayData.workDay.startTime}\n${dayData.workDay.endTime}`;
+                        // Si hay turno partido, agregar segundo horario
+                        if (dayData.workDay.secondStartTime && dayData.workDay.secondEndTime) {
+                          timeText += `\n${dayData.workDay.secondStartTime}\n${dayData.workDay.secondEndTime}`;
+                        }
+                      }
                       break;
                     case 'free':
                       badgeColor = '#3B82F6'; // Azul para días libres
@@ -401,11 +465,17 @@ export default function NoLocationMapView({ onNavigate }: Props) {
                       badgeColor = '#EF4444'; // Rojo para enfermedad
                       badgeText = 'S';
                       break;
+                    default:
+                      console.log('⚠️ Unknown workDay type:', dayData.workDay.type);
+                      break;
                   }
                 }
                 
                 return (
-                  <View key={i} style={styles.miniCalendarDay}>
+                  <View key={i} style={[
+                    styles.miniCalendarDay,
+                    dayData.isToday && styles.miniCalendarDayToday
+                  ]}>
                     <Text style={[
                       styles.miniCalendarDayText, 
                       { 
@@ -416,8 +486,15 @@ export default function NoLocationMapView({ onNavigate }: Props) {
                       {dayData.day}
                     </Text>
                     {badgeColor && (
-                      <View style={[styles.miniCalendarBadge, { backgroundColor: badgeColor }]}>
-                        <Text style={styles.miniCalendarBadgeText}>{badgeText}</Text>
+                      <View style={{ alignItems: 'center' }}>
+                        <View style={[styles.miniCalendarBadge, { backgroundColor: badgeColor }]}>
+                          <Text style={styles.miniCalendarBadgeText}>{badgeText}</Text>
+                        </View>
+                        {timeText && (
+                          <Text style={styles.miniCalendarTimeText}>
+                            {timeText}
+                          </Text>
+                        )}
                       </View>
                     )}
                     {dayData.isToday && !badgeColor && (
@@ -436,6 +513,7 @@ export default function NoLocationMapView({ onNavigate }: Props) {
             </TouchableOpacity>
           </BlurView>
         </View>
+        </GestureDetector>
 
         {/* Ver Trabajos Button - Solo mostrar si hay trabajos */}
         {jobs.length > 0 && (
@@ -467,36 +545,8 @@ export default function NoLocationMapView({ onNavigate }: Props) {
           </Animated.View>
         )}
 
-        {/* Estadísticas Button */}
-        <Animated.View style={{ opacity: button2Opacity }}>
-          <TouchableOpacity
-            style={styles.statsButton}
-            onPress={() => onNavigate?.('reports')}
-            activeOpacity={0.8}
-            disabled={showJobCardsModal}
-          >
-          <LinearGradient
-            colors={['#1E3A8A', '#1E40AF', '#3B82F6']}
-            style={styles.statsButtonGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <View style={styles.statsButtonContent}>
-              <View style={styles.statsIcon}>
-                <IconSymbol size={24} name="chart.bar.fill" color="#FFFFFF" />
-              </View>
-              <View style={styles.statsTextContainer}>
-                <Text style={styles.statsButtonTitle}>Estadísticas</Text>
-                <Text style={styles.statsButtonSubtitle}>Ver reportes y métricas</Text>
-              </View>
-              <IconSymbol size={16} name="chevron.right" color="#FFFFFF" />
-            </View>
-          </LinearGradient>
-          </TouchableOpacity>
-        </Animated.View>
-
         {/* Chat IA Button */}
-        <Animated.View style={{ opacity: button3Opacity }}>
+        <Animated.View style={{ opacity: button2Opacity }}>
           <TouchableOpacity
             style={styles.chatIAButton}
             onPress={() => onNavigate?.('chatbot')}
@@ -522,7 +572,39 @@ export default function NoLocationMapView({ onNavigate }: Props) {
           </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
+
+
+        {/* Estadísticas Button */}
+        <Animated.View style={{ opacity: button3Opacity }}>
+          <TouchableOpacity
+            style={styles.statsButton}
+            onPress={() => onNavigate?.('reports')}
+            activeOpacity={0.8}
+            disabled={showJobCardsModal}
+          >
+          <LinearGradient
+            colors={['#1E3A8A', '#1E40AF', '#3B82F6']}
+            style={styles.statsButtonGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            
+            <View style={styles.statsButtonContent}>
+              <View style={styles.statsIcon}>
+                <IconSymbol size={24} name="chart.bar.fill" color="#FFFFFF" />
+              </View>
+              <View style={styles.statsTextContainer}>
+                <Text style={styles.statsButtonTitle}>Estadísticas</Text>
+                <Text style={styles.statsButtonSubtitle}>Ver reportes y métricas</Text>
+              </View>
+              <IconSymbol size={16} name="chevron.right" color="#FFFFFF" />
+            </View>
+          </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
+
+
 
       {/* Job Cards or Empty State */}
       {jobs.length === 0 ? (
@@ -735,7 +817,12 @@ const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   miniCalendarHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 12,
+  },
+  miniCalendarTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   miniCalendarTitle: {
@@ -743,19 +830,51 @@ const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
   },
-  miniCalendarGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-    paddingHorizontal: 4,
-  },
-  miniCalendarDay: {
+  miniCalendarArrow: {
     width: 32,
     height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 16,
+    backgroundColor: colors.primary + '10',
+  },
+  miniCalendarDayLabels: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    paddingHorizontal: 2,
+  },
+  miniCalendarDayLabel: {
+    width: '13.5%',
+    textAlign: 'center',
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    opacity: 0.7,
+  },
+  miniCalendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingHorizontal: 2,
+  },
+  miniCalendarDay: {
+    width: '13.5%',
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    borderRadius: 12,
     position: 'relative',
+    marginBottom: 6,
+    paddingTop: 4,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+  },
+  miniCalendarDayToday: {
+    backgroundColor: colors.primary + '15',
+    borderWidth: 1,
+    borderColor: colors.primary + '30',
   },
   miniCalendarDayText: {
     fontSize: 12,
@@ -769,18 +888,26 @@ const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     borderRadius: 2,
   },
   miniCalendarBadge: {
-    position: 'absolute',
-    bottom: 2,
-    width: 16,
-    height: 12,
-    borderRadius: 6,
+    width: 14,
+    height: 10,
+    borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 2,
   },
   miniCalendarBadgeText: {
     color: '#FFFFFF',
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: '700',
+  },
+  miniCalendarTimeText: {
+    fontSize: 6,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 1,
+    lineHeight: 7,
+    opacity: 0.8,
+    maxWidth: '100%',
   },
   miniCalendarButton: {
     backgroundColor: colors.primary + '20',

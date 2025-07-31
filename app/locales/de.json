@@ -307,6 +307,15 @@
     "title_filtered": "{{jobName}} - Kalender",
     "subtitle": "Arbeitstage und Statistiken",
     "subtitle_filtered": "Arbeitstage in {{jobName}}",
+    "days_short": {
+      "monday": "M",
+      "tuesday": "D", 
+      "wednesday": "M",
+      "thursday": "D",
+      "friday": "F",
+      "saturday": "S",
+      "sunday": "S"
+    },
     "filter_by_job": "Nach Arbeit filtern",
     "all_jobs": "Alle",
     "month_stats": "Monatsstatistiken",
@@ -786,7 +795,7 @@
         "description": "Präferenzen"
       },
       "chatbot": {
-        "title": "KI-Chatbot",
+        "title": "Analyze-Bot",
         "description": "Bilder mit künstlicher Intelligenz analysieren"
       },
       "subscription": {

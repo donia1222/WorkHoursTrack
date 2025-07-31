@@ -146,39 +146,51 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   header: {
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    overflow: 'hidden',
+  },
+  headerGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    paddingTop: 24,
   },
   backButton: {
+    position: 'absolute',
+    left: 24,
     padding: 8,
-    marginLeft: -8,
   },
   headerText: {
-    flex: 1,
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
+    marginBottom: 2,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 2,
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 4,
     color: colors.text,
+    letterSpacing: -0.3,
+    textAlign: 'center',
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.textSecondary,
-  },
-  placeholder: {
-    width: 40,
+    fontWeight: '500',
+    letterSpacing: -0.1,
+    textAlign: 'center',
   },
   content: {
     flex: 1,
@@ -1100,34 +1112,6 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.placeholder} />
-          <View style={styles.headerText}>
-            <View style={styles.titleContainer}>
-              <IconSymbol size={26} name="calendar" color={colors.primary} />
-              <Text style={styles.headerTitle}>
-                {selectedJobId !== 'all' 
-                  ? t('calendar.title_filtered', { jobName: jobs.find(j => j.id === selectedJobId)?.name })
-                  : t('calendar.title')
-                }
-              </Text>
-            </View>
-            <Text style={styles.headerSubtitle}>
-              {selectedJobId !== 'all' 
-                ? t('calendar.subtitle_filtered', { jobName: jobs.find(j => j.id === selectedJobId)?.name })
-                : t('calendar.subtitle')
-              }
-            </Text>
-          </View>
-          <TouchableOpacity 
-            onPress={handleBack}
-            style={styles.backButton}
-          >
-            <IconSymbol size={24} name="xmark" color={colors.primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {jobs.length === 0 ? (

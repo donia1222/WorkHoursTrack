@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
+  SafeAreaView,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,14 +25,65 @@ import ImagePreview from '@/app/components/ImagePreview';
 import WelcomeMessage from '@/app/components/WelcomeMessage';
 import { useLanguage } from '@/app/contexts/LanguageContext';
 import { useTheme, ThemeColors } from '@/app/contexts/ThemeContext';
-import { useNavigation } from '@/app/context/NavigationContext';
+import { useNavigation, useBackNavigation } from '@/app/context/NavigationContext';
 import { useSubscription } from '@/app/hooks/useSubscription';
+import { useHapticFeedback } from '@/app/hooks/useHapticFeedback';
 import { JobService } from '@/app/services/JobService';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  header: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    overflow: 'hidden',
+  },
+  headerGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    paddingTop: 24,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 24,
+    padding: 8,
+  },
+  headerText: {
+    alignItems: 'center',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 2,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 4,
+    color: colors.text,
+    letterSpacing: -0.3,
+    textAlign: 'center',
+  },
+  headerSubtitle: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    fontWeight: '500',
+    letterSpacing: -0.1,
+    textAlign: 'center',
   },
   messagesContainer: {
     flex: 1,
@@ -61,9 +113,14 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginRight: 12,
     marginBottom: 4,
     borderRadius: 25,
-    backgroundColor: isDark ? colors.primary + '20' : '#F0F8FF',
-    borderWidth: 1,
+    backgroundColor: isDark ? colors.primary + '30' : colors.primary + '15',
+    borderWidth: 2,
     borderColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   textInput: {
     flex: 1,
@@ -276,6 +333,8 @@ export default function ChatbotScreen() {
   const { colors, isDark } = useTheme(); // Obtener colores del tema actual
   const { exportToCalendar, navigateTo } = useNavigation(); // Obtener función de exportación
   const { isSubscribed } = useSubscription(); // Obtener estado de suscripción
+  const { handleBack } = useBackNavigation(); // Hook de navegación hacia atrás
+  const { triggerHaptic } = useHapticFeedback(); // Hook de feedback háptico
   const styles = getStyles(colors, isDark); // Generar estilos dinámicos
   
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
@@ -685,11 +744,15 @@ export default function ChatbotScreen() {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 140 : 0}
-    >
+    <SafeAreaView style={styles.container}>
+      
+    
+
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 140 : 0}
+      >
       <FlatList
         ref={flatListRef}
         data={messages.length === 0 ? [{ id: -1, text: '', isUser: false, timestamp: new Date() }] : messages}
@@ -947,7 +1010,8 @@ export default function ChatbotScreen() {
           </BlurView>
         </View>
       </Modal>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

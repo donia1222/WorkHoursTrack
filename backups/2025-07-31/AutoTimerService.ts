@@ -3,7 +3,6 @@ import { JobService } from './JobService';
 import GeofenceService, { GeofenceEvent } from './GeofenceService';
 import NotificationService from './NotificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppState, AppStateStatus } from 'react-native';
 
 export type AutoTimerState = 
   | 'inactive'     // Not monitoring or no jobs nearby
@@ -48,7 +47,6 @@ class AutoTimerService {
     this.geofenceService = GeofenceService.getInstance();
     this.notificationService = NotificationService.getInstance();
     this.bindGeofenceEvents();
-    this.setupAppStateListener();
   }
 
   static getInstance(): AutoTimerService {
@@ -151,25 +149,6 @@ class AutoTimerService {
   }
 
   /**
-   * Setup AppState listener to handle app coming back to foreground
-   */
-  private setupAppStateListener(): void {
-    let lastAppState = AppState.currentState;
-    
-    AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
-      console.log('📱 AutoTimer: AppState changed from', lastAppState, 'to:', nextAppState);
-      
-      // Check when app comes back to foreground
-      if ((lastAppState === 'background' || lastAppState === 'inactive') && nextAppState === 'active') {
-        console.log('📲 App became active - checking pending AutoTimer actions');
-        this.checkPendingActions();
-      }
-      
-      lastAppState = nextAppState;
-    });
-  }
-
-  /**
    * Handle geofence enter/exit events
    */
   private async handleGeofenceEvent(event: GeofenceEvent): Promise<void> {
@@ -222,12 +201,12 @@ class AutoTimerService {
       return;
     }
 
-    // Check if we're already in entering state for this job
-    if (this.currentState === 'entering' && this.currentJobId === job.id) {
-      console.log(`⚠️ Already in entering state for ${job.name}, ignoring duplicate event`);
-      return;
-    }
-
+    // TESTING: Start timer immediately without delay
+    console.log(`🚀 TESTING MODE: Starting timer immediately for ${job.name}`);
+    this.currentJobId = job.id;
+    await this.startAutoTimer(job);
+    
+    /* ORIGINAL CODE WITH COUNTDOWN - DISABLED FOR TESTING
     // Start delayed start action
     const delayMinutes = job.autoTimer?.delayStart || 2;
     const delaySeconds = delayMinutes * 60;
@@ -235,19 +214,17 @@ class AutoTimerService {
     this.currentState = 'entering';
     this.currentJobId = job.id;
     
-    // Cancel any existing notifications for this job before scheduling new ones
-    await this.notificationService.cancelScheduledNotifications(job.name, ['timer_started', 'timer_stopped']);
-    
-    // Schedule notifications for the future
+    // Schedule notifications for the future instead of sending immediately
     const notificationTime = new Date(Date.now() + delaySeconds * 1000);
     
-    // Schedule "timer started" notification for when it actually starts
-    console.log(`📅 Scheduling timer start notification for ${job.name}`);
-    console.log(`   Current time: ${new Date().toLocaleTimeString()}`);
-    console.log(`   Scheduled for: ${notificationTime.toLocaleTimeString()}`);
-    console.log(`   Delay: ${delaySeconds} seconds (${delayMinutes} minutes)`);
+    // No countdown notification needed - removed
     
-    await this.notificationService.scheduleNotificationForTime('timer_started', job.name, notificationTime);
+    // Schedule "timer started" notification for when it actually starts
+    const timerStartedId = `timer_started_${job.id}_${Date.now()}`;
+    if (!this.sentNotifications.has(timerStartedId)) {
+      await this.notificationService.scheduleNotificationForTime('timer_started', job.name, notificationTime);
+      this.sentNotifications.add(timerStartedId);
+    }
     
     // For short delays (< 5 seconds), use setTimeout
     // For longer delays, also set a backup check when app becomes active
@@ -274,6 +251,7 @@ class AutoTimerService {
 
     this.notifyStatusChange();
     console.log(`Will start timer for ${job.name} in ${delayMinutes} minutes`);
+    */
   }
 
   /**
@@ -297,6 +275,11 @@ class AutoTimerService {
       return;
     }
 
+    // TESTING: Stop timer immediately without delay
+    console.log(`🛑 TESTING MODE: Stopping timer immediately for ${job.name}`);
+    await this.stopAutoTimer(job);
+    
+    /* ORIGINAL CODE WITH COUNTDOWN - DISABLED FOR TESTING
     // Start delayed stop action
     const delayMinutes = job.autoTimer?.delayStop || 2;
     const delaySeconds = delayMinutes * 60;
@@ -304,15 +287,17 @@ class AutoTimerService {
     this.currentState = 'leaving';
     this.currentJobId = job.id;
     
-    // Cancel any existing notifications for this job before scheduling new ones
-    await this.notificationService.cancelScheduledNotifications(job.name, ['timer_started', 'timer_stopped']);
-    
     // Schedule notifications for timer stop
     const stopNotificationTime = new Date(Date.now() + delaySeconds * 1000);
     
+    // No countdown notification needed - removed
+    
     // Schedule "timer stopped" notification for when it actually stops
-    console.log(`📅 Scheduling timer stop notification for ${job.name} at ${stopNotificationTime.toLocaleTimeString()}`);
-    await this.notificationService.scheduleNotificationForTime('timer_stopped', job.name, stopNotificationTime);
+    const timerStoppedId = `timer_stopped_${job.id}_${Date.now()}`;
+    if (!this.sentNotifications.has(timerStoppedId)) {
+      await this.notificationService.scheduleNotificationForTime('timer_stopped', job.name, stopNotificationTime);
+      this.sentNotifications.add(timerStoppedId);
+    }
     
     const timeout = setTimeout(async () => {
       await this.stopAutoTimer(job);
@@ -336,6 +321,7 @@ class AutoTimerService {
 
     this.notifyStatusChange();
     console.log(`Will stop timer for ${job.name} in ${delayMinutes} minutes`);
+    */
   }
 
   /**
@@ -365,7 +351,11 @@ class AutoTimerService {
       this.currentState = 'active';
       this.currentDelayedAction = null;
       
-      // Notification is already scheduled when entering the geofence
+      // Send immediate notification for timer start (TESTING MODE)
+      if (job.autoTimer?.notifications !== false) {
+        await this.notificationService.sendNotification('timer_started', job.name);
+        console.log(`🔔 Sent immediate timer started notification for ${job.name}`);
+      }
       
       this.notifyStatusChange();
       console.log(`✅ Auto-started timer for ${job.name}`);
@@ -406,7 +396,11 @@ class AutoTimerService {
         await JobService.addWorkDay(workDay);
         await JobService.clearActiveSession();
         
-        // Notification is already scheduled when leaving the geofence
+        // Send immediate notification for timer stop (TESTING MODE)
+        if (job.autoTimer?.notifications !== false) {
+          await this.notificationService.sendNotification('timer_stopped', job.name);
+          console.log(`🔔 Sent immediate timer stopped notification for ${job.name}`);
+        }
         
         console.log(`✅ Auto-stopped timer for ${job.name}: ${elapsedHours}h recorded`);
       }
@@ -434,8 +428,7 @@ class AutoTimerService {
       // Cancel any scheduled notifications for this job
       const job = this.jobs.find(j => j.id === this.currentDelayedAction?.jobId);
       if (job) {
-        // Cancel specifically timer notifications
-        await this.notificationService.cancelScheduledNotifications(job.name, ['timer_started', 'timer_stopped']);
+        await this.notificationService.cancelScheduledNotifications(job.name);
         // Clean up pending action from storage
         await AsyncStorage.removeItem(`@auto_timer_pending_${job.id}`);
       }
@@ -476,13 +469,13 @@ class AutoTimerService {
         message = 'inactive';
         break;
       case 'entering':
-        message = `entering:${remainingTime}`;
+        message = `entering:${Math.ceil(remainingTime / 60)}`;
         break;
       case 'active':
         message = 'active';
         break;
       case 'leaving':
-        message = `leaving:${remainingTime}`;
+        message = `leaving:${Math.ceil(remainingTime / 60)}`;
         break;
       case 'manual':
         message = 'manual';
@@ -938,13 +931,11 @@ class AutoTimerService {
             console.log(`⏰ Found expired pending action for job ${action.jobId}, executing now`);
             
             const job = this.jobs.find(j => j.id === action.jobId);
-            if (job) {
-              // Execute the pending action based on the action type
-              if (action.action === 'start' && (this.currentState === 'entering' || this.currentState === 'inactive')) {
-                console.log(`⏰ Executing pending start action for ${job.name}`);
+            if (job && this.currentState === 'entering' && this.currentJobId === job.id) {
+              // Execute the pending action
+              if (action.action === 'start') {
                 await this.startAutoTimer(job);
-              } else if (action.action === 'stop' && this.currentState === 'leaving') {
-                console.log(`⏰ Executing pending stop action for ${job.name}`);
+              } else if (action.action === 'stop') {
                 await this.stopAutoTimer(job);
               }
             }

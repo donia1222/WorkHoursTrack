@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Modal } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import JobsManagementScreen from './JobsManagementScreen';
 import PreferencesScreen from './PreferencesScreen';
 import HelpSupportScreen from './HelpSupportScreen';
-import { useBackNavigation } from '../context/NavigationContext';
 import { Job } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import JobFormModal from '../components/JobFormModal';
@@ -38,39 +37,51 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   header: {
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    overflow: 'hidden',
+  },
+  headerGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    paddingTop: 24,
   },
   backButton: {
+    position: 'absolute',
+    left: 24,
     padding: 8,
-    marginLeft: -8,
   },
   headerText: {
-    flex: 1,
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
+    marginBottom: 2,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 2,
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 4,
     color: colors.text,
+    letterSpacing: -0.3,
+    textAlign: 'center',
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.textSecondary,
-  },
-  placeholder: {
-    width: 40,
+    fontWeight: '500',
+    letterSpacing: -0.1,
+    textAlign: 'center',
   },
   content: {
     flex: 1,
@@ -209,7 +220,6 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [selectedEditType, setSelectedEditType] = useState<'schedule' | 'location' | 'financial' | 'billing'>('schedule');
   const [editingJob, setEditingJob] = useState<Job | null>(null);
-  const { handleBack } = useBackNavigation();
   
   // Auto Backup State
   const [autoBackupEnabled, setAutoBackupEnabled] = useState(false);
@@ -226,6 +236,8 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
       onNavigationHandled?.();
     }
   }, [navigationOptions, onNavigationHandled]);
+
+  // No longer need to control header visibility for modal screens
 
   // Check for auto backup when Settings screen mounts
   React.useEffect(() => {
@@ -306,60 +318,12 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
     }
   };
 
-  if (showJobsManagement) {
-    return (
-      <JobsManagementScreen 
-        onClose={() => {
-          setShowJobsManagement(false);
-          setOpenAddJobModal(false);
-        }} 
-        openAddModal={openAddJobModal}
-        editJob={navigationOptions?.editJob}
-        initialTab={navigationOptions?.initialTab}
-      />
-    );
-  }
-
-  if (showPreferences) {
-    return (
-      <PreferencesScreen 
-        onClose={() => setShowPreferences(false)} 
-        onNavigateToSubscription={() => {
-          setShowPreferences(false);
-          onNavigate('subscription');
-        }}
-      />
-    );
-  }
-
-  if (showHelpSupport) {
-    return (
-      <HelpSupportScreen onClose={() => setShowHelpSupport(false)} />
-    );
-  }
+  // Don't render inline anymore - use modals instead
 
   const styles = getStyles(colors, isDark);
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.placeholder} />
-          <View style={styles.headerText}>
-            <View style={styles.titleContainer}>
-              <IconSymbol size={26} name="gear" color={colors.primary} />
-              <Text style={styles.headerTitle}>{t('settings.title')}</Text>
-            </View>
-            <Text style={styles.headerSubtitle}>{t('settings.subtitle')}</Text>
-          </View>
-          <TouchableOpacity 
-            onPress={handleBack}
-            style={styles.backButton}
-          >
-            <IconSymbol size={24} name="xmark" color={colors.primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Jobs Management Section */}
@@ -560,9 +524,31 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
             style={styles.settingItem}
             onPress={async () => {
               try {
-                await DataExportService.exportAllData();
+                console.log('🚀 Starting backup process...');
+                
+                // Create a backup first
+                console.log('📦 Creating backup...');
+                await AutoBackupService.createBackupNow();
+                console.log('✅ Backup created successfully');
+                
+                // Get available backups and download the most recent one
+                console.log('📋 Getting available backups...');
+                const backups = await AutoBackupService.getAvailableBackups();
+                console.log('🔍 Backups array length:', backups.length);
+                console.log('🔍 Backups array:', JSON.stringify(backups, null, 2));
+                
+                if (backups.length > 0) {
+                  const firstBackup = backups[0];
+                  console.log('🔍 First backup object type:', typeof firstBackup);
+                  console.log('🔍 First backup object:', JSON.stringify(firstBackup, null, 2));
+                  console.log('🔍 About to download backup with filePath:', firstBackup.filePath);
+                  await AutoBackupService.downloadBackup(firstBackup);
+                } else {
+                  console.error('No backup files found after creation');
+                }
               } catch (error) {
                 console.error('Error exporting data:', error);
+      
               }
             }}
           >
@@ -669,12 +655,79 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
         }}
         onDownloadBackup={async (backup) => {
           try {
-            await AutoBackupService.downloadBackup(backup.fileName);
+            await AutoBackupService.downloadBackup(backup);
           } catch (error) {
             console.error('Error downloading backup:', error);
           }
         }}
+        onRefreshBackups={async () => {
+          try {
+            await loadAutoBackupConfig();
+            // Also create new backup if auto backup is enabled
+            if (autoBackupEnabled) {
+              await AutoBackupService.createBackupNow();
+              await loadAutoBackupConfig(); // Reload to show the new backup
+            }
+          } catch (error) {
+            console.error('Error refreshing backups:', error);
+          }
+        }}
+        onDeleteBackup={async (backup) => {
+          try {
+            await AutoBackupService.deleteBackup(backup);
+            await loadAutoBackupConfig(); // Reload to update the list
+          } catch (error) {
+            console.error('Error deleting backup:', error);
+          }
+        }}
       />
+
+      {/* Preferences Modal */}
+      <Modal
+        visible={showPreferences}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => setShowPreferences(false)}
+      >
+        <PreferencesScreen 
+          onClose={() => setShowPreferences(false)} 
+          onNavigateToSubscription={() => {
+            setShowPreferences(false);
+            onNavigate('subscription');
+          }}
+        />
+      </Modal>
+
+      {/* Jobs Management Modal */}
+      <Modal
+        visible={showJobsManagement}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => {
+          setShowJobsManagement(false);
+          setOpenAddJobModal(false);
+        }}
+      >
+        <JobsManagementScreen 
+          onClose={() => {
+            setShowJobsManagement(false);
+            setOpenAddJobModal(false);
+          }} 
+          openAddModal={openAddJobModal}
+          editJob={navigationOptions?.editJob}
+          initialTab={navigationOptions?.initialTab}
+        />
+      </Modal>
+
+      {/* Help Support Modal */}
+      <Modal
+        visible={showHelpSupport}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => setShowHelpSupport(false)}
+      >
+        <HelpSupportScreen onClose={() => setShowHelpSupport(false)} />
+      </Modal>
 
     </SafeAreaView>
   );

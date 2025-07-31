@@ -75,6 +75,20 @@ export class AutoBackupService {
   }
 
   /**
+   * Update auto backup configuration
+   */
+  static async updateConfig(updates: Partial<AutoBackupConfig>): Promise<void> {
+    try {
+      const currentConfig = await this.getConfig();
+      const updatedConfig = { ...currentConfig, ...updates };
+      await this.saveConfig(updatedConfig);
+    } catch (error) {
+      console.error('❌ Error updating auto backup config:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Check if auto backup directory exists, create if not
    */
   private static async ensureBackupDirectory(): Promise<string> {
@@ -221,13 +235,18 @@ export class AutoBackupService {
   static async getAvailableBackups(): Promise<BackupFile[]> {
     try {
       const backupDir = await this.ensureBackupDirectory();
+      console.log('📁 Backup directory:', backupDir);
+      
       const dirContents = await FileSystem.readDirectoryAsync(backupDir);
+      console.log('📂 Directory contents:', dirContents);
       
       const backupFiles: BackupFile[] = [];
       
       for (const fileName of dirContents) {
         if (fileName.endsWith('.json') && fileName.startsWith('Auto_')) {
           const filePath = `${backupDir}${fileName}`;
+          console.log('🔍 Processing backup file:', fileName, 'at path:', filePath);
+          
           const fileInfo = await FileSystem.getInfoAsync(filePath);
           
           if (fileInfo.exists && !fileInfo.isDirectory) {
@@ -236,16 +255,21 @@ export class AutoBackupService {
             if (fileName.includes('Weekly')) type = 'weekly';
             else if (fileName.includes('Monthly')) type = 'monthly';
             
-            backupFiles.push({
+            const backupFile = {
               fileName,
               filePath,
               createdDate: new Date(fileInfo.modificationTime! * 1000).toISOString(),
               size: fileInfo.size || 0,
               type,
-            });
+            };
+            
+            console.log('✅ Added backup file:', backupFile);
+            backupFiles.push(backupFile);
           }
         }
       }
+      
+      console.log('📊 Total backup files found:', backupFiles.length);
       
       // Sort by creation date (newest first)
       backupFiles.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
@@ -263,6 +287,17 @@ export class AutoBackupService {
    */
   static async downloadBackup(backupFile: BackupFile): Promise<void> {
     try {
+      // Validate file path
+      if (!backupFile.filePath) {
+        throw new Error('File path is empty or undefined');
+      }
+
+      // Check if file exists
+      const fileInfo = await FileSystem.getInfoAsync(backupFile.filePath);
+      if (!fileInfo.exists) {
+        throw new Error(`Backup file does not exist: ${backupFile.fileName}`);
+      }
+
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(backupFile.filePath, {
           mimeType: 'application/json',
@@ -322,6 +357,28 @@ export class AutoBackupService {
   }
 
   /**
+   * Delete a specific backup file
+   */
+  static async deleteBackup(backupFile: BackupFile): Promise<void> {
+    try {
+      if (!backupFile.filePath) {
+        throw new Error('File path is empty or undefined');
+      }
+
+      const fileInfo = await FileSystem.getInfoAsync(backupFile.filePath);
+      if (fileInfo.exists) {
+        await FileSystem.deleteAsync(backupFile.filePath);
+        console.log(`🗑️ Backup deleted: ${backupFile.fileName}`);
+      } else {
+        console.log(`⚠️ Backup file not found: ${backupFile.fileName}`);
+      }
+    } catch (error) {
+      console.error('❌ Error deleting backup:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Delete all auto backups
    */
   static async deleteAllAutoBackups(): Promise<void> {
@@ -353,6 +410,52 @@ export class AutoBackupService {
       }
     } catch (error) {
       console.error('❌ Error in backup check:', error);
+    }
+  }
+
+  /**
+   * Force create a backup for testing purposes
+   */
+  static async createBackupNow(): Promise<void> {
+    try {
+      console.log('🔄 Force creating backup now...');
+
+      // Get all data from storage
+      const jobs = await JobService.getJobs();
+      const workDays = await JobService.getWorkDays();
+
+      // Create backup data structure
+      const backupData: BackupData = {
+        exportDate: new Date().toISOString(),
+        appVersion: this.APP_VERSION,
+        backupType: 'auto',
+        frequency: 'daily',
+        totalJobs: jobs.length,
+        totalWorkDays: workDays.length,
+        jobs,
+        workDays,
+      };
+
+      // Generate filename
+      const fileName = this.generateFileName('daily');
+      const backupDir = await this.ensureBackupDirectory();
+      const filePath = `${backupDir}${fileName}`;
+
+      console.log('💾 Creating backup file at:', filePath);
+
+      // Write JSON to file
+      await FileSystem.writeAsStringAsync(
+        filePath,
+        JSON.stringify(backupData, null, 2),
+        { encoding: FileSystem.EncodingType.UTF8 }
+      );
+
+      console.log(`✅ Test backup created successfully: ${fileName}`);
+      console.log(`📊 Backed up ${jobs.length} jobs and ${workDays.length} work days`);
+      
+    } catch (error) {
+      console.error('❌ Error creating test backup:', error);
+      throw error;
     }
   }
 }

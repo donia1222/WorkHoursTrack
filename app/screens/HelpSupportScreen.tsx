@@ -13,6 +13,8 @@ import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BlurView } from 'expo-blur';
+import Header from '../components/Header';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 interface HelpSupportScreenProps {
   onClose?: () => void;
@@ -230,6 +232,16 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   privacyIconBg: {
     backgroundColor: 'rgba(0, 122, 255, 0.15)',
   },
+  screenTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  screenTitleText: {
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+  },
 });
 
 export default function HelpSupportScreen({ onClose }: HelpSupportScreenProps) {
@@ -237,6 +249,7 @@ export default function HelpSupportScreen({ onClose }: HelpSupportScreenProps) {
   const { t } = useLanguage();
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'general' | 'time' | 'billing' | 'technical'>('all');
+  const [isClosing, setIsClosing] = useState(false);
   
   const styles = getStyles(colors, isDark);
 
@@ -325,26 +338,26 @@ export default function HelpSupportScreen({ onClose }: HelpSupportScreenProps) {
     }
   };
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose?.();
+    }, 100);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.placeholder} />
-          <View style={styles.headerText}>
-            <View style={styles.titleContainer}>
-              <IconSymbol size={26} name="questionmark.circle" color={colors.primary} />
-              <Text style={styles.headerTitle}>{t('help_support.title')}</Text>
-            </View>
-            <Text style={styles.headerSubtitle}>{t('help_support.subtitle')}</Text>
+      <Header 
+        title={
+          <View style={styles.screenTitle}>
+            <IconSymbol size={20} name="questionmark.circle" color={colors.primary} />
+            <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('help_support.title')}</Text>
           </View>
-          <TouchableOpacity 
-            onPress={onClose}
-            style={styles.closeButton}
-          >
-            <IconSymbol size={24} name="xmark" color={colors.primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
+        }
+        onProfilePress={() => {}}
+        showCloseButton={true}
+        onClosePress={handleClose}
+      />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* FAQ Categories */}
@@ -511,6 +524,8 @@ export default function HelpSupportScreen({ onClose }: HelpSupportScreenProps) {
           </View>
         </BlurView>
       </ScrollView>
+
+      <LoadingOverlay visible={isClosing} />
     </SafeAreaView>
   );
 }

@@ -302,6 +302,15 @@
     "title_filtered": "{{jobName}} - Calendar",
     "subtitle": "Work days and statistics",
     "subtitle_filtered": "Work days in {{jobName}}",
+    "days_short": {
+      "monday": "M",
+      "tuesday": "T", 
+      "wednesday": "W",
+      "thursday": "T",
+      "friday": "F",
+      "saturday": "S",
+      "sunday": "S"
+    },
     "filter_by_job": "Filter by job",
     "all_jobs": "All",
     "month_stats": "Month statistics",
@@ -915,7 +924,7 @@
         "description": "Preferences"
       },
       "chatbot": {
-        "title": "AI Chatbot",
+        "title": "Analyze-Bot",
         "description": "Analyze images with artificial intelligence"
       },
       "subscription": {
@@ -990,6 +999,8 @@
     }
   },
   "chatbot": {
+    "title": "Analyze-Bot",
+    "subtitle": "Analyze images with artificial intelligence",
     "welcome_message": "Hello! I'm your assistant specialized in work plan analysis. I can:\n\n📅 Analyze images and PDF documents of work schedules\n🔍 Extract work days, schedules and shifts\n🏖️ Identify free days and vacations\n👥 Detect multiple people and ask whose data to extract\n🧠 Remember the context of our conversation\n📊 Organize information clearly\n\n📸 Send a photo or 📄 PDF document of your work plan.\n💡 Type \"reset\" to start over.",
     "welcome_title": "Work Plan AI Assistant",
     "welcome_subtitle": "Hello! I'm your specialized assistant for work schedule analysis. I help you extract and organize information from your work plans.",
@@ -1038,6 +1049,8 @@
     "pdf_document": "PDF document",
     "cancel": "Cancel",
     "error_processing_request": "Sorry, there was an error processing your request. Please try again.",
+    "selected_image": "Selected image",
+    "image_load_error": "Error loading image",
     "export_calendar": {
       "export_button": "Export to Calendar",
       "modal_title": "Export to Calendar",

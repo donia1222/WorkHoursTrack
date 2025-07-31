@@ -24,6 +24,8 @@ interface AutoBackupModalProps {
   lastBackupDate: string | null;
   onConfigChange: (enabled: boolean, frequency: BackupFrequency) => void;
   onDownloadBackup: (backup: any) => void;
+  onRefreshBackups?: () => void;
+  onDeleteBackup?: (backup: any) => void;
 }
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
@@ -163,6 +165,8 @@ export default function AutoBackupModal({
   lastBackupDate,
   onConfigChange,
   onDownloadBackup,
+  onRefreshBackups,
+  onDeleteBackup,
 }: AutoBackupModalProps) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
@@ -247,21 +251,28 @@ export default function AutoBackupModal({
               </View>
             )}
 
-            {/* Status */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t('auto_backup.status')}</Text>
-              <View style={styles.statusContainer}>
-                <Text style={styles.statusText}>
-                  {lastBackupDate
-                    ? t('auto_backup.last_backup', { date: formatBackupDate(lastBackupDate) })
-                    : t('auto_backup.no_backups')}
-                </Text>
-              </View>
-            </View>
-
             {/* Available Backups */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t('auto_backup.available_backups')}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <Text style={styles.sectionTitle}>{t('auto_backup.available_backups')}</Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderRadius: 8,
+                    padding: 8,
+                    borderWidth: 1,
+                    borderColor: colors.separator,
+                  }}
+                  onPress={() => {
+                    // Add onRefreshBackups prop to handle this
+                    if (onRefreshBackups) {
+                      onRefreshBackups();
+                    }
+                  }}
+                >
+                  <IconSymbol size={16} name="arrow.clockwise" color={colors.primary} />
+                </TouchableOpacity>
+              </View>
               {availableBackups.length > 0 ? (
                 <View style={styles.backupList}>
                   {availableBackups.map((backup, index) => (
@@ -269,15 +280,27 @@ export default function AutoBackupModal({
                       <View style={styles.backupInfo}>
                         <Text style={styles.backupName}>{backup.fileName}</Text>
                         <Text style={styles.backupDate}>
-                          {formatBackupDate(backup.createdAt)}
+                          {formatBackupDate(backup.createdDate)}
                         </Text>
                       </View>
-                      <TouchableOpacity
-                        style={styles.downloadButton}
-                        onPress={() => onDownloadBackup(backup)}
-                      >
-                        <IconSymbol size={20} name="arrow.down.circle" color={colors.primary} />
-                      </TouchableOpacity>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <TouchableOpacity
+                          style={styles.downloadButton}
+                          onPress={() => onDownloadBackup(backup)}
+                        >
+                          <IconSymbol size={20} name="arrow.down.circle" color={colors.primary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.downloadButton, { marginLeft: 4 }]}
+                          onPress={() => {
+                            if (onDeleteBackup) {
+                              onDeleteBackup(backup);
+                            }
+                          }}
+                        >
+                          <IconSymbol size={20} name="trash" color={colors.error || '#FF3B30'} />
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   ))}
                 </View>

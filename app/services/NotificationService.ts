@@ -12,7 +12,7 @@ Notifications.setNotificationHandler({
     
     const notificationType = notification.request.content.data?.type;
     
-    // For auto-timer notifications, always show regardless of app state
+    // For auto-timer notifications, always show when triggered
     if (notificationType && notificationType.startsWith('timer_')) {
       console.log('🔔 Auto-timer notification - showing with high priority');
       return {
@@ -124,10 +124,49 @@ class NotificationService {
       // Load saved settings
       await this.loadSettings();
       
+      // Create notification channels for Android
+      if (Platform.OS === 'android') {
+        await this.createNotificationChannels();
+      }
+      
       const success = await this.requestPermissions();
       console.log('🔧 Initialization complete. Success:', success);
     } catch (error) {
       console.error('Error initializing notification service:', error);
+    }
+  }
+
+  /**
+   * Create notification channels for Android
+   */
+  private async createNotificationChannels(): Promise<void> {
+    try {
+      // Auto-timer channel with highest priority
+      await Notifications.setNotificationChannelAsync('auto-timer', {
+        name: 'Auto Timer',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        sound: true,
+        enableVibrate: true,
+        enableLights: true,
+        showBadge: true,
+        bypassDnd: true,
+      });
+
+      // Work reminders channel
+      await Notifications.setNotificationChannelAsync('work-reminders', {
+        name: 'Work Reminders',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        sound: true,
+        enableVibrate: true,
+        enableLights: true,
+        showBadge: true,
+      });
+
+      console.log('✅ Notification channels created');
+    } catch (error) {
+      console.error('Error creating notification channels:', error);
     }
   }
 
@@ -142,8 +181,9 @@ class NotificationService {
         console.log('📲 App going to background - scheduling pending work reminders');
         this.schedulePendingWorkReminders();
       } else if (nextAppState === 'active') {
-        console.log('📲 App became active - checking for missed auto-timer notifications');
-        this.checkMissedAutoTimerNotifications();
+        // Disabled to prevent duplicate notifications
+        // console.log('📲 App became active - checking for missed auto-timer notifications');
+        // this.checkMissedAutoTimerNotifications();
       }
     });
   }
@@ -337,14 +377,24 @@ class NotificationService {
       const { title, body } = this.getNotificationContent(type, jobName, extraData);
       const identifier = `${type}_${Date.now()}_scheduled`;
 
-      // Calculate seconds until notification should fire
+      // Calculate time difference for logging
       const now = Date.now();
       const scheduledTimeMs = scheduledTime.getTime();
-      const secondsUntilNotification = Math.max(1, Math.floor((scheduledTimeMs - now) / 1000));
+      const timeDiff = scheduledTimeMs - now;
+      
+      // If the scheduled time is in the past or too close (less than 1 second), schedule for 2 seconds from now
+      if (timeDiff < 1000) {
+        console.log(`⚠️ Scheduled time is too close or in the past, adjusting to 2 seconds from now`);
+        scheduledTime = new Date(now + 2000);
+      }
+      
+      const secondsUntilNotification = Math.floor((scheduledTime.getTime() - now) / 1000);
 
       console.log(`📅 Scheduling notification "${title}" for ${secondsUntilNotification} seconds from now`);
+      console.log(`📅 Using date trigger: ${scheduledTime.toISOString()}`);
 
-      await Notifications.scheduleNotificationAsync({
+      // Para notificaciones de auto-timer, usar alta prioridad y configuración especial
+      const notificationRequest: any = {
         identifier,
         content: {
           title,
@@ -361,9 +411,18 @@ class NotificationService {
           },
         },
         trigger: {
-          seconds: secondsUntilNotification,
-        },
-      });
+          type: 'date',
+          date: scheduledTime,
+        } as any,
+      };
+
+      // Add Android channel
+      if (Platform.OS === 'android') {
+        notificationRequest.content.channelId = 'auto-timer';
+      }
+
+
+      await Notifications.scheduleNotificationAsync(notificationRequest);
 
       console.log(`📅 Notification scheduled successfully: ${title} - ${body} (in ${secondsUntilNotification}s)`);
     } catch (error) {
@@ -403,7 +462,8 @@ class NotificationService {
 
       // Special configuration for auto-timer notifications to ensure background delivery
       const isAutoTimer = type.startsWith('timer_');
-      const notificationConfig = {
+      
+      const notificationConfig: any = {
         identifier,
         content: {
           title,
@@ -423,21 +483,27 @@ class NotificationService {
         },
       };
 
+      // Add Android channel for auto-timer
+      if (Platform.OS === 'android' && isAutoTimer) {
+        notificationConfig.content.channelId = 'auto-timer';
+      }
+
       await Notifications.scheduleNotificationAsync(notificationConfig);
 
+      // Disabled to prevent duplicate notifications
       // For auto-timer notifications, store them for potential re-delivery
-      if (isAutoTimer) {
-        this.pendingBackgroundNotifications.set(identifier, {
-          config: notificationConfig,
-          timestamp: Date.now(),
-          delivered: false,
-        });
-        
-        // Clean up old notifications after 5 minutes
-        setTimeout(() => {
-          this.pendingBackgroundNotifications.delete(identifier);
-        }, 5 * 60 * 1000);
-      }
+      // if (isAutoTimer) {
+      //   this.pendingBackgroundNotifications.set(identifier, {
+      //     config: notificationConfig,
+      //     timestamp: Date.now(),
+      //     delivered: false,
+      //   });
+      //   
+      //   // Clean up old notifications after 5 minutes
+      //   setTimeout(() => {
+      //     this.pendingBackgroundNotifications.delete(identifier);
+      //   }, 5 * 60 * 1000);
+      // }
 
       console.log(`📱 Notification sent: ${title} - ${body}`);
     } catch (error) {
