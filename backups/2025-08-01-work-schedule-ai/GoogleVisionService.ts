@@ -554,27 +554,12 @@ Usuario: ${message}`
     }
   }
 
-  // Función híbrida que usa análisis interactivo primero (solo español), luego Gemini Vision, y Vision API como fallback
+  // Función híbrida que usa Gemini Vision primero, y Vision API como fallback
   static async analyzeWorkPlan(imageUri: string, userMessage: string, language: SupportedLanguage = 'en'): Promise<string> {
     try {
       console.log('🔀 [HÍBRIDO] Iniciando análisis híbrido de plan de trabajo...');
       
-      // MÉTODO 1: Intentar con análisis interactivo de horarios (solo español por ahora)
-      if (language === 'es') {
-        console.log('🤖 [INTERACTIVO] Usando análisis interactivo de horarios...');
-        try {
-          const interactiveResult = await this.analyzeWorkPlanInteractive(imageUri, userMessage, language);
-          if (interactiveResult) {
-            console.log('✅ [INTERACTIVO] Análisis interactivo exitoso!');
-            return interactiveResult;
-          }
-        } catch (error) {
-          console.log('⚠️ [INTERACTIVO] Análisis interactivo falló, usando método normal...');
-          console.error('🔍 [INTERACTIVO] Error:', error);
-        }
-      }
-      
-      // MÉTODO 2: Intentar con Gemini Vision primero (más inteligente)
+      // MÉTODO 1: Intentar con Gemini Vision primero (más inteligente)
       console.log('👁️ [HÍBRIDO] Probando con Gemini Vision...');
       try {
         const geminiResult = await this.analyzeImageWithGeminiVision(imageUri, userMessage, language);
@@ -589,7 +574,7 @@ Usuario: ${message}`
         console.error('🔍 [HÍBRIDO] Error Gemini Vision:', error);
       }
 
-      // MÉTODO 3: Fallback a Vision API + Gemini texto
+      // MÉTODO 2: Fallback a Vision API + Gemini texto
       console.log('🔄 [HÍBRIDO] Usando Vision API + Gemini como fallback...');
       return await this.analyzeImageWithContext(imageUri, userMessage, language);
 
@@ -639,109 +624,6 @@ Si no hay texto legible, indícalo claramente.`;
     } catch (error) {
       console.error('Error en análisis combinado:', error);
       return VisionPrompts.getErrorMessage('visionAnalysis', language);
-    }
-  }
-
-  // Nueva función para análisis interactivo de horarios con detección de ambigüedades
-  static async analyzeWorkPlanInteractive(imageUri: string, userMessage: string, language: SupportedLanguage = 'es'): Promise<string> {
-    try {
-      console.log('🤖 [INTERACTIVO] Iniciando análisis interactivo de horarios...');
-      
-      if (!this.API_KEY) {
-        throw new Error(VisionPrompts.getErrorMessage('apiKey', language));
-      }
-
-      // Convertir imagen a base64
-      const base64Image = await FileSystem.readAsStringAsync(imageUri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-
-      // Crear prompt para detección de ambigüedades
-      const ambiguityPrompt = `${VisionPrompts.getPrompt('workScheduleAnalysisPrompt', language)}
-
-${VisionPrompts.getPrompt('ambiguityDetectionPrompt', language)}
-
-INSTRUCCIONES DE USUARIO: ${userMessage}
-
-PASO 1: Examina esta imagen de horario de trabajo y detecta si hay elementos confusos o ambiguos.
-PASO 2: Si hay ambigüedades, haz UNA pregunta específica usando el formato de clarificationQuestionFormat.
-PASO 3: Si todo está claro, procede con el análisis normal usando el formato exacto especificado en responseFormat.
-
-${VisionPrompts.getPrompt('responseFormat', language)}`;
-
-      const requestBody = {
-        contents: [
-          {
-            parts: [
-              {
-                text: ambiguityPrompt
-              },
-              {
-                inline_data: {
-                  mime_type: "image/jpeg",
-                  data: base64Image
-                }
-              }
-            ]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.3, // Menor temperatura para más consistencia
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 512, // Respuesta más corta para preguntas
-        }
-      };
-
-      console.log('📤 [INTERACTIVO] Enviando request para detección de ambigüedades...');
-      const response = await fetch(`${this.GEMINI_VISION_BASE_URL}?key=${this.API_KEY}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('❌ [INTERACTIVO] Error:', errorData);
-        throw new Error(`Error en análisis interactivo: ${response.status} - ${errorData.error?.message || 'Error desconocido'}`);
-      }
-
-      const data = await response.json();
-      console.log('📥 [INTERACTIVO] Response data:', JSON.stringify(data, null, 2));
-
-      if (data.candidates && data.candidates.length > 0) {
-        const candidate = data.candidates[0];
-        if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
-          const responseText = candidate.content.parts[0].text;
-          console.log('✅ [INTERACTIVO] Respuesta interactiva:', responseText);
-          
-          // Verificar si la respuesta contiene una pregunta de clarificación
-          if (responseText.includes('🤔') || responseText.toLowerCase().includes('necesito aclarar') || 
-              responseText.toLowerCase().includes('qué significa') || responseText.toLowerCase().includes('antes de continuar')) {
-            console.log('❓ [INTERACTIVO] Se detectó pregunta de clarificación');
-            return responseText;
-          }
-          
-          // Verificar si la respuesta tiene el formato correcto para el parser
-          if (responseText.includes('👤 **PERSONA:**') && responseText.includes('📅 **DÍAS DE TRABAJO:**')) {
-            console.log('✅ [INTERACTIVO] Respuesta con formato correcto detectada');
-            return responseText;
-          }
-          
-          // Si no es pregunta ni tiene formato correcto, hacer fallback
-          console.log('⚠️ [INTERACTIVO] Respuesta sin formato correcto, usando fallback');
-          throw new Error('Formato incorrecto, usando fallback');
-        }
-      }
-
-      console.log('⚠️ [INTERACTIVO] Respuesta vacía, usando fallback');
-      return VisionPrompts.getErrorMessage('visionAnalysis', language);
-
-    } catch (error) {
-      console.error('❌ [INTERACTIVO] Error en análisis interactivo:', error);
-      throw error; // Re-throw para que el método padre use fallback
     }
   }
 }

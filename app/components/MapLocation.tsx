@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MapView, { Marker, Circle } from 'react-native-maps';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, Modal, Dimensions, Switch } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, Modal, Dimensions, Switch, InteractionManager } from 'react-native';
+import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming, Easing, runOnJS } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -11,6 +12,7 @@ import { Job } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import JobFormModal from '../components/JobFormModal';
 import JobStatisticsModal from '../components/JobStatisticsModal';
+import JobSelectorModal from '../components/JobSelectorModal';
 import { useNavigation } from '../context/NavigationContext';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
@@ -208,7 +210,7 @@ const darkMapStyle = [
 ];
 
 type Props = {
-  location: {
+  location?: {
     latitude: number;
     longitude: number;
   };
@@ -218,6 +220,14 @@ type Props = {
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
+  mapContainer: {
+    flex: 1,
+    overflow: 'hidden',
+  },
+  mapWrapper: {
+    flex: 1,
+    position: 'relative',
+  },
   container: {
     flex: 1,
   },
@@ -291,9 +301,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     lineHeight: 22,
   },
   mainActionBadge: {
-    position: 'absolute',
-    top: -8,
-    right: 4,
+
     backgroundColor: colors.primary,
     borderRadius: 12,
     minWidth: 24,
@@ -565,7 +573,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     bottom: 0,
     borderRadius: 36,
   },
-  successIconBg: {
+  oldSuccessIconBg: {
     backgroundColor: 'rgba(52, 199, 89, 0.25)',
     borderWidth: 2,
     borderColor: 'rgba(52, 199, 89, 0.3)',
@@ -798,80 +806,91 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   miniCalendarContainer: {
     position: 'absolute',
-    top: -50,
-    left: 0,
-    right: 0,
+    top: 8,
+    left: 32,
+    right: 32,
     zIndex: 1000,
-    paddingHorizontal: 16,
-    paddingTop: 60,
-
-
   },
   miniCalendarCard: {
-    borderRadius: 20,
+    borderRadius: 24,
     overflow: 'hidden',
     elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+    shadowColor: isDark ? '#000' : '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: isDark ? 0.4 : 0.25,
+    shadowRadius: 16,
+    borderWidth: 1.5,
+    borderColor: isDark ? 'rgba(249, 249, 249, 0.27)' : 'rgba(22, 94, 182, 0.14)',
+    backgroundColor: isDark ? 'rgba(28, 28, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
   },
   miniCalendarBlur: {
-    padding: 16,
+    padding: 12,
+    backgroundColor: isDark ? 'rgba(28, 28, 30, 0.15)' : 'rgba(255, 255, 255, 0.92)',
   },
   miniCalendarHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-    gap: 8,
+    marginBottom: 8,
+    gap: 6,
+    paddingVertical: 2,
   },
   miniCalendarTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
     color: colors.text,
+    letterSpacing: -0.3,
+    textShadowColor: isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   miniCalendarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 12,
-    paddingHorizontal: 2,
+    marginBottom: 8,
+    paddingHorizontal: 1,
   },
   miniCalendarDay: {
     width: '13.5%',
-    height: 52,
+    height: 42,
     alignItems: 'center',
     justifyContent: 'flex-start',
     borderRadius: 12,
     position: 'relative',
     marginBottom: 6,
     paddingTop: 4,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.02)',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.05)',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)',
+    shadowColor: isDark ? '#000' : '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: isDark ? 0.3 : 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   miniCalendarDayText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: -0.2,
   },
   miniCalendarDot: {
     position: 'absolute',
     bottom: 2,
     width: 4,
     height: 4,
-    borderRadius: 2,
+    borderRadius: 3,
   },
   miniCalendarBadge: {
-    width: 14,
-    height: 10,
-    borderRadius: 5,
+    width: 12,
+    height: 8,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 1,
   },
   miniCalendarBadgeText: {
     color: '#FFFFFF',
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: '700',
   },
   miniCalendarTitleContainer: {
@@ -889,28 +908,36 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   miniCalendarDayLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
-    paddingHorizontal: 2,
+    marginBottom: 6,
+    paddingHorizontal: 1,
   },
   miniCalendarDayLabel: {
     width: '13.5%',
     textAlign: 'center',
     fontSize: 10,
-    fontWeight: '600',
-    color: colors.textTertiary,
-    opacity: 0.8,
+    fontWeight: '700',
+    color: isDark ? colors.textSecondary : colors.textTertiary,
+    opacity: 1,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   miniCalendarDayToday: {
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 122, 255, 0.1)',
-    borderWidth: 1,
-    borderColor: colors.primary + '40',
+    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.25)' : 'rgba(0, 122, 255, 0.2)',
+    borderWidth: 2,
+    borderColor: colors.primary + (isDark ? '80' : '60'),
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 6,
+    transform: [{ scale: 1.05 }],
   },
   miniCalendarTimeText: {
-    fontSize: 6,
+    fontSize: 5,
     color: colors.textSecondary,
     textAlign: 'center',
     marginTop: 1,
-    lineHeight: 7,
+    lineHeight: 6,
     opacity: 0.8,
   },
   miniCalendarButton: {
@@ -931,6 +958,184 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  noLocationBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  noLocationContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: 90,
+  },
+  noLocationButtons: {
+    gap: 10,
+    width: '100%',
+    maxWidth: 320,
+  },
+  noLocationButton: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.primary + '30',
+  },
+  noLocationButtonGradient: {
+    padding: 18,
+  },
+  noLocationButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  noLocationButtonText: {
+    flex: 1,
+  },
+  noLocationButtonTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  noLocationButtonSubtitle: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  // Modern button styles
+  modernButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginBottom: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    overflow: 'hidden',
+  },
+  modernButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+  },
+  modernIconContainer: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  modernIconBackground: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modernBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#FF6B35',
+    borderRadius: 12,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  modernBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  modernTextContainer: {
+    flex: 1,
+  },
+  modernButtonTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 1,
+  },
+  modernButtonSubtitle: {
+    fontSize: 11,
+    fontWeight: '500',
+    opacity: 0.7,
+  },
+  modernChevron: {
+    marginLeft: 8,
+  },
+  // Estilos para las secciones de configuración
+  sectionCard: {
+    marginVertical: 6,
+    borderRadius: 16,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  sectionCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+    color: colors.text,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    marginBottom: 4,
+  },
+  settingIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  successIconBg: {
+    backgroundColor: isDark ? 'rgba(52, 199, 89, 0.15)' : 'rgba(52, 199, 89, 0.1)',
+  },
+  warningIconBg: {
+    backgroundColor: isDark ? 'rgba(255, 149, 0, 0.15)' : 'rgba(255, 149, 0, 0.1)',
+  },
+  primaryIconBg: {
+    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.15)' : 'rgba(0, 122, 255, 0.1)',
+  },
+  settingContent: {
+    flex: 1,
+  },
+  settingTitle: {
+    fontSize: 14,
+    marginBottom: 1,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  settingDescription: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    opacity: 0.8,
+  },
 });
 
 
@@ -942,7 +1147,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showJobForm, setShowJobForm] = useState(false);
-  const [jobFormInitialTab, setJobFormInitialTab] = useState<'basic' | 'schedule' | 'financial' | 'billing' | 'auto'>('basic');
   
   // Animation values for modal
   const modalScale = useSharedValue(0);
@@ -964,6 +1168,12 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isAutoTimerMinimized, setIsAutoTimerMinimized] = useState(false);
   const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
+  
+  // Estados para los modales de configuración
+  const [showJobSelector, setShowJobSelector] = useState(false);
+  const [selectedEditType, setSelectedEditType] = useState<'schedule' | 'location' | 'financial' | 'billing'>('schedule');
+  const [currentUserLocation, setCurrentUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
+  const [forceMapUpdate, setForceMapUpdate] = useState(0);
   const [hasShownPrivacyNotice, setHasShownPrivacyNotice] = useState(false);
   const [miniCalendarData, setMiniCalendarData] = useState<any[]>([]);
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
@@ -973,6 +1183,45 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [shouldReopenJobCardsModal, setShouldReopenJobCardsModal] = useState(false);
   const mapRef = useRef<MapView>(null);
   
+  // Optimización para prevenir congelamiento durante zoom rápido
+  const onRegionChangeComplete = useCallback((region: any) => {
+    // Solo loguear cuando sea necesario para debugging
+    // console.log('Region changed:', region);
+  }, []);
+
+  // Prevenir congelamiento por eventos táctiles múltiples
+  const [isProcessingGesture, setIsProcessingGesture] = useState(false);
+  const gestureTimeoutRef = useRef<NodeJS.Timeout>();
+  const lastGestureTime = useRef<number>(0);
+  const gestureDebounceDelay = 50; // ms entre gestos para evitar sobrecarga
+  
+  const handleMapRegionChange = useCallback((region: any) => {
+    const now = Date.now();
+    
+    // Throttle para evitar demasiados eventos en poco tiempo
+    if (now - lastGestureTime.current < gestureDebounceDelay) {
+      return;
+    }
+    
+    lastGestureTime.current = now;
+    
+    // Usar InteractionManager para manejar las interacciones de manera segura
+    InteractionManager.runAfterInteractions(() => {
+      // El código aquí se ejecutará después de que terminen las animaciones
+    });
+  }, []);
+  
+  const handleMapRegionChangeComplete = useCallback((region: any) => {
+    // Pequeño delay para asegurar que todos los gestos terminaron
+    setTimeout(() => {
+      setIsProcessingGesture(false);
+      if (gestureTimeoutRef.current) {
+        clearTimeout(gestureTimeoutRef.current);
+        gestureTimeoutRef.current = undefined;
+      }
+    }, 100);
+  }, []);
+
   // AutoTimer position - fixed, no dragging
   
   // Animaciones para minimizar/maximizar
@@ -987,6 +1236,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
   // Animaciones para notificación de privacidad
   const privacyNoticeOpacity = useSharedValue(0);
   const privacyNoticeTranslateY = useSharedValue(-20);
+  
+  // Animaciones para botones de no location
+  const noLocationButtonsOpacity = useSharedValue(1);
+  const noLocationButtonsTranslateY = useSharedValue(0);
   
   const styles = getStyles(colors, isDark);
 
@@ -1016,6 +1269,15 @@ export default function MapLocation({ location, onNavigate }: Props) {
       opacity: privacyNoticeOpacity.value,
       transform: [
         { translateY: privacyNoticeTranslateY.value },
+      ],
+    };
+  });
+
+  const animatedNoLocationButtonsStyle = useAnimatedStyle(() => {
+    return {
+      opacity: noLocationButtonsOpacity.value,
+      transform: [
+        { translateY: noLocationButtonsTranslateY.value },
       ],
     };
   });
@@ -1066,6 +1328,19 @@ export default function MapLocation({ location, onNavigate }: Props) {
     const interval = setInterval(checkActiveTimer, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Animar botones cuando se abre/cierra el modal de trabajos
+  useEffect(() => {
+    if (showJobCardsModal) {
+      // Ocultar botones cuando se abre el modal
+      noLocationButtonsOpacity.value = withTiming(0, { duration: 300 });
+      noLocationButtonsTranslateY.value = withTiming(20, { duration: 300 });
+    } else {
+      // Mostrar botones cuando se cierra el modal
+      noLocationButtonsOpacity.value = withTiming(1, { duration: 400 });
+      noLocationButtonsTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+    }
+  }, [showJobCardsModal]);
 
   // Helper function to get month name from date
   const getMonthName = (date: Date) => {
@@ -1244,8 +1519,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
   // Update jobs in AutoTimer service when jobs change
   useEffect(() => {
     const updateAutoTimerJobs = async () => {
-      if (jobs.length > 0) {
-        console.log('🔄 MapLocation: Updating AutoTimer with jobs:', jobs.length);
+      const jobsWithAutoTimer = jobs.filter(job => job.autoTimer?.enabled);
+      
+      if (jobsWithAutoTimer.length > 0) {
+        console.log('🔄 MapLocation: Updating AutoTimer with jobs:', jobsWithAutoTimer.length, 'jobs with AutoTimer enabled');
         
         // If service is not enabled, start it; otherwise just update jobs
         if (!autoTimerService.isServiceEnabled()) {
@@ -1254,6 +1531,11 @@ export default function MapLocation({ location, onNavigate }: Props) {
         } else {
           console.log('🔄 MapLocation: Service already running, just updating jobs');
           await autoTimerService.updateJobs(jobs);
+        }
+      } else {
+        console.log('🔄 MapLocation: No jobs with AutoTimer enabled, stopping service if running');
+        if (autoTimerService.isServiceEnabled()) {
+          autoTimerService.stop();
         }
       }
     };
@@ -1357,6 +1639,48 @@ export default function MapLocation({ location, onNavigate }: Props) {
       }
     }
   }, [autoTimerStatus, jobs, showPrivacyNotice, shouldShowMiniCalendar]);
+
+  // Location tracking every 30 seconds when AutoTimer is active
+  useEffect(() => {
+    let locationInterval: NodeJS.Timeout;
+    
+    const isAutoTimerActive = autoTimerStatus?.state === 'active' || autoTimerStatus?.state === 'entering' || autoTimerStatus?.state === 'leaving';
+    
+    if (isAutoTimerActive) {
+      console.log('📍 MapLocation: Starting location tracking every 30s (AutoTimer active)');
+      
+      const updateLocation = async () => {
+        try {
+          const { status } = await Location.getForegroundPermissionsAsync();
+          if (status === 'granted') {
+            const locationResult = await Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.High,
+            });
+            setCurrentUserLocation({
+              latitude: locationResult.coords.latitude,
+              longitude: locationResult.coords.longitude,
+            });
+            console.log('📍 MapLocation: Location updated for AutoTimer tracking');
+          }
+        } catch (error) {
+          console.error('Error updating location for AutoTimer:', error);
+        }
+      };
+      
+      // Update immediately, then every 30 seconds
+      updateLocation();
+      locationInterval = setInterval(updateLocation, 30000);
+    } else {
+      console.log('📍 MapLocation: Stopping location tracking (AutoTimer inactive)');
+      setCurrentUserLocation(null);
+    }
+    
+    return () => {
+      if (locationInterval) {
+        clearInterval(locationInterval);
+      }
+    };
+  }, [autoTimerStatus?.state, jobs]);
 
   const calculateJobStatistics = async (job: Job): Promise<{ thisMonthHours: number; thisMonthDays: number }> => {
     try {
@@ -1555,8 +1879,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
     
     // Obtener el centro actual del mapa y el zoom
     const mapCenter = {
-      latitude: location.latitude,
-      longitude: location.longitude,
+      latitude: location?.latitude || 0,
+      longitude: location?.longitude || 0,
     };
     
     // Calcular la diferencia en grados
@@ -1726,7 +2050,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
         break;
       case 'edit-auto':
         closeModal();
-        setJobFormInitialTab('auto');
+        setSelectedEditType('location');
         handleEditJob(job);
         break;
     }
@@ -1757,6 +2081,55 @@ export default function MapLocation({ location, onNavigate }: Props) {
       }
     } catch (error) {
       console.error('Error saving job:', error);
+    }
+  };
+
+  // Función para manejar la selección de categoría de edición
+  const handleEditCategory = (category: 'schedule' | 'location' | 'financial' | 'billing') => {
+    setSelectedEditType(category);
+    setShowJobSelector(true);
+  };
+
+  // Función para manejar la selección de trabajo
+  const handleJobSelect = (job: Job) => {
+    setEditingJob(job);
+    setShowJobForm(true);
+    setShowJobSelector(false);
+  };
+
+  // Función para obtener información de edición
+  const getEditInfo = (type: string) => {
+    switch (type) {
+      case 'schedule':
+        return {
+          title: t('edit.schedule.title'),
+          subtitle: t('edit.schedule.subtitle'),
+          tab: 'schedule' as const,
+        };
+      case 'location':
+        return {
+          title: t('edit.autotimer.title'),
+          subtitle: t('edit.autotimer.subtitle'),
+          tab: 'auto' as const,
+        };
+      case 'financial':
+        return {
+          title:  t('edit.financial.title'),
+          subtitle: t('edit.financial.subtitle'),
+          tab: 'financial' as const,
+        };
+      case 'billing':
+        return {
+          title: t('edit.billing.title'),
+          subtitle: t('edit.billing.subtitle'),
+          tab: 'billing' as const,
+        };
+      default:
+        return {
+          title: t('edit.schedule.title'),
+          subtitle: t('edit.schedule.subtitle'),
+          tab: 'schedule' as const,
+        };
     }
   };
 
@@ -1868,7 +2241,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   }
                 })}>
                 <Animated.View style={[styles.miniCalendarContainer, animatedMiniCalendarStyle]}>
-                  <BlurView intensity={80} tint={isDark ? "dark" : "light"} style={styles.miniCalendarBlur}>
+                  <View style={styles.miniCalendarCard}>
+                    <BlurView intensity={100} tint={isDark ? "dark" : "light"} style={styles.miniCalendarBlur}>
                   <View style={styles.miniCalendarHeader}>
           
                     <View style={styles.miniCalendarTitleContainer}>
@@ -1940,8 +2314,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           <Text style={[
                             styles.miniCalendarDayText, 
                             { 
-                              color: dayData.isToday ? colors.primary : colors.textSecondary,
-                              fontWeight: dayData.isToday ? '700' : '500'
+                              color: dayData.isToday ? colors.primary : (isDark ? colors.text : colors.textSecondary),
+                              fontWeight: dayData.isToday ? '700' : '600'
                             }
                           ]}>
                             {dayData.day}
@@ -1966,30 +2340,77 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     })}
                   </View>
      
-                </BlurView>
+                    </BlurView>
+                  </View>
               </Animated.View>
               </GestureDetector>
             )}
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        initialRegion={{
-          latitude: location.latitude,
-          longitude: location.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }}
-        showsUserLocation={true}
-        customMapStyle={isDark ? darkMapStyle : undefined}
-      >
-        <Marker
-          coordinate={{
-            latitude: location.latitude,
-            longitude: location.longitude,
+      <View style={styles.mapWrapper}>
+      {autoTimerStatus?.state === 'active' || autoTimerStatus?.state === 'entering' || autoTimerStatus?.state === 'leaving' || autoTimerStatus?.state === 'cancelled' ? (
+        <MapView
+          key={`mapview-${autoTimerStatus?.state === 'active' ? 'with-location' : 'no-location'}`}
+          ref={mapRef}
+          style={styles.map}
+          initialRegion={{
+            latitude: location?.latitude || 40.7128,
+            longitude: location?.longitude || -74.0060,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
           }}
-          title={t('maps.you_are_here')}
-          pinColor={colors.primary}
-        />
+          showsUserLocation={autoTimerStatus?.state === 'active' || autoTimerStatus?.state === 'entering' || autoTimerStatus?.state === 'leaving'}
+          showsMyLocationButton={false}
+          customMapStyle={isDark ? darkMapStyle : undefined}
+          onRegionChangeComplete={handleMapRegionChangeComplete}
+          onRegionChange={handleMapRegionChange}
+        onTouchStart={() => {
+          // Solo procesar si no hay un gesto activo
+          if (!isProcessingGesture) {
+            setIsProcessingGesture(true);
+            
+            // Limpiar timeout anterior si existe
+            if (gestureTimeoutRef.current) {
+              clearTimeout(gestureTimeoutRef.current);
+            }
+            
+            // Timeout de seguridad más corto y más eficiente
+            gestureTimeoutRef.current = setTimeout(() => {
+              setIsProcessingGesture(false);
+              gestureTimeoutRef.current = undefined;
+            }, 1500); // Reducido de 3000 a 1500
+          }
+        }}
+        onTouchEnd={() => {
+          // No procesar inmediatamente para evitar conflictos con gestos múltiples
+          requestAnimationFrame(() => {
+            // Solo resetear si no hay más gestos activos
+            if (gestureTimeoutRef.current) {
+              clearTimeout(gestureTimeoutRef.current);
+              gestureTimeoutRef.current = setTimeout(() => {
+                setIsProcessingGesture(false);
+                gestureTimeoutRef.current = undefined;
+              }, 200);
+            }
+          });
+        }}
+        moveOnMarkerPress={false}
+        pitchEnabled={false}
+        rotateEnabled={false}
+        zoomEnabled={false}
+        scrollEnabled={true}
+        zoomTapEnabled={false}
+        loadingEnabled={true}
+        toolbarEnabled={false}
+      >
+        {location && (
+          <Marker
+            coordinate={{
+              latitude: location.latitude,
+              longitude: location.longitude,
+            }}
+            title={t('maps.you_are_here')}
+            pinColor={colors.primary}
+          />
+        )}
         
 
         {/* Geofence circles for auto timer jobs */}
@@ -2011,6 +2432,142 @@ export default function MapLocation({ location, onNavigate }: Props) {
         )}
         
       </MapView>
+      ) : (
+        <View style={styles.map}>
+          <LinearGradient
+            colors={isDark 
+              ? ['#2c3e50', '#34495e', '#4a6741', '#5d6d7e'] 
+              : ['#f8faff', '#e3f2fd', '#deecf5ff', 'rgba(255, 149, 0, 0.08)']
+            }
+            style={styles.noLocationBackground}
+          >
+            <View style={styles.noLocationContent}>
+              {/* Botón Ver Trabajos - solo si hay trabajos */}
+              {!showJobForm && jobs.length > 0 && (
+              <Animated.View style={[styles.noLocationButtons, animatedNoLocationButtonsStyle]}>
+                <TouchableOpacity
+                  style={[styles.modernButton, { backgroundColor: '#d7e9f7c5' }]}
+                  onPress={() => setShowJobCardsModal(true)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.modernButtonContent}>
+                    <View style={styles.modernIconContainer}>
+                      <View style={[styles.modernIconBackground, { backgroundColor: '#2195f366' }]}>
+                        <IconSymbol 
+                          size={21} 
+                          name="briefcase.fill" 
+                          color="#0D47A1"
+                        />
+                      </View>
+                      <View style={[styles.modernBadge, { backgroundColor: '#FF6B35' }]}>
+                        <Text style={styles.modernBadgeText}>{jobs.length}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.modernTextContainer}>
+                      <Text style={[styles.modernButtonTitle, { color: '#0D47A1' }]}>Ver trabajos</Text>
+                      <Text style={[styles.modernButtonSubtitle, { color: '#2196F3' }]}>Gestionar tus trabajos</Text>
+                    </View>
+                    <View style={styles.modernChevron}>
+                      <IconSymbol size={20} name="chevron.right" color="#0D47A1" />
+                    </View>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Configuración Laboral */}
+                <BlurView 
+                  intensity={98} 
+                  tint={isDark ? "dark" : "light"} 
+                  style={styles.sectionCard}
+                >
+                  <LinearGradient
+                    colors={isDark ? ['rgba(34, 197, 94, 0.37)', 'rgba(34, 197, 94, 0.04)'] : ['rgba(34, 197, 94, 0.08)', 'rgba(34, 197, 94, 0.02)']}
+                    style={styles.sectionCardGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  />
+                  <Text style={styles.sectionTitle}>{t('settings.work_config.title')}</Text>
+                  
+                  <TouchableOpacity 
+                    style={styles.settingItem}
+                    onPress={() => handleEditCategory('schedule')}
+                  >
+                    <View style={[styles.settingIcon, styles.successIconBg]}>
+                      <IconSymbol size={20} name="clock.fill" color={colors.success} />
+                    </View>
+                    <View style={styles.settingContent}>
+                      <Text style={styles.settingTitle}>{t('settings.work_config.schedules')}</Text>
+                      <Text style={styles.settingDescription}>{t('settings.work_config.schedules_desc')}</Text>
+                    </View>
+                    <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={styles.settingItem}
+                    onPress={() => handleEditCategory('location')}
+                  >
+                    <View style={[styles.settingIcon, styles.warningIconBg]}>
+                      <IconSymbol size={20} name="timer" color={colors.warning} />
+                    </View>
+                    <View style={styles.settingContent}>
+                      <Text style={styles.settingTitle}>{t('settings.work_config.autotimer')}</Text>
+                      <Text style={styles.settingDescription}>{t('settings.work_config.autotimer_desc')}</Text>
+                    </View>
+                    <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
+                  </TouchableOpacity>
+                </BlurView>
+
+                {/* Configuración Financiera - solo si hay trabajos */}
+                {jobs.length > 0 && (
+                <BlurView 
+                  intensity={98} 
+                  tint={isDark ? "dark" : "light"} 
+                  style={styles.sectionCard}
+                >
+                  <LinearGradient
+                    colors={isDark ? ['rgba(255, 149, 0, 0.03)', 'rgba(255, 149, 0, 0.01)'] : ['rgba(255, 149, 0, 0)', 'rgba(255, 149, 0, 0)']}
+                    style={styles.sectionCardGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  />
+                  <Text style={styles.sectionTitle}>{t('settings.financial_config.title')}</Text>
+                  
+                  <TouchableOpacity 
+                    style={styles.settingItem}
+                    onPress={() => handleEditCategory('financial')}
+                  >
+                    <View style={[styles.settingIcon, styles.successIconBg]}>
+                      <IconSymbol size={20} name="dollarsign.circle.fill" color={colors.success} />
+                    </View>
+                    <View style={styles.settingContent}>
+                      <Text style={styles.settingTitle}>{t('settings.financial_config.rates')}</Text>
+                      <Text style={styles.settingDescription}>{t('settings.financial_config.rates_desc')}</Text>
+                    </View>
+                    <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={styles.settingItem}
+                    onPress={() => handleEditCategory('billing')}
+                  >
+                    <View style={[styles.settingIcon, styles.primaryIconBg]}>
+                      <IconSymbol size={20} name="chart.bar.fill" color={colors.primary} />
+                    </View>
+                    <View style={styles.settingContent}>
+                      <Text style={styles.settingTitle}>{t('settings.financial_config.billing')}</Text>
+                      <Text style={styles.settingDescription}>{t('settings.financial_config.billing_desc')}</Text>
+                    </View>
+                    <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
+                  </TouchableOpacity>
+                </BlurView>
+                )}
+              </Animated.View>
+              )}
+            </View>
+          </LinearGradient>
+        </View>
+      )}
+      {/* Capa invisible para interceptar toques problemáticos - REMOVIDA para evitar conflictos */}
+      </View>
 
       {/* Privacy Notice for Auto Timer - Shows once when auto timer activates */}
       {showPrivacyNotice && (
@@ -2294,6 +2851,23 @@ export default function MapLocation({ location, onNavigate }: Props) {
                 </View>
               );
             })}
+            
+            {/* Texto explicativo del countdown */}
+            {autoTimerStatus && autoTimerStatus.remainingTime > 0 && (autoTimerStatus.state === 'entering' || autoTimerStatus.state === 'leaving') && (
+              <View style={{ paddingHorizontal: 16, paddingBottom: 8, paddingTop: 4 }}>
+                <Text style={{
+                  fontSize: 12,
+                  color: autoTimerStatus.state === 'entering' ? colors.warning : colors.error,
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  fontStyle: 'normal',
+                  lineHeight: 18,
+                  opacity: 0.9
+                }}>
+                  {t(`timer.auto_timer.countdown_${autoTimerStatus.state}`)}
+                </Text>
+              </View>
+            )}
               </BlurView>
             )}
           </Animated.View>
@@ -2301,7 +2875,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
 
       {/* Simple info overlay */}
-      {jobs.length === 0 && (
+      {jobs.length === 0 && !showJobForm && (
         <View style={styles.overlay}>
           <View style={styles.centeredContent}>
             <TouchableOpacity
@@ -2309,7 +2883,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
               onPress={handleAddJob}
             >
               <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.mainActionCardInner}>
-                <View style={[styles.mainActionIcon, styles.successIconBg]}>
+                <View style={[styles.mainActionIcon, styles.oldSuccessIconBg]}>
                   <IconSymbol size={36} name="plus" color={colors.success} />
                 </View>
                 <Text style={styles.mainActionTitle}>{t('maps.add_job')}</Text>
@@ -2322,8 +2896,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
         </View>
       )}
 
-      {/* Floating job cards button */}
-      {jobs.length > 0 && (
+      {/* Floating job cards button - only show when map is active */}
+      {jobs.length > 0 && (autoTimerStatus?.state === 'active' || autoTimerStatus?.state === 'entering' || autoTimerStatus?.state === 'leaving' || autoTimerStatus?.state === 'cancelled') && (
         <TouchableOpacity
           style={[styles.floatingAddButton, { bottom: 120 }]} // Moved up to avoid conflict
           onPress={() => setShowJobCardsModal(true)}
@@ -2466,16 +3040,24 @@ export default function MapLocation({ location, onNavigate }: Props) {
       </Modal>
 
 
+      {/* Job Selector Modal */}
+      <JobSelectorModal
+        visible={showJobSelector}
+        onClose={() => setShowJobSelector(false)}
+        onJobSelect={handleJobSelect}
+        title={getEditInfo(selectedEditType).title}
+        subtitle={getEditInfo(selectedEditType).subtitle}
+      />
+
       {/* Job Form Modal */}
       <JobFormModal
         visible={showJobForm}
         editingJob={editingJob}
-        initialTab={jobFormInitialTab}
+        initialTab={editingJob ? getEditInfo(selectedEditType).tab : 'basic'}
         onClose={() => {
           console.log('🟡 MapLocation: JobFormModal closing');
           setShowJobForm(false);
           setEditingJob(null);
-          setJobFormInitialTab('basic');
           // If the modal was open before editing, reopen it (but not if coming from settings button)
           if (wasJobCardsModalOpen && shouldReopenJobCardsModal) {
             setTimeout(() => {

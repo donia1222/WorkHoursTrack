@@ -5,8 +5,6 @@
     "create_first_job": "Crear Primer Trabajo",
     "cancel": "Cancelar",
     "close": "Cerrar",
-    "delete": "Eliminar",
-    "confirm_delete": "Confirmar eliminación",
     "loading": "Sincronizando...",
     "error": "Error"
   },
@@ -211,7 +209,6 @@
     "resume": "Continuar",
     "stop": "Finalizar",
     "overtime": "overtime",
-    "regular": "regular",
     "select_job_error": "Por favor selecciona un trabajo antes de comenzar",
     "start_timer_error": "No se pudo iniciar el timer",
     "session_saved": "Sesión guardada: {{hours}} horas",
@@ -224,12 +221,6 @@
     "session_added_successfully": "Tiempo agregado exitosamente al día",
     "session_saved_successfully": "Sesión de trabajo guardada exitosamente",
     "view_reports": "Ver Reportes",
-    "recent_sessions": "Sesiones Recientes",
-    "view_stats": "Ver Estadísticas", 
-    "no_recent_sessions": "Aún no has registrado ninguna sesión de tiempo con el timer",
-    "all_jobs": "Todos",
-    "confirm_delete_session": "¿Estás seguro de que quieres eliminar esta sesión?",
-    "delete_session_error": "No se pudo eliminar la sesión",
     "auto_timer": {
       "inactive": "Sin actividad automática",
       "entering": "Llegando al trabajo...",
@@ -254,7 +245,6 @@
       "disable_error": "No se pudo desactivar el timer automático",
       "background_notice": "El timer automático solo funciona con la app abierta en segundo plano. Si cierras la app completamente, dejará de contar por motivos de privacidad.",
       "privacy_notice": "Por motivos de privacidad, el auto timer no funciona con la app cerrada. Mantén la app en segundo plano para el funcionamiento correcto.",
-      "privacy_notice_short": "Mantén la app activa en segundo plano",
       "dismiss_notice": "Entendido",
       "dismiss_privacy_notice": "No mostrar más"
     }
@@ -454,6 +444,7 @@
     "calendar_content_message": "Copia este contenido y guárdalo como archivo .ics:",
     "view_complete": "Ver completo",
     "complete_ics_file": "Archivo ICS completo",
+    "close": "Cerrar",
     "save_calendar_event": "Guardar evento en calendario",
     "ics_file_shared": "ICS file shared successfully",
     "calendar_file_error": "No se pudo generar el archivo de calendario",

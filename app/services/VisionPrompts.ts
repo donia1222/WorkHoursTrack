@@ -197,4 +197,32 @@ export class VisionPrompts {
   static getSpecificObjectsTitle(language: SupportedLanguage = 'en'): string {
     return this.getPrompt('specificObjectsTitle', language);
   }
+
+  /**
+   * Get the work schedule analysis prompt for interactive analysis
+   */
+  static getWorkScheduleAnalysisPrompt(language: SupportedLanguage = 'es'): string {
+    return this.getPrompt('workScheduleAnalysisPrompt', language);
+  }
+
+  /**
+   * Get the ambiguity detection prompt
+   */
+  static getAmbiguityDetectionPrompt(language: SupportedLanguage = 'es'): string {
+    return this.getPrompt('ambiguityDetectionPrompt', language);
+  }
+
+  /**
+   * Get the clarification question format
+   */
+  static getClarificationQuestionFormat(language: SupportedLanguage = 'es', question: string = ''): string {
+    return this.getPrompt('clarificationQuestionFormat', language, { question });
+  }
+
+  /**
+   * Get the waiting for clarification message
+   */
+  static getWaitingForClarification(language: SupportedLanguage = 'es'): string {
+    return this.getPrompt('waitingForClarification', language);
+  }
 }

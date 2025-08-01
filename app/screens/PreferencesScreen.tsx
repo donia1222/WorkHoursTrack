@@ -17,7 +17,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
 import { BlurView } from 'expo-blur';
 import Header from '../components/Header';
-import LoadingOverlay from '../components/LoadingOverlay';
+
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage, languageConfig, SupportedLanguage } from '../contexts/LanguageContext';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -394,9 +394,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginTop:20
   },
   screenTitleText: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
     letterSpacing: -0.3,
   },
@@ -590,7 +591,7 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
       <Header 
         title={
           <View style={styles.screenTitle}>
-            <IconSymbol size={20} name="gear" color="#8E8E93" />
+            <IconSymbol size={26} name="gear" color="#8E8E93" />
             <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('preferences.title')}</Text>
           </View>
         }
@@ -994,7 +995,7 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
         </View>
       </Modal>
 
-      <LoadingOverlay visible={isClosing} />
+
     </SafeAreaView>
   );
 }

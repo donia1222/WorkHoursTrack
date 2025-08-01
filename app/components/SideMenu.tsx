@@ -375,9 +375,9 @@ export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps
                 </TouchableOpacity>
               ))}
               
-              {/* Botón de suscripción como chip al final */}
+              {/* Botón de suscripción con el mismo estilo que los demás */}
               <TouchableOpacity
-                style={styles.subscriptionChip}
+                style={styles.menuItem}
                 onPress={() => {
                   if (onNavigate) {
                     onNavigate(subscriptionItem.id);
@@ -385,13 +385,14 @@ export default function SideMenu({ visible, onClose, onNavigate }: SideMenuProps
                   onClose();
                 }}
               >
-                <View style={[styles.chipIconContainer, { backgroundColor: `${subscriptionItem.color}25` }]}>
-                  <IconSymbol size={14} name={subscriptionItem.icon as any} color={subscriptionItem.color} />
+                <View style={[styles.iconContainer, { backgroundColor: `${subscriptionItem.color}25` }]}>
+                  <IconSymbol size={20} name={subscriptionItem.icon as any} color={subscriptionItem.color} />
                 </View>
-                <View style={styles.chipContent}>
-                  <Text style={styles.chipTitle}>{subscriptionItem.title}</Text>
-                  <Text style={styles.chipDescription}>{subscriptionItem.description}</Text>
+                <View style={styles.itemContent}>
+                  <Text style={styles.itemTitle}>{subscriptionItem.title}</Text>
+                  <Text style={styles.itemDescription}>{subscriptionItem.description}</Text>
                 </View>
+                <IconSymbol size={16} name="chevron.right" color={colors.textTertiary} />
               </TouchableOpacity>
               
               <View style={{ height: 20 }} />

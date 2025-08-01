@@ -115,8 +115,7 @@ class BackgroundLocationTaskManager {
       // Start background location updates
       await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
         accuracy: Location.Accuracy.High,
-        timeInterval: 30000, // 30 seconds minimum interval
-        distanceInterval: 20, // 20 meters minimum distance
+        distanceInterval: 20, // Only when user moves 20 meters
         showsBackgroundLocationIndicator: true,
         foregroundService: {
           notificationTitle: 'Tracking location for work timer',

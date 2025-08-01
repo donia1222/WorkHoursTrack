@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,12 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Modal,
+  SafeAreaView,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import * as ImagePicker from 'expo-image-picker';
 import { MediaType } from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -21,11 +25,65 @@ import ImagePreview from '@/app/components/ImagePreview';
 import WelcomeMessage from '@/app/components/WelcomeMessage';
 import { useLanguage } from '@/app/contexts/LanguageContext';
 import { useTheme, ThemeColors } from '@/app/contexts/ThemeContext';
+import { useNavigation, useBackNavigation } from '@/app/context/NavigationContext';
+import { useSubscription } from '@/app/hooks/useSubscription';
+import { useHapticFeedback } from '@/app/hooks/useHapticFeedback';
+import { JobService } from '@/app/services/JobService';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  header: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    overflow: 'hidden',
+  },
+  headerGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    paddingTop: 24,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 24,
+    padding: 8,
+  },
+  headerText: {
+    alignItems: 'center',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 2,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 4,
+    color: colors.text,
+    letterSpacing: -0.3,
+    textAlign: 'center',
+  },
+  headerSubtitle: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    fontWeight: '500',
+    letterSpacing: -0.1,
+    textAlign: 'center',
   },
   messagesContainer: {
     flex: 1,
@@ -55,9 +113,14 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginRight: 12,
     marginBottom: 4,
     borderRadius: 25,
-    backgroundColor: isDark ? colors.primary + '20' : '#F0F8FF',
-    borderWidth: 1,
+    backgroundColor: isDark ? colors.primary + '30' : colors.primary + '15',
+    borderWidth: 2,
     borderColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   textInput: {
     flex: 1,
@@ -149,11 +212,129 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: colors.text,
     textAlign: 'center',
   },
+  // Premium Modal Styles
+  premiumModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  premiumModalContainer: {
+    backgroundColor: colors.surface,
+    borderRadius: 24,
+    width: '100%',
+    maxWidth: 400,
+    overflow: 'hidden',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+  },
+  premiumModalHeader: {
+    padding: 24,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.separator,
+  },
+  premiumIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FFD700',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    elevation: 4,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  premiumModalTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  premiumModalSubtitle: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  premiumModalContent: {
+    padding: 24,
+  },
+  premiumFeaturesList: {
+    marginBottom: 24,
+  },
+  premiumFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  premiumFeatureIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  premiumFeatureText: {
+    fontSize: 16,
+    color: colors.text,
+    flex: 1,
+    fontWeight: '500',
+  },
+  premiumModalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  premiumCancelButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.separator,
+  },
+  premiumCancelButtonText: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  premiumSubscribeButton: {
+    flex: 2,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: '#FFD700',
+    elevation: 2,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  premiumSubscribeButtonText: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000',
+  },
 });
 
 export default function ChatbotScreen() {
   const { language, t } = useLanguage(); // Obtener idioma actual y función de traducción
   const { colors, isDark } = useTheme(); // Obtener colores del tema actual
+  const { exportToCalendar, navigateTo } = useNavigation(); // Obtener función de exportación
+  const { isSubscribed } = useSubscription(); // Obtener estado de suscripción
+  const { handleBack } = useBackNavigation(); // Hook de navegación hacia atrás
+  const { triggerHaptic } = useHapticFeedback(); // Hook de feedback háptico
   const styles = getStyles(colors, isDark); // Generar estilos dinámicos
   
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
@@ -161,12 +342,28 @@ export default function ChatbotScreen() {
   const [selectedImage, setSelectedImage] = useState<{ uri: string } | undefined>(undefined);
   const [selectedDocument, setSelectedDocument] = useState<{ uri: string; name: string; type: string } | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [jobs, setJobs] = useState<any[]>([]);
   const flatListRef = useRef<FlatList>(null);
   
   // Estado para mantener contexto de la última imagen/documento analizado
   const [lastAnalyzedImage, setLastAnalyzedImage] = useState<{ uri: string } | null>(null);
   const [lastAnalyzedDocument, setLastAnalyzedDocument] = useState<{ uri: string; name: string; type: string } | null>(null);
   const [waitingForPersonSelection, setWaitingForPersonSelection] = useState(false);
+
+  // Cargar trabajos al inicializar
+  useEffect(() => {
+    const loadJobs = async () => {
+      try {
+        const loadedJobs = await JobService.getJobs();
+        setJobs(loadedJobs);
+      } catch (error) {
+        console.error('Error loading jobs:', error);
+      }
+    };
+    
+    loadJobs();
+  }, []);
   
   // Función para detectar si el bot está preguntando por múltiples nombres (multiidioma)
   const isAskingForPersonSelection = (text: string): boolean => {
@@ -286,6 +483,12 @@ export default function ChatbotScreen() {
   };
 
   const showFileOptions = () => {
+    // Verificar si está suscrito
+    if (!isSubscribed) {
+      setShowPremiumModal(true);
+      return;
+    }
+
     Alert.alert(
       t('chatbot.select_file'),
       t('chatbot.file_type_question'),
@@ -299,6 +502,11 @@ export default function ChatbotScreen() {
   };
 
   const sendMessage = async () => {
+
+        if (!isSubscribed) {
+      setShowPremiumModal(true);
+      return;
+    }
     console.log('💬 [CHAT] Iniciando sendMessage...');
     console.log('📝 [CHAT] Input text:', inputText);
     console.log('🖼️ [CHAT] Selected image:', selectedImage ? 'Sí' : 'No');
@@ -306,6 +514,13 @@ export default function ChatbotScreen() {
     
     if (!inputText.trim() && !selectedImage && !selectedDocument) {
       console.log('⚠️ [CHAT] No hay contenido para enviar, cancelando...');
+      return;
+    }
+
+    // Verificar si está suscrito y tiene archivos adjuntos
+    if (!isSubscribed && (selectedImage || selectedDocument)) {
+      console.log('🔒 [CHAT] Usuario no suscrito intentando enviar archivo, mostrando modal premium');
+      setShowPremiumModal(true);
       return;
     }
 
@@ -512,7 +727,13 @@ export default function ChatbotScreen() {
     if (messages.length === 0 && index === 0) {
       return <WelcomeMessage />;
     }
-    return <ChatMessage message={item} />;
+    return (
+      <ChatMessage 
+        message={item} 
+        jobs={jobs} 
+        onExportToCalendar={exportToCalendar}
+      />
+    );
   };
 
   const renderWelcomeHeader = () => {
@@ -523,11 +744,15 @@ export default function ChatbotScreen() {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 140 : 0}
-    >
+    <SafeAreaView style={styles.container}>
+      
+    
+
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 140 : 0}
+      >
       <FlatList
         ref={flatListRef}
         data={messages.length === 0 ? [{ id: -1, text: '', isUser: false, timestamp: new Date() }] : messages}
@@ -535,7 +760,13 @@ export default function ChatbotScreen() {
           if (messages.length === 0) {
             return <WelcomeMessage />;
           }
-          return <ChatMessage message={item} />;
+          return (
+            <ChatMessage 
+              message={item} 
+              jobs={jobs} 
+              onExportToCalendar={exportToCalendar}
+            />
+          );
         }}
         keyExtractor={(item, index) => messages.length === 0 ? 'welcome' : item.id.toString()}
         style={styles.messagesContainer}
@@ -620,7 +851,167 @@ export default function ChatbotScreen() {
           )}
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+
+      {/* Premium Modal */}
+      <Modal
+        visible={showPremiumModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowPremiumModal(false)}
+      >
+        <View style={styles.premiumModalOverlay}>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.premiumModalContainer}>
+            <View style={styles.premiumModalHeader}>
+              <View style={styles.premiumIcon}>
+                <IconSymbol size={40} name="crown.fill" color="#000" />
+              </View>
+              <Text style={styles.premiumModalTitle}>
+                {(() => {
+                  switch (language) {
+                    case 'es': return 'Chat Premium';
+                    case 'en': return 'Premium Chat';
+                    case 'de': return 'Premium Chat';
+                    case 'fr': return 'Chat Premium';
+                    case 'it': return 'Chat Premium';
+                    default: return 'Premium Chat';
+                  }
+                })()}
+              </Text>
+              <Text style={styles.premiumModalSubtitle}>
+                {(() => {
+                  switch (language) {
+                    case 'es': return 'Desbloquea funciones avanzadas de chat';
+                    case 'en': return 'Unlock advanced chat features';
+                    case 'de': return 'Erweiterte Chat-Funktionen freischalten';
+                    case 'fr': return 'Débloquez les fonctionnalités de chat avancées';
+                    case 'it': return 'Sblocca le funzionalità di chat avanzate';
+                    default: return 'Unlock advanced chat features';
+                  }
+                })()}
+              </Text>
+            </View>
+
+            <View style={styles.premiumModalContent}>
+              <View style={styles.premiumFeaturesList}>
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="photo.fill" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {(() => {
+                      switch (language) {
+                        case 'es': return 'Análisis de imágenes con IA';
+                        case 'en': return 'AI image analysis';
+                        case 'de': return 'KI-Bildanalyse';
+                        case 'fr': return 'Analyse d\'images par IA';
+                        case 'it': return 'Analisi delle immagini con IA';
+                        default: return 'AI image analysis';
+                      }
+                    })()}
+                  </Text>
+                </View>
+                
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="doc.fill" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {(() => {
+                      switch (language) {
+                        case 'es': return 'Procesamiento de documentos PDF';
+                        case 'en': return 'PDF document processing';
+                        case 'de': return 'PDF-Dokumentenverarbeitung';
+                        case 'fr': return 'Traitement de documents PDF';
+                        case 'it': return 'Elaborazione di documenti PDF';
+                        default: return 'PDF document processing';
+                      }
+                    })()}
+                  </Text>
+                </View>
+
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="calendar.badge.plus" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {(() => {
+                      switch (language) {
+                        case 'es': return 'Exportación automática al calendario';
+                        case 'en': return 'Automatic calendar export';
+                        case 'de': return 'Automatischer Kalenderexport';
+                        case 'fr': return 'Export automatique vers le calendrier';
+                        case 'it': return 'Esportazione automatica del calendario';
+                        default: return 'Automatic calendar export';
+                      }
+                    })()}
+                  </Text>
+                </View>
+
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="wand.and.stars" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {(() => {
+                      switch (language) {
+                        case 'es': return 'Análisis inteligente de horarios';
+                        case 'en': return 'Smart schedule analysis';
+                        case 'de': return 'Intelligente Zeitplananalyse';
+                        case 'fr': return 'Analyse intelligente des horaires';
+                        case 'it': return 'Analisi intelligente degli orari';
+                        default: return 'Smart schedule analysis';
+                      }
+                    })()}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.premiumModalActions}>
+                <TouchableOpacity 
+                  style={styles.premiumCancelButton}
+                  onPress={() => setShowPremiumModal(false)}
+                >
+                  <Text style={styles.premiumCancelButtonText}>
+                    {(() => {
+                      switch (language) {
+                        case 'es': return 'Cancelar';
+                        case 'en': return 'Cancel';
+                        case 'de': return 'Abbrechen';
+                        case 'fr': return 'Annuler';
+                        case 'it': return 'Annulla';
+                        default: return 'Cancel';
+                      }
+                    })()}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.premiumSubscribeButton}
+                  onPress={() => {
+                    setShowPremiumModal(false);
+                    navigateTo('subscription');
+                  }}
+                >
+                  <Text style={styles.premiumSubscribeButtonText}>
+                    {(() => {
+                      switch (language) {
+                        case 'es': return 'Suscribirse';
+                        case 'en': return 'Subscribe';
+                        case 'de': return 'Abonnieren';
+                        case 'fr': return 'S\'abonner';
+                        case 'it': return 'Iscriviti';
+                        default: return 'Subscribe';
+                      }
+                    })()}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </BlurView>
+        </View>
+      </Modal>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

@@ -25,13 +25,25 @@ export interface Job {
   };
   schedule?: {
     enabled?: boolean; // Enable/disable schedule functionality
-    startTime: string; // HH:MM format
-    endTime: string; // HH:MM format
-    // Support for split shifts
+    // Weekly schedule - individual schedule for each day
+    weeklySchedule?: {
+      [key: number]: {
+        startTime: string; // HH:MM format
+        endTime: string; // HH:MM format
+        // Support for split shifts
+        secondStartTime?: string; // HH:MM format for split shift
+        secondEndTime?: string; // HH:MM format for split shift
+        hasSplitShift?: boolean; // Flag to enable split shift
+        breakTime?: number; // minutes
+      } | null; // null means no schedule for that day
+    };
+    // Legacy fields for backward compatibility
+    startTime?: string; // HH:MM format
+    endTime?: string; // HH:MM format
     secondStartTime?: string; // HH:MM format for split shift
     secondEndTime?: string; // HH:MM format for split shift
     hasSplitShift?: boolean; // Flag to enable split shift
-    workDays: number[]; // 0=Sunday, 1=Monday, etc.
+    workDays?: number[]; // 0=Sunday, 1=Monday, etc.
     breakTime?: number; // minutes
     // Auto-scheduling feature
     autoSchedule?: boolean; // Automatically add work days to calendar

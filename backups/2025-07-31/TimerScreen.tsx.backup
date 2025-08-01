@@ -9,7 +9,6 @@ import {
   Alert,
   TextInput,
   StatusBar,
-  Modal,
 } from 'react-native';
 import Animated, { 
   useSharedValue, 
@@ -24,7 +23,6 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import NoJobsWarning from '../components/NoJobsWarning';
 import JobFormModal from '../components/JobFormModal';
-import TimerSuccessModal from '../components/TimerSuccessModal';
 import { Job, WorkDay } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
@@ -112,20 +110,19 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginVertical: 12,
   },
   timerCard: {
-    marginVertical: 20,
-    marginHorizontal: 4,
-    borderRadius: 28,
-    padding: 40,
+    marginVertical: 16,
+    borderRadius: 24,
+    padding: 32,
     shadowColor: colors.primary,
     shadowOffset: {
       width: 0,
-      height: 10,
+      height: 8,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 15,
-    borderWidth: 0.5,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
     overflow: 'hidden',
   },
   timerCardGradient: {
@@ -138,56 +135,24 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   timerContent: {
     alignItems: 'center',
-    justifyContent: 'center',
   },
   timerDisplay: {
     alignItems: 'center',
-    marginBottom: 28,
-    paddingVertical: 16,
-  },
-  timerTimeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16,
+    marginBottom: 20,
   },
   timerTime: {
-    fontSize: 72,
-    fontWeight: '100',
+    fontSize: 56,
+    fontWeight: '200',
     fontFamily: 'System',
-    marginBottom: 12,
+    marginBottom: 8,
     color: colors.text,
-    textShadowColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 3 },
-    textShadowRadius: 8,
-    letterSpacing: -2,
-    textAlign: 'center',
+    textShadowColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   timerHours: {
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: 20,
     color: colors.textSecondary,
-    textAlign: 'center',
-    letterSpacing: 0.5,
-    opacity: 0.8,
-  },
-  notesEditButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
-    shadowColor: colors.textSecondary,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   activeJobInfo: {
     flexDirection: 'row',
@@ -223,32 +188,28 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   timerControls: {
     alignItems: 'center',
-    paddingTop: 8,
   },
   activeControls: {
     flexDirection: 'row',
-    gap: 20,
-    alignItems: 'center',
+    gap: 16,
   },
   controlButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    borderRadius: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 6,
+      height: 4,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
-    borderWidth: 1.5,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.6)',
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 2,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.8)',
     overflow: 'hidden',
-    transform: [{ scale: 1 }],
   },
   controlButtonGradient: {
     position: 'absolute',
@@ -256,36 +217,21 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 24,
+    borderRadius: 20,
   },
   startButton: {
-    minWidth: 160,
-    height: 64,
+    minWidth: 120,
     justifyContent: 'center',
     backgroundColor: colors.success,
-    shadowColor: colors.success,
-    shadowOpacity: 0.4,
   },
   pauseButton: {
     backgroundColor: colors.warning,
-    minWidth: 72,
-    height: 56,
-    shadowColor: colors.warning,
-    shadowOpacity: 0.3,
   },
   resumeButton: {
     backgroundColor: colors.success,
-    minWidth: 72,
-    height: 56,
-    shadowColor: colors.success,
-    shadowOpacity: 0.3,
   },
   stopButton: {
     backgroundColor: colors.error,
-    minWidth: 72,
-    height: 56,
-    shadowColor: colors.error,
-    shadowOpacity: 0.3,
   },
   controlButtonText: {
     fontSize: 14,
@@ -340,10 +286,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: colors.textSecondary,
   },
   quickActions: {
-    marginVertical: 8,
-    marginBottom: 16,
+    marginVertical: 12,
+    marginBottom: 24,
     borderRadius: 16,
-    padding: 16,
+    padding: 20,
     backgroundColor: colors.surface,
     shadowColor: '#000',
     shadowOffset: {
@@ -355,16 +301,15 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     elevation: 2,
   },
   quickActionsTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 16,
     textAlign: 'center',
     color: colors.text,
   },
   quickActionButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
+    justifyContent: 'space-around',
   },
   quickActionButton: {
     alignItems: 'center',
@@ -506,40 +451,21 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontWeight: '600',
   },
   autoTimerQuickButton: {
-    flex: 1,
     alignItems: 'center',
-    padding: 12,
-    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.12)' : 'rgba(0, 122, 255, 0.08)',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: isDark ? 'rgba(0, 122, 255, 0.25)' : 'rgba(0, 122, 255, 0.18)',
+    padding: 16,
+    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.15)' : 'rgba(0, 122, 255, 0.1)',
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: isDark ? 'rgba(0, 122, 255, 0.3)' : 'rgba(0, 122, 255, 0.2)',
     shadowColor: colors.primary,
     shadowOffset: {
       width: 0,
-      height: 3,
+      height: 4,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 4,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  statsQuickButton: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 12,
-    backgroundColor: isDark ? 'rgba(34, 197, 94, 0.12)' : 'rgba(34, 197, 94, 0.08)',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: isDark ? 'rgba(34, 197, 94, 0.25)' : 'rgba(34, 197, 94, 0.18)',
-    shadowColor: '#22C55E',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+    minWidth: 120,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -549,35 +475,35 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 16,
+    borderRadius: 18,
   },
   autoTimerQuickButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 12,
   },
   autoTimerQuickButtonIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: colors.primary + '20',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: colors.primary,
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   autoTimerQuickButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
     color: colors.primary,
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
     textAlign: 'center',
   },
   compactJobSelector: {
@@ -585,19 +511,17 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     paddingHorizontal: 16,
   },
   compactJobSelectorTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 16,
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: 12,
     textAlign: 'center',
-    letterSpacing: -0.3,
   },
   compactJobTabs: {
     flexDirection: 'row',
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-    borderRadius: 16,
-    padding: 6,
-    gap: 8,
+    backgroundColor: colors.separator + '40',
+    borderRadius: 12,
+    padding: 4,
   },
   compactJobTab: {
     flex: 1,
@@ -627,6 +551,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontWeight: '500',
     color: colors.textSecondary,
     textAlign: 'center',
+    flex: 1,
   },
   compactJobTabTextActive: {
     color: colors.text,
@@ -634,203 +559,6 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   compactJobScrollContainer: {
     maxHeight: 60,
-  },
-  recentSessionsContainer: {
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  recentSessionsHeader: {
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  recentSessionsTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-    letterSpacing: -0.2,
-  },
-  viewStatsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 24,
-    backgroundColor: colors.primary + '12',
-    borderWidth: 1.5,
-    borderColor: colors.primary + '25',
-    gap: 8,
-    minWidth: 160,
-    justifyContent: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  viewStatsButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.primary,
-    letterSpacing: 0.3,
-  },
-  recentSessionsList: {
-    paddingLeft: 20,
-  },
-  recentSessionCard: {
-    width: 200,
-    marginRight: 16,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
-    shadowColor: colors.textSecondary,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  recentSessionCardGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 16,
-  },
-  recentSessionDate: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  recentSessionTime: {
-    fontSize: 11,
-    color: colors.textSecondary,
-    marginBottom: 8,
-  },
-  recentSessionJob: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    gap: 8,
-  },
-  recentSessionJobDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  recentSessionJobName: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: colors.textSecondary,
-    flex: 1,
-  },
-  recentSessionHours: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
-    textAlign: 'right',
-  },
-  recentSessionHoursLabel: {
-    fontSize: 10,
-    color: colors.textSecondary,
-    textAlign: 'right',
-    marginTop: 2,
-  },
-  deleteSessionButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  emptyRecentSessions: {
-    alignItems: 'center',
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-  },
-  emptyRecentSessionsText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  modalContainer: {
-    flex: 1,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  modalCloseButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalSaveButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary + '15',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.primary + '30',
-  },
-  modalContent: {
-    flex: 1,
-    padding: 20,
-  },
-  modalNotesInput: {
-    flex: 1,
-    fontSize: 16,
-    textAlignVertical: 'top',
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 16,
-    backgroundColor: colors.surface,
-    minHeight: 200,
-  },
-  modalNotesHint: {
-    fontSize: 12,
-    marginTop: 12,
-    color: colors.textSecondary,
-    textAlign: 'center',
   },
 });
 
@@ -840,7 +568,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   const { triggerHaptic } = useHapticFeedback();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>('');
-  const [showAllJobs, setShowAllJobs] = useState<boolean>(false);
   const [isRunning, setIsRunning] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [autoTimerElapsedTime, setAutoTimerElapsedTime] = useState(0);
@@ -851,14 +578,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   const { handleBack } = useBackNavigation();
   const { selectedJob, setSelectedJob } = useNavigation();
   const [isJobFormModalVisible, setIsJobFormModalVisible] = useState(false);
-  const [successModalVisible, setSuccessModalVisible] = useState(false);
-  const [successModalData, setSuccessModalData] = useState<{
-    hours: number;
-    totalHours?: number;
-    isUpdate: boolean;
-  }>({ hours: 0, isUpdate: false });
-  const [recentTimerSessions, setRecentTimerSessions] = useState<WorkDay[]>([]);
-  const [notesModalVisible, setNotesModalVisible] = useState(false);
   
   // Animaciones
   const pulseAnimation = useSharedValue(1);
@@ -937,13 +656,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   useEffect(() => {
     loadJobs();
     loadActiveSession();
-    loadRecentTimerSessions();
   }, []);
-
-  // Recargar sesiones cuando cambie el trabajo seleccionado
-  useEffect(() => {
-    loadRecentTimerSessions();
-  }, [selectedJobId, showAllJobs]);
 
   // Auto-select job if coming from map
   useEffect(() => {
@@ -1103,55 +816,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     }
   };
 
-  const loadRecentTimerSessions = async () => {
-    try {
-      const allWorkDays = await JobService.getWorkDays();
-      // Filtrar solo los días que NO son auto-generados (creados con timer)
-      let timerSessions = allWorkDays
-        .filter(day => day.type === 'work' && !day.isAutoGenerated);
-      
-      // Si hay un trabajo específico seleccionado y no está en modo "todos"
-      if (selectedJobId && !showAllJobs) {
-        timerSessions = timerSessions.filter(day => day.jobId === selectedJobId);
-      }
-      
-      // Ordenar y limitar
-      timerSessions = timerSessions
-        .sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime())
-        .slice(0, 10); // Solo los últimos 10
-      
-      setRecentTimerSessions(timerSessions);
-    } catch (error) {
-      console.error('Error loading recent timer sessions:', error);
-    }
-  };
-
-  const deleteTimerSession = async (sessionId: string) => {
-    Alert.alert(
-      t('common.confirm_delete'),
-      t('timer.confirm_delete_session'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        { 
-          text: t('common.delete'), 
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await JobService.deleteWorkDay(sessionId);
-              await loadRecentTimerSessions();
-              triggerHaptic('success');
-            } catch (error) {
-              console.error('Error deleting session:', error);
-              Alert.alert('Error', t('timer.delete_session_error'));
-            }
-          }
-        }
-      ]
-    );
-  };
-
   const startTimer = async () => {
-    if (!selectedJobId || showAllJobs) {
+    if (!selectedJobId) {
       Alert.alert('Error', t('timer.select_job_error'));
       return;
     }
@@ -1213,11 +879,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           ? `${existingWorkDay.notes}\n---\n${notes}` 
           : existingWorkDay.notes || notes;
           
-        // Get the job and its schedule for today
-        const job = jobs.find(j => j.id === activeSession.jobId);
-        const todayDate = new Date();
-        const daySchedule = job ? getScheduleForDay(job, todayDate) : null;
-        
         const updatedWorkDay: Omit<WorkDay, 'id' | 'createdAt' | 'updatedAt'> = {
           date: today,
           jobId: activeSession.jobId,
@@ -1225,15 +886,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           notes: combinedNotes,
           overtime: updatedHours > 8,
           type: 'work',
-          // Add schedule times if available
-          ...(daySchedule && {
-            startTime: daySchedule.startTime,
-            endTime: daySchedule.endTime,
-            ...(daySchedule.hasSplitShift && {
-              secondStartTime: daySchedule.secondStartTime,
-              secondEndTime: daySchedule.secondEndTime,
-            }),
-          }),
         };
         
         await JobService.updateWorkDay(existingWorkDay.id, updatedWorkDay);
@@ -1241,51 +893,51 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         // Check if AutoTimer was active
         const wasAutoTimerActive = autoTimerStatus?.state === 'active';
         
-        // Show success modal for updated work day
-        setSuccessModalData({
-          hours: parseFloat(hours.toFixed(2)),
-          totalHours: parseFloat(updatedHours.toFixed(2)),
-          isUpdate: true
-        });
-        
-        // If AutoTimer was active, disable it completely
-        if (wasAutoTimerActive && activeSession?.jobId) {
-          console.log('🚫 Disabling AutoTimer completely for job after manual stop');
-          
-          // Get the job and disable its AutoTimer
-          const jobs = await JobService.getJobs();
-          const job = jobs.find(j => j.id === activeSession.jobId);
-          
-          if (job) {
-            // Disable AutoTimer for this job
-            const updatedJob = {
-              ...job,
-              autoTimer: {
-                ...job.autoTimer,
-                enabled: false,
-                geofenceRadius: job.autoTimer?.geofenceRadius || 100,
-                delayStart: job.autoTimer?.delayStart || 2,
-                delayStop: job.autoTimer?.delayStop || 2,
-                notifications: job.autoTimer?.notifications !== false
+        Alert.alert(
+          t('maps.success'), 
+          t('timer.session_added_to_existing', { 
+            sessionHours: parseFloat(hours.toFixed(2)), 
+            totalHours: parseFloat(updatedHours.toFixed(2))
+          }),
+          [
+            {
+              text: 'OK',
+              onPress: async () => {
+                // If AutoTimer was active, disable it completely
+                if (wasAutoTimerActive && activeSession?.jobId) {
+                  console.log('🚫 Disabling AutoTimer completely for job after manual stop');
+                  
+                  // Get the job and disable its AutoTimer
+                  const jobs = await JobService.getJobs();
+                  const job = jobs.find(j => j.id === activeSession.jobId);
+                  
+                  if (job) {
+                    // Disable AutoTimer for this job
+                    const updatedJob = {
+                      ...job,
+                      autoTimer: {
+                        ...job.autoTimer,
+                        enabled: false,
+                        geofenceRadius: job.autoTimer?.geofenceRadius || 100,
+                        delayStart: job.autoTimer?.delayStart || 2,
+                        delayStop: job.autoTimer?.delayStop || 2,
+                        notifications: job.autoTimer?.notifications !== false
+                      }
+                    };
+                    
+                    await JobService.updateJob(job.id, updatedJob);
+                    console.log(`✅ AutoTimer disabled for job: ${job.name}`);
+                    
+                    // Stop the AutoTimer service
+                    autoTimerService.stop();
+                  }
+                }
               }
-            };
-            
-            await JobService.updateJob(job.id, updatedJob);
-            console.log(`✅ AutoTimer disabled for job: ${job.name}`);
-            
-            // Stop the AutoTimer service
-            autoTimerService.stop();
-          }
-        }
-        
-        setSuccessModalVisible(true);
+            }
+          ]
+        );
       } else {
         // Create new work day
-        // Get the job and its schedule for today
-        const job = jobs.find(j => j.id === activeSession.jobId);
-        const todayDate = new Date();
-        const daySchedule = job ? getScheduleForDay(job, todayDate) : null;
-        
         const workDay: Omit<WorkDay, 'id' | 'createdAt' | 'updatedAt'> = {
           date: today,
           jobId: activeSession.jobId,
@@ -1293,15 +945,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           notes: notes,
           overtime: hours > 8,
           type: 'work',
-          // Add schedule times if available
-          ...(daySchedule && {
-            startTime: daySchedule.startTime,
-            endTime: daySchedule.endTime,
-            ...(daySchedule.hasSplitShift && {
-              secondStartTime: daySchedule.secondStartTime,
-              secondEndTime: daySchedule.secondEndTime,
-            }),
-          }),
         };
 
         await JobService.addWorkDay(workDay);
@@ -1309,43 +952,46 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         // Check if AutoTimer was active
         const wasAutoTimerActive = autoTimerStatus?.state === 'active';
         
-        // Show success modal for new work day
-        setSuccessModalData({
-          hours: parseFloat(hours.toFixed(2)),
-          isUpdate: false
-        });
-        
-        // If AutoTimer was active, disable it completely
-        if (wasAutoTimerActive && activeSession?.jobId) {
-          console.log('🚫 Disabling AutoTimer completely for job after manual stop');
-          
-          // Get the job and disable its AutoTimer
-          const jobs = await JobService.getJobs();
-          const job = jobs.find(j => j.id === activeSession.jobId);
-          
-          if (job) {
-            // Disable AutoTimer for this job
-            const updatedJob = {
-              ...job,
-              autoTimer: {
-                ...job.autoTimer,
-                enabled: false,
-                geofenceRadius: job.autoTimer?.geofenceRadius || 100,
-                delayStart: job.autoTimer?.delayStart || 2,
-                delayStop: job.autoTimer?.delayStop || 2,
-                notifications: job.autoTimer?.notifications !== false
+        Alert.alert(
+          t('maps.success'), 
+          t('timer.session_saved', { hours: parseFloat(hours.toFixed(2)) }),
+          [
+            {
+              text: 'OK',
+              onPress: async () => {
+                // If AutoTimer was active, disable it completely
+                if (wasAutoTimerActive && activeSession?.jobId) {
+                  console.log('🚫 Disabling AutoTimer completely for job after manual stop');
+                  
+                  // Get the job and disable its AutoTimer
+                  const jobs = await JobService.getJobs();
+                  const job = jobs.find(j => j.id === activeSession.jobId);
+                  
+                  if (job) {
+                    // Disable AutoTimer for this job
+                    const updatedJob = {
+                      ...job,
+                      autoTimer: {
+                        ...job.autoTimer,
+                        enabled: false,
+                        geofenceRadius: job.autoTimer?.geofenceRadius || 100,
+                        delayStart: job.autoTimer?.delayStart || 2,
+                        delayStop: job.autoTimer?.delayStop || 2,
+                        notifications: job.autoTimer?.notifications !== false
+                      }
+                    };
+                    
+                    await JobService.updateJob(job.id, updatedJob);
+                    console.log(`✅ AutoTimer disabled for job: ${job.name}`);
+                    
+                    // Stop the AutoTimer service
+                    autoTimerService.stop();
+                  }
+                }
               }
-            };
-            
-            await JobService.updateJob(job.id, updatedJob);
-            console.log(`✅ AutoTimer disabled for job: ${job.name}`);
-            
-            // Stop the AutoTimer service
-            autoTimerService.stop();
-          }
-        }
-        
-        setSuccessModalVisible(true);
+            }
+          ]
+        );
       }
       
       await JobService.clearActiveSession();
@@ -1357,9 +1003,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       
       // Notify auto timer service about manual stop
       autoTimerService.handleManualTimerStop();
-      
-      // Reload recent timer sessions after saving
-      await loadRecentTimerSessions();
       
     } catch (error) {
       console.error('Error stopping timer:', error);
@@ -1442,130 +1085,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     setIsJobFormModalVisible(false);
   };
 
-  // Helper function to get schedule for a specific day from job
-  const getScheduleForDay = (job: Job, date: Date) => {
-    if (!job.schedule) return null;
-    
-    const dayOfWeek = date.getDay();
-    
-    // Try new weeklySchedule structure first
-    if (job.schedule.weeklySchedule && job.schedule.weeklySchedule[dayOfWeek]) {
-      return job.schedule.weeklySchedule[dayOfWeek];
-    }
-    
-    // Fallback to legacy structure
-    if (job.schedule.workDays && job.schedule.workDays.includes(dayOfWeek)) {
-      return {
-        startTime: job.schedule.startTime || '09:00',
-        endTime: job.schedule.endTime || '17:00',
-        hasSplitShift: job.schedule.hasSplitShift || false,
-        secondStartTime: job.schedule.secondStartTime,
-        secondEndTime: job.schedule.secondEndTime,
-        breakTime: job.schedule.breakTime || 60,
-      };
-    }
-    
-    return null;
-  };
-
-  const handleSuccessModalConfirm = () => {
-    setSuccessModalVisible(false);
-    onNavigate('reports');
-  };
-
-  const handleSuccessModalClose = () => {
-    setSuccessModalVisible(false);
-  };
-
-  const renderRecentTimerSessions = () => {
-    if (recentTimerSessions.length === 0) {
-      return (
-        <View style={styles.emptyRecentSessions}>
-          <IconSymbol size={32} name="clock" color={colors.textSecondary} />
-          <Text style={styles.emptyRecentSessionsText}>
-            {t('timer.no_recent_sessions')}
-          </Text>
-        </View>
-      );
-    }
-
-    return (
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        style={styles.recentSessionsList}
-        contentContainerStyle={{ paddingRight: 20 }}
-      >
-        {recentTimerSessions.map((session) => {
-          const job = jobs.find(j => j.id === session.jobId);
-          const sessionDate = new Date(session.date);
-          const createdDate = session.createdAt ? new Date(session.createdAt) : sessionDate;
-          
-          return (
-            <BlurView 
-              key={session.id} 
-              intensity={95} 
-              tint={isDark ? "dark" : "light"} 
-              style={styles.recentSessionCard}
-            >
-              <LinearGradient
-                colors={isDark ? 
-                  ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.03)'] : 
-                  ['rgba(142, 142, 147, 0.05)', 'rgba(142, 142, 147, 0.02)']
-                }
-                style={styles.recentSessionCardGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              />
-              
-              {/* Delete Button */}
-              <TouchableOpacity 
-                style={styles.deleteSessionButton}
-                onPress={() => {
-                  triggerHaptic('light');
-                  deleteTimerSession(session.id);
-                }}
-                activeOpacity={0.7}
-              >
-                <IconSymbol size={12} name="xmark" color={colors.textSecondary} />
-              </TouchableOpacity>
-              
-              <Text style={styles.recentSessionDate}>
-                {sessionDate.toLocaleDateString('es-ES', { 
-                  day: '2-digit', 
-                  month: 'short' 
-                })}
-              </Text>
-              
-              <Text style={styles.recentSessionTime}>
-                {createdDate.toLocaleTimeString('es-ES', { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
-                })}
-              </Text>
-              
-              {job && (
-                <View style={styles.recentSessionJob}>
-                  <View style={[styles.recentSessionJobDot, { backgroundColor: job.color }]} />
-                  <Text style={styles.recentSessionJobName} numberOfLines={1}>
-                    {job.name}
-                  </Text>
-                </View>
-              )}
-              
-              <Text style={styles.recentSessionHours}>
-                {session.hours.toFixed(1)}h
-              </Text>
-              <Text style={styles.recentSessionHoursLabel}>
-                {session.overtime ? t('timer.overtime') : t('timer.regular')}
-              </Text>
-            </BlurView>
-          );
-        })}
-      </ScrollView>
-    );
-  };
-
   const renderCompactJobSelector = () => {
     console.log('🔄 renderCompactJobSelector called with jobs:', jobs.length, 'isRunning:', isRunning, 'activeSession:', !!activeSession);
     if (jobs.length === 0) return null;
@@ -1594,30 +1113,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         <View style={styles.compactJobSelector}>
           <Text style={styles.compactJobSelectorTitle}>{t('job_selector.title')}</Text>
           <View style={styles.compactJobTabs}>
-            {/* All Jobs Button */}
-            <TouchableOpacity
-              style={[
-                styles.compactJobTab,
-                showAllJobs && styles.compactJobTabActive
-              ]}
-              onPress={() => {
-                triggerHaptic('light');
-                setShowAllJobs(true);
-                setSelectedJobId('');
-              }}
-              activeOpacity={0.7}
-            >
-              <Text 
-                style={[
-                  styles.compactJobTabText,
-                  showAllJobs && styles.compactJobTabTextActive
-                ]}
-                numberOfLines={1}
-              >
-                {t('timer.all_jobs')}
-              </Text>
-            </TouchableOpacity>
-            
             {jobs.map((job) => (
               <TouchableOpacity
                 key={job.id}
@@ -1628,9 +1123,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                 onPress={() => {
                   triggerHaptic('light');
                   setSelectedJobId(job.id);
-                  setShowAllJobs(false);
                 }}
-                activeOpacity={0.7}
               >
                 <View style={[styles.compactJobTabDot, { backgroundColor: job.color }]} />
                 <Text 
@@ -1658,35 +1151,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
             style={styles.compactJobScrollContainer}
             contentContainerStyle={{ paddingHorizontal: 4 }}
           >
-            {/* All Jobs Button */}
-            <TouchableOpacity
-              style={[
-                styles.compactJobTab,
-                showAllJobs && styles.compactJobTabActive,
-                { 
-                  flex: 0,
-                  minWidth: 80,
-                  marginRight: 8
-                }
-              ]}
-              onPress={() => {
-                triggerHaptic('light');
-                setShowAllJobs(true);
-                setSelectedJobId('');
-              }}
-              activeOpacity={0.7}
-            >
-              <Text 
-                style={[
-                  styles.compactJobTabText,
-                  showAllJobs && styles.compactJobTabTextActive
-                ]}
-                numberOfLines={1}
-              >
-                {t('timer.all_jobs')}
-              </Text>
-            </TouchableOpacity>
-            
             {jobs.map((job, index) => (
               <TouchableOpacity
                 key={job.id}
@@ -1702,7 +1166,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                 onPress={() => {
                   triggerHaptic('light');
                   setSelectedJobId(job.id);
-                  setShowAllJobs(false);
                 }}
               >
                 <View style={[styles.compactJobTabDot, { backgroundColor: job.color }]} />
@@ -1863,6 +1326,42 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
               </View>
             )}
 
+            {!isRunning && !activeSession && (
+              <View style={styles.quickActions}>
+                <Text style={styles.quickActionsTitle}>{t('timer.quick_actions')}</Text>
+                <View style={styles.quickActionButtons}>
+                  <TouchableOpacity 
+                    style={styles.autoTimerQuickButton}
+                    onPress={() => {
+                      triggerHaptic('light');
+                      setIsJobFormModalVisible(true);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <LinearGradient
+                      colors={isDark ? 
+                        ['rgba(0, 122, 255, 0.2)', 'rgba(0, 122, 255, 0.05)'] : 
+                        ['rgba(0, 122, 255, 0.15)', 'rgba(0, 122, 255, 0.03)']
+                      }
+                      style={styles.autoTimerQuickButtonGradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    />
+                    <View style={styles.autoTimerQuickButtonContent}>
+                      <View style={styles.autoTimerQuickButtonIcon}>
+                        <IconSymbol size={16} name="location.fill" color={colors.primary} />
+                      </View>
+                      <Text style={styles.autoTimerQuickButtonText}>
+                        AUTOTIMER
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+                <Text style={[styles.quickActionText, { textAlign: 'center', marginTop: 8, fontSize: 11, lineHeight: 14 }]}>
+                  {t('timer.auto_timer.privacy_notice')}
+                </Text>
+              </View>
+            )}
 
  
 
@@ -1879,25 +1378,9 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           />
           <View style={styles.timerContent}>
             <Animated.View style={[styles.timerDisplay, animatedTimerStyle]}>
-              <View style={styles.timerTimeContainer}>
-                <Animated.Text style={[styles.timerTime, animatedTimeTextStyle]}>
-                  {formatTime(elapsedTime)}
-                </Animated.Text>
-                <TouchableOpacity 
-                  style={styles.notesEditButton}
-                  onPress={() => {
-                    triggerHaptic('light');
-                    setNotesModalVisible(true);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <IconSymbol 
-                    size={20} 
-                    name="pencil" 
-                    color={notes.trim() ? colors.primary : colors.textSecondary} 
-                  />
-                </TouchableOpacity>
-              </View>
+              <Animated.Text style={[styles.timerTime, animatedTimeTextStyle]}>
+                {formatTime(elapsedTime)}
+              </Animated.Text>
               <Text style={styles.timerHours}>
                 ≈ {getSessionHours()}h{getSessionHours() > 8 ? ` (${t('timer.overtime')})` : ''}
               </Text>
@@ -1915,16 +1398,16 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                 <TouchableOpacity
                   style={[styles.controlButton, styles.startButton]}
                   onPress={() => { triggerHaptic('heavy'); startTimer(); }}
-                  disabled={!selectedJobId && !showAllJobs}
-                  activeOpacity={0.85}
+                  disabled={!selectedJobId}
                 >
                   <LinearGradient
-                    colors={['#34C759', '#28A745', '#1F7A40']}
+                    colors={['#34C759', '#28A745', '#20874C']}
                     style={styles.controlButtonGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   />
-                  <IconSymbol size={24} name="play.fill" color="#FFFFFF" />
+                  <IconSymbol size={20} name="play.fill" color="#FFFFFF" />
+ 
                 </TouchableOpacity>
               ) : (
                 <View style={styles.activeControls}>
@@ -1933,15 +1416,15 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                       <TouchableOpacity
                         style={[styles.controlButton, styles.pauseButton]}
                         onPress={() => { triggerHaptic('medium'); pauseTimer(); }}
-                        activeOpacity={0.85}
                       >
                         <LinearGradient
-                          colors={['#FF9500', '#E6820C', '#D17200']}
+                          colors={['#FF9500', '#E6820C', '#CC7300']}
                           style={styles.controlButtonGradient}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}
                         />
                         <IconSymbol size={20} name="pause.fill" color="#FFFFFF" />
+                  
                       </TouchableOpacity>
                     </Animated.View>
                   ) : (
@@ -1949,15 +1432,15 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                       <TouchableOpacity
                         style={[styles.controlButton, styles.resumeButton]}
                         onPress={() => { triggerHaptic('medium'); resumeTimer(); }}
-                        activeOpacity={0.85}
                       >
                         <LinearGradient
-                          colors={['#34C759', '#28A745', '#1F7A40']}
+                          colors={['#34C759', '#28A745', '#20874C']}
                           style={styles.controlButtonGradient}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}
                         />
                         <IconSymbol size={20} name="play.fill" color="#FFFFFF" />
+      
                       </TouchableOpacity>
                     </Animated.View>
                   )}
@@ -1965,15 +1448,15 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                   <TouchableOpacity
                     style={[styles.controlButton, styles.stopButton]}
                     onPress={() => { triggerHaptic('heavy'); handleStopButton(); }}
-                    activeOpacity={0.85}
                   >
                     <LinearGradient
-                      colors={['#FF3B30', '#DB1D1D', '#C41E3A']}
+                      colors={['#FF3B30', '#E6241A', '#CC1F16']}
                       style={styles.controlButtonGradient}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                     />
                     <IconSymbol size={20} name="stop.fill" color="#FFFFFF" />
+           
                   </TouchableOpacity>
                 </View>
               )}
@@ -1981,81 +1464,32 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           </View>
         </BlurView>
 
-        {/* Recent Timer Sessions */}
-        <View style={styles.recentSessionsContainer}>
-          <View style={styles.recentSessionsHeader}>
-            <Text style={styles.recentSessionsTitle}>
-              {t('timer.recent_sessions')}
-            </Text>
-          </View>
-          {renderRecentTimerSessions()}
-        </View>
-
-        {/* Quick Actions - Moved below recent sessions */}
-        {!isRunning && !activeSession && (
-          <View style={styles.quickActions}>
-            <Text style={styles.quickActionsTitle}>{t('timer.quick_actions')}</Text>
-            <View style={styles.quickActionButtons}>
-              <TouchableOpacity 
-                style={styles.autoTimerQuickButton}
-                onPress={() => {
-                  triggerHaptic('light');
-                  setIsJobFormModalVisible(true);
-                }}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={isDark ? 
-                    ['rgba(0, 122, 255, 0.2)', 'rgba(0, 122, 255, 0.05)'] : 
-                    ['rgba(0, 122, 255, 0.15)', 'rgba(0, 122, 255, 0.03)']
-                  }
-                  style={styles.autoTimerQuickButtonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                />
-                <View style={styles.autoTimerQuickButtonContent}>
-                  <View style={styles.autoTimerQuickButtonIcon}>
-                    <IconSymbol size={16} name="location.fill" color={colors.primary} />
-                  </View>
-                  <Text style={styles.autoTimerQuickButtonText}>
-                    AUTOTIMER
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.statsQuickButton}
-                onPress={() => {
-                  triggerHaptic('light');
-                  onNavigate('reports');
-                }}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={isDark ? 
-                    ['rgba(34, 197, 94, 0.2)', 'rgba(34, 197, 94, 0.05)'] : 
-                    ['rgba(34, 197, 94, 0.15)', 'rgba(34, 197, 94, 0.03)']
-                  }
-                  style={styles.autoTimerQuickButtonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                />
-                <View style={styles.autoTimerQuickButtonContent}>
-                  <View style={[styles.autoTimerQuickButtonIcon, { backgroundColor: '#22C55E' + '20' }]}>
-                    <IconSymbol size={16} name="chart.bar.fill" color="#22C55E" />
-                  </View>
-                  <Text style={[styles.autoTimerQuickButtonText, { color: '#22C55E' }]}>
-                    ESTADÍSTICAS
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-            <Text style={[styles.quickActionText, { textAlign: 'center', marginTop: 6, fontSize: 10, lineHeight: 12, opacity: 0.7 }]}>
-              {t('timer.auto_timer.privacy_notice_short')}
-            </Text>
-          </View>
-        )}
-
+        <BlurView 
+          intensity={98} 
+          tint={isDark ? "dark" : "light"} 
+          style={styles.notesCard}
+        >
+          <LinearGradient
+            colors={isDark ? ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.03)'] : ['rgba(142, 142, 147, 0.05)', 'rgba(142, 142, 147, 0.02)']}
+            style={styles.notesCardGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
+          <Text style={styles.notesTitle}>{t('timer.session_notes')}</Text>
+          <TextInput
+            style={styles.notesInput}
+            placeholder={t('timer.notes_placeholder')}
+            placeholderTextColor={colors.textSecondary}
+            value={notes}
+            onChangeText={setNotes}
+            multiline
+            numberOfLines={4}
+            editable={!isRunning}
+          />
+          <Text style={styles.notesHint}>
+            {t('timer.notes_hint')}
+          </Text>
+        </BlurView>
 
           </>
         )}
@@ -2069,60 +1503,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         initialTab="auto"
         onNavigateToSubscription={() => onNavigate('subscription')}
       />
-
-      <TimerSuccessModal
-        visible={successModalVisible}
-        hours={successModalData.hours}
-        totalHours={successModalData.totalHours}
-        isUpdate={successModalData.isUpdate}
-        onConfirm={handleSuccessModalConfirm}
-        onClose={handleSuccessModalClose}
-      />
-
-      {/* Notes Modal */}
-      <Modal
-        visible={notesModalVisible}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setNotesModalVisible(false)}
-      >
-        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity 
-              onPress={() => setNotesModalVisible(false)}
-              style={styles.modalCloseButton}
-            >
-              <IconSymbol size={24} name="xmark" color={colors.textSecondary} />
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>{t('timer.session_notes')}</Text>
-            <TouchableOpacity 
-              onPress={() => {
-                triggerHaptic('success');
-                setNotesModalVisible(false);
-              }}
-              style={styles.modalSaveButton}
-            >
-              <IconSymbol size={20} name="checkmark" color={colors.primary} />
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.modalContent}>
-            <TextInput
-              style={[styles.modalNotesInput, { color: colors.text, borderColor: colors.border }]}
-              placeholder={t('timer.notes_placeholder')}
-              placeholderTextColor={colors.textSecondary}
-              value={notes}
-              onChangeText={setNotes}
-              multiline
-              textAlignVertical="top"
-              autoFocus
-            />
-            <Text style={styles.modalNotesHint}>
-              {t('timer.notes_hint')}
-            </Text>
-          </View>
-        </SafeAreaView>
-      </Modal>
     </SafeAreaView>
   );
 }

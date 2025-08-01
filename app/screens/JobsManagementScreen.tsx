@@ -16,7 +16,6 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { BlurView } from 'expo-blur';
 import Header from '../components/Header';
-import LoadingOverlay from '../components/LoadingOverlay';
 import { Job } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import JobFormModal from '../components/JobFormModal';
@@ -191,9 +190,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginTop:20
   },
   screenTitleText: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
     letterSpacing: -0.3,
   },
@@ -292,7 +292,7 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
       <Header 
         title={
           <View style={styles.screenTitle}>
-            <IconSymbol size={20} name="briefcase.fill" color={colors.primary} />
+            <IconSymbol size={26} name="briefcase.fill" color={colors.primary} />
             <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('jobs_management.title')}</Text>
           </View>
         }
@@ -372,7 +372,7 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
         onNavigateToSubscription={() => onNavigate?.('subscription')}
       />
 
-      <LoadingOverlay visible={isClosing} />
+
     </SafeAreaView>
   );
 }

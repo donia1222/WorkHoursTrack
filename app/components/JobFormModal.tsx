@@ -303,6 +303,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   workDayButtonActive: {
     backgroundColor: colors.primary,
   },
+  workDayButtonSelected: {
+    backgroundColor: colors.secondary,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
   workDayText: {
     ...Theme.typography.footnote,
     color: colors.textSecondary,
@@ -310,6 +315,33 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   workDayTextActive: {
     color: '#FFFFFF',
+  },
+  helperText: {
+    ...Theme.typography.caption2,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: Theme.spacing.xs,
+    fontStyle: 'italic',
+  },
+  locationSection: {
+    alignItems: 'center',
+    marginBottom: Theme.spacing.md,
+    gap: Theme.spacing.sm,
+  },
+  dayScheduleContainer: {
+    marginTop: Theme.spacing.md,
+    padding: Theme.spacing.md,
+    backgroundColor: colors.separator + '20',
+    borderRadius: Theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  dayScheduleTitle: {
+    ...Theme.typography.headline,
+    color: colors.text,
+    marginBottom: Theme.spacing.md,
+    textAlign: 'center',
+    fontWeight: '600',
   },
   switchContainer: {
     flexDirection: 'row',
@@ -745,13 +777,15 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     },
     schedule: {
       enabled: false, // Schedule disabled by default
-      startTime: '09:00',
-      endTime: '17:00',
-      workDays: [1, 2, 3, 4, 5], // Monday to Friday
-      breakTime: 60,
-      hasSplitShift: false,
-      secondStartTime: '15:00',
-      secondEndTime: '19:00',
+      weeklySchedule: {
+        0: null, // Domingo
+        1: null, // Lunes
+        2: null, // Martes
+        3: null, // Miércoles
+        4: null, // Jueves
+        5: null, // Viernes
+        6: null, // Sábado
+      },
       autoSchedule: false,
     },
     billing: {
@@ -783,6 +817,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
   const [currentTab, setCurrentTab] = useState<'basic' | 'schedule' | 'financial' | 'billing' | 'auto' | 'delete'>(initialTab || 'basic');
   const [confirmationName, setConfirmationName] = useState('');
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   
   const styles = getStyles(colors, isDark);
 
@@ -797,15 +832,17 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     
     if (editingJob) {
       scheduleToUse = {
-        startTime: '09:00',
-        endTime: '17:00',
-        workDays: [1, 2, 3, 4, 5],
-        breakTime: 60,
-        hasSplitShift: false,
-        secondStartTime: '15:00',
-        secondEndTime: '19:00',
-        autoSchedule: false,
-        ...editingJob.schedule,
+        enabled: editingJob.schedule?.enabled || false,
+        weeklySchedule: editingJob.schedule?.weeklySchedule || {
+          0: null,
+          1: null,
+          2: null,
+          3: null,
+          4: null,
+          5: null,
+          6: null,
+        },
+        autoSchedule: editingJob.schedule?.autoSchedule || false,
       };
       
       setFormData({
@@ -1241,14 +1278,38 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     }
   };
 
-  const toggleWorkDay = (day: number) => {
-    const schedule = formData.schedule!;
-    const workDays = schedule.workDays || [];
-    const newWorkDays = workDays.includes(day)
-      ? workDays.filter(d => d !== day)
-      : [...workDays, day].sort();
-    
-    updateNestedData('schedule', 'workDays', newWorkDays);
+  const updateDaySchedule = (day: number, scheduleData: any) => {
+    const currentWeeklySchedule = formData.schedule?.weeklySchedule || {};
+    const newWeeklySchedule = {
+      ...currentWeeklySchedule,
+      [day]: scheduleData,
+    };
+    updateNestedData('schedule', 'weeklySchedule', newWeeklySchedule);
+  };
+
+  const getDaySchedule = (day: number) => {
+    return formData.schedule?.weeklySchedule?.[day] || null;
+  };
+
+  const getDefaultDaySchedule = () => ({
+    startTime: '09:00',
+    endTime: '17:00',
+    hasSplitShift: false,
+    secondStartTime: '15:00',
+    secondEndTime: '19:00',
+    breakTime: 60,
+  });
+
+  const hasDaySchedule = (day: number) => {
+    const daySchedule = getDaySchedule(day);
+    return daySchedule !== null;
+  };
+
+  const removeDaySchedule = (day: number) => {
+    updateDaySchedule(day, null);
+    if (selectedDay === day) {
+      setSelectedDay(null);
+    }
   };
 
   const renderBasicTab = () => (
@@ -1279,8 +1340,12 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         </View>
 
         <View style={styles.inputGroup}>
-          <View style={styles.addressHeaderContainer}>
-            <Text style={styles.label}>{t('job_form.basic.address')}</Text>
+          <Text style={styles.label}>{t('job_form.basic.address')}</Text>
+          
+          <View style={styles.locationSection}>
+            <Text style={styles.helperText}>
+              {t('job_form.basic.location_helper')}
+            </Text>
             <TouchableOpacity
               style={[
                 styles.autoFillButton,
@@ -1447,6 +1512,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 // If disabling schedule, also disable auto schedule
                 if (!newEnabled) {
                   updateNestedData('schedule', 'autoSchedule', false);
+                  setSelectedDay(null);
                 }
               }
             }}
@@ -1458,140 +1524,180 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         {/* Only show schedule fields if schedule is enabled */}
         {formData.schedule?.enabled && (
         <>
-        <View style={styles.row}>
+          {/* Days of the week selector */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>{t('job_form.schedule.start_time')}</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.schedule?.startTime}
-              onChangeText={(value) => updateNestedData('schedule', 'startTime', value)}
-              placeholder={t('job_form.schedule.start_time_placeholder')}
-              placeholderTextColor={colors.textTertiary}
-            />
-          </View>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>{t('job_form.schedule.end_time')}</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.schedule?.endTime}
-              onChangeText={(value) => updateNestedData('schedule', 'endTime', value)}
-              placeholder={t('job_form.schedule.end_time_placeholder')}
-              placeholderTextColor={colors.textTertiary}
-            />
-          </View>
-        </View>
-
-        {/* Split Shift Section */}
-        <View style={styles.switchContainer}>
-          <View style={styles.switchContent}>
-            <Text style={styles.switchLabel}>{t('job_form.schedule.split_shift')}</Text>
-            <Text style={styles.switchDescription}>{t('job_form.schedule.split_shift_desc')}</Text>
-          </View>
-          <TouchableOpacity
-            style={[styles.switch, formData.schedule?.hasSplitShift && styles.switchActive]}
-            onPress={() => updateNestedData('schedule', 'hasSplitShift', !formData.schedule?.hasSplitShift)}
-          >
-            <View style={[styles.switchThumb, formData.schedule?.hasSplitShift && styles.switchThumbActive]} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Second shift times - only show if split shift is enabled */}
-        {formData.schedule?.hasSplitShift && (
-          <View style={styles.row}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('job_form.schedule.second_start_time')}</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.schedule?.secondStartTime}
-                onChangeText={(value) => updateNestedData('schedule', 'secondStartTime', value)}
-                placeholder={t('job_form.schedule.second_start_time_placeholder')}
-                placeholderTextColor={colors.textTertiary}
-              />
-            </View>
-            
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('job_form.schedule.second_end_time')}</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.schedule?.secondEndTime}
-                onChangeText={(value) => updateNestedData('schedule', 'secondEndTime', value)}
-                placeholder={t('job_form.schedule.second_end_time_placeholder')}
-                placeholderTextColor={colors.textTertiary}
-              />
-            </View>
-          </View>
-        )}
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>{t('job_form.schedule.default_hours')}</Text>
-          <TextInput
-            style={styles.input}
-            value={String(formData.defaultHours)}
-            onChangeText={(value) => updateFormData('defaultHours', Number(value) || 0)}
-            placeholder={t('job_form.schedule.default_hours_placeholder')}
-            placeholderTextColor={colors.textTertiary}
-            keyboardType="numeric"
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>{t('job_form.schedule.break_time')}</Text>
-          <TextInput
-            style={styles.input}
-            value={String(formData.schedule?.breakTime || 0)}
-            onChangeText={(value) => updateNestedData('schedule', 'breakTime', Number(value) || 0)}
-            placeholder={t('job_form.schedule.break_time_placeholder')}
-            placeholderTextColor={colors.textTertiary}
-            keyboardType="numeric"
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>{t('job_form.schedule.work_days')}</Text>
-          <View style={styles.workDaysContainer}>
-            {(t('job_form.schedule.days') as unknown as string[]).map((day: string, index: number) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.workDayButton,
-                  formData.schedule?.workDays?.includes(index) && styles.workDayButtonActive,
-                ]}
-                onPress={() => toggleWorkDay(index)}
-              >
-                <Text
+            <Text style={styles.label}>{t('job_form.schedule.select_day')}</Text>
+            <View style={styles.workDaysContainer}>
+              {(t('job_form.schedule.days') as unknown as string[]).map((day: string, index: number) => (
+                <TouchableOpacity
+                  key={index}
                   style={[
-                    styles.workDayText,
-                    formData.schedule?.workDays?.includes(index) && styles.workDayTextActive,
+                    styles.workDayButton,
+                    hasDaySchedule(index) && styles.workDayButtonActive,
                   ]}
+                  onPress={() => {
+                    if (hasDaySchedule(index)) {
+                      // Si está marcado (azul), lo desmarca directamente
+                      removeDaySchedule(index);
+                      if (selectedDay === index) {
+                        setSelectedDay(null);
+                      }
+                    } else {
+                      // Si no está marcado, lo marca y lo selecciona para configurar
+                      updateDaySchedule(index, getDefaultDaySchedule());
+                      setSelectedDay(index);
+                    }
+                  }}
+                  onLongPress={() => {
+                    // Long press para editar un día que ya está marcado
+                    if (hasDaySchedule(index)) {
+                      setSelectedDay(index);
+                    }
+                  }}
                 >
-                  {day}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={[
+                      styles.workDayText,
+                      hasDaySchedule(index) && styles.workDayTextActive,
+                    ]}
+                  >
+                    {day}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.helperText}>
+              Toca: marcar/desmarcar día. Mantén presionado: editar horario.
+            </Text>
           </View>
-        </View>
 
-        {/* Auto Schedule Section */}
-        <View style={styles.switchContainer}>
-          <View style={styles.switchContent}>
-            <Text style={styles.switchLabel}>{t('job_form.schedule.auto_schedule')}</Text>
-            <Text style={styles.switchDescription}>{t('job_form.schedule.auto_schedule_desc')}</Text>
+          {/* Schedule details for selected day */}
+          {selectedDay !== null && (
+            <View style={styles.dayScheduleContainer}>
+              <Text style={styles.dayScheduleTitle}>
+                {t('job_form.schedule.schedule_for')} {(t('job_form.schedule.days') as unknown as string[])[selectedDay]}
+              </Text>
+
+              <View style={styles.row}>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>{t('job_form.schedule.start_time')}</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={getDaySchedule(selectedDay)?.startTime || ''}
+                    onChangeText={(value) => {
+                      const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
+                      updateDaySchedule(selectedDay, { ...currentSchedule, startTime: value });
+                    }}
+                    placeholder={t('job_form.schedule.start_time_placeholder')}
+                    placeholderTextColor={colors.textTertiary}
+                  />
+                </View>
+                
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>{t('job_form.schedule.end_time')}</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={getDaySchedule(selectedDay)?.endTime || ''}
+                    onChangeText={(value) => {
+                      const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
+                      updateDaySchedule(selectedDay, { ...currentSchedule, endTime: value });
+                    }}
+                    placeholder={t('job_form.schedule.end_time_placeholder')}
+                    placeholderTextColor={colors.textTertiary}
+                  />
+                </View>
+              </View>
+
+              {/* Split Shift Section */}
+              <View style={styles.switchContainer}>
+                <View style={styles.switchContent}>
+                  <Text style={styles.switchLabel}>{t('job_form.schedule.split_shift')}</Text>
+                  <Text style={styles.switchDescription}>{t('job_form.schedule.split_shift_desc')}</Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.switch, getDaySchedule(selectedDay)?.hasSplitShift && styles.switchActive]}
+                  onPress={() => {
+                    const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
+                    updateDaySchedule(selectedDay, { 
+                      ...currentSchedule, 
+                      hasSplitShift: !currentSchedule.hasSplitShift 
+                    });
+                  }}
+                >
+                  <View style={[styles.switchThumb, getDaySchedule(selectedDay)?.hasSplitShift && styles.switchThumbActive]} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Second shift times - only show if split shift is enabled */}
+              {getDaySchedule(selectedDay)?.hasSplitShift && (
+                <View style={styles.row}>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>{t('job_form.schedule.second_start_time')}</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={getDaySchedule(selectedDay)?.secondStartTime || ''}
+                      onChangeText={(value) => {
+                        const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
+                        updateDaySchedule(selectedDay, { ...currentSchedule, secondStartTime: value });
+                      }}
+                      placeholder={t('job_form.schedule.second_start_time_placeholder')}
+                      placeholderTextColor={colors.textTertiary}
+                    />
+                  </View>
+                  
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>{t('job_form.schedule.second_end_time')}</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={getDaySchedule(selectedDay)?.secondEndTime || ''}
+                      onChangeText={(value) => {
+                        const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
+                        updateDaySchedule(selectedDay, { ...currentSchedule, secondEndTime: value });
+                      }}
+                      placeholder={t('job_form.schedule.second_end_time_placeholder')}
+                      placeholderTextColor={colors.textTertiary}
+                    />
+                  </View>
+                </View>
+              )}
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('job_form.schedule.break_time')}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={String(getDaySchedule(selectedDay)?.breakTime || 0)}
+                  onChangeText={(value) => {
+                    const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
+                    updateDaySchedule(selectedDay, { ...currentSchedule, breakTime: Number(value) || 0 });
+                  }}
+                  placeholder={t('job_form.schedule.break_time_placeholder')}
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                />
+              </View>
+            </View>
+          )}
+
+          {/* Auto Schedule Section */}
+          <View style={styles.switchContainer}>
+            <View style={styles.switchContent}>
+              <Text style={styles.switchLabel}>{t('job_form.schedule.auto_schedule')}</Text>
+              <Text style={styles.switchDescription}>{t('job_form.schedule.auto_schedule_desc')}</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.switch, formData.schedule?.autoSchedule && styles.switchActive]}
+              onPress={() => {
+                const newValue = !formData.schedule?.autoSchedule;
+                if (newValue && !isSubscribed) {
+                  setShowPremiumModal(true);
+                } else {
+                  updateNestedData('schedule', 'autoSchedule', newValue);
+                }
+              }}
+            >
+              <View style={[styles.switchThumb, formData.schedule?.autoSchedule && styles.switchThumbActive]} />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={[styles.switch, formData.schedule?.autoSchedule && styles.switchActive]}
-            onPress={() => {
-              const newValue = !formData.schedule?.autoSchedule;
-              if (newValue && !isSubscribed) {
-                setShowPremiumModal(true);
-              } else {
-                updateNestedData('schedule', 'autoSchedule', newValue);
-              }
-            }}
-          >
-            <View style={[styles.switchThumb, formData.schedule?.autoSchedule && styles.switchThumbActive]} />
-          </TouchableOpacity>
-        </View>
         </>
         )}
       </BlurView>
@@ -1883,41 +1989,39 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             />
           </View>
 
-          <View style={styles.row}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                <IconSymbol size={16} name="phone" color={colors.primary} /> {t('job_form.billing.user_data.phone')}
-              </Text>
-              <TextInput
-                style={styles.input}
-                value={formData.billing?.userData?.phone}
-                onChangeText={(value) => updateNestedData('billing', 'userData', {
-                  ...formData.billing?.userData,
-                  phone: value
-                })}
-                placeholder={t('job_form.billing.user_data.phone_placeholder')}
-                placeholderTextColor={colors.textTertiary}
-                keyboardType="phone-pad"
-              />
-            </View>
-            
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                <IconSymbol size={16} name="envelope" color={colors.primary} /> {t('job_form.billing.user_data.email')}
-              </Text>
-              <TextInput
-                style={styles.input}
-                value={formData.billing?.userData?.email}
-                onChangeText={(value) => updateNestedData('billing', 'userData', {
-                  ...formData.billing?.userData,
-                  email: value
-                })}
-                placeholder={t('job_form.billing.user_data.email_placeholder')}
-                placeholderTextColor={colors.textTertiary}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              <IconSymbol size={16} name="phone" color={colors.primary} /> {t('job_form.billing.user_data.phone')}
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={formData.billing?.userData?.phone}
+              onChangeText={(value) => updateNestedData('billing', 'userData', {
+                ...formData.billing?.userData,
+                phone: value
+              })}
+              placeholder={t('job_form.billing.user_data.phone_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+              keyboardType="phone-pad"
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              <IconSymbol size={16} name="envelope" color={colors.primary} /> {t('job_form.billing.user_data.email')}
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={formData.billing?.userData?.email}
+              onChangeText={(value) => updateNestedData('billing', 'userData', {
+                ...formData.billing?.userData,
+                email: value
+              })}
+              placeholder={t('job_form.billing.user_data.email_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
           </View>
 
           {/* Professional Information Section */}
@@ -1965,39 +2069,37 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             />
           </View>
 
-          <View style={styles.row}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                <IconSymbol size={16} name="building.2" color={colors.primary} /> {t('job_form.billing.user_data.bank_name')}
-              </Text>
-              <TextInput
-                style={styles.input}
-                value={formData.billing?.userData?.bankName}
-                onChangeText={(value) => updateNestedData('billing', 'userData', {
-                  ...formData.billing?.userData,
-                  bankName: value
-                })}
-                placeholder={t('job_form.billing.user_data.bank_name_placeholder')}
-                placeholderTextColor={colors.textTertiary}
-              />
-            </View>
-            
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                <IconSymbol size={16} name="network" color={colors.primary} /> {t('job_form.billing.user_data.swift_code')}
-              </Text>
-              <TextInput
-                style={styles.input}
-                value={formData.billing?.userData?.swiftCode}
-                onChangeText={(value) => updateNestedData('billing', 'userData', {
-                  ...formData.billing?.userData,
-                  swiftCode: value
-                })}
-                placeholder={t('job_form.billing.user_data.swift_code_placeholder')}
-                placeholderTextColor={colors.textTertiary}
-                autoCapitalize="characters"
-              />
-            </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              <IconSymbol size={16} name="building.2" color={colors.primary} /> {t('job_form.billing.user_data.bank_name')}
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={formData.billing?.userData?.bankName}
+              onChangeText={(value) => updateNestedData('billing', 'userData', {
+                ...formData.billing?.userData,
+                bankName: value
+              })}
+              placeholder={t('job_form.billing.user_data.bank_name_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              <IconSymbol size={16} name="network" color={colors.primary} /> {t('job_form.billing.user_data.swift_code')}
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={formData.billing?.userData?.swiftCode}
+              onChangeText={(value) => updateNestedData('billing', 'userData', {
+                ...formData.billing?.userData,
+                swiftCode: value
+              })}
+              placeholder={t('job_form.billing.user_data.swift_code_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+              autoCapitalize="characters"
+            />
           </View>
 
           <View style={styles.previewCard}>

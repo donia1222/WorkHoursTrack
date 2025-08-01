@@ -88,8 +88,7 @@ class GeofenceService {
       this.locationSubscription = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
-          timeInterval: 10000, // Update every 10 seconds (more frequent)
-          distanceInterval: 10, // Or when user moves 10 meters
+          distanceInterval: 20, // Only when user moves 20 meters
         },
         (location) => {
           this.processLocationUpdate(location, jobsToMonitor);

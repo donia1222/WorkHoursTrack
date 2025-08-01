@@ -350,6 +350,7 @@ export default function ChatbotScreen() {
   const [lastAnalyzedImage, setLastAnalyzedImage] = useState<{ uri: string } | null>(null);
   const [lastAnalyzedDocument, setLastAnalyzedDocument] = useState<{ uri: string; name: string; type: string } | null>(null);
   const [waitingForPersonSelection, setWaitingForPersonSelection] = useState(false);
+  const [waitingForClarification, setWaitingForClarification] = useState(false);
 
   // Cargar trabajos al inicializar
   useEffect(() => {
@@ -376,6 +377,21 @@ export default function ChatbotScreen() {
     ];
     
     return patterns.some(pattern => text.includes(pattern));
+  };
+
+  // Función para detectar si el bot está pidiendo clarificación sobre ambigüedades
+  const isAskingForClarification = (text: string): boolean => {
+    const patterns = [
+      '🤔', // Emoji de clarificación
+      'necesito aclarar',
+      'qué significa',
+      'antes de continuar',
+      'no entiendo',
+      'podrías explicar',
+      '¿qué quiere decir'
+    ];
+    
+    return patterns.some(pattern => text.toLowerCase().includes(pattern.toLowerCase()));
   };
   
   // Función para obtener historial de conversación (últimos 10 mensajes)
@@ -614,6 +630,12 @@ export default function ChatbotScreen() {
             console.log('👥 [CHAT] Bot detectó múltiples nombres, activando modo de selección');
             setWaitingForPersonSelection(true);
           }
+          
+          // Detectar si el bot está pidiendo clarificación sobre ambigüedades
+          if (isAskingForClarification(responseText)) {
+            console.log('❓ [CHAT] Bot detectó ambigüedades, activando modo de clarificación');
+            setWaitingForClarification(true);
+          }
         }
       } else if (waitingForPersonSelection && (lastAnalyzedImage || lastAnalyzedDocument)) {
         console.log('👤 [CHAT] Usuario seleccionó persona, analizando con contexto');
@@ -639,6 +661,34 @@ export default function ChatbotScreen() {
         // Limpiar solo el estado de espera, mantener el archivo activo
         setWaitingForPersonSelection(false);
         
+      } else if (waitingForClarification && (lastAnalyzedImage || lastAnalyzedDocument)) {
+        console.log('🔍 [CHAT] Usuario respondió clarificación, re-analizando con información adicional');
+        // El usuario está respondiendo a la pregunta de clarificación
+        
+        const clarificationMessage = `Información adicional: ${inputText}. 
+
+Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa el formato exacto con emojis, separadores y estructura que especifica responseFormat.`;
+        
+        if (lastAnalyzedDocument) {
+          console.log('📄 [CHAT] Re-analizando documento PDF con clarificación');
+          responseText = await GoogleVisionService.analyzePDFDocument(
+            lastAnalyzedDocument.uri,
+            lastAnalyzedDocument.name,
+            clarificationMessage,
+            language
+          );
+        } else if (lastAnalyzedImage) {
+          console.log('🖼️ [CHAT] Re-analizando imagen con clarificación');
+          responseText = await GoogleVisionService.analyzeWorkPlan(
+            lastAnalyzedImage.uri,
+            clarificationMessage,
+            language
+          );
+        }
+        
+        // Limpiar el estado de espera de clarificación
+        setWaitingForClarification(false);
+        
       } else {
         console.log('💬 [CHAT] Solo texto, sin imagen');
         
@@ -651,6 +701,7 @@ export default function ChatbotScreen() {
           setLastAnalyzedImage(null);
           setLastAnalyzedDocument(null);
           setWaitingForPersonSelection(false);
+          setWaitingForClarification(false);
           responseText = t('chatbot.context_cleared');
         } else {
           // Obtener historial de conversación
@@ -824,7 +875,11 @@ export default function ChatbotScreen() {
           style={styles.textInput}
           value={inputText}
           onChangeText={setInputText}
-          placeholder={waitingForPersonSelection ? t('chatbot.placeholder_waiting') : t('chatbot.placeholder_default')}
+          placeholder={
+            waitingForPersonSelection ? t('chatbot.placeholder_waiting') : 
+            waitingForClarification ? 'Explícame qué significa...' : 
+            t('chatbot.placeholder_default')
+          }
           placeholderTextColor={colors.textSecondary}
           multiline
           maxLength={500}

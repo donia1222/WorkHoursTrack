@@ -282,33 +282,10 @@ function AppContent() {
   const renderCurrentScreen = () => {
     switch (currentScreen) {
       case 'mapa':
-        if (locationPermissionDenied) {
-          // Show permission denied UI instead of map
-          return (
-            <ScreenWrapper screenKey="mapa-no-location">
-              {renderLocationPermissionDenied()}
-            </ScreenWrapper>
-          );
-        }
-        if (useWithoutLocation) {
-          // Show app functionality without location
-          return (
-            <ScreenWrapper screenKey="mapa-without-location">
-              <NoLocationMapView onNavigate={handleNavigate} />
-            </ScreenWrapper>
-          );
-        }
-        // Show loading when requesting location or when no location yet
-        if (isRequestingLocation || !location) {
-          return (
-            <ScreenWrapper screenKey="mapa-loading">
-              <Loading showMessage={false} />
-            </ScreenWrapper>
-          );
-        }
+        // Always show MapLocation regardless of permission status
         return (
           <ScreenWrapper screenKey="mapa">
-            <MapLocation location={location} onNavigate={handleNavigate} />
+            <MapLocation location={location || undefined} onNavigate={handleNavigate} />
           </ScreenWrapper>
         );
       case 'timer':
@@ -369,35 +346,35 @@ function AppContent() {
       case 'timer':
         return (
           <View style={styles.screenTitle}>
-            <IconSymbol size={20} name="clock.fill" color="#34C759" />
+            <IconSymbol size={26} name="clock.fill" color="#34C759" />
             <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('timer.title')}</Text>
           </View>
         );
       case 'reports':
         return (
           <View style={styles.screenTitle}>
-            <IconSymbol size={20} name="doc.text.fill" color="#FF9500" />
+            <IconSymbol size={26} name="doc.text.fill" color="#FF9500" />
             <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('reports.title')}</Text>
           </View>
         );
       case 'calendar':
         return (
           <View style={styles.screenTitle}>
-            <IconSymbol size={20} name="calendar" color="#6366F1" />
+            <IconSymbol size={26} name="calendar" color="#6366F1" />
             <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('calendar.title')}</Text>
           </View>
         );
       case 'settings':
         return (
           <View style={styles.screenTitle}>
-            <IconSymbol size={20} name="gear" color="#8E8E93" />
+            <IconSymbol size={26} name="gear" color="#8E8E93" />
             <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('settings.title')}</Text>
           </View>
         );
       case 'subscription':
         return (
           <View style={styles.screenTitle}>
-            <IconSymbol size={20} name="crown.fill" color="#FFD700" />
+            <IconSymbol size={26} name="crown.fill" color="#FFD700" />
             <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('subscription.title')}</Text>
           </View>
         );
@@ -406,7 +383,7 @@ function AppContent() {
       default:
         return (
           <View style={styles.workTrackTitle}>
-            <IconSymbol size={24} name="clock.fill" color="#34C759" />
+            <IconSymbol size={26} name="clock.fill" color="#34C759" />
             <Text style={[styles.workText, { color: '#007AFF' }]}>Work</Text>
             <Text style={[styles.trackText, { color: '#34C759' }]}>Track</Text>
           </View>

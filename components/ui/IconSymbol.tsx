@@ -38,6 +38,10 @@ const MAPPING = {
   'doc.text.fill': 'description',
   'chevron.down': 'expand-more',
   'square.and.arrow.up': 'share',
+  // Added missing icon mappings for button icons
+  'briefcase.fill': 'work',
+  'timer': 'timer',
+  'message.fill': 'message',
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],

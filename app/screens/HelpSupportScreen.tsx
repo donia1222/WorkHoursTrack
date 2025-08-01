@@ -14,7 +14,7 @@ import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BlurView } from 'expo-blur';
 import Header from '../components/Header';
-import LoadingOverlay from '../components/LoadingOverlay';
+
 
 interface HelpSupportScreenProps {
   onClose?: () => void;
@@ -236,9 +236,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginTop:20
   },
   screenTitleText: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
     letterSpacing: -0.3,
   },
@@ -350,7 +351,7 @@ export default function HelpSupportScreen({ onClose }: HelpSupportScreenProps) {
       <Header 
         title={
           <View style={styles.screenTitle}>
-            <IconSymbol size={20} name="questionmark.circle" color={colors.primary} />
+            <IconSymbol size={26} name="questionmark.circle" color={colors.primary} />
             <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('help_support.title')}</Text>
           </View>
         }
@@ -525,7 +526,7 @@ export default function HelpSupportScreen({ onClose }: HelpSupportScreenProps) {
         </BlurView>
       </ScrollView>
 
-      <LoadingOverlay visible={isClosing} />
+
     </SafeAreaView>
   );
 }

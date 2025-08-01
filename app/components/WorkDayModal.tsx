@@ -170,6 +170,11 @@ export default function WorkDayModal({
 
   // Function to calculate hours from time range
   const calculateHoursFromTime = (start: string, end: string, secondStart?: string, secondEnd?: string): number => {
+    // Validate that start and end are not undefined or empty and have correct format
+    if (!start || !end || !start.includes(':') || !end.includes(':')) {
+      return 0;
+    }
+    
     const [startHour, startMin] = start.split(':').map(Number);
     const [endHour, endMin] = end.split(':').map(Number);
     
@@ -184,7 +189,7 @@ export default function WorkDayModal({
     let totalMinutes = endMinutes - startMinutes;
     
     // Add second shift if split shift is enabled
-    if (secondStart && secondEnd) {
+    if (secondStart && secondEnd && secondStart.includes(':') && secondEnd.includes(':')) {
       const [secondStartHour, secondStartMin] = secondStart.split(':').map(Number);
       const [secondEndHour, secondEndMin] = secondEnd.split(':').map(Number);
       

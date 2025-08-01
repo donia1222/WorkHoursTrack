@@ -205,8 +205,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginRight: 8,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '500',
     color: colors.text,
     textShadowColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
     textShadowOffset: { width: 0, height: 1 },
