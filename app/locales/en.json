@@ -208,7 +208,7 @@
     "stop": "Stop",
     "overtime": "overtime",
     "regular": "regular",
-    "recent_sessions": "Recent Sessions",
+    "recent_sessions": "Recent logs",
     "view_stats": "View Statistics",
     "no_recent_sessions": "You haven't recorded any timer sessions yet",
     "all_jobs": "All",
@@ -599,6 +599,7 @@
       "company": "Company",
       "company_placeholder": "E.g: Tech Solutions Inc.",
       "address": "Address",
+      "location_helper": "Use this when you're at your workplace",
       "street": "Street",
       "street_placeholder": "Example Street 123",
       "postal_code": "Postal Code",
@@ -642,7 +643,9 @@
       "enable_schedule": "Enable schedule",
       "enable_schedule_desc": "Enable work schedule and calendar sync for this job",
       "auto_schedule": "Auto scheduling",
-      "auto_schedule_desc": "Automatically add work days to calendar"
+      "auto_schedule_desc": "Automatically add work days to calendar",
+      "select_day": "Select day",
+      "schedule_for": "Schedule for"
     },
     "financial": {
       "title": "Salary Configuration",

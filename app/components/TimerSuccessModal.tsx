@@ -200,9 +200,7 @@ export default function TimerSuccessModal({
                     size={18}
                     color="#FFFFFF"
                   />
-                  <Text style={[styles.buttonText, styles.primaryButtonText]}>
-                    {t('timer.view_reports')}
-                  </Text>
+              
                 </LinearGradient>
               </TouchableOpacity>
             </View>

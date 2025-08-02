@@ -204,7 +204,7 @@
     "stop": "Ferma",
     "overtime": "straordinario",
     "regular": "regolare",
-    "recent_sessions": "Sessioni Recenti",
+    "recent_sessions": "Ultimi registri",
     "view_stats": "Vedi Statistiche",
     "no_recent_sessions": "Non hai ancora registrato nessuna sessione con il timer",
     "all_jobs": "Tutti",
@@ -459,6 +459,7 @@
       "company": "Azienda",
       "company_placeholder": "Es: Tech Solutions S.r.l.",
       "address": "Indirizzo",
+      "location_helper": "Usa questo quando sei sul tuo posto di lavoro",
       "street": "Via",
       "street_placeholder": "Via Esempio 123",
       "postal_code": "Codice postale",
@@ -502,7 +503,9 @@
       "enable_schedule": "Attiva orario",
       "enable_schedule_desc": "Attiva l'orario di lavoro e la sincronizzazione del calendario per questo lavoro",
       "auto_schedule": "Programmazione automatica",
-      "auto_schedule_desc": "Aggiungere automaticamente i giorni lavorativi al calendario"
+      "auto_schedule_desc": "Aggiungere automaticamente i giorni lavorativi al calendario",
+      "select_day": "Seleziona giorno",
+      "schedule_for": "Orario per"
     },
     "financial": {
       "title": "Configurazione stipendio",
@@ -971,5 +974,57 @@
       "november": "Novembre",
       "december": "Dicembre"
     }
+  },
+  "onboarding": {
+    "steps": {
+      "jobs": {
+        "title": "Gestisci i tuoi Lavori",
+        "description": "Crea e organizza tutti i tuoi lavori con informazioni dettagliate, orari, tariffe e posizioni."
+      },
+      "timer": {
+        "title": "Monitora il tuo Tempo",
+        "description": "Usa il timer per misurare le ore di lavoro o registra manualmente nel calendario."
+      },
+      "location": {
+        "title": "Localizza sulla Mappa",
+        "description": "Vedi i tuoi lavori sulla mappa, naviga verso le loro posizioni e gestisci tutto da un unico posto."
+      },
+      "reports": {
+        "title": "Analizza le Statistiche",
+        "description": "Rivedi rapporti dettagliati, statistiche di lavoro ed esporta i tuoi dati quando ne hai bisogno."
+      }
+    },
+    "step_counter": "{{current}} di {{total}}",
+    "navigation": {
+      "previous": "Precedente",
+      "next": "Successivo",
+      "start": "Inizia",
+      "allow_location": "Consenti Posizione",
+      "skip": "Salta"
+    },
+    "location": {
+      "permission_notice": "Per utilizzare questa funzione avremo bisogno di accedere alla tua posizione",
+      "permission_title": "Autorizzazioni di Posizione",
+      "permission_message": "Le autorizzazioni di posizione sono necessarie per mostrare i tuoi lavori sulla mappa e navigare verso le posizioni. Puoi abilitare le autorizzazioni più tardi nelle impostazioni dell'app.",
+      "permission_understood": "Capito"
+    },
+    "features": {
+      "title": "Funzionalità Principali",
+      "smart_timer": "Timer automatico con arrotondamento intelligente",
+      "visual_calendar": "Calendario visuale con tipi di giorni",
+      "interactive_map": "Mappa interattiva con posizioni",
+      "detailed_stats": "Statistiche e rapporti dettagliati",
+      "data_export": "Esportazione dati"
+    },
+    "tips": {
+      "title": "💡 Suggerimenti Rapidi",
+      "long_press": "Tieni premuto per più opzioni",
+      "share_stats": "Condividi le tue statistiche da qualsiasi modal",
+      "swipe_close": "Scorri verso il basso per chiudere i modal"
+    }
+  },
+  "welcome": {
+    "title": "Benvenuto!",
+    "subtitle": "Impara a usare l'app in {{steps}} passaggi"
   }
 }

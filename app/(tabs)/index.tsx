@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Alert, StyleSheet, Text, TouchableOpacity, SafeAreaView, Linking, AppState } from 'react-native';
+import { View, Alert, StyleSheet, Text, TouchableOpacity, SafeAreaView, Linking, AppState, Modal } from 'react-native';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
 
 import Loading from '../components/Loading';
 import MapLocation from '../components/MapLocation';
@@ -50,6 +51,7 @@ function AppContent() {
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
   const [useWithoutLocation, setUseWithoutLocation] = useState(false);
+  const [showFeaturesModal, setShowFeaturesModal] = useState(false);
   const { currentScreen, navigateTo } = useNavigation();
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
@@ -171,6 +173,28 @@ function AppContent() {
     };
   }, [locationPermissionDenied, useWithoutLocation, location]);
 
+  // Show features modal after 1 minute if it hasn't been shown before
+  useEffect(() => {
+    const checkAndShowFeaturesModal = async () => {
+      try {
+        const hasSeenModal = await AsyncStorage.getItem('hasSeenFeaturesModal');
+        
+        if (hasSeenModal !== 'true') {
+          // Set timer for 30 seconds (30000 ms)
+          const timer = setTimeout(() => {
+            setShowFeaturesModal(true);
+          }, 30000);
+          
+          return () => clearTimeout(timer);
+        }
+      } catch (error) {
+        console.error('Error checking features modal status:', error);
+      }
+    };
+
+    checkAndShowFeaturesModal();
+  }, []);
+
   const requestLocationPermission = async () => {
     setIsRequestingLocation(true);
     try {
@@ -277,6 +301,21 @@ function AppContent() {
   const handleWelcomeModalClose = async () => {
     setShowWelcomeModal(false);
     await OnboardingService.markOnboardingComplete();
+  };
+
+  const handleFeaturesModalClose = async () => {
+    setShowFeaturesModal(false);
+    try {
+      await AsyncStorage.setItem('hasSeenFeaturesModal', 'true');
+    } catch (error) {
+      console.error('Error saving features modal status:', error);
+    }
+  };
+
+  const handleAnalyzeBotPress = () => {
+    setShowFeaturesModal(false);
+    handleFeaturesModalClose();
+    navigateTo('chatbot');
   };
 
   const renderCurrentScreen = () => {
@@ -425,6 +464,86 @@ function AppContent() {
         onMenuToggle={() => setShowMenu(!showMenu)}
         onNavigate={handleNavigate}
       />
+      
+      {/* Features Modal */}
+      <Modal
+        visible={showFeaturesModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleFeaturesModalClose}
+      >
+        <View style={featuresModalStyles.overlay}>
+          <BlurView intensity={80} tint={isDark ? "dark" : "light"} style={[featuresModalStyles.container, { backgroundColor: isDark ? colors.surface : '#FFFFFF' }]}>
+            <View style={featuresModalStyles.header}>
+              <Text style={[featuresModalStyles.title, { color: colors.text }]}>News! 🎉</Text>
+              <TouchableOpacity
+                style={featuresModalStyles.closeButton}
+                onPress={handleFeaturesModalClose}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={featuresModalStyles.content}>
+              {/* Features copied from WelcomeMessage */}
+              <View style={featuresModalStyles.featuresList}>
+                <View style={featuresModalStyles.featureItem}>
+                  <View style={[featuresModalStyles.featureIcon, { backgroundColor: isDark ? colors.primary + '15' : colors.primary + '10' }]}>
+                    <Ionicons name="document-text" size={16} color={colors.primary} />
+                  </View>
+                  <Text style={[featuresModalStyles.featureText, { color: colors.text }]}>{t('chatbot.feature_analyze')}</Text>
+                </View>
+
+                <View style={featuresModalStyles.featureItem}>
+                  <View style={[featuresModalStyles.featureIcon, { backgroundColor: isDark ? colors.primary + '15' : colors.primary + '10' }]}>
+                    <Ionicons name="search" size={16} color={colors.primary} />
+                  </View>
+                  <Text style={[featuresModalStyles.featureText, { color: colors.text }]}>{t('chatbot.feature_extract')}</Text>
+                </View>
+
+                <View style={featuresModalStyles.featureItem}>
+                  <View style={[featuresModalStyles.featureIcon, { backgroundColor: isDark ? colors.primary + '15' : colors.primary + '10' }]}>
+                    <Ionicons name="calendar" size={16} color={colors.primary} />
+                  </View>
+                  <Text style={[featuresModalStyles.featureText, { color: colors.text }]}>{t('chatbot.feature_identify')}</Text>
+                </View>
+
+                <View style={featuresModalStyles.featureItem}>
+                  <View style={[featuresModalStyles.featureIcon, { backgroundColor: isDark ? colors.primary + '15' : colors.primary + '10' }]}>
+                    <Ionicons name="people" size={16} color={colors.primary} />
+                  </View>
+                  <Text style={[featuresModalStyles.featureText, { color: colors.text }]}>{t('chatbot.feature_detect')}</Text>
+                </View>
+
+                <View style={featuresModalStyles.featureItem}>
+                  <View style={[featuresModalStyles.featureIcon, { backgroundColor: isDark ? colors.primary + '15' : colors.primary + '10' }]}>
+                    <Ionicons name="download" size={16} color={colors.primary} />
+                  </View>
+                  <Text style={[featuresModalStyles.featureText, { color: colors.text }]}>{t('chatbot.feature_export')}</Text>
+                </View>
+
+                <View style={featuresModalStyles.featureItem}>
+                  <View style={[featuresModalStyles.featureIcon, { backgroundColor: isDark ? colors.primary + '15' : colors.primary + '10' }]}>
+                    <Ionicons name="sync" size={16} color={colors.primary} />
+                  </View>
+                  <Text style={[featuresModalStyles.featureText, { color: colors.text }]}>{t('chatbot.feature_sync')}</Text>
+                </View>
+              </View>
+              
+              {/* Analyze Bot Button */}
+              <TouchableOpacity
+                style={[featuresModalStyles.analyzeButton, { backgroundColor: colors.primary }]}
+                onPress={handleAnalyzeBotPress}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="sparkles" size={20} color="#FFFFFF" />
+                <Text style={featuresModalStyles.analyzeButtonText}>Analyze bot</Text>
+              </TouchableOpacity>
+            </View>
+          </BlurView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -544,6 +663,82 @@ const locationDeniedStyles = StyleSheet.create({
     borderWidth: 1,
   },
   secondaryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
+
+const featuresModalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  container: {
+    borderRadius: 20,
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '80%',
+    overflow: 'hidden',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    flex: 1,
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  content: {
+    padding: 20,
+  },
+  featuresList: {
+    marginBottom: 24,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  featureIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  featureText: {
+    fontSize: 15,
+    flex: 1,
+    lineHeight: 20,
+    fontWeight: '500',
+  },
+  analyzeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    gap: 8,
+  },
+  analyzeButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

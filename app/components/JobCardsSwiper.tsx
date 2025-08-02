@@ -768,7 +768,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     marginTop: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    width: '100%',
+    width: '95%',
     backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
     borderRadius: 12,
     borderWidth: 1,
@@ -778,6 +778,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 1,
+    alignSelf: 'center',
   },
   autoTimerLabel: {
     fontSize: 13,

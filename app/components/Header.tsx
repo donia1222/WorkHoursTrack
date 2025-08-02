@@ -210,8 +210,8 @@ export default function Header({ title, onProfilePress, onMenuPress, onBackPress
       <BlurView intensity={isDark ? 0 : 90} tint={isDark ? "dark" : "light"} style={styles.blurContainer}>
         <LinearGradient
           colors={isDark 
-            ? ['#000000', '#000000', '#000000'] 
-            : ['rgba(0, 122, 255, 0.06)', 'rgba(0, 122, 255, 0.02)', 'transparent']
+            ? ['#000000ff', '#000000', '#000000'] 
+            : ['rgba(0, 123, 255, 0)', 'rgba(0, 123, 255, 0)', 'transparent']
           }
           style={styles.blurGradient}
           start={{ x: 0, y: 0 }}

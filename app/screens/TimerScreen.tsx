@@ -172,6 +172,9 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     opacity: 0.8,
   },
   notesEditButton: {
+    position: 'absolute',
+    top: -8,
+    right: 0,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -581,16 +584,17 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     textAlign: 'center',
   },
   compactJobSelector: {
-    marginVertical: 8,
+marginTop: -4,
     paddingHorizontal: 16,
   },
-  compactJobSelectorTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 16,
+
+
+    compactJobSelectorTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: 12,
     textAlign: 'center',
-    letterSpacing: -0.3,
   },
   compactJobTabs: {
     flexDirection: 'row',
@@ -836,7 +840,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
 
 export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   const { colors, isDark } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { triggerHaptic } = useHapticFeedback();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>('');
@@ -1531,17 +1535,31 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
               </TouchableOpacity>
               
               <Text style={styles.recentSessionDate}>
-                {sessionDate.toLocaleDateString('es-ES', { 
-                  day: '2-digit', 
-                  month: 'short' 
-                })}
+                {sessionDate.toLocaleDateString(
+                  language === 'es' ? 'es-ES' : 
+                  language === 'en' ? 'en-US' : 
+                  language === 'de' ? 'de-DE' : 
+                  language === 'fr' ? 'fr-FR' : 
+                  language === 'it' ? 'it-IT' : 'en-US', 
+                  { 
+                    day: 'numeric', 
+                    month: 'short' 
+                  }
+                ).replace(/\.$/, '')}
               </Text>
               
               <Text style={styles.recentSessionTime}>
-                {createdDate.toLocaleTimeString('es-ES', { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
-                })}
+                {createdDate.toLocaleTimeString(
+                  language === 'es' ? 'es-ES' : 
+                  language === 'en' ? 'en-US' : 
+                  language === 'de' ? 'de-DE' : 
+                  language === 'fr' ? 'fr-FR' : 
+                  language === 'it' ? 'it-IT' : 'en-US', 
+                  { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  }
+                )}
               </Text>
               
               {job && (
@@ -1575,13 +1593,13 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       const job = jobs[0];
       return (
         <View style={styles.compactJobSelector}>
-          <Text style={styles.compactJobSelectorTitle}>{t('job_selector.title')}</Text>
           <View style={styles.compactJobTabs}>
             <View style={[styles.compactJobTab, styles.compactJobTabActive]}>
               <View style={[styles.compactJobTabDot, { backgroundColor: job.color }]} />
               <Text style={[styles.compactJobTabText, styles.compactJobTabTextActive]} numberOfLines={1}>
                 {job.name}
               </Text>
+              
             </View>
           </View>
         </View>
@@ -1592,7 +1610,9 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       // Para 2-3 trabajos, mostrar como pestañas
       return (
         <View style={styles.compactJobSelector}>
-          <Text style={styles.compactJobSelectorTitle}>{t('job_selector.title')}</Text>
+          {jobs.length > 1 && (
+            <Text style={styles.compactJobSelectorTitle}>{t('calendar.filter_by_job')}</Text>
+          )}
           <View style={styles.compactJobTabs}>
             {/* All Jobs Button */}
             <TouchableOpacity
@@ -1651,7 +1671,9 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       // Para más de 3 trabajos, mostrar como scroll horizontal
       return (
         <View style={styles.compactJobSelector}>
-          <Text style={styles.compactJobSelectorTitle}>{t('job_selector.title')}</Text>
+          {jobs.length > 1 && (
+            <Text style={styles.compactJobSelectorTitle}>{t('job_selector.title')}</Text>
+          )}
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
@@ -1878,12 +1900,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
             end={{ x: 1, y: 1 }}
           />
           <View style={styles.timerContent}>
-            <Animated.View style={[styles.timerDisplay, animatedTimerStyle]}>
-              <View style={styles.timerTimeContainer}>
-                <Animated.Text style={[styles.timerTime, animatedTimeTextStyle]}>
-                  {formatTime(elapsedTime)}
-                </Animated.Text>
-                <TouchableOpacity 
+                           <TouchableOpacity 
                   style={styles.notesEditButton}
                   onPress={() => {
                     triggerHaptic('light');
@@ -1897,6 +1914,12 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                     color={notes.trim() ? colors.primary : colors.textSecondary} 
                   />
                 </TouchableOpacity>
+            <Animated.View style={[styles.timerDisplay, animatedTimerStyle]}>
+              <View style={styles.timerTimeContainer}>
+                <Animated.Text style={[styles.timerTime, animatedTimeTextStyle]}>
+                  {formatTime(elapsedTime)}
+                </Animated.Text>
+ 
               </View>
               <Text style={styles.timerHours}>
                 ≈ {getSessionHours()}h{getSessionHours() > 8 ? ` (${t('timer.overtime')})` : ''}

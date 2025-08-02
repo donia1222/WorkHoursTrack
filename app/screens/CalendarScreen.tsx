@@ -813,14 +813,23 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   const renderCompactJobSelector = () => {
     if (jobs.length === 0) return null;
     
-    // Always show "All" option + available jobs
-    const allOptions = [{ id: 'all', name: t('calendar.all_jobs'), color: colors.primary }].concat(jobs);
+    // Only show "All" option when there are multiple jobs
+    const allOptions = jobs.length > 1 
+      ? [{ id: 'all', name: t('calendar.all_jobs'), color: colors.primary }].concat(jobs)
+      : jobs;
+    
+    // When there's only one job, auto-select it
+    if (jobs.length === 1 && selectedJobId === 'all') {
+      setSelectedJobId(jobs[0].id);
+    }
     
     if (allOptions.length <= 4) {
       // Para hasta 4 opciones (incluyendo "Todos"), mostrar como pestañas
       return (
         <View style={styles.compactJobSelector}>
-          <Text style={styles.compactJobSelectorTitle}>{t('calendar.filter_by_job')}</Text>
+          {jobs.length > 1 && (
+            <Text style={styles.compactJobSelectorTitle}>{t('calendar.filter_by_job')}</Text>
+          )}
           <View style={styles.compactJobTabs}>
             {allOptions.map((option) => (
               <TouchableOpacity
@@ -855,7 +864,9 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
       // Para más opciones, mostrar como scroll horizontal
       return (
         <View style={styles.compactJobSelector}>
-          <Text style={styles.compactJobSelectorTitle}>{t('calendar.filter_by_job')}</Text>
+          {jobs.length > 1 && (
+            <Text style={styles.compactJobSelectorTitle}>{t('calendar.filter_by_job')}</Text>
+          )}
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}

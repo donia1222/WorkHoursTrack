@@ -207,7 +207,7 @@
     "stop": "Stoppen",
     "overtime": "Überstunden",
     "regular": "regulär",
-    "recent_sessions": "Letzte Sitzungen",
+    "recent_sessions": "Letzte Einträge",
     "view_stats": "Statistiken Anzeigen",
     "no_recent_sessions": "Sie haben noch keine Timer-Sitzungen aufgezeichnet",
     "all_jobs": "Alle",
@@ -479,6 +479,7 @@
       "company": "Unternehmen",
       "company_placeholder": "Z.B: Tech Solutions GmbH",
       "address": "Adresse",
+      "location_helper": "Verwenden Sie dies, wenn Sie an Ihrem Arbeitsplatz sind",
       "street": "Straße",
       "street_placeholder": "Beispielstraße 123",
       "postal_code": "Postleitzahl",
@@ -522,7 +523,9 @@
       "enable_schedule": "Zeitplan aktivieren",
       "enable_schedule_desc": "Arbeitszeiten und Kalendersynchronisation für diesen Job aktivieren",
       "auto_schedule": "Automatische Terminplanung",
-      "auto_schedule_desc": "Arbeitstage automatisch zum Kalender hinzufügen"
+      "auto_schedule_desc": "Arbeitstage automatisch zum Kalender hinzufügen",
+      "select_day": "Tag auswählen",
+      "schedule_for": "Zeitplan für"
     },
     "financial": {
       "title": "Gehaltskonfiguration",
@@ -1007,5 +1010,57 @@
       "november": "November",
       "december": "Dezember"
     }
+  },
+  "onboarding": {
+    "steps": {
+      "jobs": {
+        "title": "Verwalten Sie Ihre Arbeit",
+        "description": "Erstellen und organisieren Sie alle Ihre Arbeiten mit detaillierten Informationen, Zeitplänen, Tarifen und Standorten."
+      },
+      "timer": {
+        "title": "Verfolgen Sie Ihre Zeit",
+        "description": "Verwenden Sie den Timer, um Arbeitsstunden zu messen oder manuell im Kalender zu registrieren."
+      },
+      "location": {
+        "title": "Auf der Karte lokalisieren",
+        "description": "Sehen Sie Ihre Arbeiten auf der Karte, navigieren Sie zu ihren Standorten und verwalten Sie alles von einem Ort aus."
+      },
+      "reports": {
+        "title": "Statistiken analysieren",
+        "description": "Überprüfen Sie detaillierte Berichte, Arbeitsstatistiken und exportieren Sie Ihre Daten, wenn Sie sie benötigen."
+      }
+    },
+    "step_counter": "{{current}} von {{total}}",
+    "navigation": {
+      "previous": "Zurück",
+      "next": "Weiter",
+      "start": "Start",
+      "allow_location": "Standort erlauben",
+      "skip": "Überspringen"
+    },
+    "location": {
+      "permission_notice": "Um diese Funktion zu nutzen, benötigen wir Zugriff auf Ihren Standort",
+      "permission_title": "Standortberechtigungen",
+      "permission_message": "Standortberechtigungen sind erforderlich, um Ihre Arbeiten auf der Karte anzuzeigen und zu Standorten zu navigieren. Sie können die Berechtigungen später in den App-Einstellungen aktivieren.",
+      "permission_understood": "Verstanden"
+    },
+    "features": {
+      "title": "Hauptfunktionen",
+      "smart_timer": "Automatischer Timer mit intelligenter Rundung",
+      "visual_calendar": "Visueller Kalender mit Tagestypen",
+      "interactive_map": "Interaktive Karte mit Standorten",
+      "detailed_stats": "Detaillierte Statistiken und Berichte",
+      "data_export": "Datenexport"
+    },
+    "tips": {
+      "title": "💡 Schnelle Tipps",
+      "long_press": "Lange drücken für mehr Optionen",
+      "share_stats": "Teilen Sie Ihre Statistiken aus jedem Modal",
+      "swipe_close": "Nach unten wischen, um Modals zu schließen"
+    }
+  },
+  "welcome": {
+    "title": "Willkommen!",
+    "subtitle": "Lernen Sie, wie Sie die App in {{steps}} Schritten verwenden"
   }
 }

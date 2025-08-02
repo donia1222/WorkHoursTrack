@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, ThemeColors } from '@/app/contexts/ThemeContext';
 import { useLanguage } from '@/app/contexts/LanguageContext';
+import { BlurView } from 'expo-blur';
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
@@ -114,12 +115,79 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginTop: 12,
     opacity: 0.7,
   },
+  infoButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 14,
+    backgroundColor: colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  modalContainer: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '80%',
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.separator,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+    flex: 1,
+  },
+  modalCloseButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    padding: 20,
+  },
+  modalActionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 8,
+  },
+  modalActionIcon: {
+    marginRight: 12,
+  },
+  modalActionText: {
+    fontSize: 15,
+    color: colors.text,
+    flex: 1,
+    lineHeight: 20,
+  },
 });
 
 export default function WelcomeMessage() {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
   const styles = getStyles(colors, isDark);
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   const messageTime = new Date().toLocaleTimeString([], { 
     hour: '2-digit', 
@@ -127,13 +195,16 @@ export default function WelcomeMessage() {
   });
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerIcon}>
-          <Ionicons name="chatbubble-ellipses" size={18} color={colors.primary} />
+    <>
+      <View style={styles.container}>
+
+        
+        <View style={styles.header}>
+          <View style={styles.headerIcon}>
+            <Ionicons name="chatbubble-ellipses" size={18} color={colors.primary} />
+          </View>
+          <Text style={styles.title}>{t('chatbot.welcome_title')}</Text>
         </View>
-        <Text style={styles.title}>{t('chatbot.welcome_title')}</Text>
-      </View>
       
       <Text style={styles.subtitle}>
         {t('chatbot.welcome_subtitle')}
@@ -183,35 +254,61 @@ export default function WelcomeMessage() {
         </View>
       </View>
 
-      <View style={styles.divider} />
-
-      <View style={styles.actionSection}>
-        <Text style={styles.actionTitle}>{t('chatbot.get_started')}</Text>
-        
-        <View style={styles.actionItem}>
-          <Ionicons name="camera" size={18} color={colors.primary} style={styles.actionIcon} />
-          <Text style={styles.actionText}>{t('chatbot.action_photo')}</Text>
-        </View>
-
-        <View style={styles.actionItem}>
-          <Ionicons name="document" size={18} color={colors.primary} style={styles.actionIcon} />
-          <Text style={styles.actionText}>{t('chatbot.action_document')}</Text>
-        </View>
-
-        <View style={styles.actionItem}>
-          <Ionicons name="calendar" size={18} color={colors.primary} style={styles.actionIcon} />
-          <Text style={styles.actionText}>{t('chatbot.action_export')}</Text>
-        </View>
-
-        <View style={styles.actionItem}>
-          <Ionicons name="refresh" size={18} color={colors.textSecondary} style={styles.actionIcon} />
-          <Text style={styles.actionText}>{t('chatbot.action_reset')}</Text>
-        </View>
+        <Text style={styles.timestamp}>
+          {messageTime}
+        </Text>
+                <TouchableOpacity
+          style={styles.infoButton}
+          onPress={() => setShowInfoModal(true)}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="information-circle" size={26} color={colors.secondary} />
+        </TouchableOpacity>
       </View>
 
-      <Text style={styles.timestamp}>
-        {messageTime}
-      </Text>
-    </View>
+      <Modal
+        visible={showInfoModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowInfoModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('chatbot.get_started')}</Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowInfoModal(false)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalContent}>
+              <View style={styles.modalActionItem}>
+                <Ionicons name="camera" size={20} color={colors.primary} style={styles.modalActionIcon} />
+                <Text style={styles.modalActionText}>{t('chatbot.action_photo')}</Text>
+              </View>
+
+              <View style={styles.modalActionItem}>
+                <Ionicons name="document" size={20} color={colors.primary} style={styles.modalActionIcon} />
+                <Text style={styles.modalActionText}>{t('chatbot.action_document')}</Text>
+              </View>
+
+              <View style={styles.modalActionItem}>
+                <Ionicons name="calendar" size={20} color={colors.primary} style={styles.modalActionIcon} />
+                <Text style={styles.modalActionText}>{t('chatbot.action_export')}</Text>
+              </View>
+
+              <View style={styles.modalActionItem}>
+                <Ionicons name="refresh" size={20} color={colors.textSecondary} style={styles.modalActionIcon} />
+                <Text style={styles.modalActionText}>{t('chatbot.action_reset')}</Text>
+              </View>
+            </View>
+          </BlurView>
+        </View>
+      </Modal>
+    </>
   );
 }

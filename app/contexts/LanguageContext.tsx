@@ -34,7 +34,14 @@ i18n.enableFallback = true;
 i18n.defaultLocale = 'en';
 
 const getDeviceLanguage = (): SupportedLanguage => {
-  const deviceLanguage = Localization.getLocales()[0]?.languageCode;
+  const locales = Localization.getLocales();
+  const deviceLanguage = locales[0]?.languageCode;
+  const deviceRegion = locales[0]?.regionCode;
+  
+  // Manejar casos especiales de idiomas con regiones
+  const fullLocale = deviceRegion ? `${deviceLanguage}-${deviceRegion}` : deviceLanguage;
+  
+  console.log('Device language detected:', deviceLanguage, 'Full locale:', fullLocale);
   
   switch (deviceLanguage) {
     case 'es':
@@ -48,6 +55,8 @@ const getDeviceLanguage = (): SupportedLanguage => {
     case 'it':
       return 'it';
     default:
+      // Si no está entre los 5 idiomas soportados, usar inglés
+      console.log('Language not supported, defaulting to English');
       return 'en';
   }
 };
@@ -63,9 +72,17 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const loadLanguage = async () => {
     try {
       const savedLanguage = await AsyncStorage.getItem(STORAGE_KEY);
-      const languageToUse = savedLanguage 
-        ? (savedLanguage as SupportedLanguage) 
-        : getDeviceLanguage();
+      let languageToUse: SupportedLanguage;
+      
+      if (savedLanguage) {
+        // Usuario ya seleccionó un idioma manualmente
+        languageToUse = savedLanguage as SupportedLanguage;
+      } else {
+        // Primera vez o no hay preferencia guardada
+        // Detectar idioma del dispositivo
+        languageToUse = getDeviceLanguage();
+        // No guardar automáticamente para permitir que el usuario lo cambie si desea
+      }
       
       setCurrentLanguage(languageToUse);
       i18n.locale = languageToUse;

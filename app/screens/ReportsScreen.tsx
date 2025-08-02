@@ -485,11 +485,28 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
+    const locale = language === 'es' ? 'es-ES' : 
+                   language === 'en' ? 'en-US' : 
+                   language === 'de' ? 'de-DE' : 
+                   language === 'fr' ? 'fr-FR' : 
+                   language === 'it' ? 'it-IT' : 'es-ES';
+    return date.toLocaleDateString(locale, {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  const formatHoursDisplay = (hours: number): string => {
+    if (hours < 0.017) { // Less than 1 minute (0.017h = 1min)
+      return '< 1 min';
+    } else if (hours < 1) { // Less than 1 hour
+      const minutes = Math.round(hours * 60);
+      return `${minutes} min`;
+    } else {
+      // For 1 hour or more, show hours with max 1 decimal
+      return `${hours.toFixed(1)}h`;
+    }
   };
 
   const handleDatePickerConfirm = (event: any, selectedDate?: Date) => {
@@ -1097,14 +1114,23 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const renderCompactJobSelector = () => {
     if (jobs.length === 0) return null;
     
-    // Always show "All" option + available jobs
-    const allOptions = [{ id: 'all', name: t('reports.all_jobs'), color: colors.primary }].concat(jobs);
+    // Only show "All" option when there are multiple jobs
+    const allOptions = jobs.length > 1 
+      ? [{ id: 'all', name: t('reports.all_jobs'), color: colors.primary }].concat(jobs)
+      : jobs;
+    
+    // When there's only one job, auto-select it
+    if (jobs.length === 1 && selectedJobId === 'all') {
+      setSelectedJobId(jobs[0].id);
+    }
     
     if (allOptions.length <= 4) {
       // Para hasta 4 opciones (incluyendo "Todos"), mostrar como pestañas
       return (
         <View style={styles.compactJobSelector}>
-          <Text style={styles.compactJobSelectorTitle}>{t('reports.filter_by_job')}</Text>
+          {jobs.length > 1 && (
+            <Text style={styles.compactJobSelectorTitle}>{t('reports.filter_by_job')}</Text>
+          )}
           <View style={styles.compactJobTabs}>
             {allOptions.map((option) => (
               <TouchableOpacity
@@ -1139,7 +1165,9 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       // Para más opciones, mostrar como scroll horizontal
       return (
         <View style={styles.compactJobSelector}>
-          <Text style={styles.compactJobSelectorTitle}>{t('reports.filter_by_job')}</Text>
+          {jobs.length > 1 && (
+            <Text style={styles.compactJobSelectorTitle}>{t('reports.filter_by_job')}</Text>
+          )}
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
@@ -1397,7 +1425,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                       </View>
                     </View>
                     <View style={styles.recentRight}>
-                      <Text style={styles.recentHours}>{day.hours}h</Text>
+                      <Text style={styles.recentHours}>{formatHoursDisplay(day.hours)}</Text>
                       {/* Show specific schedule if available */}
                       {(day.startTime && day.endTime) && (
                         <Text style={styles.recentSchedule}>

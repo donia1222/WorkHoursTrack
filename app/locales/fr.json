@@ -204,7 +204,7 @@
     "stop": "Arrêter",
     "overtime": "heures supplémentaires",
     "regular": "régulier",
-    "recent_sessions": "Sessions Récentes",
+    "recent_sessions": "Derniers enregistrements",
     "view_stats": "Voir Statistiques",
     "no_recent_sessions": "Vous n'avez encore enregistré aucune session de minuteur",
     "all_jobs": "Tous",
@@ -459,6 +459,7 @@
       "company": "Entreprise",
       "company_placeholder": "Ex: Tech Solutions SARL",
       "address": "Adresse",
+      "location_helper": "Utilisez ceci lorsque vous êtes sur votre lieu de travail",
       "street": "Rue",
       "street_placeholder": "123 Rue de l'Exemple",
       "postal_code": "Code postal",
@@ -502,7 +503,9 @@
       "enable_schedule": "Activer l'horaire",
       "enable_schedule_desc": "Activer l'horaire de travail et la synchronisation du calendrier pour ce travail",
       "auto_schedule": "Planification automatique",
-      "auto_schedule_desc": "Ajouter automatiquement les jours de travail au calendrier"
+      "auto_schedule_desc": "Ajouter automatiquement les jours de travail au calendrier",
+      "select_day": "Sélectionner le jour",
+      "schedule_for": "Horaire pour"
     },
     "financial": {
       "title": "Configuration salariale",
@@ -979,5 +982,57 @@
       "november": "Novembre",
       "december": "Décembre"
     }
+  },
+  "onboarding": {
+    "steps": {
+      "jobs": {
+        "title": "Gérez vos Travaux",
+        "description": "Créez et organisez tous vos travaux avec des informations détaillées, des horaires, des tarifs et des emplacements."
+      },
+      "timer": {
+        "title": "Suivez votre Temps",
+        "description": "Utilisez le minuteur pour mesurer les heures de travail ou enregistrez manuellement dans le calendrier."
+      },
+      "location": {
+        "title": "Localisez sur la Carte",
+        "description": "Voyez vos travaux sur la carte, naviguez vers leurs emplacements et gérez tout depuis un seul endroit."
+      },
+      "reports": {
+        "title": "Analysez les Statistiques",
+        "description": "Consultez des rapports détaillés, des statistiques de travail et exportez vos données lorsque vous en avez besoin."
+      }
+    },
+    "step_counter": "{{current}} sur {{total}}",
+    "navigation": {
+      "previous": "Précédent",
+      "next": "Suivant",
+      "start": "Démarrer",
+      "allow_location": "Autoriser la Localisation",
+      "skip": "Passer"
+    },
+    "location": {
+      "permission_notice": "Pour utiliser cette fonction, nous aurons besoin d'accéder à votre localisation",
+      "permission_title": "Autorisations de Localisation",
+      "permission_message": "Les autorisations de localisation sont nécessaires pour afficher vos travaux sur la carte et naviguer vers les emplacements. Vous pouvez activer les autorisations plus tard dans les paramètres de l'application.",
+      "permission_understood": "Compris"
+    },
+    "features": {
+      "title": "Fonctionnalités Principales",
+      "smart_timer": "Minuteur automatique avec arrondi intelligent",
+      "visual_calendar": "Calendrier visuel avec types de jours",
+      "interactive_map": "Carte interactive avec emplacements",
+      "detailed_stats": "Statistiques et rapports détaillés",
+      "data_export": "Export de données"
+    },
+    "tips": {
+      "title": "💡 Conseils Rapides",
+      "long_press": "Appuyez longuement pour plus d'options",
+      "share_stats": "Partagez vos statistiques depuis n'importe quel modal",
+      "swipe_close": "Glissez vers le bas pour fermer les modals"
+    }
+  },
+  "welcome": {
+    "title": "Bienvenue!",
+    "subtitle": "Apprenez à utiliser l'application en {{steps}} étapes"
   }
 }

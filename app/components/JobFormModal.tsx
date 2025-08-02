@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Linking,
+  AppState,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -753,6 +754,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [previousAutoSchedule, setPreviousAutoSchedule] = useState<boolean | undefined>(undefined);
+  const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(isLocationEnabled);
 
   const [formData, setFormData] = useState<Partial<Job>>({
     name: '',
@@ -826,6 +828,43 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       setCurrentTab(initialTab);
     }
   }, [visible, initialTab]);
+
+  // Verificar permisos de ubicación cuando se abre el modal
+  useEffect(() => {
+    const checkLocationPermission = async () => {
+      if (visible) {
+        try {
+          const { status } = await Location.getForegroundPermissionsAsync();
+          setHasLocationPermission(status === 'granted');
+        } catch (error) {
+          console.error('Error checking location permission:', error);
+          setHasLocationPermission(false);
+        }
+      }
+    };
+
+    checkLocationPermission();
+  }, [visible]);
+
+  // Listener para detectar cuando la app vuelve a estar activa y re-verificar permisos
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: string) => {
+      if (nextAppState === 'active' && visible) {
+        try {
+          const { status } = await Location.getForegroundPermissionsAsync();
+          setHasLocationPermission(status === 'granted');
+        } catch (error) {
+          console.error('Error checking location permission on app focus:', error);
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    return () => {
+      subscription?.remove();
+    };
+  }, [visible]);
 
   useEffect(() => {
     let scheduleToUse;
@@ -2138,7 +2177,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     };
 
     const handleAutoTimerToggle = async (value: boolean) => {
-      if (!isLocationEnabled) {
+      if (!hasLocationPermission) {
         // No hacer nada si no hay permisos de ubicación
         return;
       }
@@ -2175,13 +2214,39 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       Linking.openSettings();
     };
 
+    const handleAutoTimerToggleWithPermissionCheck = async (value: boolean) => {
+      if (!hasLocationPermission && value) {
+        Alert.alert(
+          t('maps.auto_timer_location_required_title'),
+          t('maps.auto_timer_location_required_message'),
+          [
+            { text: t('common.cancel'), style: 'cancel' },
+            { 
+              text: t('maps.auto_timer_open_settings'), 
+              onPress: () => {
+                openSettings();
+                // Los permisos se verificarán automáticamente cuando la app vuelva a estar activa
+              }
+            }
+          ]
+        );
+        return;
+      }
+      
+      if (value && !isSubscribed) {
+        setShowPremiumModal(true);
+      } else {
+        handleAutoTimerToggle(value);
+      }
+    };
+
     return (
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
           <Text style={styles.sectionTitle}>{t('job_form.auto_timer.title')}</Text>
           <Text style={styles.sectionSubtitle}>{t('job_form.auto_timer.subtitle')}</Text>
 
-          {!isLocationEnabled ? (
+          {!hasLocationPermission ? (
             <View style={styles.locationDisabledContainer}>
               <View style={styles.locationDisabledIcon}>
                 <IconSymbol size={32} name="location.slash" color={colors.error} />
@@ -2212,13 +2277,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   </View>
                   <Switch
                     value={formData.autoTimer?.enabled || false}
-                    onValueChange={(value) => {
-                      if (value && !isSubscribed) {
-                        setShowPremiumModal(true);
-                      } else {
-                        handleAutoTimerToggle(value);
-                      }
-                    }}
+                    onValueChange={handleAutoTimerToggleWithPermissionCheck}
                     trackColor={{ false: colors.separator, true: colors.primary + '40' }}
                     thumbColor={formData.autoTimer?.enabled ? colors.primary : colors.textTertiary}
                   />
