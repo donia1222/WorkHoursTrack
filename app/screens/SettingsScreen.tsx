@@ -17,6 +17,7 @@ import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { DataExportService } from '../services/DataExportService';
 import { AutoBackupService, BackupFrequency } from '../services/AutoBackupService';
+import { useSubscription } from '../hooks/useSubscription';
 
 interface SettingsScreenProps {
   onNavigate: (screen: string) => void;
@@ -33,6 +34,9 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+marginBottom: 68,
+
+    marginTop: 10,
   },
   header: {
     borderBottomWidth: 1,
@@ -90,7 +94,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   sectionCard: {
     marginVertical: 16,
     borderRadius: 24,
-    padding: 28,
+    padding: 8,
+    
     shadowColor: colors.primary,
     shadowOffset: {
       width: 0,
@@ -99,8 +104,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 16,
     elevation: 12,
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+
     overflow: 'hidden',
   },
   sectionCardGradient: {
@@ -112,10 +116,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderRadius: 24,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
     color: colors.text,
+    marginLeft: 8,
   },
   sectionDescription: {
     fontSize: 14,
@@ -211,6 +216,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
 export default function SettingsScreen({ onNavigate, navigationOptions, onNavigationHandled }: SettingsScreenProps) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
+  const { isSubscribed } = useSubscription();
   const [showJobsManagement, setShowJobsManagement] = useState(false);
   const [openAddJobModal, setOpenAddJobModal] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
@@ -521,6 +527,54 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
           </TouchableOpacity>
         </BlurView>
 
+        {/* Subscription Section */}
+        <BlurView 
+          intensity={98} 
+          tint={isDark ? "dark" : "light"} 
+          style={[styles.sectionCard, { 
+            marginTop: 16,
+            backgroundColor: isSubscribed 
+              ? (isDark ? 'rgba(34, 197, 94, 0.08)' : 'rgba(34, 197, 94, 0.06)')
+              : (isDark ? 'rgba(99, 102, 241, 0.08)' : 'rgba(99, 102, 241, 0.06)')
+          }]}
+        >
+          <TouchableOpacity 
+            onPress={() => onNavigate('subscription')}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={isSubscribed 
+                ? (isDark ? ['rgba(34, 197, 94, 0)', 'rgba(34, 197, 94, 0)'] : ['rgba(34, 197, 94, 0)', 'rgba(34, 197, 94, 0)'])
+                : (isDark ? ['rgba(99, 102, 241, 0.15)', 'rgba(99, 102, 241, 0.08)'] : ['rgba(99, 102, 241, 0.12)', 'rgba(99, 102, 241, 0.06)'])
+              }
+              style={styles.sectionCardGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
+            <View style={[styles.settingItem, { marginBottom: 0, paddingVertical: 12 }]}>
+              <View style={[styles.settingIcon, { 
+                backgroundColor: isSubscribed 
+                  ? (isDark ? 'rgba(34, 197, 94, 0)' : 'rgba(34, 197, 94, 0.12)') 
+                  : (isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.12)')
+              }]}>
+                <IconSymbol 
+                  size={24} 
+                  name="crown.fill" 
+                  color={isSubscribed ? '#22C55E' : '#6366F1'} 
+                />
+              </View>
+              <View style={styles.settingContent}>
+                <Text style={[styles.settingTitle, { fontSize: 17 }]}>
+                  {isSubscribed ? t('side_menu.menu_items.subscription.premium_title') : t('side_menu.menu_items.subscription.title')}
+                </Text>
+                <Text style={[styles.settingDescription, { marginTop: 4 }]}>
+                  {isSubscribed ? t('side_menu.menu_items.subscription.premium_description') : t('side_menu.menu_items.subscription.description')}
+                </Text>
+              </View>
+              <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
+            </View>
+          </TouchableOpacity>
+        </BlurView>
 
       </ScrollView>
 

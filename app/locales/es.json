@@ -342,6 +342,16 @@
       "saturday": "S",
       "sunday": "D"
     },
+    "days_long": {
+      "monday": "Lunes",
+      "tuesday": "Martes",
+      "wednesday": "Miércoles",
+      "thursday": "Jueves",
+      "friday": "Viernes",
+      "saturday": "Sábado",
+      "sunday": "Domingo"
+    },
+    "today": "Hoy",
     "filter_by_job": "Filtrar por trabajo",
     "all_jobs": "Todos",
     "month_stats": "Estadísticas del mes",

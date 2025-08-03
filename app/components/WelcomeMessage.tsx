@@ -110,9 +110,9 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   timestamp: {
     fontSize: 12,
-    color: colors.textSecondary,
+    color: colors.text,
     textAlign: 'left',
-    marginTop: 12,
+    marginTop: -12,
     opacity: 0.7,
   },
   infoButton: {

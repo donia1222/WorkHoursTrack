@@ -1910,6 +1910,9 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+
+   
+    marginTop: 10,
   },
   header: {
     borderBottomWidth: 1,
@@ -2448,6 +2451,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginVertical: 20,
     marginBottom: 24,
     gap: 16,
+       paddingBottom: 44,
   },
   actionButton: {
     marginVertical: 4,

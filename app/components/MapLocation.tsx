@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming, Easing, runOnJS } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Job } from '../types/WorkTypes';
@@ -807,7 +808,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   miniCalendarContainer: {
     position: 'absolute',
-    top: 8,
+    top: 28,
     left: 32,
     right: 32,
     zIndex: 10, // Reduced from 1000
@@ -822,12 +823,12 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     shadowOpacity: isDark ? 0.15 : 0.10,
     shadowRadius: 8,
     borderWidth: 1,
-    borderColor: isDark ? 'rgba(249, 249, 249, 0.15)' : 'rgba(22, 94, 182, 0.08)',
-    backgroundColor: isDark ? 'rgba(28, 28, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+    borderColor: isDark ? 'rgba(249, 249, 249, 0.15)' : 'rgba(9, 34, 65, 0.1)',
+
   },
   miniCalendarBlur: {
-    padding: 12,
-    backgroundColor: isDark ? 'rgba(28, 28, 30, 0.15)' : 'rgba(255, 255, 255, 0.92)',
+    padding: 16,
+    backgroundColor: isDark ? 'rgba(28, 28, 30, 0.15)' : 'rgba(12, 97, 201, 0.04)',
   },
   miniCalendarHeader: {
     flexDirection: 'row',
@@ -837,8 +838,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     paddingVertical: 2,
   },
   miniCalendarTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '500',
     color: colors.text,
     letterSpacing: -0.3,
   },
@@ -851,7 +852,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   miniCalendarDay: {
     width: '13.5%',
-    height: 52,
+    height: 62,
     alignItems: 'center',
     justifyContent: 'flex-start',
     borderRadius: 10,
@@ -861,9 +862,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
   },
   miniCalendarDayText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     letterSpacing: -0.2,
+    marginBottom: 2,
   },
   miniCalendarDot: {
     position: 'absolute',
@@ -873,13 +875,15 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderRadius: 3,
   },
   miniCalendarBadge: {
-    width: 16,
-    height: 10,
-    borderRadius: 6,
+    width: 20,
+    minHeight: 16,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 1,
     marginBottom: 2,
+    paddingVertical: 2,
+    paddingHorizontal: 1,
   },
   miniCalendarBadgeText: {
     color: '#FFFFFF',
@@ -919,12 +923,14 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderWidth: 0,
   },
   miniCalendarTimeText: {
-    fontSize: 6,
+    fontSize: 7,
     color: colors.text,
     textAlign: 'center',
-    marginTop: 1,
-    lineHeight: 6,
-    opacity: 0.8,
+    marginTop: 2,
+    lineHeight: 9,
+    opacity: 0.9,
+    fontWeight: '500',
+    paddingHorizontal: 1,
   },
   miniCalendarButton: {
     backgroundColor: colors.primary,
@@ -956,7 +962,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginTop: 120,
+    marginTop: 60,
   },
   noLocationButtons: {
     gap: 12,
@@ -998,18 +1004,20 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   modernButton: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    marginBottom: 8,
+
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
     overflow: 'hidden',
+        marginBottom: 4,
   },
   modernButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    padding: 13,
+
   },
   modernIconContainer: {
     position: 'relative',
@@ -1037,14 +1045,14 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   modernBadgeText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '700',
   },
   modernTextContainer: {
     flex: 1,
   },
   modernButtonTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     marginBottom: 1,
   },
@@ -1087,12 +1095,16 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontWeight: '700',
     marginBottom: 12,
     color: colors.text,
+
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 12,
     marginBottom: 4,
+     backgroundColor: isDark ? 'rgba(76, 92, 175, 0.1)' : 'rgba(76, 87, 175, 0.08)',
+     paddingHorizontal: 12,
+     borderRadius: 12,
   },
   settingIcon: {
     width: 40,
@@ -1103,7 +1115,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginRight: 12,
   },
   successIconBg: {
-    backgroundColor: isDark ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.08)',
+    backgroundColor: isDark ? 'rgba(76, 92, 175, 0.1)' : 'rgba(76, 87, 175, 0.08)',
   },
   warningIconBg: {
     backgroundColor: isDark ? 'rgba(255, 152, 0, 0.1)' : 'rgba(255, 152, 0, 0.08)',
@@ -2302,8 +2314,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         console.log('📅 Badge rendering for day', dayData.day, 'type:', dayData.workDay.type);
                         switch (dayData.workDay.type) {
                           case 'work':
-                            badgeColor = '#10B981'; // Verde para días de trabajo
-                            badgeText = 'W';
+                            badgeColor = '#059669'; // Verde más intenso para mejor contraste
+                            badgeText = 'checkmark-circle';
                             // Mostrar horario si existe
                             if (dayData.workDay.startTime && dayData.workDay.endTime) {
                               timeText = `${dayData.workDay.startTime}\n${dayData.workDay.endTime}`;
@@ -2314,16 +2326,16 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             }
                             break;
                           case 'free':
-                            badgeColor = '#3B82F6'; // Azul para días libres
-                            badgeText = 'F';
+                            badgeColor = '#FBBF24'; // Amarillo para días libres
+                            badgeText = 'sunny';
                             break;
                           case 'vacation':
                             badgeColor = '#F59E0B'; // Amarillo para vacaciones
-                            badgeText = 'V';
+                            badgeText = 'airplane';
                             break;
                           case 'sick':
                             badgeColor = '#EF4444'; // Rojo para enfermedad
-                            badgeText = 'S';
+                            badgeText = 'medkit';
                             break;
                           default:
                             console.log('⚠️ Unknown workDay type:', dayData.workDay.type);
@@ -2353,7 +2365,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           {badgeColor && (
                             <View style={{ alignItems: 'center' }}>
                               <View style={[styles.miniCalendarBadge, { backgroundColor: badgeColor }]}>
-                                <Text style={styles.miniCalendarBadgeText}>{badgeText}</Text>
+                                <Ionicons name={badgeText as any} size={12} color="#FFFFFF" />
                               </View>
                               {timeText && (
                                 <Text style={styles.miniCalendarTimeText}>
@@ -2469,7 +2481,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
           <LinearGradient
             colors={isDark 
               ? ['#1a1a1a', '#242424', '#2a2a2a', '#1f1f1f'] 
-              : ['#f8f9fa', '#f1f3f5', '#e9ecef', '#f8f9fa']
+              : ['#FFFFFF', '#F0F4FF', '#E6EDFF', '#D6E3FF']
             }
             style={styles.noLocationBackground}
           >
@@ -2500,25 +2512,27 @@ export default function MapLocation({ location, onNavigate }: Props) {
                       <Text style={[styles.modernButtonSubtitle, { color: '#2196F3' }]}>{t('settings.jobs.my_jobs_desc')}</Text>
                     </View>
                     <View style={styles.modernChevron}>
-                      <IconSymbol size={20} name="chevron.right" color="#0D47A1" />
+                      <IconSymbol size={16} name="chevron.right" color="#0D47A1" />
                     </View>
                   </View>
                 </TouchableOpacity>
 
-                {/* Configuración Laboral */}
-                <BlurView 
-                  intensity={98} 
-                  tint={isDark ? "dark" : "light"} 
-                  style={styles.sectionCard}
-                >
-                  <LinearGradient
-                    colors={isDark ? ['rgba(255, 255, 255, 0.05)', 'rgba(255, 255, 255, 0.02)'] : ['rgba(0, 0, 0, 0.02)', 'rgba(0, 0, 0, 0.0)']}
-                    style={styles.sectionCardGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  />
-                  <Text style={styles.sectionTitle}>{t('settings.work_config.title')}</Text>
-                  
+         
+      
+
+                                  <TouchableOpacity 
+                    style={styles.settingItem}
+                    onPress={() => handleEditCategory('location')}
+                  >
+                    <View style={[styles.settingIcon, styles.warningIconBg]}>
+                      <IconSymbol size={20} name="timer" color={colors.warning} />
+                    </View>
+                    <View style={styles.settingContent}>
+                      <Text style={styles.settingTitle}>{t('settings.work_config.autotimer')}</Text>
+                      <Text style={styles.settingDescription}>{t('settings.work_config.autotimer_desc')}</Text>
+                    </View>
+                    <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
+                  </TouchableOpacity>
                   <TouchableOpacity 
                     style={styles.settingItem}
                     onPress={() => handleEditCategory('schedule')}
@@ -2533,42 +2547,14 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
                   </TouchableOpacity>
                   
-                  <TouchableOpacity 
-                    style={styles.settingItem}
-                    onPress={() => handleEditCategory('location')}
-                  >
-                    <View style={[styles.settingIcon, styles.warningIconBg]}>
-                      <IconSymbol size={20} name="timer" color={colors.warning} />
-                    </View>
-                    <View style={styles.settingContent}>
-                      <Text style={styles.settingTitle}>{t('settings.work_config.autotimer')}</Text>
-                      <Text style={styles.settingDescription}>{t('settings.work_config.autotimer_desc')}</Text>
-                    </View>
-                    <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
-                  </TouchableOpacity>
-                </BlurView>
+  
 
-                {/* Configuración Financiera - solo si hay trabajos */}
-                {jobs.length > 0 && (
-                <BlurView 
-                  intensity={98} 
-                  tint={isDark ? "dark" : "light"} 
-                  style={styles.sectionCard}
-                >
-                  <LinearGradient
-                    colors={isDark ? ['rgba(255, 255, 255, 0.05)', 'rgba(255, 255, 255, 0.02)'] : ['rgba(0, 0, 0, 0.02)', 'rgba(0, 0, 0, 0.0)']}
-                    style={styles.sectionCardGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  />
-                  <Text style={styles.sectionTitle}>{t('settings.financial_config.title')}</Text>
-                  
-                  <TouchableOpacity 
+                                    <TouchableOpacity 
                     style={styles.settingItem}
                     onPress={() => handleEditCategory('financial')}
                   >
                     <View style={[styles.settingIcon, styles.successIconBg]}>
-                      <IconSymbol size={20} name="dollarsign.circle.fill" color={colors.success} />
+                      <IconSymbol size={20} name="dollarsign.circle.fill" color={colors.secondary} />
                     </View>
                     <View style={styles.settingContent}>
                       <Text style={styles.settingTitle}>{t('settings.financial_config.rates')}</Text>
@@ -2576,8 +2562,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     </View>
                     <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
                   </TouchableOpacity>
-                  
-                  <TouchableOpacity 
+
+                                    <TouchableOpacity 
                     style={styles.settingItem}
                     onPress={() => handleEditCategory('billing')}
                   >
@@ -2590,8 +2576,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     </View>
                     <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
                   </TouchableOpacity>
-                </BlurView>
-                )}
+                  
+
+               
               </Animated.View>
               )}
             </View>

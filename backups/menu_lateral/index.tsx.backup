@@ -13,8 +13,7 @@ import NoLocationMapView from '../components/NoLocationMapView';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import Header from '../components/Header';
 import ProfileModal from '../components/ProfileModal';
-// import SideMenu from '../components/SideMenu'; // Removed - using BottomNavigation
-import BottomNavigation from '../components/BottomNavigation';
+import SideMenu from '../components/SideMenu';
 
 import TimerScreen from '../screens/TimerScreen';
 import EnhancedReportsScreen from '../screens/ReportsScreen';
@@ -48,7 +47,7 @@ function AppContent() {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  // const [showMenu, setShowMenu] = useState(false); // Removed - using BottomNavigation
+  const [showMenu, setShowMenu] = useState(false);
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
   const [useWithoutLocation, setUseWithoutLocation] = useState(false);
@@ -378,7 +377,7 @@ function AppContent() {
       case 'mapa':
         return (
           <View style={styles.workTrackTitle}>
-            <IconSymbol size={22} name="clock.fill" color="#34C759" />
+            <IconSymbol size={24} name="clock.fill" color="#34C759" />
             <Text style={[styles.workText, { color: '#007AFF' }]}>Work</Text>
             <Text style={[styles.trackText, { color: '#34C759' }]}>Track</Text>
           </View>
@@ -386,35 +385,35 @@ function AppContent() {
       case 'timer':
         return (
           <View style={styles.screenTitle}>
-            <IconSymbol size={20} name="clock.fill" color="#34C759" />
+            <IconSymbol size={26} name="clock.fill" color="#34C759" />
             <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('timer.title')}</Text>
           </View>
         );
       case 'reports':
         return (
           <View style={styles.screenTitle}>
-            <IconSymbol size={23} name="doc.text.fill" color="#FF9500" />
+            <IconSymbol size={26} name="doc.text.fill" color="#FF9500" />
             <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('reports.title')}</Text>
           </View>
         );
       case 'calendar':
         return (
           <View style={styles.screenTitle}>
-            <IconSymbol size={23} name="calendar" color="#6366F1" />
+            <IconSymbol size={26} name="calendar" color="#6366F1" />
             <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('calendar.title')}</Text>
           </View>
         );
       case 'settings':
         return (
           <View style={styles.screenTitle}>
-            <IconSymbol size={23} name="gear" color="#8E8E93" />
+            <IconSymbol size={26} name="gear" color="#8E8E93" />
             <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('settings.title')}</Text>
           </View>
         );
       case 'subscription':
         return (
           <View style={styles.screenTitle}>
-            <IconSymbol size={23} name="crown.fill" color="#FFD700" />
+            <IconSymbol size={26} name="crown.fill" color="#FFD700" />
             <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('subscription.title')}</Text>
           </View>
         );
@@ -423,7 +422,7 @@ function AppContent() {
       default:
         return (
           <View style={styles.workTrackTitle}>
-            <IconSymbol size={22} name="clock.fill" color="#34C759" />
+            <IconSymbol size={26} name="clock.fill" color="#34C759" />
             <Text style={[styles.workText, { color: '#007AFF' }]}>Work</Text>
             <Text style={[styles.trackText, { color: '#34C759' }]}>Track</Text>
           </View>
@@ -449,20 +448,22 @@ function AppContent() {
 
   // Renderizar siempre con header y menu para mantener consistencia
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={styles.container}>
       {(currentScreen === 'mapa' || currentScreen === 'chatbot' || currentScreen === 'timer' || currentScreen === 'reports' || currentScreen === 'calendar' || currentScreen === 'settings' || currentScreen === 'subscription') && (
         <Header 
           title={getScreenTitle()} 
-          onProfilePress={() => navigateTo('settings')}
-          isSettingsActive={currentScreen === 'settings'}
+          onProfilePress={() => setShowProfile(true)}
+          onMenuPress={() => setShowMenu(true)}
         />
       )}
-      <View style={{ flex: 1 }}>
-        {renderCurrentScreen()}
-      </View>
+      {renderCurrentScreen()}
       <ProfileModal visible={showProfile} onClose={() => setShowProfile(false)} />
-      {/* SideMenu removed - using BottomNavigation */}
-      <BottomNavigation />
+      <SideMenu 
+        visible={showMenu} 
+        onClose={() => setShowMenu(false)} 
+        onMenuToggle={() => setShowMenu(!showMenu)}
+        onNavigate={handleNavigate}
+      />
       
       {/* Features Modal */}
       <Modal
@@ -558,7 +559,6 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
   },
   center: {
     flex: 1,
@@ -574,14 +574,14 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   workText: {
-    fontSize: 20,
-    fontWeight: '600',
-    letterSpacing: -0.3,
+    fontSize: 28,
+    fontWeight: '700',
+    letterSpacing: -0.5,
   },
   trackText: {
-    fontSize: 20,
-    fontWeight: '600',
-    letterSpacing: -0.3,
+    fontSize: 28,
+    fontWeight: '700',
+    letterSpacing: -0.5,
   },
   screenTitle: {
     flexDirection: 'row',
@@ -589,9 +589,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   screenTitleText: {
-    fontSize: 18,
-    fontWeight: '600',
-    letterSpacing: -0.2,
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: -0.3,
   },
 });
 

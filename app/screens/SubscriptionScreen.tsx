@@ -453,6 +453,7 @@ export default function SubscriptionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginBottom: 80,
   },
   backgroundGradient: {
     position: 'absolute',

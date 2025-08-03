@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { Calendar, DateData } from 'react-native-calendars';
+import { Calendar, DateData, LocaleConfig } from 'react-native-calendars';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -38,7 +38,7 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
     let timeText = '';
     
     if (workDay.type === 'work' && job) {
-      badgeColor = '#10B981'; // Green for all work days
+      badgeColor = job.color || '#10B981'; // Use job color or default green
       badgeText = t('calendar.badge_work');
       timeText = workDay.startTime || '';
       if (workDay.endTime) {
@@ -73,42 +73,56 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
       onPress={() => onPress && onPress(date)}
       style={{
         width: 50,
-        height: 80,
+        height: 65,
         alignItems: 'center',
         justifyContent: 'flex-start',
-        paddingTop: 4,
-        paddingBottom: 4,
+        paddingTop: 2,
+        paddingBottom: 2,
       }}
     >
-      <Text
+      <View
         style={{
-          fontSize: 16,
-          fontWeight: isToday ? '600' : '500',
-          color: isDisabled ? colors.textTertiary : isToday ? colors.primary : colors.text,
-          marginBottom: 2,
+          width: 28,
+          height: 28,
+          borderRadius: 14,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: isToday ? colors.primary + '20' : 'transparent',
+          borderWidth: isToday ? 2 : 0,
+          borderColor: colors.primary,
         }}
       >
-        {date.day}
-      </Text>
+        <Text
+          style={{
+            fontSize: 14,
+            fontWeight: isToday ? '700' : '500',
+            color: isDisabled ? colors.textTertiary : isToday ? colors.primary : colors.text,
+          }}
+        >
+          {date.day}
+        </Text>
+      </View>
       
       {badgeStyle && (
         <View style={{ alignItems: 'center' }}>
           <View
             style={{
-              backgroundColor: badgeStyle.badgeColor,
-              paddingHorizontal: 6,
-              paddingVertical: 6,
-              borderRadius: 4,
+              backgroundColor: badgeStyle.badgeColor + '15',
+              paddingHorizontal: 4,
+              paddingVertical: 2,
+              borderRadius: 6,
               minWidth: 32,
               alignItems: 'center',
-              marginBottom: 3,
+              marginBottom: 2,
+              borderWidth: 1.5,
+              borderColor: badgeStyle.badgeColor,
             }}
           >
             <Text
               style={{
-                color: '#FFFFFF',
-                fontSize: 10,
-                fontWeight: '600',
+                color: badgeStyle.badgeColor,
+                fontSize: 9,
+                fontWeight: '700',
               }}
             >
               {badgeStyle.badgeText}
@@ -117,12 +131,12 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
           {badgeStyle.timeText && (
             <Text
               style={{
-                fontSize: 7,
+                fontSize: 6,
                 color: colors.textSecondary,
                 fontWeight: '500',
-                marginTop: 1,
+                marginTop: 0,
                 textAlign: 'center',
-                lineHeight: 9,
+                lineHeight: 8,
               }}
             >
               {badgeStyle.timeText}
@@ -142,6 +156,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    marginTop: 10,
   },
   header: {
     borderBottomWidth: 1,
@@ -162,6 +177,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 20,
     paddingTop: 24,
+    
   },
   backButton: {
     position: 'absolute',
@@ -199,13 +215,13 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   jobSelector: {
     marginTop: 20,
     marginBottom: 12,
-    borderRadius: 24,
-    padding: 28,
+    borderRadius: 20,
+    padding: 20,
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 8 }, 
-    shadowOpacity: 0.25, 
-    shadowRadius: 16, 
-    elevation: 12,
+    shadowOffset: { width: 0, height: 4 }, 
+    shadowOpacity: 0.15, 
+    shadowRadius: 12, 
+    elevation: 6,
     borderWidth: 1,
     borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
     overflow: 'hidden',
@@ -262,7 +278,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: '#FFFFFF',
   },
   compactJobSelector: {
-    marginVertical: 8,
+    marginTop: 12,
+    marginBottom: 8,
     paddingHorizontal: 16,
   },
   compactJobSelectorTitle: {
@@ -274,9 +291,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   compactJobTabs: {
     flexDirection: 'row',
-    backgroundColor: colors.separator + '40',
-    borderRadius: 12,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+    borderRadius: 16,
     padding: 4,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
   },
   compactJobTab: {
     flex: 1,
@@ -289,12 +308,14 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     justifyContent: 'center',
   },
   compactJobTabActive: {
-    backgroundColor: colors.surface,
-    shadowColor: '#000',
+    backgroundColor: isDark ? colors.surface : '#FFFFFF',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: colors.primary + '30',
   },
   compactJobTabDot: {
     width: 8,
@@ -314,29 +335,27 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   compactJobScrollContainer: {
     maxHeight: 60,
+
   },
   calendar: {
-    marginVertical: 20,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
-    shadowColor: isDark ? "#FFFFFF" : "#000", 
-    shadowOffset: { width: 0, height: 2 }, 
-    shadowOpacity: isDark ? 0.05 : 0.1, 
-    shadowRadius: 8, 
-    elevation: 4,
+    marginVertical: 12,
+    borderRadius: 20,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 }, 
+    shadowOpacity: 0.15, 
+    shadowRadius: 12, 
+    elevation: 6,
     overflow: 'hidden',
+    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.03)' : 'rgba(0, 122, 255, 0.02)',
   },
   statsCard: {
-    marginVertical: 20,
-    borderRadius: 28,
-    padding: 32,
-    shadowColor: colors.warning,
-    shadowOffset: { width: 0, height: 8 }, 
-    shadowOpacity: 0.25, 
-    shadowRadius: 16, 
-    elevation: 12,
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    marginVertical: 16,
+    borderRadius: 24,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 }, 
+    shadowOpacity: 0.2, 
+    shadowRadius: 14, 
+    elevation: 8,
     overflow: 'hidden',
   },
   statsCardGradient: {
@@ -363,9 +382,9 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flex: 1,
   },
   statNumber: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: colors.text,
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.primary,
     marginTop: 4,
     marginBottom: 4,
   },
@@ -375,17 +394,15 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     textAlign: 'center',
   },
   legendCard: {
-    marginVertical: 20,
-    borderRadius: 24,
-    padding: 28,
+    marginVertical: 16,
+    borderRadius: 20,
     shadowColor: colors.textSecondary,
-    shadowOffset: { width: 0, height: 6 }, 
-    shadowOpacity: 0.18, 
-    shadowRadius: 14, 
-    elevation: 10,
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+    shadowOffset: { width: 0, height: 4 }, 
+    shadowOpacity: 0.12, 
+    shadowRadius: 10, 
+    elevation: 6,
     overflow: 'hidden',
+   paddingBottom: 44,
   },
   legendCardGradient: {
     position: 'absolute',
@@ -417,22 +434,14 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: colors.textSecondary,
   },
   actionButton: {
-
-    marginBottom: 24,
-    marginTop: -20,
+   
   },
   actionButtonInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 20,
+    padding: 18,
     borderRadius: 16,
-    backgroundColor: colors.surface,
-    shadowColor: "#000", 
-    shadowOffset: { width: 0, height: 1 }, 
-    shadowOpacity: 0.05, 
-    shadowRadius: 4, 
-    elevation: 2,
   },
   actionButtonText: {
     fontSize: 16,
@@ -520,7 +529,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
 
 export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   const { colors, isDark } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { settings: notificationSettings } = useNotifications();
   const [workDays, setWorkDays] = useState<WorkDay[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -540,6 +549,50 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Configure calendar locale based on user language
+  useEffect(() => {
+    const months = {
+      es: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+      en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+      de: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
+      fr: ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
+      it: ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre']
+    };
+
+    const days = {
+      es: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+      en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      de: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
+      fr: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
+      it: ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato']
+    };
+
+    const daysShort = {
+      es: ['D', 'L', 'M', 'M', 'J', 'V', 'S'],
+      en: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+      de: ['S', 'M', 'D', 'M', 'D', 'F', 'S'],
+      fr: ['D', 'L', 'M', 'M', 'J', 'V', 'S'],
+      it: ['D', 'L', 'M', 'M', 'G', 'V', 'S']
+    };
+
+    const today = {
+      es: 'Hoy',
+      en: 'Today',
+      de: 'Heute',
+      fr: "Aujourd'hui",
+      it: 'Oggi'
+    };
+
+    LocaleConfig.locales[language] = {
+      monthNames: months[language] || months.es,
+      monthNamesShort: (months[language] || months.es).map(m => m.substring(0, 3)),
+      dayNames: days[language] || days.es,
+      dayNamesShort: daysShort[language] || daysShort.es,
+      today: today[language] || today.es
+    };
+    LocaleConfig.defaultLocale = language;
+  }, [language]);
 
   // Registrar el handler de exportación desde chat
   useEffect(() => {
@@ -1054,9 +1107,9 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           if (day.type === 'work') {
             return day.jobId === selectedJobId;
           }
-          // For non-work days, we can't easily associate them with a specific job
-          // so we skip them when a specific job is selected
-          return false;
+          // Include all non-work days (free, vacation, sick) regardless of job selection
+          // because they apply to all jobs
+          return true;
         });
       }
 
@@ -1132,22 +1185,26 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         {/* Job selector */}
         {renderCompactJobSelector()}
 
-        <Calendar
-          style={styles.calendar}
+        <BlurView 
+          intensity={isDark ? 98 : 96} 
+          tint={isDark ? "dark" : "light"} 
+          style={[styles.calendar, { backgroundColor: isDark ? 'rgba(0, 122, 255, 0.05)' : 'rgba(0, 122, 255, 0.03)' }]}
+        >
+          <Calendar
           onDayPress={handleDayPress}
           onMonthChange={(month: any) => setCurrentMonth(new Date(month.timestamp))}
           markedDates={getMarkedDates()}
           dayComponent={CustomDay}
           theme={{
-            backgroundColor: colors.surface,
-            calendarBackground: colors.surface,
+            backgroundColor: 'transparent',
+            calendarBackground: 'transparent',
             textSectionTitleColor: colors.surface,
             textSectionTitleDisabledColor: colors.surface,
             selectedDayBackgroundColor: colors.primary,
             selectedDayTextColor: '#ffffff',
             todayTextColor: colors.primary,
             dayTextColor: colors.text,
-            textDisabledColor: colors.textTertiary,
+            textDisabledColor: colors.textTertiary + '80',
             dotColor: colors.primary,
             selectedDotColor: '#ffffff',
             arrowColor: colors.primary,
@@ -1164,19 +1221,20 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
             textDayHeaderFontSize: 13,
             'stylesheet.calendar.header': {
               header: {
-                backgroundColor: colors.surface,
+                backgroundColor: 'transparent',
                 paddingVertical: 12,
-                paddingHorizontal: 0,
+                paddingHorizontal: 16,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
+                borderBottomWidth: 0,
               },
               dayHeader: {
-                marginTop: 8,
-                marginBottom: 8,
+                marginTop: 4,
+                marginBottom: 4,
                 width: 32,
                 textAlign: 'center',
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: '600',
                 color: colors.text,
               },
@@ -1185,14 +1243,15 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
                 marginBottom: 0,
                 flexDirection: 'row',
                 justifyContent: 'space-around',
-                backgroundColor: colors.surface,
-                paddingBottom: 8,
+                backgroundColor: 'transparent',
+                paddingBottom: 4,
+                paddingHorizontal: 8,
               },
             },
             'stylesheet.day.basic': {
               base: {
                 width: 50,
-                height: 80,
+                height: 65,
                 alignItems: 'center',
                 justifyContent: 'flex-start',
               },
@@ -1214,19 +1273,26 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
             },
             'stylesheet.calendar.main': {
               container: {
-                backgroundColor: colors.surface,
+                backgroundColor: 'transparent',
+                paddingBottom: 4,
               },
               week: {
                 marginTop: 0,
                 marginBottom: 0,
                 flexDirection: 'row',
                 justifyContent: 'space-around',
-                backgroundColor: colors.surface,
-                paddingVertical: 4,
+                backgroundColor: 'transparent',
+                paddingVertical: 2,
+                paddingHorizontal: 8,
+              },
+              monthView: {
+                backgroundColor: 'transparent',
               },
             },
           }}
-        />
+            />
+        </BlurView>
+        
         <TouchableOpacity
           style={styles.actionButton}
           onPress={handleSyncCalendar}
@@ -1249,17 +1315,18 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           </BlurView>
         </TouchableOpacity>
 
-        <BlurView 
-          intensity={98} 
-          tint={isDark ? "dark" : "light"} 
-          style={styles.statsCard}
-        >
-          <LinearGradient
-            colors={isDark ? ['rgba(255, 149, 0, 0.12)', 'rgba(255, 149, 0, 0.04)'] : ['rgba(255, 149, 0, 0.08)', 'rgba(255, 149, 0, 0.02)']}
-            style={styles.statsCardGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          />
+        <View style={styles.statsCard}>
+          <BlurView 
+            intensity={isDark ? 96 : 94} 
+            tint={isDark ? "dark" : "light"} 
+            style={{ padding: 28, borderRadius: 24 }}
+          >
+            <LinearGradient
+              colors={isDark ? ['rgba(0, 122, 255, 0.1)', 'rgba(0, 122, 255, 0.02)'] : ['rgba(0, 122, 255, 0.08)', 'rgba(0, 122, 255, 0.01)']}
+              style={[styles.statsCardGradient, { borderRadius: 24 }]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
           <Text style={styles.statsTitle}>{t('calendar.month_stats')}</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
@@ -1269,7 +1336,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
             </View>
             <View style={styles.statItem}>
               <IconSymbol size={24} name="clock.fill" color={colors.success} />
-              <Text style={styles.statNumber}>{stats.totalHours}h</Text>
+              <Text style={styles.statNumber}>{Math.round(stats.totalHours)}h</Text>
               <Text style={styles.statLabel}>{t('calendar.total_hours')}</Text>
             </View>
             <View style={styles.statItem}>
@@ -1308,15 +1375,17 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
               </View>
             </View>
           )}
-        </BlurView>
+          </BlurView>
+        </View>
 
-        <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.legendCard}>
-          <LinearGradient
-            colors={isDark ? ['rgba(142, 142, 147, 0.1)', 'rgba(142, 142, 147, 0.03)'] : ['rgba(142, 142, 147, 0.06)', 'rgba(142, 142, 147, 0.02)']}
-            style={styles.legendCardGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          />
+        <View style={styles.legendCard}>
+          <BlurView intensity={isDark ? 95 : 92} tint={isDark ? "dark" : "light"} style={{ padding: 24, borderRadius: 20 }}>
+            <LinearGradient
+              colors={isDark ? ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.02)'] : ['rgba(142, 142, 147, 0.05)', 'rgba(142, 142, 147, 0.01)']}
+              style={[styles.legendCardGradient, { borderRadius: 20 }]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
           <Text style={styles.legendTitle}>{t('calendar.day_types')}</Text>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.work.color }]} />
@@ -1341,20 +1410,12 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
             <IconSymbol size={16} name="plus" color={colors.primary} />
             <Text style={styles.legendText}>{t('calendar.tap_to_register')}</Text>
           </View>
-        </BlurView>
-
-
-
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => onNavigate && onNavigate('reports')}
-        >
-          <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.actionButtonInner}>
-            <IconSymbol size={24} name="chart.bar.fill" color={colors.primary} />
-            <Text style={styles.actionButtonText}>{t('calendar.view_detailed_reports')}</Text>
-            <IconSymbol size={16} name="arrow.right" color={colors.primary} />
           </BlurView>
-        </TouchableOpacity>
+        </View>
+
+
+
+
           </>
         )}
       </ScrollView>

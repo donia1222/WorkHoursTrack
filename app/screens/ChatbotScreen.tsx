@@ -35,6 +35,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    marginBottom: 70,
   },
   header: {
     borderBottomWidth: 1,
@@ -111,7 +112,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   imageButton: {
     padding: 12,
     marginRight: 12,
-    marginBottom: 4,
+
     borderRadius: 25,
     backgroundColor: isDark ? colors.primary + '30' : colors.primary + '15',
     borderWidth: 2,

@@ -54,6 +54,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+
+    marginTop: 10,
   },
   header: {
     borderBottomWidth: 1,
@@ -349,9 +351,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     padding: 16,
     backgroundColor: colors.surface,
     shadowColor: '#000',
+       paddingBottom: 44,
     shadowOffset: {
       width: 0,
       height: 1,
+      
     },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -1482,17 +1486,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   };
 
   const renderRecentTimerSessions = () => {
-    if (recentTimerSessions.length === 0) {
-      return (
-        <View style={styles.emptyRecentSessions}>
-          <IconSymbol size={32} name="clock" color={colors.textSecondary} />
-          <Text style={styles.emptyRecentSessionsText}>
-            {t('timer.no_recent_sessions')}
-          </Text>
-        </View>
-      );
-    }
-
     return (
       <ScrollView 
         horizontal 
@@ -2004,15 +1997,17 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           </View>
         </BlurView>
 
-        {/* Recent Timer Sessions */}
-        <View style={styles.recentSessionsContainer}>
-          <View style={styles.recentSessionsHeader}>
-            <Text style={styles.recentSessionsTitle}>
-              {t('timer.recent_sessions')}
-            </Text>
+        {/* Recent Timer Sessions - Only show if there are sessions */}
+        {recentTimerSessions.length > 0 && (
+          <View style={styles.recentSessionsContainer}>
+            <View style={styles.recentSessionsHeader}>
+              <Text style={styles.recentSessionsTitle}>
+                {t('timer.recent_sessions')}
+              </Text>
+            </View>
+            {renderRecentTimerSessions()}
           </View>
-          {renderRecentTimerSessions()}
-        </View>
+        )}
 
         {/* Quick Actions - Moved below recent sessions */}
         {!isRunning && !activeSession && (
