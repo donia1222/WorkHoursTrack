@@ -199,6 +199,19 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     }
   }, [selectedJob]);
 
+  // Listen for header export button press
+  useEffect(() => {
+    // Register the export handler globally
+    globalThis.reportsScreenExportHandler = () => {
+      showBillingDataModal();
+    };
+
+    // Cleanup on unmount
+    return () => {
+      delete globalThis.reportsScreenExportHandler;
+    };
+  }, []);
+
   const loadData = async () => {
     try {
       const [loadedJobs, loadedWorkDays] = await Promise.all([

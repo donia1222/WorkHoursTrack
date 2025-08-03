@@ -73,28 +73,29 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
       onPress={() => onPress && onPress(date)}
       style={{
         width: 50,
-        height: 65,
+        height: 80,
         alignItems: 'center',
         justifyContent: 'flex-start',
-        paddingTop: 2,
-        paddingBottom: 2,
+        paddingTop: 4,
+        paddingBottom: 4,
       }}
     >
       <View
         style={{
-          width: 28,
-          height: 28,
-          borderRadius: 14,
+          width: 32,
+          height: 32,
+          borderRadius: 16,
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: isToday ? colors.primary + '20' : 'transparent',
           borderWidth: isToday ? 2 : 0,
           borderColor: colors.primary,
+          marginBottom: badgeStyle ? 6 : 0,
         }}
       >
         <Text
           style={{
-            fontSize: 14,
+            fontSize: 15,
             fontWeight: isToday ? '700' : '500',
             color: isDisabled ? colors.textTertiary : isToday ? colors.primary : colors.text,
           }}
@@ -104,14 +105,14 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
       </View>
       
       {badgeStyle && (
-        <View style={{ alignItems: 'center' }}>
+        <View style={{ alignItems: 'center', width: '100%' }}>
           <View
             style={{
               backgroundColor: badgeStyle.badgeColor + '15',
-              paddingHorizontal: 4,
-              paddingVertical: 2,
-              borderRadius: 6,
-              minWidth: 32,
+              paddingHorizontal: 5,
+              paddingVertical: 3,
+              borderRadius: 8,
+              minWidth: 36,
               alignItems: 'center',
               marginBottom: 2,
               borderWidth: 1.5,
@@ -121,8 +122,9 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
             <Text
               style={{
                 color: badgeStyle.badgeColor,
-                fontSize: 9,
+                fontSize: 10,
                 fontWeight: '700',
+                letterSpacing: 0.5,
               }}
             >
               {badgeStyle.badgeText}
@@ -131,12 +133,12 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
           {badgeStyle.timeText && (
             <Text
               style={{
-                fontSize: 6,
+                fontSize: 7,
                 color: colors.textSecondary,
-                fontWeight: '500',
-                marginTop: 0,
+                fontWeight: '600',
+                marginTop: 1,
                 textAlign: 'center',
-                lineHeight: 8,
+                lineHeight: 9,
               }}
             >
               {badgeStyle.timeText}
@@ -608,6 +610,19 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
       setOnExportToCalendar(undefined);
     };
   }, [setOnExportToCalendar]);
+
+  // Register header sync button handler
+  useEffect(() => {
+    // Register the sync handler globally
+    globalThis.calendarScreenSyncHandler = () => {
+      handleSyncCalendar();
+    };
+
+    // Cleanup on unmount
+    return () => {
+      delete globalThis.calendarScreenSyncHandler;
+    };
+  }, [currentMonth, workDays, jobs]);
 
   // Auto-select job if coming from map
   useEffect(() => {

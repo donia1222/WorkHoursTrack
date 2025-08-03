@@ -15,6 +15,7 @@ import {
   Linking,
   AppState,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
@@ -22,6 +23,7 @@ import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useSubscription } from '../hooks/useSubscription';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Job, DEFAULT_COLORS } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import { AutoScheduleService } from '../services/AutoScheduleService';
@@ -40,9 +42,18 @@ interface JobFormModalProps {
 
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  transparentContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -745,6 +756,146 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontWeight: '700',
     color: '#000',
   },
+  simplifiedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingTop: Platform.OS === 'ios' ? 120 : 100,
+  },
+  simplifiedKeyboardView: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  simplifiedCard: {
+    width: '90%',
+    maxWidth: 400,
+    borderRadius: Theme.borderRadius.xl,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
+    backgroundColor: isDark ? 'rgba(0, 0, 0, 0.5)' : 'rgba(57, 131, 229, 0.12)',
+  },
+  simplifiedBlurCard: {
+    padding: Theme.spacing.lg,
+    alignItems: 'center',
+  },
+  simplifiedCloseButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 10,
+  },
+  simplifiedCloseCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(142,142,147,0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  simplifiedWelcomeSection: {
+    alignItems: 'center',
+    marginBottom: Theme.spacing.sm,
+  },
+  simplifiedIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Theme.spacing.sm,
+    overflow: 'hidden',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  simplifiedIconGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  simplifiedWelcome: {
+    ...Theme.typography.title2,
+    color: colors.text,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  simplifiedCreateFirst: {
+    ...Theme.typography.callout,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  simplifiedSubtitle: {
+    ...Theme.typography.caption1,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: Theme.spacing.md,
+    lineHeight: 16,
+  },
+  simplifiedInputSection: {
+    width: '100%',
+    marginBottom: Theme.spacing.md,
+  },
+  simplifiedLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.xs,
+    marginBottom: Theme.spacing.sm,
+  },
+  simplifiedLabel: {
+    ...Theme.typography.callout,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  simplifiedInput: {
+    ...Theme.typography.body,
+    color: colors.text,
+    backgroundColor: isDark ? colors.surface : colors.background,
+    borderRadius: Theme.borderRadius.md,
+    paddingVertical: 10,
+    paddingHorizontal: Theme.spacing.md,
+    borderWidth: 1.5,
+    borderColor: colors.separator,
+    fontSize: 16,
+  },
+  simplifiedSaveButton: {
+    flexDirection: 'row',
+    minHeight: 42,
+    paddingVertical: 4,
+    paddingHorizontal: 32,
+    borderRadius: Theme.borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Theme.spacing.sm,
+    overflow: 'hidden',
+    marginTop: Theme.spacing.sm,
+  },
+  simplifiedButtonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  simplifiedSaveButtonDisabled: {
+    opacity: 0.5,
+  },
+  simplifiedSaveButtonText: {
+    ...Theme.typography.headline,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    fontSize: 17,
+  },
 });
 
 export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true }: JobFormModalProps) {
@@ -820,6 +971,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [currentTab, setCurrentTab] = useState<'basic' | 'schedule' | 'financial' | 'billing' | 'auto' | 'delete'>(initialTab || 'basic');
   const [confirmationName, setConfirmationName] = useState('');
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+  const [hasCheckedFirstTime, setHasCheckedFirstTime] = useState(false);
   
   const styles = getStyles(colors, isDark);
 
@@ -828,6 +981,24 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       setCurrentTab(initialTab);
     }
   }, [visible, initialTab]);
+
+  // Check if it's the first time user opens the form
+  useEffect(() => {
+    const checkFirstTimeUser = async () => {
+      if (visible && !hasCheckedFirstTime && !editingJob) {
+        try {
+          const hasSeenFullForm = await AsyncStorage.getItem('hasSeenFullJobForm');
+          setIsFirstTimeUser(hasSeenFullForm !== 'true');
+          setHasCheckedFirstTime(true);
+        } catch (error) {
+          console.error('Error checking first time user:', error);
+          setIsFirstTimeUser(false);
+        }
+      }
+    };
+
+    checkFirstTimeUser();
+  }, [visible, hasCheckedFirstTime, editingJob]);
 
   // Verificar permisos de ubicación cuando se abre el modal
   useEffect(() => {
@@ -1079,6 +1250,15 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     if (!formData.name?.trim()) {
       onClose();
       return;
+    }
+
+    // Mark that user has seen the full form after first save
+    if (isFirstTimeUser) {
+      try {
+        await AsyncStorage.setItem('hasSeenFullJobForm', 'true');
+      } catch (error) {
+        console.error('Error saving first time status:', error);
+      }
     }
 
     try {
@@ -1350,6 +1530,102 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       setSelectedDay(null);
     }
   };
+
+  const renderSimplifiedForm = () => (
+    <TouchableOpacity 
+      style={styles.simplifiedOverlay} 
+      activeOpacity={1}
+      onPress={onClose}
+    >
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.simplifiedKeyboardView}
+      >
+        <TouchableOpacity 
+          activeOpacity={1}
+          onPress={() => {}}
+          style={styles.simplifiedCard}
+        >
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.simplifiedBlurCard}>
+            {/* Close button */}
+            <TouchableOpacity 
+              onPress={onClose} 
+              style={styles.simplifiedCloseButton}
+            >
+              <View style={styles.simplifiedCloseCircle}>
+                <IconSymbol size={20} name="xmark" color={isDark ? '#FFFFFF' : '#3C3C43'} />
+              </View>
+            </TouchableOpacity>
+
+            {/* Welcome section */}
+            <View style={styles.simplifiedWelcomeSection}>
+              <View style={styles.simplifiedIconContainer}>
+                <LinearGradient
+                  colors={[colors.primary, colors.primary + '80']}
+                  style={styles.simplifiedIconGradient}
+                />
+                <IconSymbol size={32} name="briefcase.fill" color="#FFFFFF" />
+              </View>
+              
+              <Text style={styles.simplifiedWelcome}>
+                {t('job_form.simplified_welcome')}
+              </Text>
+              <Text style={styles.simplifiedCreateFirst}>
+                {t('job_form.simplified_create_first')}
+              </Text>
+              <Text style={styles.simplifiedSubtitle}>
+                {t('job_form.simplified_subtitle')}
+              </Text>
+            </View>
+            
+            {/* Form section */}
+            <View style={styles.simplifiedInputSection}>
+              <View style={styles.simplifiedLabelRow}>
+                <IconSymbol size={18} name="pencil" color={colors.primary} />
+                <Text style={styles.simplifiedLabel}>
+                  {t('job_form.basic.name')}
+                </Text>
+              </View>
+              <TextInput
+                style={styles.simplifiedInput}
+                value={formData.name}
+                onChangeText={(value) => updateFormData('name', value)}
+                placeholder={t('job_form.basic.name_placeholder')}
+                placeholderTextColor={colors.textTertiary}
+                autoFocus={true}
+                returnKeyType="done"
+                onSubmitEditing={formData.name?.trim() ? handleSave : undefined}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.simplifiedSaveButton, 
+                !formData.name?.trim() && styles.simplifiedSaveButtonDisabled
+              ]}
+              onPress={handleSave}
+              disabled={!formData.name?.trim()}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={formData.name?.trim() 
+                  ? [colors.primary, colors.primary + 'DD']
+                  : [colors.separator, colors.separator]
+                }
+                style={styles.simplifiedButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              />
+              <IconSymbol size={18} name="checkmark.circle.fill" color="#FFFFFF" />
+              <Text style={styles.simplifiedSaveButtonText}>
+                {t('job_form.save')}
+              </Text>
+            </TouchableOpacity>
+          </BlurView>
+        </TouchableOpacity>
+      </KeyboardAvoidingView>
+    </TouchableOpacity>
+  );
 
   const renderBasicTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
@@ -2578,22 +2854,29 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     : baseTabs;
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>
-            {editingJob ? t('job_form.title_edit') : t('job_form.title_new')}
-          </Text>
-          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <View style={styles.closeButtonCircle}>
-              <IconSymbol size={20} name={formData.name?.trim() ? "checkmark" : "xmark"} color="#FFFFFF" />
+    <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={onClose}>
+      {isFirstTimeUser && !editingJob ? (
+        // Show simplified form for first time users
+        renderSimplifiedForm()
+      ) : (
+        <View style={styles.modalOverlay}>
+          <SafeAreaView style={styles.container}>
+          // Show full form
+          <>
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>
+                {editingJob ? t('job_form.title_edit') : t('job_form.title_new')}
+              </Text>
+              <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+                <View style={styles.closeButtonCircle}>
+                  <IconSymbol size={20} name={formData.name?.trim() ? "checkmark" : "xmark"} color="#FFFFFF" />
+                </View>
+              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-        </View>
 
-        <View style={styles.tabsContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {tabs.map((tab) => {
+            <View style={styles.tabsContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {tabs.map((tab) => {
               const isAutoTab = tab.key === 'auto';
               const isAutoTimerEnabled = formData.autoTimer?.enabled || false;
               const isActive = currentTab === tab.key;
@@ -2645,7 +2928,10 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           {currentTab === 'auto' && renderAutoTab()}
           {currentTab === 'delete' && renderDeleteTab()}
         </KeyboardAvoidingView>
-      </SafeAreaView>
+          </>
+          </SafeAreaView>
+        </View>
+      )}
 
       {/* Premium Modal */}
       <Modal

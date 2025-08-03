@@ -77,11 +77,11 @@ export default function BottomNavigation() {
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <BlurView 
-        intensity={95} 
+        intensity={85} 
         tint={isDark ? "dark" : "light"} 
         style={styles.blurContainer}
       >
-        <View style={[styles.tabsContainer, { backgroundColor: isDark ? 'rgba(0, 0, 0, 0.18)' : 'rgba(255, 255, 255, 0.23)' }]}>
+        <View style={[styles.tabsContainer, { backgroundColor: isDark ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.1)' }]}>
           {tabs.map((tab) => {
             const isActive = currentScreen === tab.id;
             return (

@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { View, Alert, StyleSheet, Text, TouchableOpacity, SafeAreaView, Linking, AppState, Modal } from 'react-native';
+import { View, Alert, StyleSheet, Text, TouchableOpacity, SafeAreaView, Linking, AppState, Modal, Image } from 'react-native';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+
+// Type declaration for global handlers
+declare global {
+  var reportsScreenExportHandler: (() => void) | undefined;
+  var calendarScreenSyncHandler: (() => void) | undefined;
+  var timerScreenNotesHandler: (() => void) | undefined;
+  var chatbotScreenHistoryHandler: (() => void) | undefined;
+}
 
 import Loading from '../components/Loading';
 import MapLocation from '../components/MapLocation';
@@ -22,6 +30,7 @@ import SettingsScreen from '../screens/SettingsScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 import ChatbotScreen from '../screens/ChatbotScreen';
+import HelpSupportScreen from '../screens/HelpSupportScreen';
 
 import { NavigationProvider, useNavigation, ScreenName } from '../context/NavigationContext';
 import { OnboardingService } from '../services/OnboardingService';
@@ -53,6 +62,8 @@ function AppContent() {
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
   const [useWithoutLocation, setUseWithoutLocation] = useState(false);
   const [showFeaturesModal, setShowFeaturesModal] = useState(false);
+  const [showHelpSupport, setShowHelpSupport] = useState(false);
+  const [showInfoButton, setShowInfoButton] = useState(true);
   const { currentScreen, navigateTo } = useNavigation();
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
@@ -62,6 +73,11 @@ function AppContent() {
     // Verificar si ya se mostró el onboarding
     AsyncStorage.getItem('onboardingSeen').then((value) => {
       setShowOnboarding(value !== 'true'); // true = ya visto
+    });
+    
+    // Verificar si el botón de info ya fue presionado
+    AsyncStorage.getItem('infoButtonPressed').then((value) => {
+      setShowInfoButton(value !== 'true'); // true = ya presionado
     });
   }, []);
 
@@ -378,7 +394,11 @@ function AppContent() {
       case 'mapa':
         return (
           <View style={styles.workTrackTitle}>
-            <IconSymbol size={22} name="clock.fill" color="#34C759" />
+            <Image 
+              source={require('../../public/images/app-icon.png')} 
+              style={styles.headerLogo}
+              resizeMode="contain"
+            />
             <Text style={[styles.workText, { color: '#007AFF' }]}>Work</Text>
             <Text style={[styles.trackText, { color: '#34C759' }]}>Track</Text>
           </View>
@@ -455,6 +475,31 @@ function AppContent() {
           title={getScreenTitle()} 
           onProfilePress={() => navigateTo('settings')}
           isSettingsActive={currentScreen === 'settings'}
+          currentScreen={currentScreen}
+          onExportPress={currentScreen === 'reports' ? () => {
+            // This will be handled by ReportsScreen's export functionality
+            if (globalThis.reportsScreenExportHandler) {
+              globalThis.reportsScreenExportHandler();
+            }
+          } : undefined}
+          onSyncPress={currentScreen === 'calendar' ? () => {
+            // This will be handled by CalendarScreen's sync functionality
+            if (globalThis.calendarScreenSyncHandler) {
+              globalThis.calendarScreenSyncHandler();
+            }
+          } : undefined}
+          onNotesPress={currentScreen === 'timer' ? () => {
+            // This will be handled by TimerScreen's notes functionality
+            if (globalThis.timerScreenNotesHandler) {
+              globalThis.timerScreenNotesHandler();
+            }
+          } : undefined}
+          onInfoPress={currentScreen === 'mapa' && showInfoButton ? async () => {
+            setShowHelpSupport(true);
+            // Guardar que el botón fue presionado
+            await AsyncStorage.setItem('infoButtonPressed', 'true');
+            setShowInfoButton(false);
+          } : undefined}
         />
       )}
       <View style={{ flex: 1 }}>
@@ -543,6 +588,16 @@ function AppContent() {
           </BlurView>
         </View>
       </Modal>
+      
+      {/* Help Support Modal */}
+      <Modal
+        visible={showHelpSupport}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => setShowHelpSupport(false)}
+      >
+        <HelpSupportScreen onClose={() => setShowHelpSupport(false)} />
+      </Modal>
     </View>
   );
 }
@@ -568,18 +623,23 @@ const styles = StyleSheet.create({
   workTrackTitle: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 0,
   },
   titleIcon: {
     marginRight: 4,
   },
+  headerLogo: {
+    width: 32,
+    height: 32,
+    marginRight: 2,
+  },
   workText: {
-    fontSize: 20,
+    fontSize: 21,
     fontWeight: '600',
     letterSpacing: -0.3,
   },
   trackText: {
-    fontSize: 20,
+    fontSize: 21,
     fontWeight: '600',
     letterSpacing: -0.3,
   },

@@ -122,8 +122,10 @@
       "preferences_desc": "Notifiche, lingua, tema",
       "how_it_works": "Come funziona",
       "how_it_works_desc": "Tutorial e guida all'uso",
-      "help": "Aiuto e supporto",
-      "help_desc": "FAQ, contatto, termini"
+      "help": "Domande frequenti",
+      "help_desc": "Domande più comuni sull'app",
+      "support_terms": "Supporto e termini",
+      "support_terms_desc": "Contatto, termini e privacy"
     },
     "quick_stats": {
       "title": "Riepilogo rapido",
@@ -443,6 +445,9 @@
     "title_edit": "Modifica lavoro",
     "title_new": "Nuovo lavoro",
     "save": "Salva",
+    "simplified_subtitle": "Inizia con solo un nome. Potrai aggiungere altri dettagli più tardi.",
+    "simplified_welcome": "Benvenuto!",
+    "simplified_create_first": "Crea il tuo primo lavoro",
     "tabs": {
       "basic": "Base",
       "schedule": "Orario", 
@@ -659,11 +664,13 @@
     "add_new_job_button": "Aggiungi un nuovo lavoro"
   },
   "help_support": {
-    "title": "Aiuto & Supporto",
+    "title": "FAQ & Supporto",
     "subtitle": "FAQ, contatto e risorse",
     "faq": {
       "title": "Domande Frequenti",
       "description": "Trova risposte alle domande più comuni",
+      "section_title": "Domande frequenti",
+      "section_description": "Trova risposte rapide alle domande più comuni sull'applicazione",
       "categories": {
         "all": "Tutte",
         "general": "Generale",
@@ -698,11 +705,31 @@
         },
         "export_data": {
           "question": "Posso esportare i miei dati?",
-          "answer": "Aggiungeremo presto la funzionalità di esportazione PDF ed Excel per i tuoi record di tempo."
+          "answer": "Sì, puoi esportare i tuoi dati dalla schermata Impostazioni. Puoi scegliere tra formato PDF o Excel per i tuoi record di tempo."
         },
         "location_issues": {
           "question": "Perché la posizione non funziona?",
           "answer": "Verifica di aver concesso i permessi di posizione all'app. Vai su Impostazioni del Dispositivo > Privacy > Posizione e abilita i permessi."
+        },
+        "work_notifications": {
+          "question": "Posso creare notifiche per ricordarmi quando devo andare al lavoro?",
+          "answer": "Sì, nella schermata del calendario, quando aggiungi un orario vedrai un pulsante per creare una notifica che ti ricorderà quando andare al lavoro."
+        },
+        "export_calendar": {
+          "question": "Posso esportare i giorni di lavoro dal calendario dell'app al calendario nativo del telefono?",
+          "answer": "Sì, dalla schermata del calendario puoi sincronizzare con il tuo calendario nativo usando il pulsante di sincronizzazione."
+        },
+        "chatbot_ai": {
+          "question": "Il chatbot funziona con intelligenza artificiale?",
+          "answer": "Sì, funziona con Gemini 1.5 Pro e può commettere errori se il piano di lavoro analizzato non è ben definito."
+        },
+        "offline_functionality": {
+          "question": "L'app funziona senza connessione internet?",
+          "answer": "Sì, funziona perfettamente senza connessione internet. Tutto è memorizzato localmente, solo la funzione di analisi delle immagini del chatbot non funzionerà offline."
+        },
+        "premium_features": {
+          "question": "Ho bisogno di un abbonamento per tutte le funzionalità?",
+          "answer": "Per godere al 100% di tutte le funzionalità hai bisogno di un abbonamento premium."
         }
       }
     },
@@ -714,7 +741,10 @@
       "whatsapp": "WhatsApp",
       "whatsapp_number": "+39 06 123 456",
       "schedule": "Orari di Supporto",
-      "schedule_hours": "Lun - Ven: 9:00 - 18:00"
+      "schedule_hours": "Lun - Ven: 9:00 - 18:00",
+      "share_app": "Condividi app",
+      "share_app_desc": "Condividi WorkTrack con gli amici",
+      "share_message": "Scopri WorkTrack! La migliore app per tracciare le tue ore di lavoro. Scarica: https://mywork-track.com"
     },
     "legal": {
       "title": "Legale & Privacy",
@@ -724,6 +754,9 @@
       "privacy_description": "Come gestiamo i tuoi dati",
       "version": "Versione 1.0.0",
       "last_update": "Ultimo aggiornamento: Luglio 2025"
+    },
+    "support_terms": {
+      "title": "Supporto e termini"
     }
   },
   "preferences": {
@@ -907,6 +940,20 @@
     "context_cleared": "✅ Contesto cancellato. Ora puoi inviare una nuova immagine o documento PDF del piano di lavoro o fare domande generali.",
     "analyzing_document": "Analisi del documento...",
     "generating_response": "Generazione della risposta...",
+    "history": {
+      "title": "Cronologia chat",
+      "today": "Oggi",
+      "yesterday": "Ieri",
+      "days_ago": "giorni fa",
+      "restore": "Ripristina",
+      "restore_title": "Ripristina sessione",
+      "restore_message": "Questo sostituirà la conversazione attuale. Continuare?",
+      "delete_title": "Elimina sessione",
+      "delete_message": "Sei sicuro di voler eliminare questa sessione?",
+      "empty_title": "Nessuna cronologia",
+      "empty_message": "Le conversazioni verranno salvate automaticamente quando lasci la chat",
+      "no_messages": "Nessun messaggio"
+    },
     "placeholder_waiting": "Scrivi il nome della persona...",
     "placeholder_default": "Scrivi qui il tuo messaggio...",
     "placeholder_processing": "L'assistente sta elaborando...",
@@ -978,20 +1025,24 @@
   "onboarding": {
     "steps": {
       "jobs": {
-        "title": "Gestisci i tuoi Lavori",
-        "description": "Crea e organizza tutti i tuoi lavori con informazioni dettagliate, orari, tariffe e posizioni."
+        "title": "Lavori",
+        "description": "Aggiungi e modifica lavori, configura orari e tariffe. Tutti i dati sono salvati localmente, ricorda di fare backup."
+      },
+      "calendar": {
+        "title": "Calendario",
+        "description": "Segna i tuoi giorni di lavoro, sincronizza con il calendario nativo e programma notifiche di promemoria."
       },
       "timer": {
-        "title": "Monitora il tuo Tempo",
-        "description": "Usa il timer per misurare le ore di lavoro o registra manualmente nel calendario."
+        "title": "Timer",
+        "description": "Gestisci il tuo tempo di lavoro. Ideale per freelancer. Attiva l'autotimer con posizione lavorativa. Aggiunto automaticamente al calendario."
       },
-      "location": {
-        "title": "Localizza sulla Mappa",
-        "description": "Vedi i tuoi lavori sulla mappa, naviga verso le loro posizioni e gestisci tutto da un unico posto."
+      "statistics": {
+        "title": "Statistiche",
+        "description": "Esporta statistiche in PDF, ottieni riepiloghi e crea fatture basate sui dati."
       },
-      "reports": {
-        "title": "Analizza le Statistiche",
-        "description": "Rivedi rapporti dettagliati, statistiche di lavoro ed esporta i tuoi dati quando ne hai bisogno."
+      "chatbot": {
+        "title": "Chat di Analisi",
+        "description": "Analizza immagini e PDF per estrarre ore di lavoro e sincronizzare con il calendario nativo."
       }
     },
     "step_counter": "{{current}} di {{total}}",
@@ -1026,5 +1077,67 @@
   "welcome": {
     "title": "Benvenuto!",
     "subtitle": "Impara a usare l'app in {{steps}} passaggi"
+  },
+  "privacy_policy": {
+    "title": "Informativa sulla Privacy",
+    "subtitle": "Ultimo aggiornamento: Agosto 2025",
+    "your_privacy_title": "La Tua Privacy è la Nostra Priorità",
+    "your_privacy_text": "In WorkTrack, prendiamo sul serio la tua privacy. Questa Informativa sulla Privacy spiega come raccogliamo, utilizziamo e proteggiamo le tue informazioni quando usi la nostra applicazione di tracciamento del tempo di lavoro.",
+    "data_storage_title": "Archiviazione dei Dati",
+    "local_storage_text": "100% Archiviazione Locale: Tutti i tuoi dati di lavoro, incluse informazioni sul lavoro, registrazioni del tempo, orari e impostazioni sono archiviati esclusivamente sul tuo dispositivo. Non abbiamo accesso a queste informazioni.",
+    "no_cloud_text": "Nessun Server Cloud: Non abbiamo database o server cloud che memorizzano le tue informazioni personali. I tuoi dati non lasciano mai il tuo dispositivo a meno che tu non scelga esplicitamente di esportarli o condividerli.",
+    "no_accounts_text": "Nessun Account Utente: L'app funziona senza creare account utente, il che significa che non raccogliamo o memorizziamo informazioni di identificazione personale come nomi, indirizzi email o numeri di telefono.",
+    "data_backup_title": "Backup dei Dati",
+    "data_backup_text": "Poiché tutti i dati sono memorizzati localmente sul tuo dispositivo, sei responsabile della creazione di backup regolari. L'app fornisce funzionalità di esportazione per aiutarti a salvare i tuoi dati in sicurezza.",
+    "ai_chat_title": "Funzioni Chat IA",
+    "ai_anonymous_text": "I messaggi inviati al chatbot IA vengono elaborati in modo anonimo tramite l'API Gemini di Google. Nessuna informazione personale è inclusa in queste richieste.",
+    "ai_no_storage_text": "Non memorizziamo la cronologia delle chat o le conversazioni sui nostri server. Tutti i dati delle chat rimangono sul tuo dispositivo.",
+    "ai_images_text": "Le immagini analizzate dall'IA vengono elaborate temporaneamente e non sono memorizzate su server esterni.",
+    "subscriptions_title": "Abbonamenti",
+    "subscription_text": "Se acquisti un abbonamento premium, le informazioni di pagamento sono gestite da Apple App Store o Google Play Store secondo le loro rispettive politiche sulla privacy. Non abbiamo accesso ai tuoi dettagli di pagamento.",
+    "location_data_title": "Dati di Posizione",
+    "location_text": "I dati di posizione sono utilizzati solo per la funzionalità del timer automatico e sono memorizzati localmente sul tuo dispositivo. Le informazioni di posizione non vengono mai trasmesse ai nostri server.",
+    "third_party_title": "Servizi di Terze Parti",
+    "third_party_text": "Utilizziamo solo servizi di terze parti essenziali: API Google Gemini per funzionalità chat IA (anonima), e app store specifici della piattaforma per la gestione degli abbonamenti.",
+    "data_security_title": "Sicurezza dei Dati",
+    "data_security_text": "Poiché tutti i dati sono memorizzati localmente sul tuo dispositivo, la sicurezza dei dati dipende dalle misure di sicurezza del tuo dispositivo. Raccomandiamo di utilizzare la crittografia del dispositivo e schermate di blocco sicure.",
+    "childrens_privacy_title": "Privacy dei Bambini",
+    "childrens_text": "La nostra app non è progettata per bambini sotto i 13 anni. Non raccogliamo consapevolmente informazioni personali da bambini.",
+    "changes_title": "Modifiche a Questa Politica",
+    "changes_text": "Potremmo aggiornare questa Informativa sulla Privacy di tanto in tanto. Eventuali modifiche saranno pubblicate nell'app e entreranno in vigore immediatamente dopo la pubblicazione.",
+    "contact_us_title": "Contattaci",
+    "contact_text": "Se hai domande su questa Informativa sulla Privacy, contattaci a support@worktrack-app.com"
+  },
+  "terms_of_service": {
+    "title": "Termini di Servizio",
+    "subtitle": "Ultimo aggiornamento: Agosto 2025",
+    "acceptance_title": "Accettazione dei Termini",
+    "acceptance_text": "Scaricando, installando o utilizzando WorkTrack, accetti di essere vincolato da questi Termini di Servizio. Se non accetti questi termini, ti preghiamo di non utilizzare l'app.",
+    "description_title": "Descrizione dell'App",
+    "description_text": "WorkTrack è un'applicazione di tracciamento del tempo di lavoro che ti aiuta a monitorare e gestire le tue ore di lavoro, creare orari e generare report. Tutti i dati sono memorizzati localmente sul tuo dispositivo.",
+    "license_title": "Licenza",
+    "license_text": "Ti concediamo una licenza limitata, non esclusiva, non trasferibile per utilizzare WorkTrack per scopi personali o aziendali in conformità a questi termini.",
+    "user_responsibilities_title": "Responsabilità dell'Utente",
+    "user_responsibilities_text": "Sei responsabile di: (a) mantenere la sicurezza del tuo dispositivo e dei dati dell'app, (b) creare backup regolari dei tuoi dati, (c) utilizzare l'app in conformità alle leggi applicabili.",
+    "data_ownership_title": "Proprietà dei Dati",
+    "data_ownership_text": "Mantieni la proprietà completa di tutti i dati che crei o memorizzi nell'app. Non rivendichiamo alcun diritto sui tuoi dati di lavoro, orari o report.",
+    "prohibited_uses_title": "Usi Proibiti",
+    "prohibited_uses_text": "Non puoi: (a) fare reverse engineering o tentare di estrarre il codice sorgente, (b) utilizzare l'app per attività illegali, (c) tentare di aggirare le misure di sicurezza.",
+    "premium_features_title": "Funzioni Premium",
+    "premium_features_text": "Alcune funzioni richiedono un abbonamento premium. I termini dell'abbonamento sono regolati dalle politiche di App Store o Google Play Store. Gli abbonamenti si rinnovano automaticamente a meno che non vengano cancellati.",
+    "ai_features_title": "Funzioni IA",
+    "ai_features_text": "Le funzioni di chat IA sono fornite 'così come sono' e potrebbero non essere sempre accurate. Dovresti verificare qualsiasi informazione fornita dalle funzioni IA prima di prendere decisioni aziendali.",
+    "disclaimers_title": "Esclusioni di Responsabilità",
+    "disclaimers_text": "L'app è fornita 'così com'è' senza garanzie. Non siamo responsabili per perdita di dati, ore di lavoro perse o decisioni aziendali basate sui dati dell'app.",
+    "limitation_liability_title": "Limitazione di Responsabilità",
+    "limitation_liability_text": "La nostra responsabilità è limitata all'importo che hai pagato per l'app o l'abbonamento. Non siamo responsabili per danni indiretti, incidentali o consequenziali.",
+    "termination_title": "Risoluzione",
+    "termination_text": "Puoi smettere di utilizzare l'app in qualsiasi momento. Possiamo terminare il tuo accesso se violi questi termini. Alla risoluzione, la tua licenza per utilizzare l'app termina.",
+    "changes_terms_title": "Modifiche ai Termini",
+    "changes_terms_text": "Possiamo modificare questi termini in qualsiasi momento. L'uso continuato dell'app dopo le modifiche costituisce accettazione dei nuovi termini.",
+    "governing_law_title": "Legge Applicabile",
+    "governing_law_text": "Questi termini sono regolati dalle leggi della giurisdizione in cui si trova lo sviluppatore dell'app.",
+    "contact_title": "Informazioni di Contatto",
+    "contact_text": "Per domande su questi Termini di Servizio, contattaci a support@worktrack-app.com"
   }
 }

@@ -761,10 +761,7 @@
       "whatsapp": "WhatsApp",
       "whatsapp_number": "+49 30 123 456",
       "schedule": "Support-Zeiten",
-      "schedule_hours": "Mo - Fr: 9:00 - 18:00 Uhr",
-      "share_app": "App teilen",
-      "share_app_desc": "WorkTrack mit Freunden teilen",
-      "share_message": "Entdecke WorkTrack! Die beste App zur Arbeitszeiterfassung. Download: https://mywork-track.com"
+      "schedule_hours": "Mo - Fr: 9:00 - 18:00 Uhr"
     },
     "legal": {
       "title": "Rechtliches & Datenschutz",
@@ -774,9 +771,6 @@
       "privacy_description": "Wie wir mit Ihren Daten umgehen",
       "version": "Version 1.0.0",
       "last_update": "Letztes Update: Juli 2025"
-    },
-    "support_terms": {
-      "title": "Support & Bedingungen"
     }
   },
   "preferences": {
@@ -1113,67 +1107,5 @@
   "welcome": {
     "title": "Willkommen!",
     "subtitle": "Lernen Sie, wie Sie die App in {{steps}} Schritten verwenden"
-  },
-  "privacy_policy": {
-    "title": "Datenschutzrichtlinie",
-    "subtitle": "Letzte Aktualisierung: August 2025",
-    "your_privacy_title": "Ihr Datenschutz ist unsere Priorität",
-    "your_privacy_text": "Bei WorkTrack nehmen wir Ihren Datenschutz ernst. Diese Datenschutzrichtlinie erklärt, wie wir Ihre Informationen sammeln, verwenden und schützen, wenn Sie unsere Arbeitszeiterfassungsanwendung verwenden.",
-    "data_storage_title": "Datenspeicherung",
-    "local_storage_text": "100% lokale Speicherung: Alle Ihre Arbeitsdaten, einschließlich Stelleninformationen, Zeitaufzeichnungen, Zeitpläne und Einstellungen werden ausschließlich auf Ihrem Gerät gespeichert. Wir haben keinen Zugriff auf diese Informationen.",
-    "no_cloud_text": "Keine Cloud-Server: Wir haben keine Datenbanken oder Cloud-Server, die Ihre persönlichen Informationen speichern. Ihre Daten verlassen Ihr Gerät nie, es sei denn, Sie wählen explizit, sie zu exportieren oder zu teilen.",
-    "no_accounts_text": "Keine Benutzerkonten: Die App funktioniert ohne die Erstellung von Benutzerkonten, was bedeutet, dass wir keine persönlichen Identifikationsinformationen wie Namen, E-Mail-Adressen oder Telefonnummern sammeln oder speichern.",
-    "data_backup_title": "Datensicherung",
-    "data_backup_text": "Da alle Daten lokal auf Ihrem Gerät gespeichert werden, sind Sie für die Erstellung regelmäßiger Backups verantwortlich. Die App bietet Exportfunktionen, um Ihnen zu helfen, Ihre Daten sicher zu speichern.",
-    "ai_chat_title": "KI-Chat-Funktionen",
-    "ai_anonymous_text": "Nachrichten, die an den KI-Chatbot gesendet werden, werden anonym über Googles Gemini API verarbeitet. Keine persönlichen Informationen werden in diese Anfragen einbezogen.",
-    "ai_no_storage_text": "Wir speichern keine Chat-Verläufe oder Unterhaltungen auf unseren Servern. Alle Chat-Daten bleiben auf Ihrem Gerät.",
-    "ai_images_text": "Von der KI analysierte Bilder werden vorübergehend verarbeitet und nicht auf externen Servern gespeichert.",
-    "subscriptions_title": "Abonnements",
-    "subscription_text": "Wenn Sie ein Premium-Abonnement kaufen, werden Zahlungsinformationen vom Apple App Store oder Google Play Store gemäß ihren jeweiligen Datenschutzrichtlinien verwaltet. Wir haben keinen Zugriff auf Ihre Zahlungsdetails.",
-    "location_data_title": "Standortdaten",
-    "location_text": "Standortdaten werden nur für die automatische Timer-Funktionalität verwendet und lokal auf Ihrem Gerät gespeichert. Standortinformationen werden niemals an unsere Server übertragen.",
-    "third_party_title": "Drittanbieter-Dienste",
-    "third_party_text": "Wir verwenden nur wesentliche Drittanbieter-Dienste: Google Gemini API für KI-Chat-Funktionalität (anonym) und plattformspezifische App-Stores für Abonnement-Management.",
-    "data_security_title": "Datensicherheit",
-    "data_security_text": "Da alle Daten lokal auf Ihrem Gerät gespeichert werden, hängt die Datensicherheit von den Sicherheitsmaßnahmen Ihres Geräts ab. Wir empfehlen die Verwendung von Geräteverschlüsselung und sicheren Sperrbildschirmen.",
-    "childrens_privacy_title": "Datenschutz für Kinder",
-    "childrens_text": "Unsere App ist nicht für Kinder unter 13 Jahren konzipiert. Wir sammeln wissentlich keine persönlichen Informationen von Kindern.",
-    "changes_title": "Änderungen an dieser Richtlinie",
-    "changes_text": "Wir können diese Datenschutzrichtlinie von Zeit zu Zeit aktualisieren. Alle Änderungen werden in der App veröffentlicht und treten sofort nach der Veröffentlichung in Kraft.",
-    "contact_us_title": "Kontaktieren Sie uns",
-    "contact_text": "Wenn Sie Fragen zu dieser Datenschutzrichtlinie haben, kontaktieren Sie uns unter support@worktrack-app.com"
-  },
-  "terms_of_service": {
-    "title": "Nutzungsbedingungen",
-    "subtitle": "Letzte Aktualisierung: August 2025",
-    "acceptance_title": "Annahme der Bedingungen",
-    "acceptance_text": "Durch das Herunterladen, Installieren oder Verwenden von WorkTrack stimmen Sie zu, an diese Nutzungsbedingungen gebunden zu sein. Wenn Sie diesen Bedingungen nicht zustimmen, verwenden Sie die App bitte nicht.",
-    "description_title": "App-Beschreibung",
-    "description_text": "WorkTrack ist eine Arbeitszeiterfassungsanwendung, die Ihnen hilft, Ihre Arbeitszeiten zu überwachen und zu verwalten, Zeitpläne zu erstellen und Berichte zu generieren. Alle Daten werden lokal auf Ihrem Gerät gespeichert.",
-    "license_title": "Lizenz",
-    "license_text": "Wir gewähren Ihnen eine begrenzte, nicht-exklusive, nicht-übertragbare Lizenz zur Nutzung von WorkTrack für persönliche oder geschäftliche Zwecke in Übereinstimmung mit diesen Bedingungen.",
-    "user_responsibilities_title": "Benutzerverantwortlichkeiten",
-    "user_responsibilities_text": "Sie sind verantwortlich für: (a) die Aufrechterhaltung der Sicherheit Ihres Geräts und der App-Daten, (b) die Erstellung regelmäßiger Backups Ihrer Daten, (c) die Nutzung der App in Übereinstimmung mit geltendem Recht.",
-    "data_ownership_title": "Dateneigentum",
-    "data_ownership_text": "Sie behalten das vollständige Eigentum an allen Daten, die Sie in der App erstellen oder speichern. Wir erheben keine Ansprüche auf Ihre Arbeitsdaten, Zeitpläne oder Berichte.",
-    "prohibited_uses_title": "Verbotene Nutzungen",
-    "prohibited_uses_text": "Sie dürfen nicht: (a) Reverse Engineering betreiben oder versuchen, Quellcode zu extrahieren, (b) die App für illegale Aktivitäten verwenden, (c) versuchen, Sicherheitsmaßnahmen zu umgehen.",
-    "premium_features_title": "Premium-Funktionen",
-    "premium_features_text": "Einige Funktionen erfordern ein Premium-Abonnement. Abonnementbedingungen unterliegen den App Store- oder Google Play Store-Richtlinien. Abonnements verlängern sich automatisch, es sei denn, sie werden gekündigt.",
-    "ai_features_title": "KI-Funktionen",
-    "ai_features_text": "KI-Chat-Funktionen werden 'wie besehen' bereitgestellt und sind möglicherweise nicht immer genau. Sie sollten alle von KI-Funktionen bereitgestellten Informationen überprüfen, bevor Sie geschäftliche Entscheidungen treffen.",
-    "disclaimers_title": "Haftungsausschlüsse",
-    "disclaimers_text": "Die App wird 'wie besehen' ohne Gewährleistungen bereitgestellt. Wir sind nicht haftbar für Datenverlust, verpasste Arbeitszeiten oder geschäftliche Entscheidungen basierend auf App-Daten.",
-    "limitation_liability_title": "Haftungsbeschränkung",
-    "limitation_liability_text": "Unsere Haftung ist auf den Betrag beschränkt, den Sie für die App oder das Abonnement bezahlt haben. Wir sind nicht haftbar für indirekte, zufällige oder Folgeschäden.",
-    "termination_title": "Kündigung",
-    "termination_text": "Sie können die Nutzung der App jederzeit einstellen. Wir können Ihren Zugang beenden, wenn Sie gegen diese Bedingungen verstoßen. Bei Beendigung endet Ihre Lizenz zur Nutzung der App.",
-    "changes_terms_title": "Änderungen der Bedingungen",
-    "changes_terms_text": "Wir können diese Bedingungen jederzeit ändern. Die fortgesetzte Nutzung der App nach Änderungen stellt die Annahme neuer Bedingungen dar.",
-    "governing_law_title": "Geltendes Recht",
-    "governing_law_text": "Diese Bedingungen unterliegen den Gesetzen der Gerichtsbarkeit, in der sich der App-Entwickler befindet.",
-    "contact_title": "Kontaktinformationen",
-    "contact_text": "Für Fragen zu diesen Nutzungsbedingungen kontaktieren Sie uns unter support@worktrack-app.com"
   }
 }

@@ -294,6 +294,31 @@ export default function HelpSupportScreen({ onClose }: HelpSupportScreenProps) {
       question: t('help_support.faq.questions.location_issues.question'),
       answer: t('help_support.faq.questions.location_issues.answer'),
       category: 'technical'
+    },
+    {
+      question: t('help_support.faq.questions.work_notifications.question'),
+      answer: t('help_support.faq.questions.work_notifications.answer'),
+      category: 'time'
+    },
+    {
+      question: t('help_support.faq.questions.export_calendar.question'),
+      answer: t('help_support.faq.questions.export_calendar.answer'),
+      category: 'time'
+    },
+    {
+      question: t('help_support.faq.questions.chatbot_ai.question'),
+      answer: t('help_support.faq.questions.chatbot_ai.answer'),
+      category: 'technical'
+    },
+    {
+      question: t('help_support.faq.questions.offline_functionality.question'),
+      answer: t('help_support.faq.questions.offline_functionality.answer'),
+      category: 'technical'
+    },
+    {
+      question: t('help_support.faq.questions.premium_features.question'),
+      answer: t('help_support.faq.questions.premium_features.answer'),
+      category: 'billing'
     }
   ];
 
@@ -305,19 +330,6 @@ export default function HelpSupportScreen({ onClose }: HelpSupportScreenProps) {
     ? FAQ_DATA 
     : FAQ_DATA.filter(item => item.category === selectedCategory);
 
-  const openEmail = () => {
-    Linking.openURL('mailto:support@geolocalizacion-app.com?subject=Soporte - Geolocalización App');
-  };
-
-  const openTerms = () => {
-    // URL de ejemplo - reemplazar con la real
-    Linking.openURL('https://example.com/terms');
-  };
-
-  const openPrivacy = () => {
-    // URL de ejemplo - reemplazar con la real
-    Linking.openURL('https://example.com/privacy');
-  };
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -352,7 +364,7 @@ export default function HelpSupportScreen({ onClose }: HelpSupportScreenProps) {
         title={
           <View style={styles.screenTitle}>
             <IconSymbol size={26} name="questionmark.circle" color={colors.primary} />
-            <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('help_support.title')}</Text>
+            <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('help_support.faq.title')}</Text>
           </View>
         }
         onProfilePress={() => {}}
@@ -363,9 +375,9 @@ export default function HelpSupportScreen({ onClose }: HelpSupportScreenProps) {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* FAQ Categories */}
         <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>{t('help_support.faq.title')}</Text>
+          <Text style={styles.sectionTitle}>{t('help_support.faq.section_title')}</Text>
           <Text style={styles.sectionDescription}>
-            {t('help_support.faq.description')}
+            {t('help_support.faq.section_description')}
           </Text>
           
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryContainer}>
@@ -453,77 +465,6 @@ export default function HelpSupportScreen({ onClose }: HelpSupportScreenProps) {
           ))}
         </BlurView>
 
-        {/* Contact Support */}
-        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>{t('help_support.contact.title')}</Text>
-          <Text style={styles.sectionDescription}>
-            {t('help_support.contact.description')}
-          </Text>
-          
-          <TouchableOpacity style={styles.contactItem} onPress={openEmail}>
-            <View style={[styles.contactIcon, styles.emailIconBg]}>
-              <IconSymbol size={24} name="envelope.fill" color={colors.primary} />
-            </View>
-            <View style={styles.contactContent}>
-              <Text style={styles.contactTitle}>{t('help_support.contact.email')}</Text>
-              <Text style={styles.contactDescription}>{t('help_support.contact.email_address')}</Text>
-            </View>
-            <IconSymbol size={16} name="chevron.right" color={Theme.colors.textSecondary} />
-          </TouchableOpacity>
-          
-          <View style={styles.contactItem}>
-            <View style={[styles.contactIcon, styles.whatsappIconBg]}>
-              <IconSymbol size={24} name="message.fill" color={colors.success} />
-            </View>
-            <View style={styles.contactContent}>
-              <Text style={styles.contactTitle}>{t('help_support.contact.whatsapp')}</Text>
-              <Text style={styles.contactDescription}>{t('help_support.contact.whatsapp_number')}</Text>
-            </View>
-            <IconSymbol size={16} name="chevron.right" color={Theme.colors.textSecondary} />
-          </View>
-          
-          <View style={styles.contactItem}>
-            <View style={[styles.contactIcon, styles.scheduleIconBg]}>
-              <IconSymbol size={24} name="clock.fill" color={colors.warning} />
-            </View>
-            <View style={styles.contactContent}>
-              <Text style={styles.contactTitle}>{t('help_support.contact.schedule')}</Text>
-              <Text style={styles.contactDescription}>{t('help_support.contact.schedule_hours')}</Text>
-            </View>
-          </View>
-        </BlurView>
-
-        {/* Legal */}
-        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>{t('help_support.legal.title')}</Text>
-          
-          <TouchableOpacity style={styles.legalItem} onPress={openTerms}>
-            <View style={[styles.legalIcon, styles.termsIconBg]}>
-              <IconSymbol size={24} name="doc.text.fill" color={colors.textSecondary} />
-            </View>
-            <View style={styles.legalContent}>
-              <Text style={styles.legalTitle}>{t('help_support.legal.terms')}</Text>
-              <Text style={styles.legalDescription}>{t('help_support.legal.terms_description')}</Text>
-            </View>
-            <IconSymbol size={16} name="chevron.right" color={Theme.colors.textSecondary} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.legalItem} onPress={openPrivacy}>
-            <View style={[styles.legalIcon, styles.privacyIconBg]}>
-              <IconSymbol size={24} name="lock.fill" color={colors.primary} />
-            </View>
-            <View style={styles.legalContent}>
-              <Text style={styles.legalTitle}>{t('help_support.legal.privacy')}</Text>
-              <Text style={styles.legalDescription}>{t('help_support.legal.privacy_description')}</Text>
-            </View>
-            <IconSymbol size={16} name="chevron.right" color={Theme.colors.textSecondary} />
-          </TouchableOpacity>
-          
-          <View style={styles.versionInfo}>
-            <Text style={styles.versionText}>{t('help_support.legal.version')}</Text>
-            <Text style={styles.versionSubtext}>{t('help_support.legal.last_update')}</Text>
-          </View>
-        </BlurView>
       </ScrollView>
 
 

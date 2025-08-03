@@ -807,28 +807,24 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     textShadowRadius: 2,
   },
   miniCalendarContainer: {
-    position: 'absolute',
-    top: 28,
-    left: 32,
-    right: 32,
-    zIndex: 10, // Reduced from 1000
-    pointerEvents: 'box-none', // Allow touches to pass through empty areas
+    marginBottom: 16,
   },
   miniCalendarCard: {
-    borderRadius: 16,
+    borderRadius: 14,
     overflow: 'hidden',
-    elevation: 3,
+    elevation: 2,
     shadowColor: isDark ? '#000' : '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: isDark ? 0.15 : 0.10,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: isDark ? 0.12 : 0.08,
+    shadowRadius: 6,
     borderWidth: 1,
-    borderColor: isDark ? 'rgba(249, 249, 249, 0.15)' : 'rgba(9, 34, 65, 0.1)',
-
+    borderColor: isDark ? 'rgba(255, 255, 255, 0)' : 'rgba(0, 0, 0, 0)',
   },
   miniCalendarBlur: {
-    padding: 16,
-    backgroundColor: isDark ? 'rgba(28, 28, 30, 0.15)' : 'rgba(12, 97, 201, 0.04)',
+    paddingTop: 10,
+    paddingBottom: 8,
+    paddingHorizontal: 12,
+    backgroundColor: isDark ? 'rgba(28, 28, 30, 0.15)' : 'rgba(12, 97, 201, 0.08)',
   },
   miniCalendarHeader: {
     flexDirection: 'row',
@@ -847,43 +843,39 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 4,
     paddingHorizontal: 1,
+    alignItems: 'flex-start',
   },
   miniCalendarDay: {
     width: '13.5%',
-    height: 62,
+    height: 48,
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    borderRadius: 10,
+    justifyContent: 'center',
+    borderRadius: 8,
     position: 'relative',
     marginBottom: 4,
-    paddingTop: 4,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.015)',
   },
   miniCalendarDayText: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '600',
     letterSpacing: -0.2,
-    marginBottom: 2,
   },
   miniCalendarDot: {
     position: 'absolute',
-    bottom: 2,
+    bottom: 3,
     width: 4,
     height: 4,
-    borderRadius: 3,
+    borderRadius: 2,
   },
   miniCalendarBadge: {
-    width: 20,
-    minHeight: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 1,
-    marginBottom: 2,
-    paddingVertical: 2,
-    paddingHorizontal: 1,
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   miniCalendarBadgeText: {
     color: '#FFFFFF',
@@ -928,9 +920,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     textAlign: 'center',
     marginTop: 2,
     lineHeight: 9,
-    opacity: 0.9,
-    fontWeight: '500',
+    opacity: 0.8,
+    fontWeight: '600',
     paddingHorizontal: 1,
+    letterSpacing: -0.3,
   },
   miniCalendarButton: {
     backgroundColor: colors.primary,
@@ -965,9 +958,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginTop: 60,
   },
   noLocationButtons: {
-    gap: 12,
+    gap: 16,
     width: '100%',
     maxWidth: 320,
+    marginTop: -40,
   },
   noLocationButton: {
     borderRadius: 16,
@@ -1101,8 +1095,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    marginBottom: 4,
-     backgroundColor: isDark ? 'rgba(76, 92, 175, 0.1)' : 'rgba(76, 87, 175, 0.08)',
+    marginBottom: 12,
+    backgroundColor: isDark ? 'rgba(76, 92, 175, 0.1)' : 'rgba(76, 87, 175, 0.08)',
      paddingHorizontal: 12,
      borderRadius: 12,
   },
@@ -1182,6 +1176,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [shouldShowMiniCalendar, setShouldShowMiniCalendar] = useState(true);
   const [wasJobCardsModalOpen, setWasJobCardsModalOpen] = useState(false);
   const [shouldReopenJobCardsModal, setShouldReopenJobCardsModal] = useState(false);
+  const [selectedDaySchedule, setSelectedDaySchedule] = useState<number | null>(null);
   const mapRef = useRef<MapView>(null);
   
   // Optimización para prevenir congelamiento durante zoom rápido
@@ -2269,124 +2264,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
       <View style={styles.mapWrapper}>
 
 
-            {/* Mini Calendar - Conditional render */}
-            {shouldShowMiniCalendar && miniCalendarData.length > 0 && (
-              <GestureDetector gesture={Gesture.Pan()
-                .onEnd((event) => {
-                  const { velocityX } = event;
-                  if (Math.abs(velocityX) > 500) {
-                    if (velocityX > 0) {
-                      runOnJS(navigateWeek)('prev');
-                    } else {
-                      runOnJS(navigateWeek)('next');
-                    }
-                  }
-                })}>
-                <Animated.View style={[styles.miniCalendarContainer, animatedMiniCalendarStyle]}>
-                  <View style={styles.miniCalendarCard}>
-                    <BlurView intensity={100} tint={isDark ? "dark" : "light"} style={styles.miniCalendarBlur}>
-                  <View style={styles.miniCalendarHeader}>
-          
-                    <View style={styles.miniCalendarTitleContainer}>
-                      <IconSymbol size={18} name="calendar" color={colors.primary} />
-                      <Text style={styles.miniCalendarTitle}>{getMonthName(currentWeekStart)}</Text>
-                    </View>
-             
-                  </View>
-                  
-                  {/* Day labels */}
-                  <View style={styles.miniCalendarDayLabels}>
-                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day, index) => (
-                      <Text key={index} style={styles.miniCalendarDayLabel}>
-                        {t(`calendar.days_short.${day}`)}
-                      </Text>
-                    ))}
-                  </View>
-                  
-                  <View style={styles.miniCalendarGrid}>
-                    {miniCalendarData.map((dayData, i) => {
-                      // Determinar color del badge basado en el tipo de día de trabajo
-                      let badgeColor = null;
-                      let badgeText = '';
-                      let timeText = '';
-                      
-                      if (dayData.workDay) {
-                        console.log('📅 Badge rendering for day', dayData.day, 'type:', dayData.workDay.type);
-                        switch (dayData.workDay.type) {
-                          case 'work':
-                            badgeColor = '#059669'; // Verde más intenso para mejor contraste
-                            badgeText = 'checkmark-circle';
-                            // Mostrar horario si existe
-                            if (dayData.workDay.startTime && dayData.workDay.endTime) {
-                              timeText = `${dayData.workDay.startTime}\n${dayData.workDay.endTime}`;
-                              // Si hay turno partido, agregar segundo horario
-                              if (dayData.workDay.secondStartTime && dayData.workDay.secondEndTime) {
-                                timeText += `\n${dayData.workDay.secondStartTime}\n${dayData.workDay.secondEndTime}`;
-                              }
-                            }
-                            break;
-                          case 'free':
-                            badgeColor = '#FBBF24'; // Amarillo para días libres
-                            badgeText = 'sunny';
-                            break;
-                          case 'vacation':
-                            badgeColor = '#F59E0B'; // Amarillo para vacaciones
-                            badgeText = 'airplane';
-                            break;
-                          case 'sick':
-                            badgeColor = '#EF4444'; // Rojo para enfermedad
-                            badgeText = 'medkit';
-                            break;
-                          default:
-                            console.log('⚠️ Unknown workDay type:', dayData.workDay.type);
-                            break;
-                        }
-                      }
-                      
-                      return (
-                        <TouchableOpacity 
-                          key={i} 
-                          style={[
-                            styles.miniCalendarDay,
-                            dayData.isToday && styles.miniCalendarDayToday
-                          ]}
-                          onPress={() => onNavigate?.('calendar')}
-                          activeOpacity={0.7}
-                        >
-                          <Text style={[
-                            styles.miniCalendarDayText, 
-                            { 
-                              color: dayData.isToday ? colors.primary : (isDark ? colors.text : colors.textSecondary),
-                              fontWeight: dayData.isToday ? '700' : '600'
-                            }
-                          ]}>
-                            {dayData.day}
-                          </Text>
-                          {badgeColor && (
-                            <View style={{ alignItems: 'center' }}>
-                              <View style={[styles.miniCalendarBadge, { backgroundColor: badgeColor }]}>
-                                <Ionicons name={badgeText as any} size={12} color="#FFFFFF" />
-                              </View>
-                              {timeText && (
-                                <Text style={styles.miniCalendarTimeText}>
-                                  {timeText}
-                                </Text>
-                              )}
-                            </View>
-                          )}
-                          {dayData.isToday && !badgeColor && (
-                            <View style={[styles.miniCalendarDot, { backgroundColor: colors.primary }]} />
-                          )}
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-     
-                    </BlurView>
-                  </View>
-              </Animated.View>
-              </GestureDetector>
-            )}
 
 
 
@@ -2480,59 +2357,278 @@ export default function MapLocation({ location, onNavigate }: Props) {
         <View style={styles.map}>
           <LinearGradient
             colors={isDark 
-              ? ['#1a1a1a', '#242424', '#2a2a2a', '#1f1f1f'] 
-              : ['#FFFFFF', '#F0F4FF', '#E6EDFF', '#D6E3FF']
+              ? ['#0a0a0a', '#1a1a1a', '#0f0f0f'] 
+              : ['transparent', '#4b75df1e', '#4b75df54']
             }
             style={styles.noLocationBackground}
+            locations={[0, 0.5, 1]}
           >
+            {/* Background pattern */}
+            <View style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              opacity: 0.03,
+            }}>
+              {[...Array(20)].map((_, i) => (
+                <View
+                  key={i}
+                  style={{
+                    position: 'absolute',
+                    width: 200,
+                    height: 200,
+                    borderRadius: 100,
+                    borderWidth: 1,
+                    borderColor: colors.primary,
+                    top: `${(i % 4) * 25}%`,
+                    left: `${Math.floor(i / 4) * 20}%`,
+                  }}
+                />
+              ))}
+            </View>
+            
+            {/* Stats cards at top */}
+            {jobs.length > 0 && (
+              <View style={{
+                position: 'absolute',
+                top: 40,
+                left: '50%',
+                transform: [{ translateX: -160 }],
+                width: 320,
+                flexDirection: 'row',
+                gap: 10,
+              }}>
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    backgroundColor: isDark ? 'rgba(52, 211, 153, 0.15)' : 'rgba(52, 211, 153, 0.12)',
+                    borderRadius: 14,
+                    padding: 16,
+                    borderWidth: 1,
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0)' : 'rgba(0, 0, 0, 0)',
+                    shadowColor: isDark ? '#000' : '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: isDark ? 0.12 : 0.08,
+                    shadowRadius: 6,
+                    elevation: 2,
+                  }}
+                  onPress={() => setShowJobCardsModal(true)}
+                  activeOpacity={0.7}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <IconSymbol size={24} name="briefcase.fill" color="#34D399" />
+                    <IconSymbol size={16} name="chevron.forward" color={colors.textSecondary} style={{ opacity: 0.5 }} />
+                  </View>
+                  <Text style={{
+                    fontSize: 21,
+                    fontWeight: '700',
+                    color: colors.text,
+                    marginTop: 8,
+                  }}>{jobs.length}</Text>
+                  <Text style={{
+                    fontSize: 12,
+                    color: colors.textSecondary,
+                    marginTop: 2,
+                  }}>{t('maps.active_jobs')}</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    backgroundColor: isDark ? 'rgba(167, 139, 250, 0.15)' : 'rgba(167, 139, 250, 0.12)',
+                    borderRadius: 14,
+                    padding: 16,
+                    borderWidth: 1,
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0)' : 'rgba(0, 0, 0, 0)',
+                    shadowColor: isDark ? '#000' : '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: isDark ? 0.12 : 0.08,
+                    shadowRadius: 6,
+                    elevation: 2,
+                  }}
+                  onPress={() => handleEditCategory('location')}
+                  activeOpacity={0.7}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <IconSymbol size={24} name="clock.fill" color="#A78BFA" />
+                    <IconSymbol size={16} name="chevron.forward" color={colors.textSecondary} style={{ opacity: 0.5 }} />
+                  </View>
+         
+                  <Text style={{
+                    fontSize: 12,
+                    color: colors.textSecondary,
+                    marginTop: 2,
+                    marginBottom: 15,
+                  }}>{t('maps.auto_timer')}</Text>
+                   <Text style={styles.settingDescription}>{t('settings.work_config.autotimer_desc')}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            
             <View style={styles.noLocationContent}>
               {/* Botón Ver Trabajos - solo si hay trabajos */}
               {!showJobForm && jobs.length > 0 && (
               <Animated.View style={[styles.noLocationButtons, animatedNoLocationButtonsStyle]}>
-                <TouchableOpacity
-                  style={[styles.modernButton, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(59, 130, 246, 0.06)' }]}
-                  onPress={() => setShowJobCardsModal(true)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.modernButtonContent}>
-                    <View style={styles.modernIconContainer}>
-                      <View style={[styles.modernIconBackground, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
-                        <IconSymbol 
-                          size={21} 
-                          name="briefcase.fill" 
-                          color="#0D47A1"
-                        />
-                      </View>
-                      <View style={[styles.modernBadge, { backgroundColor: '#FF6B35' }]}>
-                        <Text style={styles.modernBadgeText}>{jobs.length}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.modernTextContainer}>
-                      <Text style={[styles.modernButtonTitle, { color: '#0D47A1' }]}>{t('settings.jobs.my_jobs')}</Text>
-                      <Text style={[styles.modernButtonSubtitle, { color: '#2196F3' }]}>{t('settings.jobs.my_jobs_desc')}</Text>
-                    </View>
-                    <View style={styles.modernChevron}>
-                      <IconSymbol size={16} name="chevron.right" color="#0D47A1" />
-                    </View>
-                  </View>
-                </TouchableOpacity>
+  
 
          
-      
+            {/* Mini Calendar - Conditional render */}
+            {shouldShowMiniCalendar && miniCalendarData.length > 0 && (
+              <GestureDetector gesture={Gesture.Pan()
+                .onEnd((event) => {
+                  const { velocityX } = event;
+                  if (Math.abs(velocityX) > 500) {
+                    if (velocityX > 0) {
+                      runOnJS(navigateWeek)('prev');
+                    } else {
+                      runOnJS(navigateWeek)('next');
+                    }
+                  }
+                })}>
+                <Animated.View style={[styles.miniCalendarContainer, animatedMiniCalendarStyle]}>
+                  <View style={styles.miniCalendarCard}>
+                    <BlurView intensity={100} tint={isDark ? "dark" : "light"} style={styles.miniCalendarBlur}>
+                  <View style={styles.miniCalendarHeader}>
+          
+                    <View style={styles.miniCalendarTitleContainer}>
+                      <IconSymbol size={18} name="calendar" color={colors.primary} />
+                      <Text style={styles.miniCalendarTitle}>{getMonthName(currentWeekStart)}</Text>
+                    </View>
+             
+                  </View>
+                  
+                  {/* Day labels */}
+                  <View style={styles.miniCalendarDayLabels}>
+                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day, index) => (
+                      <Text key={index} style={styles.miniCalendarDayLabel}>
+                        {t(`calendar.days_short.${day}`)}
+                      </Text>
+                    ))}
+                  </View>
+                  
+                  <View style={styles.miniCalendarGrid}>
+                    {miniCalendarData.map((dayData, i) => {
+                      // Determinar color del badge basado en el tipo de día de trabajo
+                      let badgeColor = null;
+                      let badgeText = '';
+                      let timeText = '';
+                      
+                      if (dayData.workDay) {
+                        console.log('📅 Badge rendering for day', dayData.day, 'type:', dayData.workDay.type);
+                        switch (dayData.workDay.type) {
+                          case 'work':
+                            badgeColor = '#059669'; // Verde más intenso para mejor contraste
+                            badgeText = 'checkmark-circle';
+                            // Mostrar horario si existe
+                            if (dayData.workDay.startTime && dayData.workDay.endTime) {
+                              // Formatear horas sin el cero inicial si es necesario
+                              const formatTime = (time: string) => {
+                                const [hours, minutes] = time.split(':');
+                                return `${parseInt(hours)}:${minutes}`;
+                              };
+                              
+                              // Si hay turno partido, mostrar ambos bloques
+                              if (dayData.workDay.secondStartTime && dayData.workDay.secondEndTime) {
+                                timeText = `${formatTime(dayData.workDay.startTime)}-${formatTime(dayData.workDay.endTime)}\n${formatTime(dayData.workDay.secondStartTime)}-${formatTime(dayData.workDay.secondEndTime)}`;
+                              } else {
+                                // Horario simple
+                                timeText = `${formatTime(dayData.workDay.startTime)}\n${formatTime(dayData.workDay.endTime)}`;
+                              }
+                            }
+                            break;
+                          case 'free':
+                            badgeColor = '#FBBF24'; // Amarillo para días libres
+                            badgeText = 'sunny';
+                            break;
+                          case 'vacation':
+                            badgeColor = '#F59E0B'; // Amarillo para vacaciones
+                            badgeText = 'airplane';
+                            break;
+                          case 'sick':
+                            badgeColor = '#EF4444'; // Rojo para enfermedad
+                            badgeText = 'medkit';
+                            break;
+                          default:
+                            console.log('⚠️ Unknown workDay type:', dayData.workDay.type);
+                            break;
+                        }
+                      }
+                      
+                      return (
+                        <TouchableOpacity 
+                          key={i} 
+                          style={[
+                            styles.miniCalendarDay,
+                            dayData.isToday && styles.miniCalendarDayToday
+                          ]}
+                          onPress={() => {
+                            if (dayData.workDay && dayData.workDay.type === 'work' && dayData.workDay.startTime) {
+                              setSelectedDaySchedule(selectedDaySchedule === i ? null : i);
+                            } else {
+                              onNavigate?.('calendar');
+                            }
+                          }}
+                          activeOpacity={0.7}
+                          onLongPress={() => onNavigate?.('calendar')}
+                        >
+                          <Text style={[
+                            styles.miniCalendarDayText, 
+                            { 
+                              color: dayData.isToday ? colors.primary : (isDark ? colors.text : colors.textSecondary),
+                              fontWeight: dayData.isToday ? '700' : '600'
+                            }
+                          ]}>
+                            {dayData.day}
+                          </Text>
+                          {badgeColor && (
+                            <View style={[styles.miniCalendarBadge, { backgroundColor: badgeColor }]} />
+                          )}
+                          {dayData.isToday && !badgeColor && (
+                            <View style={[styles.miniCalendarDot, { backgroundColor: colors.primary }]} />
+                          )}
+                          {/* Mostrar horario si está seleccionado */}
+                          {selectedDaySchedule === i && dayData.workDay && dayData.workDay.type === 'work' && timeText && (
+                            <View style={{
+                              position: 'absolute',
+                              bottom: -28,
+                              left: -20,
+                              right: -20,
+                              backgroundColor: isDark ? 'rgba(0, 0, 0, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+                              borderRadius: 6,
+                              padding: 6,
+                              zIndex: 1000,
+                              shadowColor: '#000',
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.2,
+                              shadowRadius: 4,
+                              elevation: 5,
+                              borderWidth: 1,
+                              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                            }}>
+                              <Text style={{
+                                fontSize: 9,
+                                color: colors.text,
+                                textAlign: 'center',
+                                fontWeight: '600',
+                                lineHeight: 11,
+                              }}>
+                                {timeText}
+                              </Text>
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+     
+                    </BlurView>
+                  </View>
+              </Animated.View>
+              </GestureDetector>
+            )}
 
-                                  <TouchableOpacity 
-                    style={styles.settingItem}
-                    onPress={() => handleEditCategory('location')}
-                  >
-                    <View style={[styles.settingIcon, styles.warningIconBg]}>
-                      <IconSymbol size={20} name="timer" color={colors.warning} />
-                    </View>
-                    <View style={styles.settingContent}>
-                      <Text style={styles.settingTitle}>{t('settings.work_config.autotimer')}</Text>
-                      <Text style={styles.settingDescription}>{t('settings.work_config.autotimer_desc')}</Text>
-                    </View>
-                    <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
-                  </TouchableOpacity>
                   <TouchableOpacity 
                     style={styles.settingItem}
                     onPress={() => handleEditCategory('schedule')}
@@ -2896,14 +2992,21 @@ export default function MapLocation({ location, onNavigate }: Props) {
       {/* Simple info overlay */}
       {jobs.length === 0 && !showJobForm && (
         <View style={styles.overlay}>
-          <View style={styles.centeredContent}>
+          <View style={[styles.centeredContent, { marginBottom: 80 }]}>
             <TouchableOpacity
               style={styles.mainActionCard}
               onPress={handleAddJob}
             >
-              <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.mainActionCardInner}>
-                <View style={[styles.mainActionIcon, styles.oldSuccessIconBg]}>
-                  <IconSymbol size={36} name="plus" color={colors.success} />
+              <BlurView intensity={85} tint={isDark ? "dark" : "light"} style={[styles.mainActionCardInner, {
+                backgroundColor: isDark ? 'rgba(76, 135, 175, 0.25)' : 'rgba(76, 135, 175, 0.25)' ,
+                borderWidth: 0,
+                borderColor: 'transparent'
+              }]}>
+                <View style={[styles.mainActionIcon, {
+                  backgroundColor: isDark ? 'rgba(76, 135, 175, 0.25)' : 'rgba(76, 135, 175, 0.25)' ,
+                  borderWidth: 0
+                }]}>
+                  <IconSymbol size={36} name="plus" color={colors.primary} />
                 </View>
                 <Text style={styles.mainActionTitle}>{t('maps.add_job')}</Text>
                 <Text style={styles.mainActionDescription}>

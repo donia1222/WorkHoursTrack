@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import JobsManagementScreen from './JobsManagementScreen';
 import PreferencesScreen from './PreferencesScreen';
 import HelpSupportScreen from './HelpSupportScreen';
+import SupportTermsScreen from './SupportTermsScreen';
 import { Job } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import JobFormModal from '../components/JobFormModal';
@@ -34,8 +35,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-marginBottom: 68,
-
+    marginBottom: 68,
     marginTop: 10,
   },
   header: {
@@ -73,11 +73,11 @@ marginBottom: 68,
     marginBottom: 2,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 6,
     color: colors.text,
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
     textAlign: 'center',
   },
   headerSubtitle: {
@@ -89,22 +89,22 @@ marginBottom: 68,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+    paddingTop: 8,
   },
   sectionCard: {
-    marginVertical: 16,
-    borderRadius: 24,
-    padding: 8,
-    
-    shadowColor: colors.primary,
+    marginVertical: 12,
+    borderRadius: 20,
+    padding: 20,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+    shadowColor: isDark ? '#000' : colors.primary,
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 12,
-
+    shadowOpacity: isDark ? 0.3 : 0.08,
+    shadowRadius: 12,
+    elevation: 6,
     overflow: 'hidden',
   },
   sectionCardGradient: {
@@ -113,68 +113,84 @@ marginBottom: 68,
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 24,
+    borderRadius: 20,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 8,
     color: colors.text,
-    marginLeft: 8,
+    letterSpacing: -0.3,
   },
   sectionDescription: {
     fontSize: 14,
-    marginBottom: 16,
-    lineHeight: 18,
+    marginBottom: 20,
+    lineHeight: 20,
     color: colors.textSecondary,
+    paddingRight: 8,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    marginBottom: 4,
+    paddingVertical: 16,
+    paddingHorizontal: 4,
+    marginBottom: 8,
+    borderRadius: 16,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.01)',
   },
   settingIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   settingContent: {
     flex: 1,
+    paddingRight: 8,
   },
   settingTitle: {
     fontSize: 16,
-    marginBottom: 2,
+    marginBottom: 4,
     fontWeight: '600',
     color: colors.text,
+    letterSpacing: -0.2,
   },
   settingDescription: {
     fontSize: 14,
     color: colors.textSecondary,
+    lineHeight: 18,
   },
   statsCard: {
     marginVertical: 12,
     marginBottom: 24,
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 20,
+    padding: 24,
     backgroundColor: colors.surface,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: isDark ? 0.15 : 0.06,
+    shadowRadius: 8,
+    elevation: 4,
   },
   statsTitle: {
-    fontSize: 16,
-    marginBottom: 16,
+    fontSize: 17,
+    marginBottom: 20,
     textAlign: 'center',
     color: colors.text,
+    fontWeight: '600',
   },
   statsGrid: {
     flexDirection: 'row',
@@ -185,31 +201,32 @@ marginBottom: 68,
     flex: 1,
   },
   statNumber: {
-    fontSize: 20,
-    marginTop: 4,
-    marginBottom: 2,
-    fontWeight: '600',
+    fontSize: 24,
+    marginTop: 6,
+    marginBottom: 4,
+    fontWeight: '700',
     color: colors.text,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 13,
     textAlign: 'center',
     color: colors.textSecondary,
+    fontWeight: '500',
   },
   primaryIconBg: {
-    backgroundColor: 'rgba(0, 122, 255, 0.15)',
+    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.2)' : 'rgba(0, 122, 255, 0.12)',
   },
   successIconBg: {
-    backgroundColor: 'rgba(52, 199, 89, 0.15)',
+    backgroundColor: isDark ? 'rgba(52, 199, 89, 0.2)' : 'rgba(52, 199, 89, 0.12)',
   },
   warningIconBg: {
-    backgroundColor: 'rgba(255, 149, 0, 0.15)',
+    backgroundColor: isDark ? 'rgba(255, 149, 0, 0.2)' : 'rgba(255, 149, 0, 0.12)',
   },
   secondaryIconBg: {
-    backgroundColor: 'rgba(142, 142, 147, 0.15)',
+    backgroundColor: isDark ? 'rgba(142, 142, 147, 0.2)' : 'rgba(142, 142, 147, 0.12)',
   },
   errorIconBg: {
-    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+    backgroundColor: isDark ? 'rgba(255, 59, 48, 0.2)' : 'rgba(255, 59, 48, 0.12)',
   },
 });
 
@@ -221,6 +238,7 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
   const [openAddJobModal, setOpenAddJobModal] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [showHelpSupport, setShowHelpSupport] = useState(false);
+  const [showSupportTerms, setShowSupportTerms] = useState(false);
   const [showJobSelector, setShowJobSelector] = useState(false);
   const [showJobForm, setShowJobForm] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -344,10 +362,12 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           />
-          <Text style={styles.sectionTitle}>{t('settings.jobs.title')}</Text>
-          <Text style={styles.sectionDescription}>
-            {t('settings.jobs.description')}
-          </Text>
+          <View style={{ marginBottom: 8 }}>
+            <Text style={styles.sectionTitle}>{t('settings.jobs.title')}</Text>
+            <Text style={styles.sectionDescription}>
+              {t('settings.jobs.description')}
+            </Text>
+          </View>
           
           <TouchableOpacity 
             style={styles.settingItem}
@@ -378,7 +398,9 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           />
-          <Text style={styles.sectionTitle}>{t('settings.app_config.title')}</Text>
+          <View style={{ marginBottom: 8 }}>
+            <Text style={styles.sectionTitle}>{t('settings.app_config.title')}</Text>
+          </View>
           
           <TouchableOpacity 
             style={styles.settingItem}
@@ -421,6 +443,20 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
             </View>
             <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
           </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => setShowSupportTerms(true)}
+          >
+            <View style={[styles.settingIcon, { backgroundColor: isDark ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.12)' }]}>
+              <IconSymbol size={24} name="shield.fill" color={colors.primary} />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>{t('settings.app_config.support_terms')}</Text>
+              <Text style={styles.settingDescription}>{t('settings.app_config.support_terms_desc')}</Text>
+            </View>
+            <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
+          </TouchableOpacity>
 
         </BlurView>
 
@@ -436,10 +472,12 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           />
-          <Text style={styles.sectionTitle}>{t('preferences.data_management.title')}</Text>
-          <Text style={styles.sectionDescription}>
-            {t('preferences.data_management.description')}
-          </Text>
+          <View style={{ marginBottom: 8 }}>
+            <Text style={styles.sectionTitle}>{t('preferences.data_management.title')}</Text>
+            <Text style={styles.sectionDescription}>
+              {t('preferences.data_management.description')}
+            </Text>
+          </View>
           
           {/* Export Data */}
           <TouchableOpacity 
@@ -532,7 +570,9 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
           intensity={98} 
           tint={isDark ? "dark" : "light"} 
           style={[styles.sectionCard, { 
-            marginTop: 16,
+            marginTop: 20,
+            marginBottom: 24,
+            padding: 24,
             backgroundColor: isSubscribed 
               ? (isDark ? 'rgba(34, 197, 94, 0.08)' : 'rgba(34, 197, 94, 0.06)')
               : (isDark ? 'rgba(99, 102, 241, 0.08)' : 'rgba(99, 102, 241, 0.06)')
@@ -545,33 +585,36 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
             <LinearGradient
               colors={isSubscribed 
                 ? (isDark ? ['rgba(34, 197, 94, 0)', 'rgba(34, 197, 94, 0)'] : ['rgba(34, 197, 94, 0)', 'rgba(34, 197, 94, 0)'])
-                : (isDark ? ['rgba(99, 102, 241, 0.15)', 'rgba(99, 102, 241, 0.08)'] : ['rgba(99, 102, 241, 0.12)', 'rgba(99, 102, 241, 0.06)'])
+                : (isDark ? ['rgba(99, 101, 241, 0)', 'rgba(99, 101, 241, 0)'] : ['rgba(99, 101, 241, 0)', 'rgba(99, 101, 241, 0)'])
               }
               style={styles.sectionCardGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             />
-            <View style={[styles.settingItem, { marginBottom: 0, paddingVertical: 12 }]}>
+            <View style={[styles.settingItem, { marginBottom: 0, paddingVertical: 16, backgroundColor: 'transparent' }]}>
               <View style={[styles.settingIcon, { 
                 backgroundColor: isSubscribed 
-                  ? (isDark ? 'rgba(34, 197, 94, 0)' : 'rgba(34, 197, 94, 0.12)') 
-                  : (isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.12)')
+                  ? (isDark ? 'rgba(34, 197, 94, 0.25)' : 'rgba(34, 197, 94, 0.15)') 
+                  : (isDark ? 'rgba(99, 102, 241, 0.25)' : 'rgba(250, 204, 64, 0.73)'),
+                width: 52,
+                height: 52,
+                borderRadius: 26,
               }]}>
                 <IconSymbol 
-                  size={24} 
+                  size={26} 
                   name="crown.fill" 
-                  color={isSubscribed ? '#22C55E' : '#6366F1'} 
+                  color={isSubscribed ? '#22C55E' : '#747371ff'} 
                 />
               </View>
               <View style={styles.settingContent}>
-                <Text style={[styles.settingTitle, { fontSize: 17 }]}>
+                <Text style={[styles.settingTitle, { fontSize: 16, fontWeight: '700' }]}>
                   {isSubscribed ? t('side_menu.menu_items.subscription.premium_title') : t('side_menu.menu_items.subscription.title')}
                 </Text>
-                <Text style={[styles.settingDescription, { marginTop: 4 }]}>
+                <Text style={[styles.settingDescription, { marginTop: 4, fontSize: 15 }]}>
                   {isSubscribed ? t('side_menu.menu_items.subscription.premium_description') : t('side_menu.menu_items.subscription.description')}
                 </Text>
               </View>
-              <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
+              <IconSymbol size={18} name="chevron.right" color={colors.textSecondary} />
             </View>
           </TouchableOpacity>
         </BlurView>
@@ -697,6 +740,16 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
         onRequestClose={() => setShowHelpSupport(false)}
       >
         <HelpSupportScreen onClose={() => setShowHelpSupport(false)} />
+      </Modal>
+      
+      {/* Support Terms Modal */}
+      <Modal
+        visible={showSupportTerms}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => setShowSupportTerms(false)}
+      >
+        <SupportTermsScreen onClose={() => setShowSupportTerms(false)} />
       </Modal>
 
     </SafeAreaView>

@@ -30,6 +30,11 @@ import { useSubscription } from '@/app/hooks/useSubscription';
 import { useHapticFeedback } from '@/app/hooks/useHapticFeedback';
 import { JobService } from '@/app/services/JobService';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ChatHistoryModal, { ChatSession } from '@/app/components/ChatHistoryModal';
+
+const CHAT_HISTORY_KEY = 'chatbot_history_sessions';
+const MAX_SESSIONS = 10;
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
@@ -345,6 +350,8 @@ export default function ChatbotScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [jobs, setJobs] = useState<any[]>([]);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historySessions, setHistorySessions] = useState<ChatSession[]>([]);
   const flatListRef = useRef<FlatList>(null);
   
   // Estado para mantener contexto de la última imagen/documento analizado
@@ -365,7 +372,25 @@ export default function ChatbotScreen() {
     };
     
     loadJobs();
+    loadChatHistory();
   }, []);
+
+  // Register header history button handler
+  useEffect(() => {
+    // Register the history handler globally
+    globalThis.chatbotScreenHistoryHandler = () => {
+      setShowHistoryModal(true);
+    };
+
+    // Cleanup on unmount
+    return () => {
+      // Save current session if it has messages
+      if (messages.length > 0) {
+        saveChatSession();
+      }
+      delete globalThis.chatbotScreenHistoryHandler;
+    };
+  }, [messages]);
   
   // Función para detectar si el bot está preguntando por múltiples nombres (multiidioma)
   const isAskingForPersonSelection = (text: string): boolean => {
@@ -403,6 +428,68 @@ export default function ChatbotScreen() {
       hasImage: !!msg.image,
       hasDocument: !!msg.document
     }));
+  };
+
+  // Load chat history from AsyncStorage
+  const loadChatHistory = async () => {
+    try {
+      const storedSessions = await AsyncStorage.getItem(CHAT_HISTORY_KEY);
+      if (storedSessions) {
+        const sessions = JSON.parse(storedSessions);
+        // Convert date strings back to Date objects
+        const parsedSessions = sessions.map((session: any) => ({
+          ...session,
+          date: new Date(session.date),
+        }));
+        setHistorySessions(parsedSessions);
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+    }
+  };
+
+  // Save current chat session
+  const saveChatSession = async () => {
+    try {
+      if (messages.length === 0) return;
+
+      const newSession: ChatSession = {
+        id: Date.now().toString(),
+        date: new Date(),
+        messages: messages,
+        preview: messages[0]?.text || '',
+      };
+
+      const updatedSessions = [newSession, ...historySessions].slice(0, MAX_SESSIONS);
+      
+      await AsyncStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(updatedSessions));
+      setHistorySessions(updatedSessions);
+    } catch (error) {
+      console.error('Error saving chat session:', error);
+    }
+  };
+
+  // Restore a chat session
+  const restoreSession = (session: ChatSession) => {
+    // Convert timestamp strings back to Date objects
+    const messagesWithDates = session.messages.map(msg => ({
+      ...msg,
+      timestamp: new Date(msg.timestamp)
+    }));
+    setMessages(messagesWithDates);
+    triggerHaptic('success');
+  };
+
+  // Delete a chat session
+  const deleteSession = async (sessionId: string) => {
+    try {
+      const updatedSessions = historySessions.filter(s => s.id !== sessionId);
+      await AsyncStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(updatedSessions));
+      setHistorySessions(updatedSessions);
+      triggerHaptic('success');
+    } catch (error) {
+      console.error('Error deleting session:', error);
+    }
   };
 
   const pickImage = async () => {
@@ -1066,6 +1153,15 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
           </BlurView>
         </View>
       </Modal>
+
+      {/* Chat History Modal */}
+      <ChatHistoryModal
+        visible={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        sessions={historySessions}
+        onRestoreSession={restoreSession}
+        onDeleteSession={deleteSession}
+      />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

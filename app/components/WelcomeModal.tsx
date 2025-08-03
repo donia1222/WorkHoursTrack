@@ -41,7 +41,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
@@ -105,6 +105,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 16,
     overflow: 'hidden',
+    marginTop: -20,
   },
   stepCardGradient: {
     position: 'absolute',
@@ -155,7 +156,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   indicatorsContainer: {
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: -10,
   },
   indicators: {
     flexDirection: 'row',
@@ -338,22 +339,28 @@ const getOnboardingSteps = (colors: ThemeColors, t: (key: string) => string): On
     color: colors.primary,
   },
   {
-    title: t('onboarding.steps.timer.title'),
-    description: t('onboarding.steps.timer.description'),
-    icon: 'clock.fill',
+    title: t('onboarding.steps.calendar.title'),
+    description: t('onboarding.steps.calendar.description'),
+    icon: 'calendar',
     color: colors.success,
   },
   {
-    title: t('onboarding.steps.location.title'),
-    description: t('onboarding.steps.location.description'),
-    icon: 'location.fill',
+    title: t('onboarding.steps.timer.title'),
+    description: t('onboarding.steps.timer.description'),
+    icon: 'clock.fill',
     color: colors.warning,
   },
   {
-    title: t('onboarding.steps.reports.title'),
-    description: t('onboarding.steps.reports.description'),
+    title: t('onboarding.steps.statistics.title'),
+    description: t('onboarding.steps.statistics.description'),
     icon: 'chart.bar.fill',
     color: colors.error,
+  },
+  {
+    title: t('onboarding.steps.chatbot.title'),
+    description: t('onboarding.steps.chatbot.description'),
+    icon: 'message.fill',
+    color: colors.primary,
   },
 ];
 
@@ -515,42 +522,7 @@ export default function WelcomeModal({ visible, onClose }: WelcomeModalProps) {
           </BlurView>
 
           {/* Tips card */}
-          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.tipsCard}>
-            <LinearGradient
-              colors={isDark 
-                ? ['rgba(0, 122, 255, 0.08)', 'rgba(0, 122, 255, 0.04)', 'transparent'] 
-                : ['rgba(0, 122, 255, 0.06)', 'rgba(0, 122, 255, 0.03)', 'transparent']
-              }
-              style={styles.tipsCardGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            />
-            <Text style={[styles.tipsTitle, { color: colors.text }]}>{t('onboarding.tips.title')}</Text>
-            <View style={styles.tipItem}>
-              <View style={styles.tipIconContainer}>
-                <IconSymbol size={14} name="hand.tap.fill" color={colors.primary} />
-              </View>
-              <Text style={[styles.tipText, { color: colors.textSecondary }]}>
-                {t('onboarding.tips.long_press')}
-              </Text>
-            </View>
-            <View style={styles.tipItem}>
-              <View style={styles.tipIconContainer}>
-                <IconSymbol size={14} name="square.and.arrow.up.fill" color={colors.primary} />
-              </View>
-              <Text style={[styles.tipText, { color: colors.textSecondary }]}>
-                {t('onboarding.tips.share_stats')}
-              </Text>
-            </View>
-            <View style={styles.tipItem}>
-              <View style={styles.tipIconContainer}>
-                <IconSymbol size={14} name="arrow.down.circle.fill" color={colors.primary} />
-              </View>
-              <Text style={[styles.tipText, { color: colors.textSecondary }]}>
-                {t('onboarding.tips.swipe_close')}
-              </Text>
-            </View>
-          </BlurView>
+         
         </ScrollView>
 
         {/* Navigation buttons */}

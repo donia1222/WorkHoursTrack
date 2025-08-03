@@ -33,6 +33,7 @@ import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
+import { useAutoTimer } from '../contexts/AutoTimerContext';
 
 interface TimerScreenProps {
   onNavigate: (screen: string, options?: any) => void;
@@ -946,6 +947,19 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     loadJobs();
     loadActiveSession();
     loadRecentTimerSessions();
+  }, []);
+
+  // Register header notes button handler
+  useEffect(() => {
+    // Register the notes handler globally
+    globalThis.timerScreenNotesHandler = () => {
+      setNotesModalVisible(true);
+    };
+
+    // Cleanup on unmount
+    return () => {
+      delete globalThis.timerScreenNotesHandler;
+    };
   }, []);
 
   // Recargar sesiones cuando cambie el trabajo seleccionado
@@ -1893,20 +1907,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
             end={{ x: 1, y: 1 }}
           />
           <View style={styles.timerContent}>
-                           <TouchableOpacity 
-                  style={styles.notesEditButton}
-                  onPress={() => {
-                    triggerHaptic('light');
-                    setNotesModalVisible(true);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <IconSymbol 
-                    size={20} 
-                    name="pencil" 
-                    color={notes.trim() ? colors.primary : colors.textSecondary} 
-                  />
-                </TouchableOpacity>
+      
             <Animated.View style={[styles.timerDisplay, animatedTimerStyle]}>
               <View style={styles.timerTimeContainer}>
                 <Animated.Text style={[styles.timerTime, animatedTimeTextStyle]}>
