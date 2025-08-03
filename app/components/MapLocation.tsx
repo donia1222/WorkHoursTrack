@@ -1547,10 +1547,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
   // Update jobs in AutoTimer service when jobs change
   useEffect(() => {
     const updateAutoTimerJobs = async () => {
-      const jobsWithAutoTimer = jobs.filter(job => job.autoTimer?.enabled);
-      
-      if (jobsWithAutoTimer.length > 0) {
-        console.log('🔄 MapLocation: Updating AutoTimer with jobs:', jobsWithAutoTimer.length, 'jobs with AutoTimer enabled');
+      if (jobs.length > 0) {
+        console.log('🔄 MapLocation: Updating AutoTimer with jobs:', jobs.length);
         
         // If service is not enabled, start it; otherwise just update jobs
         if (!autoTimerService.isServiceEnabled()) {
@@ -1559,11 +1557,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
         } else {
           console.log('🔄 MapLocation: Service already running, just updating jobs');
           await autoTimerService.updateJobs(jobs);
-        }
-      } else {
-        console.log('🔄 MapLocation: No jobs with AutoTimer enabled, stopping service if running');
-        if (autoTimerService.isServiceEnabled()) {
-          autoTimerService.stop();
         }
       }
     };

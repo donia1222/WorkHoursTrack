@@ -43,6 +43,7 @@ class AutoTimerService {
   private statusUpdateInterval: NodeJS.Timeout | null = null;
   private pausedDelayedAction: DelayedAction | null = null; // To remember paused countdown
   private sentNotifications: Set<string> = new Set(); // Track sent notifications to avoid duplicates
+  private autoTimerStartTime: Date | null = null; // Track when auto timer actually started
 
   constructor() {
     this.geofenceService = GeofenceService.getInstance();
@@ -92,7 +93,7 @@ class AutoTimerService {
       // Restore state from storage (after jobs are set)
       await this.restoreState();
 
-      // Check for active sessions and clear old ones
+      // Check for active sessions and handle them properly
       const activeSession = await JobService.getActiveSession();
       if (activeSession) {
         console.log(`🔍 Found active session:`, {
@@ -101,10 +102,13 @@ class AutoTimerService {
           notes: activeSession.notes
         });
         
-        // For now, always clear any existing session to allow AutoTimer to work
-        // Later we can add smart detection if needed
-        console.log(`🧹 Clearing existing session to allow AutoTimer`);
-        await JobService.clearActiveSession();
+        // Only clear if it's not an auto-started session or if it doesn't match our state
+        if (activeSession.notes === 'Auto-started' && this.currentState === 'active' && this.currentJobId === activeSession.jobId) {
+          console.log(`✅ Keeping existing auto-started session for job ${activeSession.jobId}`);
+        } else {
+          console.log(`🧹 Clearing session (not auto-started or state mismatch)`);
+          await JobService.clearActiveSession();
+        }
       }
 
       // Start geofence monitoring in FOREGROUND ONLY mode
@@ -212,12 +216,24 @@ class AutoTimerService {
       this.cancelDelayedAction();
     }
 
+    // Check if we're already active for this job
+    if (this.currentState === 'active' && this.currentJobId === job.id) {
+      console.log(`⚡ AutoTimer already active for ${job.name}, ignoring enter event`);
+      return;
+    }
+
     // Check if there's an active session for this job
     const activeSession = await JobService.getActiveSession();
     if (activeSession && activeSession.jobId === job.id) {
       console.log(`⚡ Timer already running for ${job.name}, setting state to active`);
       this.currentState = 'active';
       this.currentJobId = job.id;
+      // Restore the start time if it's an auto-started session
+      if (activeSession.notes === 'Auto-started' && !this.autoTimerStartTime) {
+        this.autoTimerStartTime = new Date(activeSession.startTime);
+        console.log(`⏱️ Restored start time from active session: ${this.autoTimerStartTime.toLocaleTimeString()}`);
+      }
+      await this.saveState();
       this.notifyStatusChange();
       return;
     }
@@ -231,6 +247,12 @@ class AutoTimerService {
     // Start delayed start action
     const delayMinutes = job.autoTimer?.delayStart || 2;
     const delaySeconds = delayMinutes * 60;
+    
+    console.log(`⏰ Job ${job.name} auto-timer settings:`, {
+      delayStart: job.autoTimer?.delayStart,
+      delayStop: job.autoTimer?.delayStop,
+      geofenceRadius: job.autoTimer?.geofenceRadius
+    });
 
     this.currentState = 'entering';
     this.currentJobId = job.id;
@@ -354,21 +376,30 @@ class AutoTimerService {
 
       console.log(`🎯 Starting timer for job ${job.id} (${job.name})`);
       
+      const startTime = new Date();
+      
       // Use the same pattern as TimerScreen to start a timer
       const sessionForStorage = {
         jobId: job.id,
-        startTime: new Date().toISOString(),
+        startTime: startTime.toISOString(),
         notes: 'Auto-started', // Auto-started note
       };
       
       await JobService.saveActiveSession(sessionForStorage);
       this.currentState = 'active';
       this.currentDelayedAction = null;
+      this.autoTimerStartTime = startTime; // Save the actual start time
+      
+      // Clear any pending action from storage
+      await AsyncStorage.removeItem(`@auto_timer_pending_${job.id}`);
+      
+      // Save state immediately to persist the start time
+      await this.saveState();
       
       // Notification is already scheduled when entering the geofence
       
       this.notifyStatusChange();
-      console.log(`✅ Auto-started timer for ${job.name}`);
+      console.log(`✅ Auto-started timer for ${job.name} at ${startTime.toLocaleTimeString()}`);
     } catch (error) {
       console.error('Error starting auto timer:', error);
       this.currentState = 'inactive';
@@ -414,11 +445,14 @@ class AutoTimerService {
       this.currentState = 'inactive';
       this.currentJobId = null;
       this.currentDelayedAction = null;
+      this.autoTimerStartTime = null; // Clear the start time
+      await this.saveState(); // Save state after clearing
       this.notifyStatusChange();
     } catch (error) {
       console.error('Error stopping auto timer:', error);
       this.currentState = 'inactive';
       this.currentJobId = null;
+      this.autoTimerStartTime = null;
       this.notifyStatusChange();
     }
   }
@@ -452,6 +486,17 @@ class AutoTimerService {
   private clearNotificationHistory(): void {
     this.sentNotifications.clear();
     console.log('🗑️ Notification history cleared');
+  }
+
+  /**
+   * Get elapsed time for active auto timer (includes time when app was closed)
+   */
+  getElapsedTime(): number {
+    if (this.currentState === 'active' && this.autoTimerStartTime) {
+      const elapsedMs = Date.now() - this.autoTimerStartTime.getTime();
+      return Math.floor(elapsedMs / 1000);
+    }
+    return 0;
   }
 
   /**
@@ -658,6 +703,7 @@ class AutoTimerService {
         isEnabled: this.isEnabled,
         currentState: this.currentState,
         currentJobId: this.currentJobId,
+        autoTimerStartTime: this.autoTimerStartTime ? this.autoTimerStartTime.toISOString() : null,
         delayedAction: this.currentDelayedAction ? {
           jobId: this.currentDelayedAction.jobId,
           action: this.currentDelayedAction.action,
@@ -667,7 +713,10 @@ class AutoTimerService {
       };
       
       await AsyncStorage.setItem('@auto_timer_state', JSON.stringify(state));
-      console.log('🔄 AutoTimer state saved');
+      console.log('🔄 AutoTimer state saved', { 
+        state: this.currentState, 
+        hasStartTime: !!this.autoTimerStartTime 
+      });
     } catch (error) {
       console.error('Error saving AutoTimer state:', error);
     }
@@ -685,42 +734,59 @@ class AutoTimerService {
         this.currentState = state.currentState || 'inactive';
         this.currentJobId = state.currentJobId || null;
         
-        // Restore delayed action if it exists
-        if (state.delayedAction && (this.currentState === 'entering' || this.currentState === 'leaving')) {
+        // Restore auto timer start time if active
+        if (state.autoTimerStartTime && this.currentState === 'active') {
+          this.autoTimerStartTime = new Date(state.autoTimerStartTime);
+          const elapsedSeconds = Math.floor((Date.now() - this.autoTimerStartTime.getTime()) / 1000);
+          console.log(`⏱️ AutoTimer was running: ${elapsedSeconds} seconds elapsed since ${this.autoTimerStartTime.toLocaleTimeString()}`);
+        }
+        
+        // Check if we should restore a delayed action or if it already executed
+        if (state.delayedAction && this.currentState !== 'active') {
           const startTime = new Date(state.delayedAction.startTime);
           const elapsedSeconds = (Date.now() - startTime.getTime()) / 1000;
           const remainingSeconds = state.delayedAction.delaySeconds - elapsedSeconds;
           
-          console.log(`🔄 Restoring delayed action: ${Math.ceil(remainingSeconds)}s remaining`);
+          console.log(`🔄 Checking delayed action: ${Math.ceil(remainingSeconds)}s remaining from original ${state.delayedAction.delaySeconds}s`);
           
-          if (remainingSeconds > 0) {
-            // Recreate the delayed action with remaining time
-            const job = this.jobs.find(j => j.id === state.delayedAction.jobId);
-            if (job) {
-              const timeout = setTimeout(async () => {
-                console.log(`🚀 Restored timer triggered for ${job.name}`);
+          // Only restore if we're still in the entering/leaving state
+          if (this.currentState === 'entering' || this.currentState === 'leaving') {
+            if (remainingSeconds > 0) {
+              // Recreate the delayed action with remaining time
+              const job = this.jobs.find(j => j.id === state.delayedAction.jobId);
+              if (job) {
+                const timeout = setTimeout(async () => {
+                  console.log(`🚀 Restored timer triggered for ${job.name}`);
+                  if (state.delayedAction.action === 'start') {
+                    await this.startAutoTimer(job);
+                  } else {
+                    await this.stopAutoTimer(job);
+                  }
+                }, remainingSeconds * 1000);
+                
+                this.currentDelayedAction = {
+                  jobId: state.delayedAction.jobId,
+                  action: state.delayedAction.action,
+                  timeout,
+                  startTime: startTime,
+                  delaySeconds: state.delayedAction.delaySeconds,
+                };
+                
+                // Start status update interval
+                this.startStatusUpdateInterval();
+              }
+            } else {
+              // Time already expired, execute action immediately
+              console.log(`⏰ Delayed action expired ${Math.abs(remainingSeconds)}s ago, executing now`);
+              const job = this.jobs.find(j => j.id === state.delayedAction.jobId);
+              if (job) {
                 if (state.delayedAction.action === 'start') {
                   await this.startAutoTimer(job);
                 } else {
                   await this.stopAutoTimer(job);
                 }
-              }, remainingSeconds * 1000);
-              
-              this.currentDelayedAction = {
-                jobId: state.delayedAction.jobId,
-                action: state.delayedAction.action,
-                timeout,
-                startTime: startTime,
-                delaySeconds: state.delayedAction.delaySeconds,
-              };
-              
-              // Start status update interval
-              this.startStatusUpdateInterval();
+              }
             }
-          } else {
-            // Time already expired, execute action immediately
-            console.log(`⏰ Restored action already expired, executing now`);
-            await this.checkPendingActions();
           }
         }
         
@@ -740,9 +806,19 @@ class AutoTimerService {
    * Update jobs list (call when jobs change)
    */
   async updateJobs(jobs: Job[]): Promise<void> {
+    // Store jobs immediately
+    const previousJobs = this.jobs;
+    this.jobs = jobs;
+    
+    // If we haven't restored state yet and we now have jobs, restore it
+    if (jobs.length > 0 && previousJobs.length === 0 && this.currentState === 'inactive') {
+      console.log('🔄 First jobs loaded, attempting to restore AutoTimer state');
+      await this.restoreState();
+    }
+    
     // Check if there are changes in AutoTimer configuration for active job
     if (this.currentJobId && this.currentDelayedAction) {
-      const oldJob = this.jobs.find(j => j.id === this.currentJobId);
+      const oldJob = previousJobs.find(j => j.id === this.currentJobId);
       const newJob = jobs.find(j => j.id === this.currentJobId);
       
       if (oldJob && newJob && oldJob.autoTimer && newJob.autoTimer) {
@@ -800,8 +876,6 @@ class AutoTimerService {
         }
       }
     }
-    
-    this.jobs = jobs;
     
     // Restart geofence monitoring with updated jobs if service is enabled
     if (this.isEnabled) {
