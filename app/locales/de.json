@@ -889,11 +889,6 @@
       "no_ads": "✓ Keine Werbung",
       "priority_support": "✓ Prioritäts-Support"
     },
-    "buttons": {
-      "restore": "Käufe Wiederherstellen",
-      "cancel": "Abbrechen",
-      "continue": "Zur App Fortfahren"
-    },
     "processing": "Kauf wird verarbeitet...",
     "success": {
       "title": "Abonnement Erfolgreich!",
@@ -916,6 +911,7 @@
       "cancel": "Abbrechen",
       "continue": "Weiter"
     },
+    "duration": "3 Monate Abonnement",
     "active": {
       "account_status": {
         "title": "Kontostatus",

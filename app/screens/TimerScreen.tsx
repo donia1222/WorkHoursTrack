@@ -33,7 +33,7 @@ import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
-import { useAutoTimer } from '../contexts/AutoTimerContext';
+
 
 interface TimerScreenProps {
   onNavigate: (screen: string, options?: any) => void;

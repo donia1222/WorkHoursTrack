@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
+  Dimensions,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -17,6 +19,16 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  interpolate,
+  runOnJS,
+} from 'react-native-reanimated';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function SubscriptionScreen() {
   const router = useRouter();
@@ -25,6 +37,44 @@ export default function SubscriptionScreen() {
   const { t } = useLanguage();
   const { isSubscribed, isLoading, offerings, customerInfo, purchaseSubscription, restorePurchases, checkSubscriptionStatus } = useSubscription();
   const [purchasing, setPurchasing] = useState(false);
+  
+  // Animation values
+  const fadeInValue = useSharedValue(0);
+  const slideInValue = useSharedValue(50);
+  const scaleValue = useSharedValue(0.9);
+  const crownRotation = useSharedValue(0);
+  
+  useEffect(() => {
+    // Entrance animations
+    fadeInValue.value = withTiming(1, { duration: 800 });
+    slideInValue.value = withSpring(0, { damping: 15, stiffness: 100 });
+    scaleValue.value = withSpring(1, { damping: 12, stiffness: 120 });
+    
+    // Crown rotation animation
+    const rotateCrown = () => {
+      crownRotation.value = withTiming(360, { duration: 2500 }, () => {
+        crownRotation.value = 0;
+        runOnJS(rotateCrown)();
+      });
+    };
+    rotateCrown();
+  }, []);
+  
+  const containerAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: fadeInValue.value,
+      transform: [
+        { translateY: slideInValue.value },
+        { scale: scaleValue.value },
+      ],
+    };
+  });
+  
+  const crownAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: `${crownRotation.value}deg` }],
+    };
+  });
 
   const handlePurchase = async (packageToPurchase: any) => {
     setPurchasing(true);
@@ -81,17 +131,30 @@ export default function SubscriptionScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <LinearGradient
           colors={isDark 
-            ? ['rgba(59, 130, 246, 0.08)', 'rgba(99, 102, 241, 0.06)', 'rgba(139, 92, 246, 0.04)'] 
-            : ['rgba(59, 130, 246, 0.05)', 'rgba(99, 102, 241, 0.04)', 'rgba(139, 92, 246, 0.03)']
+            ? ['#0A0A0B', '#1A1A2E', '#16213E', '#0F3460'] 
+            : ['#F8FAFF', '#E8F2FF', '#D4EDFF', '#C0E7FF']
           }
           style={styles.backgroundGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.text }]}>{t('subscription.loading')}</Text>
-        </View>
+        <Animated.View style={[styles.loadingContainer, containerAnimatedStyle]}>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.loadingCard}>
+            <LinearGradient
+              colors={isDark 
+                ? ['rgba(59, 130, 246, 0.15)', 'rgba(99, 102, 241, 0.10)', 'transparent'] 
+                : ['rgba(59, 130, 246, 0.12)', 'rgba(99, 102, 241, 0.08)', 'transparent']
+              }
+              style={styles.loadingCardGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
+            <View style={[styles.loadingIconContainer, { backgroundColor: colors.primary + '20' }]}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+            <Text style={[styles.loadingText, { color: colors.text }]}>{t('subscription.loading')}</Text>
+          </BlurView>
+        </Animated.View>
       </SafeAreaView>
     );
   }
@@ -107,20 +170,44 @@ export default function SubscriptionScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-                  {/* Header con gradiente */}
-        <View style={[styles.premiumHeader, { backgroundColor: colors.primary }]}>
-          
-          <View style={styles.headerContent}>
-            <View style={styles.premiumBadge}>
-              <IconSymbol size={24} name="crown.fill" color="#FFD700" />
-              <Text style={styles.premiumBadgeText}>{t('subscription.success.premium_badge')}</Text>
-            </View>
-            <Text style={styles.premiumTitle}>{t('subscription.success.premium_title')}</Text>
-            <Text style={styles.premiumSubtitle}>
-              {t('subscription.success.premium_subtitle')}
-            </Text>
-          </View>
-        </View>
+          {/* Enhanced Premium Header */}
+          <Animated.View style={containerAnimatedStyle}>
+            <LinearGradient
+              colors={isDark 
+                ? ['#667eea', '#764ba2', '#f093fb', '#f5576c'] 
+                : ['#667eea', '#764ba2', '#f093fb', '#f5576c']
+              }
+              style={styles.premiumHeader}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.headerContent}>
+                <View style={styles.premiumBadgeContainer}>
+                  <BlurView intensity={80} tint={"light"} style={styles.premiumBadge}>
+                    <Animated.View style={crownAnimatedStyle}>
+                      <IconSymbol size={28} name="crown.fill" color="#FFD700" />
+                    </Animated.View>
+                    <Text style={styles.premiumBadgeText}>{t('subscription.success.premium_badge')}</Text>
+                  </BlurView>
+                </View>
+                <Text style={styles.premiumTitle}>{t('subscription.success.premium_title')}</Text>
+                <Text style={styles.premiumSubtitle}>
+                  {t('subscription.success.premium_subtitle')}
+                </Text>
+                <View style={styles.decorativeElements}>
+                  {[...Array(3)].map((_, i) => (
+                    <View 
+                      key={i} 
+                      style={[
+                        styles.decorativeDot, 
+                        { opacity: 0.7 - (i * 0.2) }
+                      ]} 
+                    />
+                  ))}
+                </View>
+              </View>
+            </LinearGradient>
+          </Animated.View>
           {/* Tarjetas de información con diseño moderno */}
           {customerInfo && (
             <>
@@ -149,6 +236,7 @@ export default function SubscriptionScreen() {
                   <Text style={[styles.statusDescription, { color: colors.textSecondary }]}>
                     {t('subscription.active.account_status.description')}
                   </Text>
+                  
                 </View>
               </BlurView>
 
@@ -282,28 +370,38 @@ export default function SubscriptionScreen() {
         end={{ x: 1, y: 1 }}
       />
       
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Hero Section */}
-        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.heroCard}>
-          <LinearGradient
-            colors={isDark 
-              ? ['rgba(255, 215, 0, 0.12)', 'rgba(255, 165, 0, 0.08)', 'transparent'] 
-              : ['rgba(255, 215, 0, 0.08)', 'rgba(255, 165, 0, 0.06)', 'transparent']
-            }
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 24 }}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          />
-          <View style={styles.premiumIconContainer}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+      >
+        <Animated.View style={containerAnimatedStyle}>
+          {/* Enhanced Hero Section */}
+          <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.heroCard}>
             <LinearGradient
-              colors={['#FFD700', '#FFA500']}
-              style={styles.premiumIconGradient}
+              colors={isDark 
+                ? ['rgba(255, 215, 0, 0.18)', 'rgba(255, 165, 0, 0.12)', 'rgba(255, 140, 0, 0.06)', 'transparent'] 
+                : ['rgba(255, 215, 0, 0.15)', 'rgba(255, 165, 0, 0.10)', 'rgba(255, 140, 0, 0.05)', 'transparent']
+              }
+              style={styles.heroGradientOverlay}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-            >
-              <IconSymbol size={48} name="crown.fill" color="#000" />
-            </LinearGradient>
-          </View>
+            />
+            <View style={styles.premiumIconContainer}>
+              <LinearGradient
+                colors={['#FFD700', '#FF8C00', '#FF6347']}
+                style={styles.premiumIconGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <View style={styles.iconShadow}>
+                  <Animated.View style={crownAnimatedStyle}>
+                    <IconSymbol size={52} name="crown.fill" color="#000" />
+                  </Animated.View>
+                </View>
+              </LinearGradient>
+              <View style={styles.premiumIconGlow} />
+            </View>
           
           <Text style={[styles.heroTitle, { color: colors.text }]}>{t('subscription.title')}</Text>
           <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
@@ -386,10 +484,11 @@ export default function SubscriptionScreen() {
                     <Text style={[styles.packageTitle, { color: colors.text }]}>{pkg.product.title}</Text>
                   </View>
                   
-                  <Text style={[styles.packageDescription, { color: colors.textSecondary }]}>{pkg.product.description}</Text>
+                    <Text style={[styles.packageDuration, { color: colors.textSecondary }]}>{t('subscription.duration')}</Text>
                   
                   <View style={styles.packagePriceContainer}>
                     <Text style={[styles.packagePrice, { color: colors.text }]}>{pkg.product.priceString}</Text>
+          
                     <View style={styles.subscribeButtonContainer}>
                       <LinearGradient
                         colors={['#FFD700', '#FFA500']}
@@ -439,12 +538,15 @@ export default function SubscriptionScreen() {
           </TouchableOpacity>
         </View>
 
-        {purchasing && (
-          <View style={[styles.purchasingOverlay, { backgroundColor: colors.background + 'E6' }]}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[styles.purchasingText, { color: colors.text }]}>{t('subscription.processing')}</Text>
-          </View>
-        )}
+          {purchasing && (
+            <View style={[styles.purchasingOverlay, { backgroundColor: colors.background + 'E6' }]}>
+              <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.purchasingCard}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={[styles.purchasingText, { color: colors.text }]}>{t('subscription.processing')}</Text>
+              </BlurView>
+            </View>
+          )}
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -454,6 +556,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     marginBottom: 80,
+
   },
   backgroundGradient: {
     position: 'absolute',
@@ -461,70 +564,158 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    
   },
+  
+  // Enhanced Loading Styles
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
+  loadingCard: {
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.15,
+        shadowRadius: 24,
+      },
+      android: {
+        elevation: 12,
+      },
+    }),
   },
-
-  // Premium Header Styles
-  premiumHeader: {
-    paddingTop: 20,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
-    position: 'relative',
-    marginBottom: 40,
-    marginTop: -20,
+  loadingCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     borderRadius: 24,
   },
-  closeButton: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  loadingIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 10,
+    marginBottom: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#007AFF',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    letterSpacing: 0.3,
+  },
+
+  // Enhanced Premium Header Styles
+  premiumHeader: {
+    paddingTop: 40,
+    paddingBottom: 40,
+  
+    position: 'relative',
+    marginBottom: 32,
+    marginTop: -20,
+    marginHorizontal: 16,
+    borderRadius: 28,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 16 },
+        shadowOpacity: 0.25,
+        shadowRadius: 32,
+      },
+      android: {
+        elevation: 16,
+      },
+    }),
   },
   headerContent: {
     alignItems: 'center',
     marginTop: 20,
   },
+  premiumBadgeContainer: {
+    marginBottom: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#FFD700',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
   premiumBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 215, 0, 0.2)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginBottom: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.3)',
+    overflow: 'hidden',
   },
   premiumBadgeText: {
     color: '#FFD700',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginLeft: 8,
-    letterSpacing: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    marginLeft: 12,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
   },
   premiumTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 32,
+    fontWeight: '800',
     color: '#FFFFFF',
-    marginBottom: 8,
+    marginBottom: 12,
     textAlign: 'center',
+    letterSpacing: -0.5,
+    ...Platform.select({
+      ios: {
+        fontFamily: 'System',
+      },
+    }),
   },
   premiumSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 18,
+    color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
+    lineHeight: 26,
+    paddingHorizontal: 20,
+  },
+  decorativeElements: {
+    flexDirection: 'row',
+    marginTop: 20,
+    gap: 8,
+  },
+  decorativeDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FFFFFF',
   },
 
   // Scroll Container
@@ -543,6 +734,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     borderWidth: 1,
     overflow: 'hidden',
+    
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -756,6 +948,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
+  packageDuration: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 8,
+    marginBottom: 4,
+    letterSpacing: 0.3,
+  },
   buttonsContainer: {
     marginTop: 20,
   },
@@ -785,53 +984,190 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 1000,
+  },
+  purchasingCard: {
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.25,
+        shadowRadius: 24,
+      },
+      android: {
+        elevation: 12,
+      },
+    }),
   },
   purchasingText: {
-    marginTop: 10,
-    fontSize: 16,
+    marginTop: 20,
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  
+  // Enhanced Card Styles
+  cardGradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
+  },
+  statusCard: {
+    borderWidth: 2,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  enhancedIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
+  iconGradientBg: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 28,
+  },
+  headerTextContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  statusIndicatorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginLeft: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#10B981',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
 
-  // New Modern Styles
+  // Enhanced Hero Section Styles
   heroCard: {
-    borderRadius: 24,
-    margin: 16,
-    padding: 24,
+    borderRadius: 28,
+    margin: 20,
+    padding: 32,
     alignItems: 'center',
     overflow: 'hidden',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 20 },
+        shadowOpacity: 0.2,
+        shadowRadius: 32,
+      },
+      android: {
+        elevation: 16,
+      },
+    }),
+  },
+  heroGradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 28,
   },
   premiumIconContainer: {
-    marginBottom: 20,
-    elevation: 6,
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    marginBottom: 28,
+    position: 'relative',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#FFD700',
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.4,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 12,
+      },
+    }),
   },
   premiumIconGradient: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  premiumIconGlow: {
+    position: 'absolute',
+    top: -10,
+    left: -10,
+    right: -10,
+    bottom: -10,
+    borderRadius: 65,
+    backgroundColor: 'rgba(255, 215, 0, 0.15)',
+    zIndex: -1,
+  },
+  iconShadow: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+    }),
   },
   heroTitle: {
-    fontSize: 32,
-    fontWeight: '800',
+    fontSize: 36,
+    fontWeight: '900',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
+    letterSpacing: -0.8,
+    ...Platform.select({
+      ios: {
+        fontFamily: 'System',
+      },
+    }),
   },
   heroSubtitle: {
-    fontSize: 18,
+    fontSize: 20,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 28,
+    paddingHorizontal: 16,
+    fontWeight: '500',
   },
   featuresCard: {
     borderRadius: 20,

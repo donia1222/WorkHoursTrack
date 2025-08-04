@@ -1008,11 +1008,6 @@
       "no_ads": "✓ No ads",
       "priority_support": "✓ Priority support"
     },
-    "buttons": {
-      "restore": "Restore Purchases",
-      "cancel": "Cancel",
-      "continue": "Continue to App"
-    },
     "processing": "Processing purchase...",
     "success": {
       "title": "Subscription Successful!",
@@ -1035,6 +1030,7 @@
       "cancel": "Cancel",
       "continue": "Continue"
     },
+    "duration": "3 months subscription",
     "active": {
       "account_status": {
         "title": "Account Status",

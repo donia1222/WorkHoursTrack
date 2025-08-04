@@ -7,12 +7,16 @@ import {
   SafeAreaView,
   ScrollView,
   Alert,
+  Linking,
+  Modal,
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import * as Location from 'expo-location';
+import PrivacyPolicyScreen from './PrivacyPolicyScreen';
+import TermsOfServiceScreen from './TermsOfServiceScreen';
 
 interface OnboardingScreenProps {
   onDone: () => Promise<void>;
@@ -220,6 +224,38 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderRadius: 16,
     gap: 12,
   },
+  footerLinksContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 5,
+    paddingTop: 5,
+    alignItems: 'center',
+    maxWidth: '95%',
+    alignSelf: 'center',
+  },
+  footerLinksBackground: {
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    overflow: 'hidden',
+  },
+  footerLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  footerLink: {
+    paddingHorizontal: 2,
+    paddingVertical: 4,
+  },
+  footerLinkText: {
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  footerDivider: {
+    fontSize: 12,
+    marginHorizontal: 1,
+  },
 });
 
 const getOnboardingSteps = (colors: ThemeColors, t: (key: string) => string): OnboardingStep[] => [
@@ -255,6 +291,8 @@ export default function OnboardingScreen({ onDone }: OnboardingScreenProps) {
   const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(0);
   const [locationPermissionRequested, setLocationPermissionRequested] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
   const onboardingSteps = getOnboardingSteps(colors, t);
   
   const styles = getStyles(colors, isDark);
@@ -311,11 +349,23 @@ export default function OnboardingScreen({ onDone }: OnboardingScreenProps) {
     onDone();
   };
 
+  const openEmail = () => {
+    Linking.openURL('mailto:info@lweb.ch?subject=WorkTrack Support');
+  };
+
+  const openTerms = () => {
+    setShowTermsOfService(true);
+  };
+
+  const openPrivacy = () => {
+    setShowPrivacyPolicy(true);
+  };
+
   const currentStepData = onboardingSteps[currentStep];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-  
+    <>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.stepContainer}>
             <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.stepCard, { backgroundColor: colors.surface }]}>
@@ -455,7 +505,61 @@ export default function OnboardingScreen({ onDone }: OnboardingScreenProps) {
             </View>
           </TouchableOpacity>
         </View>
+        
+        {/* Footer Links */}
+        <View style={styles.footerLinksContainer}>
+          <BlurView 
+            intensity={85} 
+            tint={isDark ? "dark" : "light"} 
+            style={[styles.footerLinksBackground, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }]}
+          >
+            <View style={styles.footerLinks}>
+              <TouchableOpacity style={styles.footerLink} onPress={openPrivacy}>
+                <Text style={[styles.footerLinkText, { color: colors.primary }]}>
+                  {t('help_support.legal.privacy')}
+                </Text>
+              </TouchableOpacity>
+              
+              <Text style={[styles.footerDivider, { color: colors.textTertiary }]}>•</Text>
+              
+              <TouchableOpacity style={styles.footerLink} onPress={openTerms}>
+                <Text style={[styles.footerLinkText, { color: colors.primary }]}>
+                  {t('help_support.legal.terms')}
+                </Text>
+              </TouchableOpacity>
+              
+              <Text style={[styles.footerDivider, { color: colors.textTertiary }]}>•</Text>
+              
+              <TouchableOpacity style={styles.footerLink} onPress={openEmail}>
+                <Text style={[styles.footerLinkText, { color: colors.primary }]}>
+                  {t('help_support.contact.email')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </BlurView>
+        </View>
       </SafeAreaView>
+
+      {/* Privacy Policy Modal */}
+      <Modal
+        visible={showPrivacyPolicy}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => setShowPrivacyPolicy(false)}
+      >
+        <PrivacyPolicyScreen onClose={() => setShowPrivacyPolicy(false)} />
+      </Modal>
+      
+      {/* Terms of Service Modal */}
+      <Modal
+        visible={showTermsOfService}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => setShowTermsOfService(false)}
+      >
+        <TermsOfServiceScreen onClose={() => setShowTermsOfService(false)} />
+      </Modal>
+    </>
   );
 }
 

@@ -853,11 +853,6 @@
       "no_ads": "✓ Senza pubblicità",
       "priority_support": "✓ Supporto prioritario"
     },
-    "buttons": {
-      "restore": "Ripristina Acquisti",
-      "cancel": "Annulla",
-      "continue": "Continua all'App"
-    },
     "processing": "Elaborazione acquisto...",
     "success": {
       "title": "Abbonamento Riuscito!",
@@ -880,6 +875,7 @@
       "cancel": "Annulla",
       "continue": "Continua"
     },
+    "duration": "Abbonamento di 3 mesi",
     "active": {
       "account_status": {
         "title": "Stato Account",

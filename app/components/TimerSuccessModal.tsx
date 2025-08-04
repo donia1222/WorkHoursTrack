@@ -118,6 +118,20 @@ export default function TimerSuccessModal({
               end={{ x: 1, y: 1 }}
             />
             
+            {/* Close Button */}
+            <TouchableOpacity
+              style={[styles.closeButton, { 
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)' 
+              }]}
+              onPress={onClose}
+            >
+              <IconSymbol
+                name="xmark"
+                size={16}
+                color={isDark ? '#FFFFFF' : '#000000'}
+              />
+            </TouchableOpacity>
+            
             {/* Success Icon */}
             <Animated.View style={[styles.iconContainer, animatedCheckmarkStyle]}>
               <LinearGradient
@@ -174,18 +188,6 @@ export default function TimerSuccessModal({
             {/* Actions */}
             <View style={styles.actions}>
               <TouchableOpacity
-                style={[styles.button, styles.secondaryButton, { 
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)',
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-                }]}
-                onPress={onClose}
-              >
-                <Text style={[styles.buttonText, { color: isDark ? '#FFFFFF' : '#000000', opacity: 0.8 }]}>
-                  Cancel
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
                 style={[styles.button, styles.primaryButton]}
                 onPress={handleConfirm}
               >
@@ -197,10 +199,10 @@ export default function TimerSuccessModal({
                 >
                   <IconSymbol
                     name="chart.bar.fill"
-                    size={18}
+                    size={28}
                     color="#FFFFFF"
                   />
-              
+   
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -233,6 +235,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
   },
   iconContainer: {
     alignSelf: 'center',
@@ -296,11 +309,10 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   actions: {
-    flexDirection: 'row',
-    gap: 12,
+    width: '100%',
   },
   button: {
-    flex: 1,
+    width: '100%',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
@@ -312,6 +324,8 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     overflow: 'hidden',
+    maxWidth: '50%',
+    alignSelf: 'center',
   },
   buttonGradient: {
     position: 'absolute',

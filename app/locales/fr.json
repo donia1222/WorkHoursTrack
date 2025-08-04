@@ -861,11 +861,6 @@
       "no_ads": "✓ Sans publicités",
       "priority_support": "✓ Support prioritaire"
     },
-    "buttons": {
-      "restore": "Restaurer les Achats",
-      "cancel": "Annuler",
-      "continue": "Continuer vers l'App"
-    },
     "processing": "Traitement de l'achat...",
     "success": {
       "title": "Abonnement Réussi !",
@@ -888,6 +883,7 @@
       "cancel": "Annuler",
       "continue": "Continuer"
     },
+    "duration": "Abonnement de 3 mois",
     "active": {
       "account_status": {
         "title": "Statut du Compte",
