@@ -17,7 +17,7 @@ export interface ImageAnalysisResult {
 
 export class GoogleVisionService {
   // Proxy URL desde variables de entorno (debe definirse en .env)
-  private static readonly PROXY_URL = process.env.EXPO_PUBLIC_API_PROXY_URL!;
+  private static readonly PROXY_URL = process.env.EXPO_PUBLIC_LOGIN_URL!;
 
   // Helper method to detect if the message is asking for specific person analysis
   private static isSpecificPersonAnalysis(userMessage: string): boolean {
