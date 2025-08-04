@@ -304,6 +304,26 @@
     "pdf_error": "Error al generar PDF",
     "pdf_title": "Reporte de Trabajo",
     "analysis_date": "Fecha del análisis",
+    "invoice_title": "FACTURA",
+    "provider_data": "DATOS DEL PROVEEDOR",
+    "summary": "RESUMEN",
+    "banking_details": "DATOS BANCARIOS",
+    "account": "Cuenta",
+    "bank": "Banco",
+    "generated_on": "Generado el",
+    "salary_calculation": "CÁLCULO SALARIAL",
+    "calculation_details": "DETALLES DE CÁLCULO",
+    "rate": "Tarifa",
+    "period": "Período",
+    "worked_hours": "Horas trabajadas",
+    "worked_weeks": "Semanas trabajadas",
+    "worked_months": "Meses trabajados",
+    "total_to_pay": "TOTAL A PAGAR",
+    "note": "Nota",
+    "salary_note": "Este cálculo se basa en las horas registradas y la configuración salarial del trabajo.",
+    "per_worked_hours": "por horas trabajadas",
+    "per_worked_weeks": "por semanas trabajadas",
+    "proportional_month": "proporcional al mes",
     "days": "días",
     "work": "Trabajo",
     "statistics_section": "Estadísticas",
@@ -795,7 +815,10 @@
       "preview": "Vista previa: Se iniciará después de {{delayStart}} min en el trabajo, se parará {{delayStop}} min después de salir",
       "address_required_title": "Dirección Requerida",
       "address_required_message": "Para activar el timer automático, primero necesitas añadir una dirección en la pestaña 'Básico'. La dirección es necesaria para la detección automática por ubicación.",
-      "stopped_no_time": "Timer parado - no había tiempo activo"
+      "stopped_no_time": "Timer parado - no había tiempo activo",
+      "only_one_active": "Solo un AutoTimer activo",
+      "only_one_active_message": "El trabajo \"{{jobName}}\" ya tiene el AutoTimer activado. Solo un trabajo puede tener el AutoTimer activo a la vez.",
+      "deactivate_other": "Desactivar otro y activar este"
     },
     "delete": {
       "title": "Eliminar Trabajo",
@@ -1022,6 +1045,7 @@
       "cancel": "Cancelar",
       "continue": "Continuar"
     },
+    "cancellation_text": "Puedes cancelar tu suscripción en cualquier momento",
     "duration": "3 meses de suscripción",
     "active": {
       "account_status": {

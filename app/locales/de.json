@@ -317,6 +317,26 @@
     "configure_amounts_message": "Konfigurieren Sie Beträge, um die Gesamtsumme zu sehen",
     "pdf_title": "Arbeitsbericht",
     "analysis_date": "Analysedatum",
+    "invoice_title": "RECHNUNG",
+    "provider_data": "ANBIETER-DATEN",
+    "summary": "ZUSAMMENFASSUNG",
+    "banking_details": "BANKDATEN",
+    "account": "Konto",
+    "bank": "Bank",
+    "generated_on": "Generiert am",
+    "salary_calculation": "GEHALTSBERECHNUNG",
+    "calculation_details": "BERECHNUNGSDETAILS",
+    "rate": "Tarif",
+    "period": "Zeitraum",
+    "worked_hours": "Arbeitsstunden",
+    "worked_weeks": "Arbeitswochen",
+    "worked_months": "Arbeitsmonate",
+    "total_to_pay": "GESAMTBETRAG",
+    "note": "Hinweis",
+    "salary_note": "Diese Berechnung basiert auf den aufgezeichneten Stunden und der Gehaltskonfiguration des Jobs.",
+    "per_worked_hours": "pro geleistete Stunden",
+    "per_worked_weeks": "pro geleistete Wochen",
+    "proportional_month": "proportional zum Monat",
     "days": "Tage",
     "work": "Arbeit",
     "statistics_section": "Statistiken",
@@ -622,7 +642,10 @@
       "preview": "Vorschau: Startet nach {{delayStart}} Min am Arbeitsplatz, stoppt {{delayStop}} Min nach Verlassen",
       "address_required_title": "Adresse Erforderlich",
       "address_required_message": "Um den automatischen Timer zu aktivieren, müssen Sie zuerst eine Adresse im Tab 'Grundlagen' hinzufügen. Die Adresse ist für die automatische Standorterkennung erforderlich.",
-      "stopped_no_time": "Timer gestoppt - keine aktive Zeit lief"
+      "stopped_no_time": "Timer gestoppt - keine aktive Zeit lief",
+      "only_one_active": "Nur ein AutoTimer aktiv",
+      "only_one_active_message": "Die Arbeit \"{{jobName}}\" hat bereits den AutoTimer aktiviert. Nur eine Arbeit kann den AutoTimer gleichzeitig aktiv haben.",
+      "deactivate_other": "Anderen deaktivieren und diesen aktivieren"
     },
     "delete": {
       "title": "Arbeit Löschen",
@@ -911,6 +934,7 @@
       "cancel": "Abbrechen",
       "continue": "Weiter"
     },
+    "cancellation_text": "Sie können Ihr Abonnement jederzeit kündigen",
     "duration": "3 Monate Abonnement",
     "active": {
       "account_status": {

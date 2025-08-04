@@ -310,7 +310,29 @@
     "no_salary_config": "Nessuna configurazione stipendio",
     "no_salary_config_desc": "Attiva la configurazione stipendio nel tuo lavoro per includere calcoli automatici",
     "activate_salary_config": "Attiva configurazione stipendio",
-    "configure_amounts_message": "Configura gli importi per vedere il totale"
+    "configure_amounts_message": "Configura gli importi per vedere il totale",
+    "pdf_title": "Report di Lavoro",
+    "analysis_date": "Data di analisi",
+    "invoice_title": "FATTURA",
+    "provider_data": "DATI DEL FORNITORE",
+    "summary": "RIEPILOGO",
+    "banking_details": "DETTAGLI BANCARI",
+    "account": "Conto",
+    "bank": "Banca",
+    "generated_on": "Generato il",
+    "salary_calculation": "CALCOLO STIPENDIO",
+    "calculation_details": "DETTAGLI CALCOLO",
+    "rate": "Tariffa",
+    "period": "Periodo",
+    "worked_hours": "Ore lavorate",
+    "worked_weeks": "Settimane lavorate",
+    "worked_months": "Mesi lavorati",
+    "total_to_pay": "TOTALE DA PAGARE",
+    "note": "Nota",
+    "salary_note": "Questo calcolo si basa sulle ore registrate e sulla configurazione stipendio del lavoro.",
+    "per_worked_hours": "per ore lavorate",
+    "per_worked_weeks": "per settimane lavorate",
+    "proportional_month": "proporzionale al mese"
   },
   "calendar": {
     "title": "Il Mio Calendario",
@@ -602,7 +624,10 @@
       "preview": "Anteprima: Si avvierà dopo {{delayStart}} min al lavoro, si fermerà {{delayStop}} min dopo essere uscito",
       "address_required_title": "Indirizzo Richiesto",
       "address_required_message": "Per attivare il timer automatico, devi prima aggiungere un indirizzo nella scheda 'Base'. L'indirizzo è necessario per il rilevamento automatico della posizione.",
-      "stopped_no_time": "Timer fermato - nessun tempo attivo era in corso"
+      "stopped_no_time": "Timer fermato - nessun tempo attivo era in corso",
+      "only_one_active": "Solo un AutoTimer attivo",
+      "only_one_active_message": "Il lavoro \"{{jobName}}\" ha già l'AutoTimer attivato. Solo un lavoro può avere l'AutoTimer attivo alla volta.",
+      "deactivate_other": "Disattiva altro e attiva questo"
     },
     "delete": {
       "title": "Elimina Lavoro",
@@ -875,6 +900,7 @@
       "cancel": "Annulla",
       "continue": "Continua"
     },
+    "cancellation_text": "Puoi cancellare il tuo abbonamento in qualsiasi momento",
     "duration": "Abbonamento di 3 mesi",
     "active": {
       "account_status": {

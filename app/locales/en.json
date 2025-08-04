@@ -319,7 +319,29 @@
     "no_salary_config": "No salary configuration",
     "no_salary_config_desc": "Enable salary configuration in your job to include automatic calculations",
     "activate_salary_config": "Activate salary configuration",
-    "configure_amounts_message": "Configure amounts to see the total"
+    "configure_amounts_message": "Configure amounts to see the total",
+    "pdf_title": "Work Report",
+    "analysis_date": "Analysis date",
+    "invoice_title": "INVOICE",
+    "provider_data": "PROVIDER DATA",
+    "summary": "SUMMARY",
+    "banking_details": "BANKING DETAILS",
+    "account": "Account",
+    "bank": "Bank",
+    "generated_on": "Generated on",
+    "salary_calculation": "SALARY CALCULATION",
+    "calculation_details": "CALCULATION DETAILS",
+    "rate": "Rate",
+    "period": "Period",
+    "worked_hours": "Worked hours",
+    "worked_weeks": "Worked weeks",
+    "worked_months": "Worked months",
+    "total_to_pay": "TOTAL TO PAY",
+    "note": "Note",
+    "salary_note": "This calculation is based on recorded hours and job salary configuration.",
+    "per_worked_hours": "per worked hours",
+    "per_worked_weeks": "per worked weeks",
+    "proportional_month": "proportional to month"
   },
   "calendar": {
     "title": "My Calendar",
@@ -764,7 +786,10 @@
       "preview": "Preview: Will start after {{delayStart}} min at work, will stop {{delayStop}} min after leaving",
       "address_required_title": "Address Required",
       "address_required_message": "To enable automatic timer, you first need to add an address in the 'Basic' tab. The address is necessary for automatic location detection.",
-      "stopped_no_time": "Timer stopped - no active time was running"
+      "stopped_no_time": "Timer stopped - no active time was running",
+      "only_one_active": "Only one AutoTimer active",
+      "only_one_active_message": "The job \"{{jobName}}\" already has AutoTimer enabled. Only one job can have AutoTimer active at a time.",
+      "deactivate_other": "Deactivate other and enable this"
     },
     "delete": {
       "title": "Delete Job",
@@ -1030,6 +1055,7 @@
       "cancel": "Cancel",
       "continue": "Continue"
     },
+    "cancellation_text": "You can cancel your subscription at any time",
     "duration": "3 months subscription",
     "active": {
       "account_status": {

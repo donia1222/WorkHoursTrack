@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Modal,
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import type { IconSymbolName } from '@/components/ui/IconSymbol';
@@ -14,6 +15,7 @@ import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
+import { useSubscription } from '../hooks/useSubscription';
 import { BlurView } from 'expo-blur';
 import Header from '../components/Header';
 import { Job } from '../types/WorkTypes';
@@ -197,16 +199,131 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontWeight: '700',
     letterSpacing: -0.3,
   },
+  // Premium Modal Styles
+  premiumModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  premiumModalContainer: {
+    backgroundColor: colors.surface,
+    borderRadius: 24,
+    width: '100%',
+    maxWidth: 400,
+    overflow: 'hidden',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+  },
+  premiumModalHeader: {
+    padding: 24,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.separator,
+  },
+  premiumIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FFD700',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    elevation: 4,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  premiumModalTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  premiumModalSubtitle: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  premiumModalContent: {
+    padding: 24,
+  },
+  premiumFeaturesList: {
+    marginBottom: 24,
+  },
+  premiumFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  premiumFeatureIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  premiumFeatureText: {
+    fontSize: 16,
+    color: colors.text,
+    flex: 1,
+    fontWeight: '500',
+  },
+  premiumModalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  premiumCancelButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.separator,
+  },
+  premiumCancelButtonText: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  premiumSubscribeButton: {
+    flex: 2,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: '#FFD700',
+    elevation: 2,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  premiumSubscribeButtonText: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000',
+  },
 });
 
 export default function JobsManagementScreen({ onNavigate, onClose, openAddModal = false, editJob, initialTab }: JobsManagementScreenProps) {
   const { colors, isDark } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { triggerHaptic } = useHapticFeedback();
+  const { isSubscribed } = useSubscription();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [showAddModal, setShowAddModal] = useState(openAddModal);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
-  const [isClosing, setIsClosing] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   
   const styles = getStyles(colors, isDark);
 
@@ -234,6 +351,12 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
   };
 
   const handleAddJob = () => {
+    // Verificar si está suscrito
+    if (!isSubscribed) {
+      setShowPremiumModal(true);
+      return;
+    }
+    
     setEditingJob(null);
     setShowAddModal(true);
   };
@@ -281,10 +404,7 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
   const inactiveJobs = (jobs || []).filter(job => job && !job.isActive);
 
   const handleClose = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      onClose?.();
-    }, 100);
+    onClose?.();
   };
 
   return (
@@ -372,6 +492,164 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
         onNavigateToSubscription={() => onNavigate?.('subscription')}
       />
 
+      {/* Premium Modal */}
+      <Modal
+        visible={showPremiumModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowPremiumModal(false)}
+      >
+        <View style={styles.premiumModalOverlay}>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.premiumModalContainer}>
+            <View style={styles.premiumModalHeader}>
+              <View style={styles.premiumIcon}>
+                <IconSymbol size={40} name="crown.fill" color="#000" />
+              </View>
+              <Text style={styles.premiumModalTitle}>
+                {(() => {
+                  switch (language) {
+                    case 'es': return 'Trabajos Premium';
+                    case 'en': return 'Premium Jobs';
+                    case 'de': return 'Premium-Jobs';
+                    case 'fr': return 'Emplois Premium';
+                    case 'it': return 'Lavori Premium';
+                    default: return 'Premium Jobs';
+                  }
+                })()}
+              </Text>
+              <Text style={styles.premiumModalSubtitle}>
+                {(() => {
+                  switch (language) {
+                    case 'es': return 'Desbloquea la gestión de trabajos ilimitados';
+                    case 'en': return 'Unlock unlimited job management';
+                    case 'de': return 'Schalten Sie unbegrenzte Job-Verwaltung frei';
+                    case 'fr': return 'Débloquez la gestion d\'emplois illimitée';
+                    case 'it': return 'Sblocca la gestione illimitata dei lavori';
+                    default: return 'Unlock unlimited job management';
+                  }
+                })()}
+              </Text>
+            </View>
+
+            <View style={styles.premiumModalContent}>
+              <View style={styles.premiumFeaturesList}>
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="briefcase.fill" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {(() => {
+                      switch (language) {
+                        case 'es': return 'Trabajos ilimitados';
+                        case 'en': return 'Unlimited jobs';
+                        case 'de': return 'Unbegrenzte Jobs';
+                        case 'fr': return 'Emplois illimités';
+                        case 'it': return 'Lavori illimitati';
+                        default: return 'Unlimited jobs';
+                      }
+                    })()}
+                  </Text>
+                </View>
+                
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="location.fill" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {(() => {
+                      switch (language) {
+                        case 'es': return 'Auto-timer con geolocalización';
+                        case 'en': return 'Auto-timer with geolocation';
+                        case 'de': return 'Auto-Timer mit Geolokalisierung';
+                        case 'fr': return 'Minuterie automatique avec géolocalisation';
+                        case 'it': return 'Timer automatico con geolocalizzazione';
+                        default: return 'Auto-timer with geolocation';
+                      }
+                    })()}
+                  </Text>
+                </View>
+
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="chart.bar.fill" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {(() => {
+                      switch (language) {
+                        case 'es': return 'Reportes avanzados y exportación';
+                        case 'en': return 'Advanced reports and export';
+                        case 'de': return 'Erweiterte Berichte und Export';
+                        case 'fr': return 'Rapports avancés et exportation';
+                        case 'it': return 'Report avanzati ed esportazione';
+                        default: return 'Advanced reports and export';
+                      }
+                    })()}
+                  </Text>
+                </View>
+
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="calendar.badge.plus" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {(() => {
+                      switch (language) {
+                        case 'es': return 'Sincronización con calendario';
+                        case 'en': return 'Calendar synchronization';
+                        case 'de': return 'Kalendersynchronisation';
+                        case 'fr': return 'Synchronisation du calendrier';
+                        case 'it': return 'Sincronizzazione calendario';
+                        default: return 'Calendar synchronization';
+                      }
+                    })()}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.premiumModalActions}>
+                <TouchableOpacity 
+                  style={styles.premiumCancelButton}
+                  onPress={() => setShowPremiumModal(false)}
+                >
+                  <Text style={styles.premiumCancelButtonText}>
+                    {(() => {
+                      switch (language) {
+                        case 'es': return 'Cancelar';
+                        case 'en': return 'Cancel';
+                        case 'de': return 'Abbrechen';
+                        case 'fr': return 'Annuler';
+                        case 'it': return 'Annulla';
+                        default: return 'Cancel';
+                      }
+                    })()}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.premiumSubscribeButton}
+                  onPress={() => {
+                    setShowPremiumModal(false);
+                    onNavigate?.('subscription');
+                  }}
+                >
+                  <Text style={styles.premiumSubscribeButtonText}>
+                    {(() => {
+                      switch (language) {
+                        case 'es': return 'Suscribirse';
+                        case 'en': return 'Subscribe';
+                        case 'de': return 'Abonnieren';
+                        case 'fr': return 'S\'abonner';
+                        case 'it': return 'Iscriviti';
+                        default: return 'Subscribe';
+                      }
+                    })()}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </BlurView>
+        </View>
+      </Modal>
 
     </SafeAreaView>
   );

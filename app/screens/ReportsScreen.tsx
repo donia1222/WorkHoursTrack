@@ -25,6 +25,7 @@ import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { Calendar } from 'react-native-calendars';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 import JobFormModal from '../components/JobFormModal';
 
 interface ReportsScreenProps {
@@ -146,10 +147,10 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const [showBillingModal, setShowBillingModal] = useState(false);
   const [includeBillingData, setIncludeBillingData] = useState(true);
   const [includeInvoiceDetails, setIncludeInvoiceDetails] = useState(true);
-  const [showJobFormModal, setShowJobFormModal] = useState(false);
-  const [editingJobForBilling, setEditingJobForBilling] = useState<Job | null>(null);
   const [includeSalaryCalculation, setIncludeSalaryCalculation] = useState(false);
   const [salaryPeriod, setSalaryPeriod] = useState<'hour' | 'week' | 'month'>('hour');
+  const [showJobFormModal, setShowJobFormModal] = useState(false);
+  const [editingJobForBilling, setEditingJobForBilling] = useState<Job | null>(null);
   
   const { handleBack } = useBackNavigation();
   const { colors, isDark } = useTheme();
@@ -578,7 +579,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       const jobName = selectedJob ? selectedJob.name : t('reports.all_jobs');
       
       // Generate HTML content
-      const htmlContent = generateHTMLReport(includeBillingData);
+      const htmlContent = await generateHTMLReport(includeBillingData);
       
       // Create PDF
       const { uri } = await Print.printToFileAsync({
@@ -613,23 +614,38 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     // Get billing data from the first job that has billing enabled, or from selected job
     let jobWithBilling = null;
     
+    console.log('🔍 [BILLING] Getting billing data, selectedJobId:', selectedJobId);
+    console.log('🔍 [BILLING] Available jobs:', jobs.length);
+    
     if (selectedJobId !== 'all') {
       const selectedJob = jobs.find(job => job.id === selectedJobId);
+      console.log('🔍 [BILLING] Selected job found:', !!selectedJob);
       if (selectedJob?.billing?.enabled && selectedJob?.billing?.userData) {
+        console.log('🔍 [BILLING] Selected job has billing data');
         jobWithBilling = selectedJob;
       }
     }
     
     // If no selected job or it doesn't have billing, find first job with billing data
     if (!jobWithBilling) {
+      console.log('🔍 [BILLING] Looking for any job with billing data...');
       jobWithBilling = jobs.find(job => 
         job.billing?.enabled && 
         job.billing?.userData && 
         (job.billing.userData.name || job.billing.userData.companyName)
       );
+      console.log('🔍 [BILLING] Found job with billing:', !!jobWithBilling);
     }
     
-    return jobWithBilling?.billing?.userData || null;
+    const result = jobWithBilling?.billing?.userData || null;
+    console.log('🔍 [BILLING] Final billing data:', {
+      hasData: !!result,
+      isCompany: result?.isCompany,
+      companyName: result?.companyName,
+      logoUrl: result?.logoUrl
+    });
+    
+    return result;
   };
 
   const getSalaryData = () => {
@@ -667,7 +683,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           return {
             amount: totalHours * salaryData.amount,
             currency: salaryData.currency || 'EUR',
-            period: 'por horas trabajadas',
+            period: t('reports.per_worked_hours') || 'por horas trabajadas',
             rate: salaryData.amount > 0 ? `${salaryData.amount} ${salaryData.currency || 'EUR'}/h` : 'No configurado',
             hours: totalHours
           };
@@ -678,7 +694,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         return {
           amount: totalHours * hourlyRate,
           currency: salaryData.currency || 'EUR',
-          period: 'por horas trabajadas',
+          period: t('reports.per_worked_hours') || 'por horas trabajadas',
           rate: hourlyRate > 0 ? `${hourlyRate} ${salaryData.currency || 'EUR'}/h` : 'No configurado',
           hours: totalHours
         };
@@ -701,7 +717,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         return {
           amount: weeksWorked * weeklyRate,
           currency: salaryData.currency || 'EUR',
-          period: 'por semanas trabajadas',
+          period: t('reports.per_worked_weeks') || 'por semanas trabajadas',
           rate: weeklyRate > 0 ? `${weeklyRate.toFixed(2)} ${salaryData.currency || 'EUR'}/semana` : 'No configurado',
           weeks: weeksWorked
         };
@@ -722,30 +738,13 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         return {
           amount: monthsWorked * monthlyRate,
           currency: salaryData.currency || 'EUR',
-          period: 'proporcional al mes',
+          period: t('reports.proportional_month') || 'proporcional al mes',
           rate: monthlyRate > 0 ? `${monthlyRate.toFixed(2)} ${salaryData.currency || 'EUR'}/mes` : 'No configurado',
           months: monthsWorked
         };
 
       default:
         return null;
-    }
-  };
-
-  const openBillingConfiguration = () => {
-    setShowBillingModal(false);
-    
-    // Use selected job or first job for billing configuration
-    let jobToEdit = null;
-    if (selectedJobId !== 'all') {
-      jobToEdit = jobs.find(job => job.id === selectedJobId);
-    } else {
-      jobToEdit = jobs[0]; // Use first job if all jobs selected
-    }
-    
-    if (jobToEdit) {
-      setEditingJobForBilling(jobToEdit);
-      setShowJobFormModal(true);
     }
   };
 
@@ -766,6 +765,24 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     }
   };
 
+  const openBillingConfiguration = () => {
+    setShowBillingModal(false);
+    
+    // Use selected job or first job for billing configuration
+    let jobToEdit = null;
+    if (selectedJobId !== 'all') {
+      jobToEdit = jobs.find(job => job.id === selectedJobId);
+    } else {
+      jobToEdit = jobs[0]; // Use first job if all jobs selected
+    }
+    
+    if (jobToEdit) {
+      setEditingJobForBilling(jobToEdit);
+      setShowJobFormModal(true);
+    }
+  };
+
+
   const generateInvoiceNumber = () => {
     const billingData = getBillingData();
     const prefix = billingData?.isCompany ? 
@@ -780,7 +797,21 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     return `${prefix}-${year}${month}${day}-${random}`;
   };
 
-  const generateHTMLReport = (includeBilling: boolean = false) => {
+  const convertImageToBase64 = async (uri: string): Promise<string | null> => {
+    try {
+      console.log('🔄 [BASE64] Converting image to base64:', uri);
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      console.log('✅ [BASE64] Image converted successfully');
+      return `data:image/png;base64,${base64}`;
+    } catch (error) {
+      console.error('❌ [BASE64] Error converting image:', error);
+      return null;
+    }
+  };
+
+  const generateHTMLReport = async (includeBilling: boolean = false) => {
     if (!periodStats) return '';
 
     const selectedJob = selectedJobId === 'all' ? null : jobs.find(job => job.id === selectedJobId);
@@ -792,6 +823,26 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     
     // Get billing data if needed
     const billingData = includeBilling ? getBillingData() : null;
+    
+    // Debug logs for logo
+    if (billingData) {
+      console.log('🖼️ [PDF] Billing data found:', {
+        isCompany: billingData.isCompany,
+        companyName: billingData.companyName,
+        hasLogoUrl: !!billingData.logoUrl,
+        logoUrl: billingData.logoUrl
+      });
+    } else {
+      console.log('❌ [PDF] No billing data found');
+    }
+    
+    // Convert logo to base64 if available
+    let logoBase64 = null;
+    if (billingData?.isCompany && billingData?.logoUrl) {
+      console.log('🔄 [PDF] Converting logo to base64...');
+      logoBase64 = await convertImageToBase64(billingData.logoUrl);
+      console.log('🖼️ [PDF] Logo base64 result:', logoBase64 ? 'Success' : 'Failed');
+    }
     
     // Get salary calculation if needed
     const salaryTotal = includeSalaryCalculation ? calculateSalaryTotal() : null;
@@ -945,7 +996,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     </head>
     <body>
       <div class="header">
-        <div class="title">📊 ${t('reports.pdf_title')}</div>
+        <div class="title">${t('reports.pdf_title')}</div>
         <div class="subtitle">${jobName}</div>
         <div class="period">${periodLabel}</div>
       </div>
@@ -965,11 +1016,6 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         </div>
       </div>
 
-      ${periodStats.overtimeHours > 0 ? `
-        <div class="overtime">
-          ⏰ ${t('reports.overtime_hours', { hours: periodStats.overtimeHours.toFixed(1) })}
-        </div>
-      ` : ''}
 
       ${periodStats.jobBreakdown.length > 1 ? `
         <div class="section">
@@ -1016,7 +1062,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         <div style="page-break-before: always; margin-top: 40px;">
           <div style="border: 2px solid #007AFF; border-radius: 12px; padding: 30px; background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);">
             <div style="text-align: center; margin-bottom: 25px;">
-              <h2 style="color: #007AFF; font-size: 24px; margin: 0; font-weight: 700;">💼 FACTURA / INVOICE</h2>
+              <h2 style="color: #007AFF; font-size: 24px; margin: 0; font-weight: 700;">💼 ${t('reports.invoice_title') || 'FACTURA / INVOICE'}</h2>
               ${invoiceNumber ? `<div style="color: #666; font-size: 16px; margin-top: 8px; font-weight: 600;">📄 ${invoiceNumber}</div>` : ''}
               ${invoiceDate ? `<div style="color: #666; font-size: 14px; margin-top: 4px;">📅 ${invoiceDate}</div>` : ''}
               <div style="height: 3px; background: linear-gradient(90deg, #007AFF, #00D4FF); margin: 10px auto; width: 150px; border-radius: 2px;"></div>
@@ -1024,21 +1070,45 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
             
             <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
               <div style="flex: 1;">
-                <h3 style="color: #333; font-size: 16px; margin-bottom: 15px; border-bottom: 2px solid #007AFF; padding-bottom: 5px;">📋 DATOS DEL PROVEEDOR / PROVIDER</h3>
-                ${billingData.isCompany ? `
-                  <div style="margin-bottom: 10px; font-size: 18px; font-weight: 700; color: #007AFF;">🏢 ${billingData.companyName || 'Empresa'}</div>
-                  <div style="margin-bottom: 8px; color: #666; font-weight: 600;">📄 ${billingData.taxId ? 'CIF/VAT: ' + billingData.taxId : 'CIF/VAT: N/A'}</div>
-                ` : `
-                  <div style="margin-bottom: 10px; font-size: 18px; font-weight: 700; color: #007AFF;">👤 ${billingData.name || 'Usuario'}</div>
-                `}
-                ${billingData.address ? `<div style="margin-bottom: 8px; color: #555;">📍 ${billingData.address}</div>` : ''}
-                ${billingData.phone ? `<div style="margin-bottom: 8px; color: #555;">📞 ${billingData.phone}</div>` : ''}
-                ${billingData.email ? `<div style="margin-bottom: 8px; color: #555;">✉️ ${billingData.email}</div>` : ''}
-                ${billingData.website ? `<div style="margin-bottom: 8px; color: #007AFF;">🌐 ${billingData.website}</div>` : ''}
+                <div style="display: flex; align-items: flex-start; gap: 20px; margin-bottom: 20px;">
+                  <div style="flex: 1;">
+                    <h3 style="color: #333; font-size: 16px; margin-bottom: 15px; border-bottom: 2px solid #007AFF; padding-bottom: 5px;">${t('reports.provider_data') || 'DATOS DEL PROVEEDOR / PROVIDER'}</h3>
+                    ${billingData.isCompany ? `
+                      <div style="margin-bottom: 10px; font-size: 18px; font-weight: 700; color: #007AFF;">${billingData.companyName || 'Empresa'}</div>
+                      <div style="margin-bottom: 8px; color: #666; font-weight: 600;">${billingData.taxId ? 'CIF/VAT: ' + billingData.taxId : 'CIF/VAT: N/A'}</div>
+                    ` : `
+                      <div style="margin-bottom: 10px; font-size: 18px; font-weight: 700; color: #007AFF;">${billingData.name || 'Usuario'}</div>
+                    `}
+                    ${billingData.address ? `<div style="margin-bottom: 8px; color: #555;">${billingData.address}</div>` : ''}
+                    ${billingData.phone ? `<div style="margin-bottom: 8px; color: #555;">Tel: ${billingData.phone}</div>` : ''}
+                    ${billingData.email ? `<div style="margin-bottom: 8px; color: #555;">Email: ${billingData.email}</div>` : ''}
+                    ${billingData.website ? `<div style="margin-bottom: 8px; color: #007AFF;">Web: ${billingData.website}</div>` : ''}
+                  </div>
+                  ${(() => {
+                    console.log('🔍 [PDF] Logo check:', {
+                      isCompany: billingData.isCompany,
+                      hasOriginalLogoUrl: !!billingData.logoUrl,
+                      hasBase64Logo: !!logoBase64,
+                      willShowLogo: billingData.isCompany && logoBase64
+                    });
+                    
+                    if (billingData.isCompany && logoBase64) {
+                      console.log('✅ [PDF] Adding base64 logo to HTML');
+                      return `
+                        <div style="min-width: 120px; max-width: 120px;">
+                          <img src="${logoBase64}" alt="Logo de empresa" style="max-width: 100%; height: auto; max-height: 80px; border-radius: 8px; border: 2px solid #E5E5EA; object-fit: contain; background: white; padding: 8px;" />
+                        </div>
+                      `;
+                    } else {
+                      console.log('❌ [PDF] No logo will be shown (missing base64 or not company)');
+                      return '';
+                    }
+                  })()}
+                </div>
               </div>
               
               <div style="flex: 1; margin-left: 30px;">
-                <h3 style="color: #333; font-size: 16px; margin-bottom: 15px; border-bottom: 2px solid #28a745; padding-bottom: 5px;">💰 RESUMEN / SUMMARY</h3>
+                <h3 style="color: #333; font-size: 16px; margin-bottom: 15px; border-bottom: 2px solid #28a745; padding-bottom: 5px;">💰 ${t('reports.summary') || 'RESUMEN / SUMMARY'}</h3>
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
                   <div style="margin-bottom: 8px;"><strong>📊 ${t('reports.total_hours')}: ${periodStats.totalHours.toFixed(1)}h</strong></div>
                   <div style="margin-bottom: 8px;"><strong>📅 ${t('reports.worked_days')}: ${periodStats.totalDays}</strong></div>
@@ -1050,17 +1120,17 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
             ${billingData.bankAccount || billingData.bankName || billingData.swiftCode ? `
               <div style="margin-top: 25px; padding: 20px; background: #e3f2fd; border-radius: 8px; border: 1px solid #2196f3;">
-                <h3 style="color: #1976d2; font-size: 16px; margin-bottom: 15px;">🏦 DATOS BANCARIOS / BANKING DETAILS</h3>
-                ${billingData.bankAccount ? `<div style="margin-bottom: 8px; font-weight: 600;">💳 <strong>Cuenta/Account:</strong> ${billingData.bankAccount}</div>` : ''}
-                ${billingData.bankName ? `<div style="margin-bottom: 8px;">🏦 <strong>Banco/Bank:</strong> ${billingData.bankName}</div>` : ''}
-                ${billingData.swiftCode ? `<div style="margin-bottom: 8px;">🔗 <strong>SWIFT/BIC:</strong> ${billingData.swiftCode}</div>` : ''}
+                <h3 style="color: #1976d2; font-size: 16px; margin-bottom: 15px;">${t('reports.banking_details') || 'DATOS BANCARIOS / BANKING DETAILS'}</h3>
+                ${billingData.bankAccount ? `<div style="margin-bottom: 8px; font-weight: 600;"><strong>${t('reports.account') || 'Cuenta/Account'}:</strong> ${billingData.bankAccount}</div>` : ''}
+                ${billingData.bankName ? `<div style="margin-bottom: 8px;"><strong>${t('reports.bank') || 'Banco/Bank'}:</strong> ${billingData.bankName}</div>` : ''}
+                ${billingData.swiftCode ? `<div style="margin-bottom: 8px;"><strong>SWIFT/BIC:</strong> ${billingData.swiftCode}</div>` : ''}
               </div>
             ` : ''}
 
             <div style="margin-top: 30px; padding: 15px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;">
               <div style="text-align: center; color: #856404;">
-                <strong>📄 Período facturado / Billing Period: ${periodLabel}</strong><br>
-                <small>Generado el / Generated on: ${new Date().toLocaleDateString()}</small>
+                <strong>${t('reports.billing_period') || 'Período facturado / Billing Period'}: ${periodLabel}</strong><br>
+                <small>${t('reports.generated_on') || 'Generado el / Generated on'}: ${new Date().toLocaleDateString()}</small>
               </div>
             </div>
           </div>
@@ -1072,27 +1142,27 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           <div style="border: 2px solid #28a745; border-radius: 12px; padding: 30px; background: linear-gradient(135deg, #f8fff8 0%, #ffffff 100%);">
             <div style="text-align: center; margin-bottom: 25px;">
               <h2 style="color: #28a745; font-size: 24px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);">
-                💰 CÁLCULO SALARIAL / SALARY CALCULATION
+                💰 ${t('reports.salary_calculation') || 'CÁLCULO SALARIAL / SALARY CALCULATION'}
               </h2>
             </div>
             
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
               <div style="flex: 1;">
-                <h3 style="color: #333; font-size: 16px; margin-bottom: 15px; border-bottom: 2px solid #28a745; padding-bottom: 5px;">📊 DETALLES DE CÁLCULO / CALCULATION DETAILS</h3>
+                <h3 style="color: #333; font-size: 16px; margin-bottom: 15px; border-bottom: 2px solid #28a745; padding-bottom: 5px;">📊 ${t('reports.calculation_details') || 'DETALLES DE CÁLCULO / CALCULATION DETAILS'}</h3>
                 <div style="margin-bottom: 10px; font-size: 16px; color: #555;">
-                  <strong>⏱️ Tarifa:</strong> ${salaryTotal.rate}
+                  <strong>⏱️ ${t('reports.rate') || 'Tarifa'}:</strong> ${salaryTotal.rate}
                 </div>
                 <div style="margin-bottom: 10px; font-size: 16px; color: #555;">
-                  <strong>📅 Período:</strong> ${salaryTotal.period}
+                  <strong>📅 ${t('reports.period') || 'Período'}:</strong> ${salaryTotal.period}
                 </div>
-                ${salaryTotal.hours ? `<div style="margin-bottom: 10px; font-size: 16px; color: #555;"><strong>🕐 Horas trabajadas:</strong> ${salaryTotal.hours.toFixed(2)}h</div>` : ''}
-                ${salaryTotal.weeks ? `<div style="margin-bottom: 10px; font-size: 16px; color: #555;"><strong>📊 Semanas trabajadas:</strong> ${salaryTotal.weeks.toFixed(2)}</div>` : ''}
-                ${salaryTotal.months ? `<div style="margin-bottom: 10px; font-size: 16px; color: #555;"><strong>📊 Meses trabajados:</strong> ${salaryTotal.months.toFixed(2)}</div>` : ''}
+                ${salaryTotal.hours ? `<div style="margin-bottom: 10px; font-size: 16px; color: #555;"><strong>🕐 ${t('reports.worked_hours') || 'Horas trabajadas'}:</strong> ${salaryTotal.hours.toFixed(2)}h</div>` : ''}
+                ${salaryTotal.weeks ? `<div style="margin-bottom: 10px; font-size: 16px; color: #555;"><strong>📊 ${t('reports.worked_weeks') || 'Semanas trabajadas'}:</strong> ${salaryTotal.weeks.toFixed(2)}</div>` : ''}
+                ${salaryTotal.months ? `<div style="margin-bottom: 10px; font-size: 16px; color: #555;"><strong>📊 ${t('reports.worked_months') || 'Meses trabajados'}:</strong> ${salaryTotal.months.toFixed(2)}</div>` : ''}
               </div>
               
               <div style="flex: 1; margin-left: 30px; text-align: right;">
                 <div style="background: #28a745; color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">
-                  <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; opacity: 0.9;">TOTAL A PAGAR / TOTAL TO PAY</div>
+                  <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; opacity: 0.9;">${t('reports.total_to_pay') || 'TOTAL A PAGAR / TOTAL TO PAY'}</div>
                   <div style="font-size: 32px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                     ${salaryTotal.amount.toFixed(2)} ${salaryTotal.currency}
                   </div>
@@ -1102,8 +1172,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
             
             <div style="margin-top: 25px; padding: 20px; background: #e8f5e8; border-radius: 8px; border: 1px solid #28a745;">
               <div style="text-align: center; color: #155724; font-size: 14px;">
-                <strong>💡 Nota:</strong> Este cálculo se basa en las horas registradas y la configuración salarial del trabajo.<br>
-                <strong>💡 Note:</strong> This calculation is based on recorded hours and job salary configuration.
+                <strong>💡 ${t('reports.note') || 'Nota'}:</strong> ${t('reports.salary_note') || 'Este cálculo se basa en las horas registradas y la configuración salarial del trabajo.'}
               </div>
             </div>
           </div>
@@ -1616,16 +1685,16 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           <View style={styles.modalOverlay}>
             <View style={styles.billingModal}>
               <View style={styles.modalHeader}>
+                <View style={{width: 40}} />
+                <Text style={styles.modalTitle}>
+                  {t('reports.export_options') || 'Opciones de Exportación'}
+                </Text>
                 <TouchableOpacity
                   style={styles.modalCloseButton}
                   onPress={() => setShowBillingModal(false)}
                 >
-                  <IconSymbol size={24} name="xmark" color={colors.text} />
+                  <IconSymbol size={20} name="xmark" color={colors.textSecondary} />
                 </TouchableOpacity>
-                <Text style={styles.modalTitle}>
-                  {t('reports.export_options') || 'Opciones de Exportación'}
-                </Text>
-                <View style={{width: 40}} />
               </View>
               
               <ScrollView style={styles.billingModalContent}>
@@ -2579,14 +2648,14 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: colors.primary,
   },
   modalCloseButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
   },
   pickerContainer: {
     padding: 20,
@@ -2611,7 +2680,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderRadius: 16,
     margin: 20,
     width: '90%',
-    maxHeight: '80%',
+    maxHeight: '85%',
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -2786,7 +2855,6 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   // Salary calculation styles
   salarySection: {
     marginTop: -40,
-
     borderTopWidth: 1,
     borderTopColor: colors.separator,
   },

@@ -824,7 +824,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 8,
     paddingHorizontal: 12,
-    backgroundColor: isDark ? 'rgba(28, 28, 30, 0.15)' : 'rgba(12, 97, 201, 0.08)',
+    backgroundColor: isDark ?  'rgba(167, 139, 250, 0.19)' : 'rgba(167, 139, 250, 0.12)',
   },
   miniCalendarHeader: {
     flexDirection: 'row',
@@ -1130,6 +1130,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontSize: 11,
     color: colors.textSecondary,
     opacity: 0.8,
+
   },
 });
 
@@ -2386,7 +2387,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                 <TouchableOpacity
                   style={{
                     flex: 1,
-                    backgroundColor: isDark ? 'rgba(52, 211, 153, 0.15)' : 'rgba(52, 211, 153, 0.12)',
+                    backgroundColor: isDark ? 'rgba(73, 129, 240, 0.15)' : 'rgba(60, 144, 246, 0.14)',
                     borderRadius: 14,
                     padding: 16,
                     borderWidth: 1,
@@ -2401,7 +2402,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   activeOpacity={0.7}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <IconSymbol size={24} name="briefcase.fill" color="#34D399" />
+                    <IconSymbol size={26} name="briefcase.fill" color={colors.primary} />
                     <IconSymbol size={16} name="chevron.forward" color={colors.textSecondary} style={{ opacity: 0.5 }} />
                   </View>
                   <Text style={{
@@ -2414,13 +2415,14 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     fontSize: 12,
                     color: colors.textSecondary,
                     marginTop: 2,
+                    fontWeight: '600',
                   }}>{t('maps.active_jobs')}</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity
                   style={{
                     flex: 1,
-                    backgroundColor: isDark ? 'rgba(167, 139, 250, 0.15)' : 'rgba(167, 139, 250, 0.12)',
+                    backgroundColor: isDark ? 'rgba(52, 211, 153, 0.15)' : 'rgba(52, 211, 153, 0.12)',
                     borderRadius: 14,
                     padding: 16,
                     borderWidth: 1,
@@ -2435,17 +2437,20 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   activeOpacity={0.7}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <IconSymbol size={24} name="clock.fill" color="#A78BFA" />
+                    <IconSymbol size={34} name="clock.fill" color={colors.success} />
                     <IconSymbol size={16} name="chevron.forward" color={colors.textSecondary} style={{ opacity: 0.5 }} />
                   </View>
          
                   <Text style={{
                     fontSize: 12,
                     color: colors.textSecondary,
-                    marginTop: 2,
-                    marginBottom: 15,
+                    position: 'absolute',
+                    fontWeight: '600',
+                    bottom: 15,
+                    left: 10,
+                  
                   }}>{t('maps.auto_timer')}</Text>
-                   <Text style={styles.settingDescription}>{t('settings.work_config.autotimer_desc')}</Text>
+                
                 </TouchableOpacity>
               </View>
             )}
@@ -2470,13 +2475,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     }
                   }
                 })}>
-                <Animated.View style={[styles.miniCalendarContainer, animatedMiniCalendarStyle]}>
+                <View style={[styles.miniCalendarContainer, animatedMiniCalendarStyle]}>
                   <View style={styles.miniCalendarCard}>
                     <BlurView intensity={100} tint={isDark ? "dark" : "light"} style={styles.miniCalendarBlur}>
                   <View style={styles.miniCalendarHeader}>
           
                     <View style={styles.miniCalendarTitleContainer}>
-                      <IconSymbol size={18} name="calendar" color={colors.primary} />
+                      <IconSymbol size={24} name="calendar" color={colors.secondary} />
                       <Text style={styles.miniCalendarTitle}>{getMonthName(currentWeekStart)}</Text>
                     </View>
              
@@ -2608,7 +2613,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
      
                     </BlurView>
                   </View>
-              </Animated.View>
+              </View>
               </GestureDetector>
             )}
 

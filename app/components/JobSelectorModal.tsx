@@ -7,7 +7,17 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
+  Dimensions,
 } from 'react-native';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  useAnimatedGestureHandler, 
+  withSpring, 
+  withTiming,
+  runOnJS 
+} from 'react-native-reanimated';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -41,7 +51,12 @@ export default function JobSelectorModal({
   const [showStatistics, setShowStatistics] = useState(false);
   const [selectedJobForStats, setSelectedJobForStats] = useState<Job | null>(null);
   
-  const styles = getStyles(colors, isDark);
+  const screenHeight = Dimensions.get('window').height;
+  const styles = getStyles(colors, isDark, jobs.length, screenHeight);
+  
+  // Animation values for gesture
+  const translateY = useSharedValue(0);
+  const opacity = useSharedValue(1);
 
   useEffect(() => {
     if (visible) {
@@ -72,18 +87,61 @@ export default function JobSelectorModal({
     setShowStatistics(true);
   };
 
-  return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={[styles.header, { borderBottomColor: colors.border }]}>
-          <View style={styles.placeholder} />
-          <Text style={styles.headerTitle}>{title}</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <IconSymbol size={21} name="xmark" color={colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
+  // Gesture handler for drag to close
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, context: any) => {
+      context.startY = translateY.value;
+    },
+    onActive: (event, context: any) => {
+      const newTranslateY = context.startY + event.translationY;
+      if (newTranslateY >= 0) {
+        translateY.value = newTranslateY;
+        // Fade out as user drags down
+        const progress = Math.min(newTranslateY / 100, 1);
+        opacity.value = 1 - progress * 0.5;
+      }
+    },
+    onEnd: (event) => {
+      const shouldClose = event.translationY > 80 || event.velocityY > 500;
+      
+      if (shouldClose) {
+        translateY.value = withTiming(screenHeight, { duration: 250 });
+        opacity.value = withTiming(0, { duration: 250 });
+        runOnJS(onClose)();
+      } else {
+        translateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+        opacity.value = withSpring(1, { damping: 15, stiffness: 150 });
+      }
+    },
+  });
 
-        <View style={styles.content}>
+  // Animated style for modal container
+  const animatedModalStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+    opacity: opacity.value,
+  }));
+
+  // Reset animation values when modal opens/closes
+  useEffect(() => {
+    if (visible) {
+      translateY.value = 0;
+      opacity.value = 1;
+    }
+  }, [visible]);
+
+  return (
+    <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={onClose}>
+      <View style={styles.overlay}>
+        <TouchableOpacity style={styles.backdrop} onPress={onClose} activeOpacity={1} />
+        <PanGestureHandler onGestureEvent={gestureHandler}>
+          <Animated.View style={[styles.modalContainer, animatedModalStyle]}>
+            {/* Drag handle */}
+            <View style={styles.dragHandle} />
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <Text style={styles.headerTitle}>{title}</Text>
+          </View>
+
+          <View style={styles.content}>
           <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.infoCard}>
             <LinearGradient
               colors={isDark ? ['rgba(0, 122, 255, 0.12)', 'rgba(0, 122, 255, 0.04)'] : ['rgba(0, 122, 255, 0.08)', 'rgba(0, 122, 255, 0.02)']}
@@ -161,7 +219,9 @@ export default function JobSelectorModal({
             </ScrollView>
           )}
         </View>
-      </SafeAreaView>
+          </Animated.View>
+        </PanGestureHandler>
+      </View>
       
       <JobStatisticsModal
         visible={showStatistics}
@@ -175,14 +235,52 @@ export default function JobSelectorModal({
   );
 }
 
-const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
-  container: {
+const getStyles = (colors: ThemeColors, isDark: boolean, jobsCount: number, screenHeight: number) => {
+  // Calculate dynamic height based on jobs count - More generous sizing
+  const baseHeight = 280; // Header + info card + padding
+  const jobCardHeight = 120; // More space per job card
+  const maxHeight = screenHeight * 0.85; // Use more screen space
+  const minHeight = screenHeight * 0.45; // Much larger minimum
+  
+  let dynamicHeight = baseHeight + (jobsCount * jobCardHeight);
+  if (dynamicHeight > maxHeight) dynamicHeight = maxHeight;
+  if (dynamicHeight < minHeight) dynamicHeight = minHeight;
+  
+  return StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  backdrop: {
     flex: 1,
   },
+  modalContainer: {
+    backgroundColor: colors.background,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: dynamicHeight,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 16,
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+  },
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingHorizontal: 24,
     paddingVertical: 20,
     borderBottomWidth: 1,
@@ -195,30 +293,19 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '500',
+    fontWeight: '600',
     color: colors.text,
+    textAlign: 'center',
     textShadowColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
-  placeholder: {
-    width: 40,
-  },
   content: {
-    flex: 1,
     paddingHorizontal: 24,
     paddingTop: 24,
+    paddingBottom: 32,
   },
   infoCard: {
     borderRadius: 24,
@@ -316,7 +403,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     lineHeight: 18,
   },
   jobsList: {
-    flex: 1,
+    maxHeight: jobsCount > 3 ? 240 : 'auto', // Allow scrolling if more than 3 jobs
   },
   jobCard: {
     marginBottom: 16,
@@ -409,4 +496,4 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-});
+});};

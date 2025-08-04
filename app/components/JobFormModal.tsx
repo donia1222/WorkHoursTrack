@@ -17,6 +17,8 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
@@ -896,6 +898,66 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     letterSpacing: 0.5,
     fontSize: 17,
   },
+  // Logo styles
+  logoContainer: {
+    marginTop: 12,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  logoPreview: {
+    width: '100%',
+    height: 80,
+    backgroundColor: colors.background,
+  },
+  logoActions: {
+    flexDirection: 'row',
+    padding: 12,
+    gap: 8,
+  },
+  logoActionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 6,
+  },
+  logoRemoveButton: {
+    borderColor: colors.error + '40',
+    backgroundColor: colors.error + '10',
+  },
+  logoActionText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  logoPickerButton: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    gap: 8,
+  },
+  logoPickerText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
 });
 
 export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true }: JobFormModalProps) {
@@ -1419,6 +1481,37 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         },
       };
     });
+  };
+
+  const pickCompanyLogo = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permisos necesarios',
+          'Se necesitan permisos para acceder a la galería de fotos'
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+        base64: false,
+      });
+
+      if (!result.canceled && result.assets?.[0]) {
+        updateNestedData('billing', 'userData', {
+          ...formData.billing?.userData,
+          logoUrl: result.assets[0].uri
+        });
+      }
+    } catch (error) {
+      console.error('Error picking logo:', error);
+      Alert.alert('Error', 'Error al seleccionar la imagen');
+    }
   };
 
   const detectCurrentLocation = async () => {
@@ -2267,6 +2360,51 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   placeholderTextColor={colors.textTertiary}
                 />
               </View>
+
+              {/* Company Logo Section */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>
+                  <IconSymbol size={16} name="photo" color={colors.primary} /> Logo de empresa (opcional)
+                </Text>
+                <Text style={styles.labelDescription}>Añadir logo para incluir en reportes PDF</Text>
+                
+                {formData.billing?.userData?.logoUrl ? (
+                  <View style={styles.logoContainer}>
+                    <Image
+                      source={{ uri: formData.billing.userData.logoUrl }}
+                      style={styles.logoPreview}
+                      resizeMode="contain"
+                    />
+                    <View style={styles.logoActions}>
+                      <TouchableOpacity
+                        style={styles.logoActionButton}
+                        onPress={pickCompanyLogo}
+                      >
+                        <IconSymbol size={16} name="pencil" color={colors.primary} />
+                        <Text style={styles.logoActionText}>Cambiar</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.logoActionButton, styles.logoRemoveButton]}
+                        onPress={() => updateNestedData('billing', 'userData', {
+                          ...formData.billing?.userData,
+                          logoUrl: ''
+                        })}
+                      >
+                        <IconSymbol size={16} name="trash" color={colors.error} />
+                        <Text style={[styles.logoActionText, { color: colors.error }]}>Quitar</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.logoPickerButton}
+                    onPress={pickCompanyLogo}
+                  >
+                    <IconSymbol size={24} name="photo.badge.plus" color={colors.textSecondary} />
+                    <Text style={styles.logoPickerText}>Seleccionar logo</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </>
           ) : (
             <View style={styles.inputGroup}>
@@ -2466,21 +2604,110 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         return;
       }
       
-      // Si se está desactivando el AutoTimer, parar el timer activo si existe
-      if (!value && editingJob) {
+      // Si se está ACTIVANDO el AutoTimer, verificar si otro trabajo ya lo tiene activado
+      if (value && editingJob) {
         try {
-          const activeSession = await JobService.getActiveSession();
-          if (activeSession && activeSession.jobId === editingJob.id) {
-            console.log('🛑 JobFormModal: Stopping active timer because AutoTimer was disabled');
-            await JobService.clearActiveSession();
-          }
+          const allJobs = await JobService.getJobs();
+          const jobWithAutoTimer = allJobs.find(job => 
+            job.id !== editingJob.id && job.autoTimer?.enabled
+          );
           
-          // También cancelar cualquier AutoTimer activo para este trabajo
-          const autoTimerService = AutoTimerService.getInstance();
-          await autoTimerService.cancelPendingAction();
+          if (jobWithAutoTimer) {
+            Alert.alert(
+              t('job_form.auto_timer.only_one_active'),
+              t('job_form.auto_timer.only_one_active_message', { jobName: jobWithAutoTimer.name }),
+              [
+                { text: t('common.cancel'), style: 'cancel' },
+                { 
+                  text: t('job_form.auto_timer.deactivate_other'), 
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      // Primero, parar cualquier timer activo del otro trabajo
+                      const activeSession = await JobService.getActiveSession();
+                      if (activeSession && activeSession.jobId === jobWithAutoTimer.id) {
+                        console.log('🛑 JobFormModal: Stopping active timer for other job because AutoTimer is being switched');
+                        await JobService.clearActiveSession();
+                      }
+                      
+                      // También cancelar cualquier AutoTimer activo para el otro trabajo
+                      const autoTimerService = AutoTimerService.getInstance();
+                      await autoTimerService.cancelPendingAction();
+                      
+                      // Detener el servicio AutoTimer
+                      autoTimerService.stop();
+                      
+                      // Poner el sistema en modo manual
+                      await autoTimerService.setManualMode();
+                      
+                      // Desactivar el AutoTimer del otro trabajo
+                      const updatedOtherJob = {
+                        ...jobWithAutoTimer,
+                        autoTimer: {
+                          enabled: false,
+                          geofenceRadius: jobWithAutoTimer.autoTimer?.geofenceRadius || 100,
+                          delayStart: jobWithAutoTimer.autoTimer?.delayStart || 2,
+                          delayStop: jobWithAutoTimer.autoTimer?.delayStop || 2,
+                          notifications: jobWithAutoTimer.autoTimer?.notifications !== false
+                        }
+                      };
+                      await JobService.updateJob(jobWithAutoTimer.id, updatedOtherJob);
+                      console.log(`🔄 AutoTimer desactivado para: ${jobWithAutoTimer.name}`);
+                      
+                      // Activar el AutoTimer para el trabajo actual
+                      updateNestedData('autoTimer', 'enabled', true);
+                    } catch (error) {
+                      console.error('Error switching AutoTimer between jobs:', error);
+                    }
+                  }
+                }
+              ]
+            );
+            return;
+          }
         } catch (error) {
-          console.error('Error stopping timer when disabling AutoTimer:', error);
+          console.error('Error checking for other jobs with AutoTimer:', error);
         }
+      }
+      
+      // Si se está desactivando el AutoTimer, mostrar confirmación
+      if (!value && editingJob) {
+        Alert.alert(
+          t('timer.auto_timer.manual_override'),
+          t('timer.auto_timer.manual_override_message'),
+          [
+            { text: t('common.cancel'), style: 'cancel' },
+            { 
+              text: t('timer.stop'), 
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  const activeSession = await JobService.getActiveSession();
+                  if (activeSession && activeSession.jobId === editingJob.id) {
+                    console.log('🛑 JobFormModal: Stopping active timer because AutoTimer was disabled');
+                    await JobService.clearActiveSession();
+                  }
+                  
+                  // También cancelar cualquier AutoTimer activo para este trabajo
+                  const autoTimerService = AutoTimerService.getInstance();
+                  await autoTimerService.cancelPendingAction();
+                  
+                  // Detener el servicio AutoTimer
+                  autoTimerService.stop();
+                  
+                  // Poner el sistema en modo manual
+                  await autoTimerService.setManualMode();
+                  
+                  // Desactivar completamente el AutoTimer
+                  updateNestedData('autoTimer', 'enabled', false);
+                } catch (error) {
+                  console.error('Error stopping timer when disabling AutoTimer:', error);
+                }
+              }
+            }
+          ]
+        );
+        return;
       }
       
       updateNestedData('autoTimer', 'enabled', value);

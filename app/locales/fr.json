@@ -310,7 +310,29 @@
     "no_salary_config": "Aucune configuration salariale",
     "no_salary_config_desc": "Activez la configuration salariale dans votre travail pour inclure les calculs automatiques",
     "activate_salary_config": "Activer la configuration salariale",
-    "configure_amounts_message": "Configurez les montants pour voir le total"
+    "configure_amounts_message": "Configurez les montants pour voir le total",
+    "pdf_title": "Rapport de Travail",
+    "analysis_date": "Date d'analyse",
+    "invoice_title": "FACTURE",
+    "provider_data": "DONNÉES DU FOURNISSEUR",
+    "summary": "RÉSUMÉ",
+    "banking_details": "DÉTAILS BANCAIRES",
+    "account": "Compte",
+    "bank": "Banque",
+    "generated_on": "Généré le",
+    "salary_calculation": "CALCUL SALARIAL",
+    "calculation_details": "DÉTAILS DU CALCUL",
+    "rate": "Tarif",
+    "period": "Période",
+    "worked_hours": "Heures travaillées",
+    "worked_weeks": "Semaines travaillées",
+    "worked_months": "Mois travaillés",
+    "total_to_pay": "TOTAL À PAYER",
+    "note": "Note",
+    "salary_note": "Ce calcul est basé sur les heures enregistrées et la configuration salariale du travail.",
+    "per_worked_hours": "par heures travaillées",
+    "per_worked_weeks": "par semaines travaillées",
+    "proportional_month": "proportionnel au mois"
   },
   "calendar": {
     "title": "Mon Calendrier",
@@ -602,7 +624,10 @@
       "preview": "Aperçu : Démarrera après {{delayStart}} min au travail, s'arrêtera {{delayStop}} min après être parti",
       "address_required_title": "Adresse Requise",
       "address_required_message": "Pour activer le minuteur automatique, vous devez d'abord ajouter une adresse dans l'onglet 'De base'. L'adresse est nécessaire pour la détection automatique par localisation.",
-      "stopped_no_time": "Minuteur arrêté - aucun temps actif n'était en cours"
+      "stopped_no_time": "Minuteur arrêté - aucun temps actif n'était en cours",
+      "only_one_active": "Un seul AutoTimer actif",
+      "only_one_active_message": "L'emploi \"{{jobName}}\" a déjà l'AutoTimer activé. Un seul emploi peut avoir l'AutoTimer actif à la fois.",
+      "deactivate_other": "Désactiver l'autre et activer celui-ci"
     },
     "delete": {
       "title": "Supprimer l'Emploi",
@@ -883,6 +908,7 @@
       "cancel": "Annuler",
       "continue": "Continuer"
     },
+    "cancellation_text": "Vous pouvez annuler votre abonnement à tout moment",
     "duration": "Abonnement de 3 mois",
     "active": {
       "account_status": {

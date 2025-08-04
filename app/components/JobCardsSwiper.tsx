@@ -196,7 +196,10 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                             </View>
                           )}
                         </View>
-                        {showAutoTimer && onAutoTimerToggle && (
+                        {showAutoTimer && onAutoTimerToggle && (() => {
+                          const hasAnyAutoTimer = jobs.some(j => j.autoTimer?.enabled);
+                          return hasAnyAutoTimer ? job.autoTimer?.enabled : true;
+                        })() && (
                             <View style={styles.autoTimerContainer}>
                               <Text style={styles.autoTimerLabel}>
                                 {t('maps.auto_timer')}
@@ -204,19 +207,29 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                               <Switch
                                 value={job.autoTimer?.enabled || false}
                                 onValueChange={(value) => {
-                                  // Verificar suscripción primero
+                                  // Si está activado, no permitir desactivar (switch presionado)
+                                  if (job.autoTimer?.enabled) {
+                                    return;
+                                  }
+                                  
+                                  // Solo permitir activar si no está ya activado
+                                  if (!value) {
+                                    return;
+                                  }
+                                  
+                                  // Verificar suscripción al activar
                                   if (value && !isSubscribed) {
                                     // Mostrar modal de suscripción
                                     setShowPremiumModal(true);
                                     return;
                                   }
                                   
-                                  // Verificar si tiene dirección
+                                  // Verificar si tiene dirección al activar
                                   const hasAddress = job.address?.trim() || job.street?.trim() || job.city?.trim() || job.postalCode?.trim();
                                   // Verificar si tiene ubicación/coordenadas
                                   const hasLocation = job.location?.latitude && job.location?.longitude;
                                   
-                                  if (!hasAddress && value) {
+                                  if (!hasAddress) {
                                     if (hasLocation) {
                                       // Si no tiene dirección pero sí coordenadas, navegar al mapa y centrar en el trabajo
                                       if (onAction) {
@@ -229,15 +242,15 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                                       }
                                     }
                                   } else {
-                                    // Si tiene dirección o quiere desactivar, cambiar estado normal
+                                    // Si tiene dirección, activar normalmente
                                     onAutoTimerToggle(job, value);
                                   }
                                 }}
                                 trackColor={{ 
                                   false: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)', 
-                                  true: colors.success + '40' 
+                                  true: 'rgba(255, 215, 0, 0.4)'
                                 }}
-                                thumbColor={job.autoTimer?.enabled ? colors.success : (isDark ? '#f4f3f4' : '#f4f3f4')}
+                                thumbColor={job.autoTimer?.enabled ? 'rgba(255, 215, 0, 0.8)' : (isDark ? '#f4f3f4' : '#f4f3f4')}
                                 style={styles.autoTimerSwitch}
                               />
                             </View>

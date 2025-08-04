@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
   Dimensions,
   Platform,
+  Modal,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -27,6 +29,8 @@ import Animated, {
   interpolate,
   runOnJS,
 } from 'react-native-reanimated';
+import PrivacyPolicyScreen from './PrivacyPolicyScreen';
+import TermsOfServiceScreen from './TermsOfServiceScreen';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -37,6 +41,8 @@ export default function SubscriptionScreen() {
   const { t } = useLanguage();
   const { isSubscribed, isLoading, offerings, customerInfo, purchaseSubscription, restorePurchases, checkSubscriptionStatus } = useSubscription();
   const [purchasing, setPurchasing] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
   
   // Animation values
   const fadeInValue = useSharedValue(0);
@@ -126,6 +132,18 @@ export default function SubscriptionScreen() {
     }
   };
 
+  const openEmail = () => {
+    Linking.openURL('mailto:info@lweb.ch?subject=WorkTrack Support');
+  };
+
+  const openTerms = () => {
+    setShowTermsOfService(true);
+  };
+
+  const openPrivacy = () => {
+    setShowPrivacyPolicy(true);
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -205,6 +223,7 @@ export default function SubscriptionScreen() {
                     />
                   ))}
                 </View>
+                
               </View>
             </LinearGradient>
           </Animated.View>
@@ -223,9 +242,11 @@ export default function SubscriptionScreen() {
                   end={{ x: 1, y: 1 }}
                 />
                 <View style={[styles.cardHeader, { borderBottomColor: colors.separator }]}>
+                  
                   <View style={[styles.cardIconContainer, { backgroundColor: colors.success + '20' }]}>
                     <IconSymbol size={22} name="checkmark.circle.fill" color={colors.success} />
                   </View>
+                  
                   <Text style={[styles.cardHeaderTitle, { color: colors.text }]}>{t('subscription.active.account_status.title')}</Text>
                 </View>
                 <View style={styles.cardContent}>
@@ -285,6 +306,9 @@ export default function SubscriptionScreen() {
                     <Text style={[styles.cardHeaderTitle, { color: colors.text }]}>{t('subscription.active.subscriptions.title')}</Text>
                   </View>
                   <View style={styles.cardContent}>
+                       <Text style={[styles.cancellationText, { color: colors.textSecondary }]}>
+              {t('subscription.cancellation_text')}
+            </Text>
                     {Object.entries(customerInfo.activeSubscriptions).map(([key, productId]) => (
                       <View key={key} style={styles.subscriptionItem}>
                         <View style={styles.subscriptionInfo}>
@@ -293,10 +317,14 @@ export default function SubscriptionScreen() {
                         </View>
                         <View style={[styles.subscriptionBadge, { backgroundColor: colors.success + '20' }]}>
                           <Text style={[styles.subscriptionBadgeText, { color: colors.success }]}>{t('subscription.active.subscriptions.status_active')}</Text>
+                          
                         </View>
+                        
                       </View>
+                      
                     ))}
                   </View>
+                  
                 </View>
               )}
 
@@ -409,52 +437,24 @@ export default function SubscriptionScreen() {
           </Text>
         </BlurView>
 
-        {/* Features Section */}
-        <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.featuresCard}>
+        {/* Cancellation Info */}
+        <BlurView intensity={85} tint={isDark ? "dark" : "light"} style={styles.cancellationContainer}>
           <LinearGradient
             colors={isDark 
-              ? ['rgba(99, 102, 241, 0.08)', 'rgba(139, 92, 246, 0.06)', 'transparent'] 
-              : ['rgba(99, 102, 241, 0.06)', 'rgba(139, 92, 246, 0.04)', 'transparent']
+              ? ['rgba(34, 197, 94, 0.08)', 'rgba(34, 197, 94, 0.04)', 'transparent'] 
+              : ['rgba(34, 197, 94, 0.06)', 'rgba(34, 197, 94, 0.03)', 'transparent']
             }
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 20 }}
+            style={styles.cancellationGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           />
-          <Text style={[styles.featuresTitle, { color: colors.text }]}>{t('subscription.features.title')}</Text>
-          
-          <View style={styles.premiumFeature}>
-            <View style={styles.featureIconContainer}>
-              <IconSymbol size={18} name="infinity" color={colors.primary} />
+          <View style={styles.cancellationContent}>
+            <View style={[styles.cancellationIconContainer, { backgroundColor: colors.success + '20' }]}>
+              <IconSymbol size={16} name="checkmark.shield.fill" color={colors.success} />
             </View>
-            <Text style={[styles.featureText, { color: colors.text }]}>{t('subscription.features.unlimited_access')}</Text>
-          </View>
-          
-          <View style={styles.premiumFeature}>
-            <View style={styles.featureIconContainer}>
-              <IconSymbol size={18} name="chart.bar.fill" color={colors.primary} />
-            </View>
-            <Text style={[styles.featureText, { color: colors.text }]}>{t('subscription.features.advanced_reports')}</Text>
-          </View>
-          
-          <View style={styles.premiumFeature}>
-            <View style={styles.featureIconContainer}>
-              <IconSymbol size={18} name="square.and.arrow.up.fill" color={colors.primary} />
-            </View>
-            <Text style={[styles.featureText, { color: colors.text }]}>{t('subscription.features.data_export')}</Text>
-          </View>
-          
-          <View style={styles.premiumFeature}>
-            <View style={styles.featureIconContainer}>
-              <IconSymbol size={18} name="eye.slash.fill" color={colors.primary} />
-            </View>
-            <Text style={[styles.featureText, { color: colors.text }]}>{t('subscription.features.no_ads')}</Text>
-          </View>
-          
-          <View style={styles.premiumFeature}>
-            <View style={styles.featureIconContainer}>
-              <IconSymbol size={18} name="headphones" color={colors.primary} />
-            </View>
-            <Text style={[styles.featureText, { color: colors.text }]}>{t('subscription.features.priority_support')}</Text>
+            <Text style={[styles.cancellationText, { color: colors.textSecondary }]}>
+              {t('subscription.cancellation_text')}
+            </Text>
           </View>
         </BlurView>
 
@@ -538,6 +538,39 @@ export default function SubscriptionScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Footer Links */}
+        <View style={styles.footerLinksContainer}>
+          <BlurView 
+            intensity={85} 
+            tint={isDark ? "dark" : "light"} 
+            style={[styles.footerLinksBackground, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }]}
+          >
+            <View style={styles.footerLinks}>
+              <TouchableOpacity style={styles.footerLink} onPress={openPrivacy}>
+                <Text style={[styles.footerLinkText, { color: colors.primary }]}>
+                  {t('help_support.legal.privacy')}
+                </Text>
+              </TouchableOpacity>
+              
+              <Text style={[styles.footerDivider, { color: colors.textTertiary }]}>•</Text>
+              
+              <TouchableOpacity style={styles.footerLink} onPress={openTerms}>
+                <Text style={[styles.footerLinkText, { color: colors.primary }]}>
+                  {t('help_support.legal.terms')}
+                </Text>
+              </TouchableOpacity>
+              
+              <Text style={[styles.footerDivider, { color: colors.textTertiary }]}>•</Text>
+              
+              <TouchableOpacity style={styles.footerLink} onPress={openEmail}>
+                <Text style={[styles.footerLinkText, { color: colors.primary }]}>
+                  {t('help_support.contact.email')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </BlurView>
+        </View>
+
           {purchasing && (
             <View style={[styles.purchasingOverlay, { backgroundColor: colors.background + 'E6' }]}>
               <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.purchasingCard}>
@@ -548,6 +581,26 @@ export default function SubscriptionScreen() {
           )}
         </Animated.View>
       </ScrollView>
+
+      {/* Privacy Policy Modal */}
+      <Modal
+        visible={showPrivacyPolicy}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => setShowPrivacyPolicy(false)}
+      >
+        <PrivacyPolicyScreen onClose={() => setShowPrivacyPolicy(false)} />
+      </Modal>
+      
+      {/* Terms of Service Modal */}
+      <Modal
+        visible={showTermsOfService}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => setShowTermsOfService(false)}
+      >
+        <TermsOfServiceScreen onClose={() => setShowTermsOfService(false)} />
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -687,7 +740,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   premiumTitle: {
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: '800',
     color: '#FFFFFF',
     marginBottom: 12,
@@ -1081,6 +1134,7 @@ const styles = StyleSheet.create({
   heroCard: {
     borderRadius: 28,
     margin: 20,
+        marginTop: -10,
     padding: 32,
     alignItems: 'center',
     overflow: 'hidden',
@@ -1108,6 +1162,7 @@ const styles = StyleSheet.create({
   },
   premiumIconContainer: {
     marginBottom: 28,
+
     position: 'relative',
     ...Platform.select({
       ios: {
@@ -1151,7 +1206,7 @@ const styles = StyleSheet.create({
     }),
   },
   heroTitle: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: '900',
     textAlign: 'center',
     marginBottom: 12,
@@ -1163,7 +1218,7 @@ const styles = StyleSheet.create({
     }),
   },
   heroSubtitle: {
-    fontSize: 20,
+    fontSize: 18,
     textAlign: 'center',
     lineHeight: 28,
     paddingHorizontal: 16,
@@ -1309,5 +1364,95 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(142, 142, 147, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',        
+  },
+  cancellationContainer: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.15)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#22C55E',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  cancellationGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 16,
+  },
+  cancellationContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  cancellationIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#22C55E',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  cancellationText: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500',
+    flex: 1,
+  },
+  footerLinksContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 5,
+    paddingTop: 15,
+    alignItems: 'center',
+    maxWidth: '95%',
+    alignSelf: 'center',
+  },
+  footerLinksBackground: {
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    overflow: 'hidden',
+  },
+  footerLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  footerLink: {
+    paddingHorizontal: 2,
+    paddingVertical: 4,
+  },
+  footerLinkText: {
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  footerDivider: {
+    fontSize: 12,
+    marginHorizontal: 1,
   },
 });

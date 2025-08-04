@@ -419,9 +419,7 @@ export default function WelcomeModal({ visible, onClose }: WelcomeModalProps) {
         
         {/* Header with Close Button */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <IconSymbol size={18} name="xmark" color={colors.textSecondary} />
-          </TouchableOpacity>
+
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
