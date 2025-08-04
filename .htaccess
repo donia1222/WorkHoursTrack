@@ -1,0 +1,14 @@
+# .htaccess - Proteger archivo de configuración
+# Ubicar en el mismo directorio que config.php
+
+# Denegar acceso directo a config.php
+<Files "config.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Proteger archivos de backup
+<FilesMatch "\.(backup|bak|old)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

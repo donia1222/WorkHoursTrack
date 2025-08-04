@@ -16,8 +16,10 @@ export interface ImageAnalysisResult {
 }
 
 export class GoogleVisionService {
-  // Proxy URL desde variables de entorno (debe definirse en .env)
-  private static readonly PROXY_URL = process.env.EXPO_PUBLIC_API_PROXY_URL!;
+  private static readonly API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
+  private static readonly VISION_BASE_URL = 'https://vision.googleapis.com/v1/images:annotate';
+  private static readonly GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
+  private static readonly GEMINI_VISION_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 
   // Helper method to detect if the message is asking for specific person analysis
   private static isSpecificPersonAnalysis(userMessage: string): boolean {
@@ -70,7 +72,9 @@ export class GoogleVisionService {
 
   static async analyzeImage(imageUri: string, features: string[] = ['TEXT_DETECTION', 'LABEL_DETECTION'], language: SupportedLanguage = 'en'): Promise<ImageAnalysisResult> {
     try {
-      // API key ahora está en el servidor, no necesitamos verificarla aquí
+      if (!this.API_KEY) {
+        throw new Error(VisionPrompts.getErrorMessage('apiKey', language));
+      }
 
       // Convertir imagen a base64
       const base64Image = await FileSystem.readAsStringAsync(imageUri, {
@@ -92,16 +96,12 @@ export class GoogleVisionService {
         ],
       };
 
-      const response = await fetch(this.PROXY_URL, {
+      const response = await fetch(`${this.VISION_BASE_URL}?key=${this.API_KEY}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          service: 'vision',
-          action: 'annotate',
-          data: requestBody
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -210,8 +210,12 @@ export class GoogleVisionService {
       console.log('🤖 [GEMINI] Iniciando getChatResponse...');
       console.log('📝 [GEMINI] Mensaje recibido:', message.substring(0, 200) + '...');
       
-      // API key ahora está en el servidor, no necesitamos verificarla aquí
-      console.log('✅ [GEMINI] Usando proxy seguro');
+      if (!this.API_KEY) {
+        console.error('❌ [GEMINI] API key no configurada');
+        throw new Error(VisionPrompts.getErrorMessage('apiKey', language));
+      }
+      
+      console.log('✅ [GEMINI] API key disponible');
 
       const requestBody = {
         contents: [
@@ -251,21 +255,16 @@ Usuario: ${message}`
         ]
       };
 
-      console.log('📤 [GEMINI] Enviando request a través del proxy...');
-      console.log('🔗 [GEMINI] Proxy URL:', this.PROXY_URL);
+      console.log('📤 [GEMINI] Enviando request a Gemini API...');
+      console.log('🔗 [GEMINI] URL:', this.GEMINI_BASE_URL);
       console.log('📦 [GEMINI] Request body:', JSON.stringify(requestBody, null, 2));
 
-      const response = await fetch(this.PROXY_URL, {
+      const response = await fetch(`${this.GEMINI_BASE_URL}?key=${this.API_KEY}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          service: 'gemini',
-          action: 'generateContent',
-          model: 'gemini-1.5-pro',
-          data: requestBody
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       console.log('📡 [GEMINI] Response status:', response.status);
@@ -310,7 +309,9 @@ Usuario: ${message}`
       console.log('📱 [GEMINI-VISION] Image URI:', imageUri);
       console.log('💬 [GEMINI-VISION] User message:', userMessage);
       
-      // API key ahora está en el servidor, no necesitamos verificarla aquí
+      if (!this.API_KEY) {
+        throw new Error(VisionPrompts.getErrorMessage('apiKey', language));
+      }
 
       // Convertir imagen a base64
       const base64Image = await FileSystem.readAsStringAsync(imageUri, {
@@ -345,17 +346,12 @@ Usuario: ${message}`
       };
 
       console.log('📤 [GEMINI-VISION] Enviando request...');
-      const response = await fetch(this.PROXY_URL, {
+      const response = await fetch(`${this.GEMINI_BASE_URL}?key=${this.API_KEY}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          service: 'gemini',
-          action: 'generateContent',
-          model: 'gemini-1.5-pro',
-          data: requestBody
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       console.log('📡 [GEMINI-VISION] Response status:', response.status);
@@ -394,7 +390,9 @@ Usuario: ${message}`
       console.log('📚 [CONTEXTO] Historial de conversación:', conversationHistory);
       console.log('🖼️ [CONTEXTO] Imagen actual:', currentImage ? 'Sí' : 'No');
       
-      // API key ahora está en el servidor, no necesitamos verificarla aquí
+      if (!this.API_KEY) {
+        throw new Error(VisionPrompts.getErrorMessage('apiKey', language));
+      }
 
       // Crear contexto de conversación usando VisionPrompts
       const contextPrompt = VisionPrompts.buildContextPrompt(
@@ -441,17 +439,12 @@ Usuario: ${message}`
       };
 
       console.log('📤 [CONTEXTO] Enviando request con contexto...');
-      const response = await fetch(this.PROXY_URL, {
+      const response = await fetch(`${this.GEMINI_BASE_URL}?key=${this.API_KEY}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          service: 'gemini',
-          action: 'generateContent',
-          model: 'gemini-1.5-pro',
-          data: requestBody
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -487,7 +480,9 @@ Usuario: ${message}`
       console.log('📋 [PDF] Document name:', documentName);
       console.log('💬 [PDF] User message:', userMessage);
       
-      // API key ahora está en el servidor, no necesitamos verificarla aquí
+      if (!this.API_KEY) {
+        throw new Error(VisionPrompts.getErrorMessage('apiKey', language));
+      }
 
       // Convertir PDF a base64
       const base64Document = await FileSystem.readAsStringAsync(documentUri, {
@@ -522,17 +517,12 @@ Usuario: ${message}`
       };
 
       console.log('📤 [PDF] Enviando request...');
-      const response = await fetch(this.PROXY_URL, {
+      const response = await fetch(`${this.GEMINI_BASE_URL}?key=${this.API_KEY}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          service: 'gemini',
-          action: 'generateContent',
-          model: 'gemini-1.5-pro',
-          data: requestBody
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       console.log('📡 [PDF] Response status:', response.status);
@@ -657,7 +647,9 @@ Si no hay texto legible, indícalo claramente.`;
     try {
       console.log('🤖 [INTERACTIVO] Iniciando análisis interactivo de horarios...');
       
-      // API key ahora está en el servidor, no necesitamos verificarla aquí
+      if (!this.API_KEY) {
+        throw new Error(VisionPrompts.getErrorMessage('apiKey', language));
+      }
 
       // Convertir imagen a base64
       const base64Image = await FileSystem.readAsStringAsync(imageUri, {
@@ -702,17 +694,12 @@ ${VisionPrompts.getPrompt('responseFormat', language)}`;
       };
 
       console.log('📤 [INTERACTIVO] Enviando request para detección de ambigüedades...');
-      const response = await fetch(this.PROXY_URL, {
+      const response = await fetch(`${this.GEMINI_VISION_BASE_URL}?key=${this.API_KEY}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          service: 'gemini',
-          action: 'generateContent',
-          model: 'gemini-2.0-flash-exp',
-          data: requestBody
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {

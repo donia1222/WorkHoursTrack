@@ -2610,67 +2610,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 </TouchableOpacity>
               </View>
             </View>
-<View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('job_form.auto_timer.delay_start')}</Text>
-              <Text style={styles.labelDescription}>{t('job_form.auto_timer.delay_start_desc')}</Text>
-              <View style={styles.counterContainer}>
-                <TouchableOpacity 
-                  style={styles.counterButton}
-                  onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStart || 1;
-                    const newValue = Math.max(1, currentValue - 1);
-                    updateNestedData('autoTimer', 'delayStart', newValue);
-                  }}
-                >
-                  <IconSymbol size={20} name="minus" color={colors.primary} />
-                </TouchableOpacity>
-                <View style={styles.counterValue}>
-                  <Text style={styles.counterText}>{formData.autoTimer?.delayStart || 1}</Text>
-                  <Text style={styles.counterUnit}>min</Text>
-                </View>
-                <TouchableOpacity 
-                  style={styles.counterButton}
-                  onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStart || 1;
-                    const newValue = Math.min(10, currentValue + 1);
-                    updateNestedData('autoTimer', 'delayStart', newValue);
-                  }}
-                >
-                  <IconSymbol size={20} name="plus" color={colors.primary} />
-                </TouchableOpacity>
-              </View>
-            </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('job_form.auto_timer.delay_stop')}</Text>
-              <Text style={styles.labelDescription}>{t('job_form.auto_timer.delay_stop_desc')}</Text>
-              <View style={styles.counterContainer}>
-                <TouchableOpacity 
-                  style={styles.counterButton}
-                  onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStop || 1;
-                    const newValue = Math.max(1, currentValue - 1);
-                    updateNestedData('autoTimer', 'delayStop', newValue);
-                  }}
-                >
-                  <IconSymbol size={20} name="minus" color={colors.primary} />
-                </TouchableOpacity>
-                <View style={styles.counterValue}>
-                  <Text style={styles.counterText}>{formData.autoTimer?.delayStop || 1}</Text>
-                  <Text style={styles.counterUnit}>min</Text>
-                </View>
-                <TouchableOpacity 
-                  style={styles.counterButton}
-                  onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStop || 1;
-                    const newValue = Math.min(10, currentValue + 1);
-                    updateNestedData('autoTimer', 'delayStop', newValue);
-                  }}
-                >
-                  <IconSymbol size={20} name="plus" color={colors.primary} />
-                </TouchableOpacity>
-              </View>
-            </View>
+
+
 
             
             <View style={styles.inputGroup}>
