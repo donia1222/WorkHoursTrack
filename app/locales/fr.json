@@ -220,12 +220,14 @@
     "total_hours": "Total des heures",
     "session_added_successfully": "Temps ajouté avec succès au jour",
     "session_saved_successfully": "Session de travail sauvegardée avec succès",
+    "break_time_minutes": "Temps de pause (minutes)",
     "view_reports": "Voir les Rapports",
     "save_error": "Impossible de sauvegarder la session",
     "load_jobs_error": "Impossible de charger les emplois",
     "auto_timer": {
       "entering": "Arrivée au travail...",
       "will_start": "Le minuteur démarrera dans {{minutes}} minutes",
+      "starting_in": "Démarre dans {{seconds}}s",
       "countdown_entering": "Le minuteur automatique commencera à la fin du décompte",
       "started_auto": "Minuteur démarré automatiquement",
       "leaving": "Quitter le travail...",
@@ -234,6 +236,8 @@
       "stopped_auto": "Minuteur arrêté automatiquement - {{hours}}h enregistrées",
       "cancelled_start": "Démarrage automatique annulé",
       "cancelled_stop": "Arrêt automatique annulé",
+      "activation_alert": "AutoTimer activé. Le minuteur démarrera automatiquement quand vous entrerez dans la zone de travail.",
+      "activation_title": "Minuteur Automatique",
       "manual_override": "Contrôle manuel activé",
       "cancelled": "Annulé - appuyez sur play pour réactiver",
       "available_title": "Minuteur Automatique Disponible",
@@ -244,8 +248,8 @@
       "disabled_message": "Minuteur automatique désactivé pour \"{{jobName}}\"",
       "disable_error": "Impossible de désactiver le minuteur automatique",
       "background_notice": "Le minuteur automatique ne fonctionne que lorsque l'app est ouverte en arrière-plan. Si vous fermez complètement l'app, il arrêtera de compter pour des raisons de confidentialité.",
-      "privacy_notice": "Pour des raisons de confidentialité, l'auto timer ne fonctionne pas quand l'app est fermée. Gardez l'app en arrière-plan pour un fonctionnement correct.",
-      "privacy_notice_short": "Gardez l'app active en arrière-plan",
+      "privacy_notice": "Le minuteur continue de compter même lorsque l'app est fermée, mais la détection de localisation nécessite que l'app soit en arrière-plan. Nous recommandons de la garder active ou de la rouvrir pour qu'elle s'arrête automatiquement en quittant le travail.",
+      "privacy_notice_short": "Le minuteur continue - gardez l'app active pour la détection automatique",
       "dismiss_notice": "Compris",
       "dismiss_privacy_notice": "Ne plus afficher"
     }
@@ -897,6 +901,10 @@
     "restore_success": {
       "title": "Achats Restaurés",
       "message": "Vos achats ont été restaurés avec succès."
+    },
+    "restore_no_purchases": {
+      "title": "Aucun abonnement actif",
+      "message": "Aucun abonnement actif trouvé à restaurer. Si vous pensez qu'il s'agit d'une erreur, veuillez contacter le support."
     },
     "errors": {
       "purchase_failed": "Impossible de terminer l'abonnement. Veuillez réessayer.",

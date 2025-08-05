@@ -228,6 +228,7 @@
     "total_hours": "Total del día",
     "session_added_successfully": "Tiempo agregado exitosamente al día",
     "session_saved_successfully": "Sesión de trabajo guardada exitosamente",
+    "break_time_minutes": "Tiempo de descanso (minutos)",
     "view_reports": "Ver Reportes",
     "recent_sessions": "Últimos registros",
     "view_stats": "Ver Estadísticas", 
@@ -239,6 +240,7 @@
       "inactive": "Sin actividad automática",
       "entering": "Llegando al trabajo...",
       "will_start": "Timer iniciará en {{minutes}} minutos",
+      "starting_in": "Iniciando en {{seconds}}s",
       "countdown_entering": "El timer automático comenzará cuando termine el conteo",
       "started_auto": "Timer iniciado automáticamente",
       "leaving": "Saliendo del trabajo...",
@@ -247,6 +249,8 @@
       "stopped_auto": "Timer parado automáticamente - {{hours}}h registradas",
       "cancelled_start": "Inicio automático cancelado",
       "cancelled_stop": "Parada automática cancelada",
+      "activation_alert": "AutoTimer activado. El timer comenzará automáticamente cuando entres al área de trabajo.",
+      "activation_title": "Timer Automático",
       "manual_override": "Control manual activado",
       "cancelled": "Cancelado - presiona play para reactivar",
       "manual_override_message": "El timer automático está activo. ¿Quieres detenerlo manualmente? Esto desactivará el modo automático.",
@@ -258,8 +262,8 @@
       "disabled_message": "Timer automático desactivado para \"{{jobName}}\"",
       "disable_error": "No se pudo desactivar el timer automático",
       "background_notice": "El timer automático solo funciona con la app abierta en segundo plano. Si cierras la app completamente, dejará de contar por motivos de privacidad.",
-      "privacy_notice": "Por motivos de privacidad, el auto timer no funciona con la app cerrada. Mantén la app en segundo plano para el funcionamiento correcto.",
-      "privacy_notice_short": "Mantén la app activa en segundo plano",
+      "privacy_notice": "El timer sigue contando aunque la app esté cerrada, pero la detección de ubicación necesita que la app esté en segundo plano. Se recomienda mantenerla activa o reabrirla para que pare automáticamente al salir del trabajo.",
+      "privacy_notice_short": "El timer sigue contando - mantén la app activa para detección automática",
       "dismiss_notice": "Entendido",
       "dismiss_privacy_notice": "No mostrar más"
     }
@@ -1034,6 +1038,10 @@
     "restore_success": {
       "title": "Compras Restauradas",
       "message": "Tus compras han sido restauradas exitosamente."
+    },
+    "restore_no_purchases": {
+      "title": "No hay suscripciones activas",
+      "message": "No se encontraron suscripciones activas para restaurar. Si crees que esto es un error, contacta con soporte."
     },
     "errors": {
       "purchase_failed": "No se pudo completar la suscripción. Inténtalo de nuevo.",

@@ -4,9 +4,11 @@ import GeofenceService, { GeofenceEvent } from './GeofenceService';
 import NotificationService from './NotificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, AppStateStatus } from 'react-native';
+import * as Location from 'expo-location';
 
 export type AutoTimerState = 
   | 'inactive'     // Not monitoring or no jobs nearby
+  | 'pre-start'    // 5 second countdown before starting timer
   | 'entering'     // Inside geofence, waiting to start timer
   | 'active'       // Timer is running automatically
   | 'leaving'      // Outside geofence, waiting to stop timer
@@ -39,6 +41,7 @@ class AutoTimerService {
   private currentJobId: string | null = null;
   private jobs: Job[] = [];
   private statusCallbacks: ((status: AutoTimerStatus) => void)[] = [];
+  private alertCallbacks: ((showAlert: boolean) => void)[] = [];
   private isEnabled = false;
   private statusUpdateInterval: NodeJS.Timeout | null = null;
   private pausedDelayedAction: DelayedAction | null = null; // To remember paused countdown
@@ -51,6 +54,7 @@ class AutoTimerService {
     this.bindGeofenceEvents();
     this.setupAppStateListener();
   }
+
 
   static getInstance(): AutoTimerService {
     if (!AutoTimerService.instance) {
@@ -120,6 +124,30 @@ class AutoTimerService {
         this.notifyStatusChange();
         console.log('🟢 Auto timer service started successfully');
         console.log(`📊 Current status: ${this.currentState}, Job: ${this.currentJobId}, Enabled: ${this.isEnabled}`);
+        
+        // Check if user is inside any geofence when starting
+        const userLocation = await this.getCurrentLocation();
+        if (userLocation) {
+          const isInsideAnyGeofence = autoTimerJobs.some(job => {
+            if (!job.location?.latitude || !job.location?.longitude) return false;
+            const distance = this.calculateDistance(
+              userLocation.coords.latitude,
+              userLocation.coords.longitude,
+              job.location.latitude,
+              job.location.longitude
+            );
+            const radius = job.autoTimer?.geofenceRadius || 100;
+            return distance <= radius;
+          });
+          
+          // Show alert only if NOT inside any geofence
+          if (!isInsideAnyGeofence) {
+            setTimeout(() => {
+              // Notify UI components to show alert
+              this.notifyAlertCallbacks(true);
+            }, 500);
+          }
+        }
       }
       
       return success;
@@ -404,12 +432,63 @@ class AutoTimerService {
   }
 
   /**
+   * Get current location
+   */
+  private async getCurrentLocation(): Promise<Location.LocationObject | null> {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        return null;
+      }
+      
+      return await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+    } catch (error) {
+      console.error('Error getting current location:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Calculate distance between two coordinates in meters
+   */
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) *
+      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+  }
+
+  /**
    * Get elapsed time for active auto timer (includes time when app was closed)
    */
-  getElapsedTime(): number {
+  async getElapsedTime(): Promise<number> {
     if (this.currentState === 'active' && this.autoTimerStartTime) {
-      const elapsedMs = Date.now() - this.autoTimerStartTime.getTime();
-      return Math.floor(elapsedMs / 1000);
+      // Check if the session is paused
+      const activeSession = await JobService.getActiveSession();
+      if (activeSession) {
+        const isPaused = (activeSession as any).isPaused || false;
+        const pausedElapsedTime = (activeSession as any).pausedElapsedTime || 0;
+        
+        if (isPaused && pausedElapsedTime > 0) {
+          // Return the paused elapsed time
+          return pausedElapsedTime;
+        } else {
+          // Calculate current elapsed time
+          const sessionStart = new Date(activeSession.startTime);
+          const elapsedMs = Date.now() - sessionStart.getTime();
+          return Math.floor(elapsedMs / 1000);
+        }
+      }
     }
     return 0;
   }
@@ -576,6 +655,36 @@ class AutoTimerService {
     if (index > -1) {
       this.statusCallbacks.splice(index, 1);
     }
+  }
+
+  /**
+   * Add alert listener
+   */
+  addAlertListener(callback: (showAlert: boolean) => void): void {
+    this.alertCallbacks.push(callback);
+  }
+
+  /**
+   * Remove alert listener
+   */
+  removeAlertListener(callback: (showAlert: boolean) => void): void {
+    const index = this.alertCallbacks.indexOf(callback);
+    if (index > -1) {
+      this.alertCallbacks.splice(index, 1);
+    }
+  }
+
+  /**
+   * Notify alert callbacks
+   */
+  private notifyAlertCallbacks(showAlert: boolean): void {
+    this.alertCallbacks.forEach(callback => {
+      try {
+        callback(showAlert);
+      } catch (error) {
+        console.error('Error in alert callback:', error);
+      }
+    });
   }
 
   /**

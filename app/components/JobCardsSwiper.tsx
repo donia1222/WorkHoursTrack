@@ -9,6 +9,7 @@ import {
   Animated,
   Modal,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import ReanimatedAnimated, { 
@@ -27,6 +28,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { Job } from '../types/WorkTypes';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { useSubscription } from '../hooks/useSubscription';
+import AutoTimerService from '../services/AutoTimerService';
 
 
 // JobCardsSwiper Props Interface
@@ -51,6 +53,20 @@ const EXPANDED_CARD_HEIGHT = 320;
 interface GestureContext extends Record<string, unknown> {
   startY: number;
 }
+
+// Función para calcular distancia entre dos coordenadas
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371e3; // Radio de la Tierra en metros
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) *
+    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
 
 export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
   jobs,
@@ -206,10 +222,44 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                               </Text>
                               <Switch
                                 value={job.autoTimer?.enabled || false}
-                                onValueChange={(value) => {
-                                  // Si está activado, no permitir desactivar (switch presionado)
-                                  if (job.autoTimer?.enabled) {
-                                    return;
+                                onValueChange={async (value) => {
+                                  // Si está tratando de desactivar
+                                  if (!value && job.autoTimer?.enabled) {
+                                    // Verificar si hay timer activo para este trabajo
+                                    const isActive = isJobCurrentlyActive(job);
+                                    
+                                    if (isActive) {
+                                      // Mostrar alerta similar a TimerScreen
+                                      Alert.alert(
+                                        t('timer.auto_timer.manual_override'),
+                                        t('timer.auto_timer.manual_override_message'),
+                                        [
+                                          { text: t('common.cancel'), style: 'cancel' },
+                                          { 
+                                            text: t('timer.stop'), 
+                                            style: 'destructive',
+                                            onPress: async () => {
+                                              // Parar el timer si está activo
+                                              if (onTimerToggle) {
+                                                onTimerToggle(job);
+                                              }
+                                              
+                                              // Desactivar AutoTimer
+                                              await onAutoTimerToggle(job, false);
+                                              
+                                              // Poner AutoTimer en modo manual
+                                              const autoTimerService = AutoTimerService.getInstance();
+                                              await autoTimerService.setManualMode();
+                                            }
+                                          }
+                                        ]
+                                      );
+                                      return;
+                                    } else {
+                                      // Si no hay timer activo, solo desactivar AutoTimer
+                                      await onAutoTimerToggle(job, false);
+                                      return;
+                                    }
                                   }
                                   
                                   // Solo permitir activar si no está ya activado
@@ -519,7 +569,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     backgroundColor: colors.surfaces,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    height: '55%',
+    height: '63%',
     paddingTop: 8,
     paddingBottom: 20,
     shadowColor: '#000',

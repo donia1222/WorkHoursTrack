@@ -40,7 +40,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    marginBottom: 70,
+    marginBottom: 75,
   },
   header: {
     borderBottomWidth: 1,

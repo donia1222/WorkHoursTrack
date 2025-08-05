@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,9 @@ import {
   Modal,
   TouchableOpacity,
   Dimensions,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -28,7 +31,7 @@ interface TimerSuccessModalProps {
   hours: number;
   totalHours?: number;
   isUpdate?: boolean;
-  onConfirm: () => void;
+  onConfirm: (breakMinutes?: number) => void;
   onClose: () => void;
 }
 
@@ -45,10 +48,19 @@ export default function TimerSuccessModal({
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
   const { triggerHaptic } = useHapticFeedback();
+  const [breakMinutes, setBreakMinutes] = useState('');
   
   const scaleAnimation = useSharedValue(0);
   const checkmarkAnimation = useSharedValue(0);
   const contentOpacity = useSharedValue(0);
+  
+  // Calculate displayed hours based on break time
+  const displayedHours = breakMinutes ? 
+    Math.max(0, hours - (parseFloat(breakMinutes) / 60)) : 
+    hours;
+  const displayedTotalHours = totalHours && breakMinutes ? 
+    Math.max(0, totalHours - (parseFloat(breakMinutes) / 60)) : 
+    totalHours;
 
   useEffect(() => {
     if (visible) {
@@ -87,7 +99,7 @@ export default function TimerSuccessModal({
     
     // Animate out
     scaleAnimation.value = withSpring(0, { damping: 15 }, () => {
-      runOnJS(onConfirm)();
+      runOnJS(onConfirm)(breakMinutes ? parseFloat(breakMinutes) : undefined);
     });
   };
 
@@ -99,7 +111,10 @@ export default function TimerSuccessModal({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView 
+        style={styles.overlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
         <TouchableOpacity
           style={StyleSheet.absoluteFillObject}
           activeOpacity={1}
@@ -156,7 +171,7 @@ export default function TimerSuccessModal({
                     {isUpdate ? t('timer.session_hours') : t('timer.hours_worked')}
                   </Text>
                   <Text style={[styles.hoursValue, { color: '#007AFF' }]}>
-                    {hours.toFixed(2)}h
+                    {displayedHours.toFixed(2)}h
                   </Text>
                 </View>
                 
@@ -170,7 +185,7 @@ export default function TimerSuccessModal({
                         {t('timer.total_hours')}
                       </Text>
                       <Text style={[styles.hoursValue, { color: '#34C759' }]}>
-                        {totalHours.toFixed(2)}h
+                        {(displayedTotalHours || totalHours).toFixed(2)}h
                       </Text>
                     </View>
                   </>
@@ -183,6 +198,35 @@ export default function TimerSuccessModal({
                   : t('timer.session_saved_successfully')
                 }
               </Text>
+              
+              {/* Break time input - only show if session was more than 30 minutes */}
+              {hours > 0.5 && (
+                <View style={[styles.breakTimeContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)' }]}>
+                  <Text style={[styles.breakTimeLabel, { color: isDark ? '#FFFFFF' : '#000000', opacity: 0.7 }]}>
+                    {t('timer.break_time_minutes')}
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.breakTimeInput,
+                      {
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                        color: isDark ? '#FFFFFF' : '#000000',
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+                      }
+                    ]}
+                    value={breakMinutes}
+                    onChangeText={(text) => {
+                      // Only allow numbers
+                      const numericText = text.replace(/[^0-9]/g, '');
+                      setBreakMinutes(numericText);
+                    }}
+                    placeholder="0"
+                    placeholderTextColor={isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)'}
+                    keyboardType="numeric"
+                    maxLength={3}
+                  />
+                </View>
+              )}
             </Animated.View>
             
             {/* Actions */}
@@ -208,7 +252,7 @@ export default function TimerSuccessModal({
             </View>
           </BlurView>
         </Animated.View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -307,6 +351,30 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textAlign: 'center',
     lineHeight: 22,
+  },
+  breakTimeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 12,
+  },
+  breakTimeLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  breakTimeInput: {
+    width: 80,
+    height: 40,
+    borderRadius: 8,
+    borderWidth: 1,
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+    paddingHorizontal: 8,
   },
   actions: {
     width: '100%',

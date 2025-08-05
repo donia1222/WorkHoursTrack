@@ -15,6 +15,13 @@ import {
   Linking,
   AppState,
 } from 'react-native';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring, 
+  withTiming,
+  Easing
+} from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
@@ -968,6 +975,18 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [previousAutoSchedule, setPreviousAutoSchedule] = useState<boolean | undefined>(undefined);
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(isLocationEnabled);
+
+  // Animation values
+  const modalScale = useSharedValue(0);
+  const modalOpacity = useSharedValue(0);
+
+  // Animated style
+  const animatedModalStyle = useAnimatedStyle(() => {
+    return {
+      opacity: modalOpacity.value,
+      transform: [{ scale: modalScale.value }],
+    };
+  });
 
   const [formData, setFormData] = useState<Partial<Job>>({
     name: '',
@@ -1975,7 +1994,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               ))}
             </View>
             <Text style={styles.helperText}>
-              Toca: marcar/desmarcar día. Mantén presionado: editar horario.
+              Tap: Check/Uncheck day. Tap and hold: Edit schedule
             </Text>
           </View>
 
@@ -2787,19 +2806,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 </View>
               </View>
               
-              {/* Privacy Notice */}
-              <View style={styles.inputGroup}>
-                <Text style={[styles.labelDescription, { 
-                  textAlign: 'center', 
-                  fontSize: 11, 
-                  lineHeight: 14, 
-                  color: colors.textSecondary,
-                  fontStyle: 'italic',
-                  marginTop: 8
-                }]}>
-                  {t('timer.auto_timer.privacy_notice')}
-                </Text>
-              </View>
+          
             </>
           )}
 
@@ -3023,7 +3030,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     : baseTabs;
 
   return (
-    <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
       {isFirstTimeUser && !editingJob ? (
         // Show simplified form for first time users
         renderSimplifiedForm()

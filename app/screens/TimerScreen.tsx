@@ -25,7 +25,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import NoJobsWarning from '../components/NoJobsWarning';
 import JobFormModal from '../components/JobFormModal';
 import TimerSuccessModal from '../components/TimerSuccessModal';
-import { Job, WorkDay } from '../types/WorkTypes';
+import { Job, WorkDay, StoredActiveSession } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
 import { useBackNavigation, useNavigation } from '../context/NavigationContext';
@@ -45,11 +45,6 @@ interface ActiveSession {
   notes: string;
 }
 
-interface StoredActiveSession {
-  jobId: string;
-  startTime: string;
-  notes: string;
-}
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
@@ -1035,6 +1030,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         setElapsedTime(elapsed);
       }, 1000);
     }
+    // When paused, keep the elapsed time static (it's already set in pauseTimer)
     return () => clearInterval(interval);
   }, [isRunning, activeSession]);
 
@@ -1102,7 +1098,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       console.log('📱 TimerScreen loadActiveSession result:', sessionData ? 'found session' : 'no session');
       if (sessionData) {
         const isPaused = (sessionData as any).isPaused || false;
-        console.log('🔄 TimerScreen setting active session, isPaused:', isPaused, 'for job:', sessionData.jobId);
+        const pausedElapsedTime = (sessionData as any).pausedElapsedTime || 0;
+        console.log('🔄 TimerScreen setting active session, isPaused:', isPaused, 'pausedElapsedTime:', pausedElapsedTime, 'for job:', sessionData.jobId);
         
         setActiveSession({
           ...sessionData,
@@ -1112,12 +1109,15 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         setNotes(sessionData.notes || '');
         setIsRunning(!isPaused); // Si está pausado, no está corriendo
         
-        const now = new Date();
-        const elapsed = Math.floor((now.getTime() - new Date(sessionData.startTime).getTime()) / 1000);
-        setElapsedTime(elapsed);
-        
-        if (isPaused) {
-          console.log('⏸️ Timer cargado en estado pausado');
+        if (isPaused && pausedElapsedTime > 0) {
+          // If paused, show the paused elapsed time
+          setElapsedTime(pausedElapsedTime);
+          console.log('⏸️ Timer loaded in paused state with elapsed time:', pausedElapsedTime);
+        } else {
+          // If running, calculate current elapsed time
+          const now = new Date();
+          const elapsed = Math.floor((now.getTime() - new Date(sessionData.startTime).getTime()) / 1000);
+          setElapsedTime(elapsed);
         }
       }
     } catch (error) {
@@ -1204,12 +1204,65 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     }
   };
 
-  const pauseTimer = () => {
+  const pauseTimer = async () => {
     setIsRunning(false);
+    
+    // Save the paused state with accumulated time
+    if (activeSession) {
+      try {
+        const now = new Date();
+        const elapsed = Math.floor((now.getTime() - activeSession.startTime.getTime()) / 1000);
+        
+        const sessionForStorage = {
+          jobId: activeSession.jobId,
+          startTime: activeSession.startTime.toISOString(),
+          notes: activeSession.notes,
+          isPaused: true,
+          pausedElapsedTime: elapsed, // Save elapsed time at pause
+        };
+        
+        await JobService.saveActiveSession(sessionForStorage);
+        console.log(`⏸️ Timer paused with ${elapsed}s elapsed`);
+      } catch (error) {
+        console.error('Error pausing timer:', error);
+      }
+    }
   };
 
-  const resumeTimer = () => {
+  const resumeTimer = async () => {
     setIsRunning(true);
+    
+    // When resuming, adjust the start time to account for paused time
+    if (activeSession) {
+      try {
+        const sessionData = await JobService.getActiveSession();
+        const pausedElapsedTime = (sessionData as any).pausedElapsedTime || 0;
+        
+        // Calculate new start time by subtracting paused elapsed time from now
+        const now = new Date();
+        const adjustedStartTime = new Date(now.getTime() - (pausedElapsedTime * 1000));
+        
+        const sessionForStorage = {
+          jobId: activeSession.jobId,
+          startTime: adjustedStartTime.toISOString(),
+          notes: activeSession.notes,
+          isPaused: false,
+          pausedElapsedTime: 0, // Clear paused time
+        };
+        
+        await JobService.saveActiveSession(sessionForStorage);
+        
+        // Update local state with adjusted start time
+        setActiveSession({
+          ...activeSession,
+          startTime: adjustedStartTime,
+        });
+        
+        console.log(`▶️ Timer resumed from ${pausedElapsedTime}s`);
+      } catch (error) {
+        console.error('Error resuming timer:', error);
+      }
+    }
   };
 
   const stopTimer = async () => {
@@ -1490,7 +1543,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     return null;
   };
 
-  const handleSuccessModalConfirm = () => {
+  const handleSuccessModalConfirm = (breakMinutes?: number) => {
     setSuccessModalVisible(false);
     onNavigate('reports');
   };

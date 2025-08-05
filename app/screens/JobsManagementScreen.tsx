@@ -351,12 +351,18 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
   };
 
   const handleAddJob = () => {
-    // Verificar si está suscrito
-    if (!isSubscribed) {
+    const totalJobs = jobs.length;
+    console.log('🔍 JobsManagement: handleAddJob - isSubscribed:', isSubscribed, 'totalJobs:', totalJobs);
+    
+    // En versión gratuita: permitir solo 1 trabajo total
+    // Si no está suscrito y ya tiene 1 o más trabajos, mostrar modal premium
+    if (!isSubscribed && totalJobs >= 1) {
+      console.log('🚫 JobsManagement: Blocking job creation - not subscribed and already has jobs');
       setShowPremiumModal(true);
       return;
     }
     
+    console.log('✅ JobsManagement: Allowing job creation');
     setEditingJob(null);
     setShowAddModal(true);
   };

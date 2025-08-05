@@ -223,6 +223,7 @@
     "total_hours": "Gesamtstunden",
     "session_added_successfully": "Zeit erfolgreich zum Tag hinzugefügt",
     "session_saved_successfully": "Arbeitssitzung erfolgreich gespeichert",
+    "break_time_minutes": "Pausenzeit (Minuten)",
     "view_reports": "Berichte Anzeigen",
     "session_added_to_existing": "{{sessionHours}}h zum Tag hinzugefügt. Gesamt: {{totalHours}}h",
     "save_error": "Sitzung konnte nicht gespeichert werden",
@@ -230,6 +231,7 @@
     "auto_timer": {
       "entering": "Ankunft am Arbeitsplatz...",
       "will_start": "Timer startet in {{minutes}} Minuten",
+      "starting_in": "Startet in {{seconds}}s",
       "countdown_entering": "Der automatische Timer startet, wenn der Countdown endet",
       "started_auto": "Timer automatisch gestartet",
       "leaving": "Verlassen des Arbeitsplatzes...",
@@ -238,6 +240,8 @@
       "stopped_auto": "Timer automatisch gestoppt - {{hours}}h registriert",
       "cancelled_start": "Automatischer Start abgebrochen",
       "cancelled_stop": "Automatischer Stopp abgebrochen",
+      "activation_alert": "AutoTimer aktiviert. Der Timer startet automatisch, wenn Sie den Arbeitsbereich betreten.",
+      "activation_title": "Automatischer Timer",
       "manual_override": "Manuelle Steuerung aktiviert",
       "cancelled": "Abgebrochen - Play drücken zum Reaktivieren",
       "available_title": "Automatischer Timer Verfügbar",
@@ -248,8 +252,8 @@
       "disabled_message": "Automatischer Timer deaktiviert für \"{{jobName}}\"",
       "disable_error": "Automatischer Timer konnte nicht deaktiviert werden",
       "background_notice": "Der automatische Timer funktioniert nur, wenn die App im Hintergrund läuft. Wenn Sie die App vollständig schließen, stoppt die Zeitählung aus Datenschutzgründen.",
-      "privacy_notice": "Aus Datenschutzgründen funktioniert der Auto-Timer nicht, wenn die App geschlossen ist. Lassen Sie die App im Hintergrund für ordnungsgemäßen Betrieb.",
-      "privacy_notice_short": "App im Hintergrund aktiv halten",
+      "privacy_notice": "Der Timer läuft weiter, auch wenn die App geschlossen ist, aber die Standorterkennung benötigt die App im Hintergrund. Wir empfehlen, sie aktiv zu halten oder wieder zu öffnen, damit sie automatisch stoppt, wenn Sie die Arbeit verlassen.",
+      "privacy_notice_short": "Timer läuft weiter - App für automatische Erkennung aktiv halten",
       "dismiss_notice": "Verstanden",
       "dismiss_privacy_notice": "Nicht mehr anzeigen"
     }
@@ -923,6 +927,10 @@
     "restore_success": {
       "title": "Käufe Wiederhergestellt",
       "message": "Ihre Käufe wurden erfolgreich wiederhergestellt."
+    },
+    "restore_no_purchases": {
+      "title": "Keine aktiven Abonnements",
+      "message": "Keine aktiven Abonnements zum Wiederherstellen gefunden. Wenn Sie glauben, dass dies ein Fehler ist, kontaktieren Sie bitte den Support."
     },
     "errors": {
       "purchase_failed": "Abonnement konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",

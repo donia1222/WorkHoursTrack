@@ -220,12 +220,14 @@
     "total_hours": "Ore totali",
     "session_added_successfully": "Tempo aggiunto con successo al giorno",
     "session_saved_successfully": "Sessione di lavoro salvata con successo",
+    "break_time_minutes": "Tempo di pausa (minuti)",
     "view_reports": "Vedi Rapporti",
     "save_error": "Non è stato possibile salvare la sessione",
     "load_jobs_error": "Non è stato possibile caricare i lavori",
     "auto_timer": {
       "entering": "Arrivo al lavoro...",
       "will_start": "Il timer inizierà tra {{minutes}} minuti",
+      "starting_in": "Avvio tra {{seconds}}s",
       "countdown_entering": "Il timer automatico inizierà al termine del conto alla rovescia",
       "started_auto": "Timer avviato automaticamente",
       "leaving": "Uscita dal lavoro...",
@@ -234,6 +236,8 @@
       "stopped_auto": "Timer fermato automaticamente - {{hours}}h registrate",
       "cancelled_start": "Avvio automatico annullato",
       "cancelled_stop": "Arresto automatico annullato",
+      "activation_alert": "AutoTimer attivato. Il timer inizierà automaticamente quando entrerai nell'area di lavoro.",
+      "activation_title": "Timer Automatico",
       "manual_override": "Controllo manuale attivato",
       "cancelled": "Annullato - premi play per riattivare",
       "available_title": "Timer Automatico Disponibile",
@@ -244,8 +248,8 @@
       "disabled_message": "Timer automatico disattivato per \"{{jobName}}\"",
       "disable_error": "Impossibile disattivare il timer automatico",
       "background_notice": "Il timer automatico funziona solo con l'app aperta in background. Se chiudi completamente l'app, smetterà di contare per motivi di privacy.",
-      "privacy_notice": "Per motivi di privacy, l'auto timer non funziona quando l'app è chiusa. Mantieni l'app in background per il corretto funzionamento.",
-      "privacy_notice_short": "Mantieni l'app attiva in background",
+      "privacy_notice": "Il timer continua a contare anche quando l'app è chiusa, ma il rilevamento della posizione richiede che l'app sia in background. Raccomandiamo di mantenerla attiva o riaprirla così si ferma automaticamente quando si esce dal lavoro.",
+      "privacy_notice_short": "Il timer continua - mantieni l'app attiva per il rilevamento automatico",
       "dismiss_notice": "Capito",
       "dismiss_privacy_notice": "Non mostrare più"
     }
@@ -889,6 +893,10 @@
     "restore_success": {
       "title": "Acquisti Ripristinati",
       "message": "I tuoi acquisti sono stati ripristinati con successo."
+    },
+    "restore_no_purchases": {
+      "title": "Nessun abbonamento attivo",
+      "message": "Nessun abbonamento attivo trovato da ripristinare. Se ritieni che si tratti di un errore, contatta il supporto."
     },
     "errors": {
       "purchase_failed": "Impossibile completare l'abbonamento. Riprova.",

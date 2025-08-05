@@ -227,6 +227,7 @@
     "total_hours": "Total hours",
     "session_added_successfully": "Time added successfully to the day",
     "session_saved_successfully": "Work session saved successfully",
+    "break_time_minutes": "Break time (minutes)",
     "view_reports": "View Reports",
     "save_error": "Could not save session",
     "load_jobs_error": "Could not load jobs",
@@ -234,6 +235,7 @@
       "inactive": "No automatic activity",
       "entering": "Arriving at work...",
       "will_start": "Timer will start in {{minutes}} minutes",
+      "starting_in": "Starting in {{seconds}}s",
       "countdown_entering": "The automatic timer will start when the countdown ends",
       "started_auto": "Timer started automatically",
       "leaving": "Leaving work...",
@@ -242,6 +244,8 @@
       "stopped_auto": "Timer stopped automatically - {{hours}}h recorded",
       "cancelled_start": "Automatic start cancelled",
       "cancelled_stop": "Automatic stop cancelled",
+      "activation_alert": "AutoTimer activated. The timer will start automatically when you enter the work area.",
+      "activation_title": "Automatic Timer",
       "manual_override": "Manual control activated",
       "cancelled": "Cancelled - press play to reactivate",
       "manual_override_message": "The automatic timer is active. Do you want to stop it manually? This will disable automatic mode.",
@@ -253,8 +257,8 @@
       "disabled_message": "Automatic timer disabled for \"{{jobName}}\"",
       "disable_error": "Could not disable automatic timer",
       "background_notice": "Auto timer only works with the app running in the background. If you completely close the app, it will stop counting for privacy reasons.",
-      "privacy_notice": "For privacy reasons, auto timer doesn't work when the app is closed. Keep the app in background for proper operation.",
-      "privacy_notice_short": "Keep the app active in background",
+      "privacy_notice": "The timer keeps counting even when the app is closed, but location detection requires the app to be in background. We recommend keeping it active or reopening it so it automatically stops when leaving work.",
+      "privacy_notice_short": "Timer keeps counting - keep app active for automatic detection",
       "dismiss_privacy_notice": "Don't show again",
       "dismiss_notice": "Got it"
     }
@@ -1044,6 +1048,10 @@
     "restore_success": {
       "title": "Purchases Restored",
       "message": "Your purchases have been successfully restored."
+    },
+    "restore_no_purchases": {
+      "title": "No Active Subscriptions",
+      "message": "No active subscriptions found to restore. If you believe this is an error, please contact support."
     },
     "errors": {
       "purchase_failed": "Could not complete subscription. Please try again.",

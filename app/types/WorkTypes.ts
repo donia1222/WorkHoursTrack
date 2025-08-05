@@ -160,3 +160,12 @@ export const DAY_TYPES = {
     icon: 'cross.fill',
   },
 } as const;
+
+// Timer session interfaces
+export interface StoredActiveSession {
+  jobId: string;
+  startTime: string;
+  notes: string;
+  isPaused?: boolean;
+  pausedElapsedTime?: number;
+}

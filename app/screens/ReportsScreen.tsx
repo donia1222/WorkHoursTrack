@@ -1744,9 +1744,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                         {(getBillingData()?.bankAccount || getBillingData()?.bankName || getBillingData()?.swiftCode) && (
                           <>
                             <View style={{height: 1, backgroundColor: colors.separator, marginVertical: 12}} />
-                            <Text style={[styles.billingDataItem, {fontWeight: '700', color: colors.primary, marginBottom: 8}]}>
-                              🏦 Datos Bancarios
-                            </Text>
+                    
                             {getBillingData()?.bankAccount && (
                               <Text style={styles.billingDataItem}>
                                 💳 <Text style={styles.billingDataValue}>{getBillingData()?.bankAccount}</Text>
