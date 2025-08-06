@@ -11,13 +11,15 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Diese App benötigt Zugriff auf deinen Standort, um dich auf der Karte zu lokalizieren.",
+        "NSLocationWhenInUseUsageDescription": "Esta app necesita acceso a tu ubicación para detectar automáticamente cuando entras y sales del trabajo.",
+        "NSLocationAlwaysUsageDescription": "Esta app necesita acceso a tu ubicación en segundo plano para detectar automáticamente cuando entras y sales del trabajo, incluso con la app cerrada.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Esta app necesita acceso a tu ubicación para detectar automáticamente cuando entras y sales del trabajo y registrar tus horas laborales.",
         "NSCalendarsUsageDescription": "Esta app necesita acceso al calendario para sincronizar tus días de trabajo con el calendario nativo.",
         "NSCalendarsWriteOnlyAccessUsageDescription": "Esta app necesita acceso de escritura al calendario para crear eventos de tus días de trabajo.",
         "NSUserNotificationsUsageDescription": "Esta app necesita permisos de notificación para avisarte cuando el timer automático se inicie o pause.",
         "NSPhotoLibraryUsageDescription": "Esta app necesita acceso a tus fotos para que puedas seleccionar imágenes y analizarlas con el chatbot IA.",
         "NSCameraUsageDescription": "Esta app necesita acceso a la cámara para que puedas tomar fotos y analizarlas con el chatbot IA.",
-        "UIBackgroundModes": []
+        "UIBackgroundModes": ["location", "remote-notification"]
       },
       "bundleIdentifier": "com.tuusuario.geolocalizacionapp"
     },
@@ -59,9 +61,11 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Esta app necesita acceso a tu ubicación cuando la uses para mostrarte en el mapa.",
-          "isIosBackgroundLocationEnabled": false,
-          "isAndroidBackgroundLocationEnabled": false
+          "locationWhenInUsePermission": "Esta app necesita acceso a tu ubicación para detectar automáticamente cuando entras y sales del trabajo.",
+          "locationAlwaysAndWhenInUsePermission": "Esta app necesita acceso a tu ubicación para detectar automáticamente cuando entras y sales del trabajo, incluso con la app cerrada.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
         }
       ],
       [
@@ -71,6 +75,9 @@
           "color": "#007AFF",
           "sounds": []
         }
+      ],
+      [
+        "expo-task-manager"
       ],
       [
         "expo-image-picker",

@@ -84,11 +84,12 @@ class GeofenceService {
         }
       });
 
-      // Start location tracking
+      // Start location tracking with improved settings for AutoTimer
       this.locationSubscription = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
-          distanceInterval: 20, // Only when user moves 20 meters
+          timeInterval: 2000, // Update every 2 seconds for better AutoTimer responsiveness
+          distanceInterval: 5, // Update when user moves 5 meters (more sensitive)
         },
         (location) => {
           this.processLocationUpdate(location, jobsToMonitor);
@@ -105,6 +106,28 @@ class GeofenceService {
     }
   }
 
+
+  /**
+   * Force location update (útil cuando se abre la app)
+   */
+  async forceLocationUpdate(jobs: Job[] = []): Promise<void> {
+    if (!this.isActive) {
+      console.log('⚠️ GeofenceService not active, skipping force update');
+      return;
+    }
+
+    try {
+      console.log('🔄 Forcing location update...');
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+      
+      this.processLocationUpdate(location, jobs);
+      console.log('✅ Force location update completed');
+    } catch (error) {
+      console.error('❌ Error in force location update:', error);
+    }
+  }
 
   /**
    * Stop monitoring geofences
@@ -174,7 +197,9 @@ class GeofenceService {
           },
         };
 
-        console.log(`Geofence event: ${event.eventType} ${event.jobName} (${distance.toFixed(0)}m)`);
+        console.log(`🎯 FOREGROUND Geofence event: ${event.eventType.toUpperCase()} ${event.jobName} (${distance.toFixed(0)}m)`);
+        console.log(`📍 Location: ${userLat.toFixed(6)}, ${userLon.toFixed(6)}`);
+        console.log(`🔄 State change: ${wasInside ? 'inside' : 'outside'} → ${isInside ? 'inside' : 'outside'}`);
         this.triggerEvent(event);
       }
     });

@@ -28,6 +28,7 @@ import TimerSuccessModal from '../components/TimerSuccessModal';
 import { Job, WorkDay, StoredActiveSession } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
+import { simulateGeofenceEvent } from '../services/BackgroundGeofenceTask';
 import { useBackNavigation, useNavigation } from '../context/NavigationContext';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
@@ -1807,6 +1808,147 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
 
   return (
     <SafeAreaView style={styles.container}>
+
+      {/* DEBUG Test Buttons - Always visible in dev mode */}
+      {__DEV__ && selectedJobId && (
+        <View style={{ padding: 16 }}>
+          <Text style={{ color: colors.text, fontSize: 14, marginBottom: 8, fontWeight: '600' }}>
+            🧪 DEBUG: Test Background Geofencing
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 6, marginBottom: 6 }}>
+            {/* Primera fila: Background tests */}
+            <TouchableOpacity
+              onPress={async () => {
+                console.log('🧪 TEST: Simulating BACKGROUND ENTER for job:', selectedJobId);
+                // Simular evento de background geofencing
+                await simulateGeofenceEvent(selectedJobId, 'enter');
+                console.log('✅ Background ENTER simulado - revisa notificaciones y sesión activa');
+              }}
+              style={{ 
+                backgroundColor: colors.success, 
+                padding: 12, 
+                borderRadius: 8, 
+                flex: 1 
+              }}
+            >
+              <Text style={{ 
+                color: 'white', 
+                fontSize: 12, 
+                fontWeight: '600', 
+                textAlign: 'center' 
+              }}>
+                📍 BG ENTER
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              onPress={async () => {
+                console.log('🧪 TEST: Simulating BACKGROUND EXIT for job:', selectedJobId);
+                // Simular evento de background geofencing
+                await simulateGeofenceEvent(selectedJobId, 'exit');
+                console.log('✅ Background EXIT simulado - revisa notificaciones y reportes');
+              }}
+              style={{ 
+                backgroundColor: colors.error, 
+                padding: 12, 
+                borderRadius: 8, 
+                flex: 1 
+              }}
+            >
+              <Text style={{ 
+                color: 'white', 
+                fontSize: 12, 
+                fontWeight: '600', 
+                textAlign: 'center' 
+              }}>
+                🚪 BG EXIT
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {/* Segunda fila: Foreground tests */}
+            <TouchableOpacity
+              onPress={async () => {
+                console.log('TEST: Simulating FOREGROUND ENTER for job:', selectedJobId);
+                // Simular evento de geofence usando el GeofenceService
+                const GeofenceService = require('../services/GeofenceService').default;
+                const geofenceService = GeofenceService.getInstance();
+                const job = jobs.find(j => j.id === selectedJobId);
+                if (job && job.autoTimer?.enabled) {
+                  // Disparar evento de entrada
+                  geofenceService['triggerEvent']({
+                    jobId: selectedJobId,
+                    jobName: job.name,
+                    eventType: 'enter',
+                    timestamp: new Date(),
+                    location: {
+                      latitude: job.location?.latitude || 0,
+                      longitude: job.location?.longitude || 0,
+                    }
+                  });
+                  Alert.alert('Test', '✅ Simulado ENTRAR - Timer debe iniciar');
+                } else {
+                  Alert.alert('Error', 'AutoTimer no está activado para este trabajo');
+                }
+              }}
+              style={{ 
+                backgroundColor: colors.success, 
+                padding: 12, 
+                borderRadius: 8, 
+                flex: 1 
+              }}
+            >
+              <Text style={{ color: 'white', fontSize: 12, fontWeight: '600', textAlign: 'center' }}>
+                📍 FG ENTER
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              onPress={async () => {
+                console.log('TEST: Simulating EXIT for job:', selectedJobId);
+                
+                // Verificar si hay sesión activa primero
+                const activeSession = await JobService.getActiveSession();
+                if (activeSession && activeSession.jobId === selectedJobId) {
+                  // Si hay sesión activa, usar GeofenceService para disparar el evento
+                  const GeofenceService = require('../services/GeofenceService').default;
+                  const geofenceService = GeofenceService.getInstance();
+                  const job = jobs.find(j => j.id === selectedJobId);
+                  
+                  if (job) {
+                    // Disparar evento de salida
+                    geofenceService['triggerEvent']({
+                      jobId: selectedJobId,
+                      jobName: job.name,
+                      eventType: 'exit',
+                      timestamp: new Date(),
+                      location: {
+                        latitude: job.location?.latitude || 0,
+                        longitude: job.location?.longitude || 0,
+                      }
+                    });
+                    Alert.alert('Test', '✅ Simulado SALIR - Timer detenido');
+                  }
+                } else {
+                  // Si no hay sesión activa, solo enviar notificación de prueba
+                  Alert.alert('Info', 'No hay timer activo para detener');
+                }
+              }}
+              style={{ 
+                backgroundColor: colors.error, 
+                padding: 12, 
+                borderRadius: 8, 
+                flex: 1 
+              }}
+            >
+              <Text style={{ color: 'white', fontSize: 12, fontWeight: '600', textAlign: 'center' }}>
+                🚪 FG EXIT
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       {/* Auto Timer Status */}
       {autoTimerStatus && autoTimerStatus.state !== 'inactive' && (() => {

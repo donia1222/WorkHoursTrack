@@ -5,6 +5,7 @@ import NotificationService from './NotificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, AppStateStatus } from 'react-native';
 import * as Location from 'expo-location';
+import { startBackgroundGeofencing, stopBackgroundGeofencing, isTaskRegistered } from './BackgroundGeofenceTask';
 
 export type AutoTimerState = 
   | 'inactive'     // Not monitoring or no jobs nearby
@@ -115,8 +116,21 @@ class AutoTimerService {
         }
       }
 
-      // Start geofence monitoring in FOREGROUND ONLY mode
+      // Start geofence monitoring - primero foreground, luego background
       let success = await this.geofenceService.startMonitoring(jobs, false);
+      
+      // Intentar iniciar también background geofencing si está disponible
+      if (success && isTaskRegistered()) {
+        console.log('🚀 Iniciando BACKGROUND geofencing...');
+        const backgroundSuccess = await startBackgroundGeofencing(jobs);
+        if (backgroundSuccess) {
+          console.log('✅ Background geofencing iniciado exitosamente - FUNCIONARÁ CON APP CERRADA');
+        } else {
+          console.log('⚠️ Background geofencing falló, solo funcionará con app abierta');
+        }
+      } else {
+        console.log('⚠️ TaskManager no registrado, solo funcionará en foreground');
+      }
       if (success) {
         this.isEnabled = true;
         this.currentState = 'inactive';
@@ -162,6 +176,8 @@ class AutoTimerService {
    */
   stop(): void {
     this.geofenceService.stopMonitoring();
+    // También detener background geofencing
+    stopBackgroundGeofencing();
     this.cancelDelayedAction();
     this.stopStatusUpdateInterval();
     this.currentState = 'inactive';
@@ -170,7 +186,7 @@ class AutoTimerService {
     this.isEnabled = false;
     this.clearNotificationHistory(); // Clear notification history when stopping
     this.notifyStatusChange();
-    console.log('Auto timer service stopped');
+    console.log('🛑 Auto timer service stopped (foreground + background)');
   }
 
   /**
@@ -340,7 +356,8 @@ class AutoTimerService {
       // Save state immediately to persist the start time
       await this.saveState();
       
-      // No notification needed - timer starts immediately
+      // Send notification for timer start
+      await this.notificationService.sendNotification('timer_started', job.name);
       
       this.notifyStatusChange();
       console.log(`✅ Auto-started timer for ${job.name} at ${startTime.toLocaleTimeString()}`);
@@ -381,7 +398,8 @@ class AutoTimerService {
         await JobService.addWorkDay(workDay);
         await JobService.clearActiveSession();
         
-        // No notification needed - timer stops immediately
+        // Send notification for timer stop
+        await this.notificationService.sendNotification('timer_stopped', job.name);
         
         console.log(`✅ Auto-stopped timer for ${job.name}: ${elapsedHours}h recorded`);
       }
@@ -990,11 +1008,47 @@ class AutoTimerService {
   }
 
   /**
+   * Check for background-started sessions when app becomes active
+   */
+  private async checkBackgroundSessions(): Promise<void> {
+    try {
+      const activeSession = await JobService.getActiveSession();
+      if (activeSession && activeSession.notes && activeSession.notes.includes('Background')) {
+        console.log('🔍 Detectada sesión iniciada desde background:', {
+          jobId: activeSession.jobId,
+          startTime: activeSession.startTime,
+          notes: activeSession.notes
+        });
+        
+        // Sincronizar el estado del AutoTimer con la sesión background
+        const job = this.jobs.find(j => j.id === activeSession.jobId);
+        if (job) {
+          this.currentState = 'active';
+          this.currentJobId = job.id;
+          this.autoTimerStartTime = new Date(activeSession.startTime);
+          console.log(`✅ Estado sincronizado con sesión background para ${job.name}`);
+          
+          // Forzar actualización de ubicación para sincronizar GeofenceService
+          console.log('🔄 Forzando actualización de ubicación tras sincronización background');
+          this.geofenceService.forceLocationUpdate(this.jobs);
+          
+          this.notifyStatusChange();
+        }
+      }
+    } catch (error) {
+      console.error('Error verificando sesiones background:', error);
+    }
+  }
+
+  /**
    * Check for pending actions that should have been executed
    * (Called when app becomes active)
    */
   async checkPendingActions(): Promise<void> {
     try {
+      // Primero verificar si hay sesiones iniciadas desde background
+      await this.checkBackgroundSessions();
+      
       // First, check if there's a current delayed action that needs adjustment
       if (this.currentDelayedAction) {
         const elapsed = (Date.now() - this.currentDelayedAction.startTime.getTime()) / 1000;

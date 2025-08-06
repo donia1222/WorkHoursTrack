@@ -821,14 +821,13 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: isDark ? 0.12 : 0.08,
     shadowRadius: 6,
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0)' : 'rgba(0, 0, 0, 0)',
+
   },
   miniCalendarBlur: {
     paddingTop: isSmallScreen ? 8 : 10,
     paddingBottom: isSmallScreen ? 6 : 8,
     paddingHorizontal: isSmallScreen ? 8 : 12,
-    backgroundColor: isDark ?  'rgba(167, 139, 250, 0.19)' : 'rgba(167, 139, 250, 0.12)',
+    backgroundColor: isDark ?  'rgba(67, 53, 107, 0.13)' : 'rgba(67, 53, 107, 0.13)',
   },
   miniCalendarHeader: {
     flexDirection: 'row',
@@ -2313,7 +2312,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
 
 
-      {autoTimerStatus && autoTimerStatus.state !== 'inactive' && autoTimerStatus.state !== null && jobs.some(job => job.autoTimer?.enabled) ? (
+      {jobs.some(job => job.autoTimer?.enabled) ? (
         <MapView
           key={`mapview-${autoTimerStatus?.state === 'active' ? 'with-location' : 'no-location'}`}
           ref={mapRef}
@@ -2642,13 +2641,14 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           {selectedDaySchedule === i && dayData.workDay && dayData.workDay.type === 'work' && timeText && (
                             <View style={{
                               position: 'absolute',
-                              bottom: -28,
+                              zIndex: 1000,
+                              bottom: -18,
                               left: -20,
                               right: -20,
                               backgroundColor: isDark ? 'rgba(0, 0, 0, 0.95)' : 'rgba(255, 255, 255, 0.98)',
                               borderRadius: 6,
-                              padding: 6,
-                              zIndex: 1000,
+                              padding: 2,
+                  
                               shadowColor: '#000',
                               shadowOffset: { width: 0, height: 2 },
                               shadowOpacity: 0.2,
