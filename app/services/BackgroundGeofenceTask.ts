@@ -2,6 +2,7 @@ import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { JobService } from './JobService';
 
 // Nombre único de la tarea de geofencing en segundo plano
 export const BACKGROUND_GEOFENCE_TASK = 'background-geofence-task';
@@ -26,7 +27,7 @@ interface BackgroundJob {
  * Definir la tarea de geofencing que se ejecuta en segundo plano
  * Esta tarea se activa cuando iOS/Android detecta entrada/salida de geocerca
  */
-TaskManager.defineTask(BACKGROUND_GEOFENCE_TASK, async ({ data, error }: { data?: any, error?: TaskManager.TaskManagerError }) => {
+TaskManager.defineTask(BACKGROUND_GEOFENCE_TASK, async ({ data, error }) => {
   console.log('🎯 BACKGROUND GEOFENCE TASK EJECUTADA');
   
   if (error) {
@@ -34,12 +35,19 @@ TaskManager.defineTask(BACKGROUND_GEOFENCE_TASK, async ({ data, error }: { data?
     return;
   }
 
-  if (!data || !data.eventType || !data.region) {
-    console.error('❌ Datos inválidos en background geofence task:', data);
+  if (!data) {
+    console.error('❌ No hay datos en background geofence task');
     return;
   }
 
-  const { eventType, region } = data as BackgroundGeofenceData;
+  const geofenceData = data as BackgroundGeofenceData;
+  
+  if (!geofenceData.eventType || !geofenceData.region) {
+    console.error('❌ Datos inválidos en background geofence task:', geofenceData);
+    return;
+  }
+
+  const { eventType, region } = geofenceData;
   const now = new Date();
   const timestamp = now.toISOString();
   
@@ -90,13 +98,10 @@ async function handleBackgroundEnter(job: any, timestamp: string): Promise<void>
   
   try {
     // Verificar si ya hay una sesión activa
-    const activeSessionData = await AsyncStorage.getItem('active_session');
-    if (activeSessionData) {
-      const activeSession = JSON.parse(activeSessionData);
-      if (activeSession.jobId === job.id) {
-        console.log(`⚡ Ya hay una sesión activa para ${job.name}, ignorando entrada`);
-        return;
-      }
+    const activeSession = await JobService.getActiveSession();
+    if (activeSession && activeSession.jobId === job.id) {
+      console.log(`⚡ Ya hay una sesión activa para ${job.name}, ignorando entrada`);
+      return;
     }
 
     // Crear nueva sesión activa
@@ -106,7 +111,7 @@ async function handleBackgroundEnter(job: any, timestamp: string): Promise<void>
       notes: 'Auto-started (Background)',
     };
 
-    await AsyncStorage.setItem('active_session', JSON.stringify(sessionForStorage));
+    await JobService.saveActiveSession(sessionForStorage);
     console.log(`✅ Sesión iniciada desde background para ${job.name} a las ${new Date(timestamp).toLocaleTimeString()}`);
 
     // Enviar notificación pidiendo al usuario que abra la app
@@ -132,13 +137,12 @@ async function handleBackgroundExit(job: any, timestamp: string): Promise<void> 
   
   try {
     // Verificar si hay sesión activa para este trabajo
-    const activeSessionData = await AsyncStorage.getItem('active_session');
-    if (!activeSessionData) {
+    const activeSession = await JobService.getActiveSession();
+    if (!activeSession) {
       console.log(`⚠️ No hay sesión activa al salir de ${job.name}`);
       return;
     }
 
-    const activeSession = JSON.parse(activeSessionData);
     if (activeSession.jobId !== job.id) {
       console.log(`⚠️ Sesión activa es para otro trabajo, ignorando salida de ${job.name}`);
       return;
@@ -160,18 +164,14 @@ async function handleBackgroundExit(job: any, timestamp: string): Promise<void> 
       hours: elapsedHours,
       notes: activeSession.notes || 'Auto-stopped (Background)',
       overtime: elapsedHours > 8,
-      type: 'work',
-      id: `${job.id}_${today}_${Date.now()}` // ID único
+      type: 'work' as const,
     };
 
-    // Guardar día laboral
-    const workDaysData = await AsyncStorage.getItem('work_days_v2');
-    let workDays = workDaysData ? JSON.parse(workDaysData) : [];
-    workDays.push(workDay);
-    await AsyncStorage.setItem('work_days_v2', JSON.stringify(workDays));
+    // Guardar día laboral usando JobService
+    await JobService.addWorkDay(workDay);
 
-    // Limpiar sesión activa
-    await AsyncStorage.removeItem('active_session');
+    // Limpiar sesión activa usando JobService
+    await JobService.clearActiveSession();
 
     console.log(`✅ Sesión terminada desde background para ${job.name}: ${elapsedHours}h registradas`);
 
@@ -328,24 +328,25 @@ export async function getBackgroundEvents(): Promise<any[]> {
 /**
  * Método para simular eventos de geofencing (solo para pruebas)
  */
-export async function simulateGeofenceEvent(jobId: string, eventType: 'enter' | 'exit'): Promise<void> {
-  console.log(`🧪 Simulando evento ${eventType} para trabajo ${jobId}`);
+// export async function simulateGeofenceEvent(jobId: string, eventType: 'enter' | 'exit'): Promise<void> {
+//   console.log(`🧪 Simulando evento ${eventType} para trabajo ${jobId}`);
   
-  const mockData = {
-    eventType: eventType === 'enter' ? Location.GeofencingEventType.Enter : Location.GeofencingEventType.Exit,
-    region: {
-      identifier: jobId,
-      latitude: 0,
-      longitude: 0,
-      radius: 100,
-      notifyOnEnter: true,
-      notifyOnExit: true,
-    }
-  };
+//   const mockData = {
+//     eventType: eventType === 'enter' ? Location.GeofencingEventType.Enter : Location.GeofencingEventType.Exit,
+//     region: {
+//       identifier: jobId,
+//       latitude: 0,
+//       longitude: 0,
+//       radius: 100,
+//       notifyOnEnter: true,
+//       notifyOnExit: true,
+//     }
+//   };
 
-  // Ejecutar la tarea como si fuera un evento real
-  const taskExecutor = TaskManager.getTaskOptions(BACKGROUND_GEOFENCE_TASK);
-  if (taskExecutor) {
-    await (taskExecutor as any).taskExecutor({ data: mockData, error: null });
-  }
-}
+//   // Ejecutar la tarea como si fuera un evento real
+//   // TaskManager no expone getTaskOptions
+//   // const taskExecutor = TaskManager.getTaskOptions(BACKGROUND_GEOFENCE_TASK);
+//   // if (taskExecutor) {
+//   //   await (taskExecutor as any).taskExecutor({ data: mockData, error: null });
+//   // }
+// }
