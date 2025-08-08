@@ -605,7 +605,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
   },
   autoTimerStatusOverlay: {
     position: 'absolute',
-    top: 0,
+    bottom: 90,
     left: 0,
     right: 0,
     zIndex: 1000,
@@ -1235,6 +1235,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   // Animaciones para minimizar/maximizar
   const scaleValue = useSharedValue(1);
   const pulseAnimation = useSharedValue(1);
+  const clockPulse = useSharedValue(1);
   
   // Animaciones para mini calendario
   const miniCalendarOpacity = useSharedValue(0);
@@ -1259,6 +1260,12 @@ export default function MapLocation({ location, onNavigate }: Props) {
       transform: [
         { scale: scaleValue.value * pulseAnimation.value },
       ],
+    };
+  });
+
+  const animatedClockStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: clockPulse.value }],
     };
   });
 
@@ -1609,6 +1616,12 @@ export default function MapLocation({ location, onNavigate }: Props) {
     console.log('🔄 MapLocation elapsed time effect triggered, autoTimerStatus:', autoTimerStatus?.state, 'jobId:', autoTimerStatus?.jobId);
     
     if (autoTimerStatus?.state === 'active' && autoTimerStatus?.jobId) {
+      // Start clock pulse animation
+      clockPulse.value = withRepeat(
+        withTiming(1.15, { duration: 1000 }),
+        -1,
+        true
+      );
       const updateElapsedTime = async () => {
         // Check if timer is paused
         const activeSession = await JobService.getActiveSession();
@@ -1629,6 +1642,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
     } else {
       console.log('🔄 MapLocation: AutoTimer not active or no jobId, resetting elapsed time to 0');
       setElapsedTime(0);
+      // Stop clock pulse animation
+      clockPulse.value = withTiming(1, { duration: 300 });
     }
 
     return () => {
@@ -1663,7 +1678,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
   // Effect to animate mini calendar appearance/disappearance
   useEffect(() => {
-    const shouldShow = ((!autoTimerStatus || autoTimerStatus.state === 'inactive' || !jobs.some(job => job.autoTimer?.enabled)) && !showPrivacyNotice) && !isSmallScreen;
+    // Always show mini calendar unless on small screen
+    const shouldShow = !isSmallScreen;
     
     console.log('📅 MapLocation: Mini calendar visibility check:', {
       shouldShow,
@@ -2151,7 +2167,15 @@ export default function MapLocation({ location, onNavigate }: Props) {
   // Función para manejar la selección de categoría de edición
   const handleEditCategory = (category: 'schedule' | 'location' | 'financial' | 'billing') => {
     setSelectedEditType(category);
-    setShowJobSelector(true);
+    
+    // Si solo hay 1 trabajo, ir directo a JobFormModal
+    if (jobs.length === 1) {
+      setEditingJob(jobs[0]);
+      setShowJobForm(true);
+    } else {
+      // Si hay más de 1 trabajo, mostrar el selector
+      setShowJobSelector(true);
+    }
   };
 
   // Función para manejar la selección de trabajo
@@ -2303,102 +2327,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
     <View style={styles.container}>
 
 
-      
-
-
       <View style={styles.mapWrapper}>
 
-
-
-
-
-      {jobs.some(job => job.autoTimer?.enabled) ? (
-        <MapView
-          key={`mapview-${autoTimerStatus?.state === 'active' ? 'with-location' : 'no-location'}`}
-          ref={mapRef}
-          style={styles.map}
-          initialRegion={{
-            latitude: location?.latitude || 40.7128,
-            longitude: location?.longitude || -74.0060,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
- 
-          showsMyLocationButton={false}
-          customMapStyle={isDark ? darkMapStyle : undefined}
-          onRegionChangeComplete={handleMapRegionChangeComplete}
-          onRegionChange={handleMapRegionChange}
-        onTouchStart={() => {
-          // Solo procesar si no hay un gesto activo
-          if (!isProcessingGesture) {
-            setIsProcessingGesture(true);
-            
-            // Limpiar timeout anterior si existe
-            if (gestureTimeoutRef.current) {
-              clearTimeout(gestureTimeoutRef.current);
-            }
-            
-            // Timeout de seguridad más corto y más eficiente
-            gestureTimeoutRef.current = setTimeout(() => {
-              setIsProcessingGesture(false);
-              gestureTimeoutRef.current = undefined;
-            }, 1500); // Reducido de 3000 a 1500
-          }
-        }}
-        onTouchEnd={() => {
-          // No procesar inmediatamente para evitar conflictos con gestos múltiples
-          requestAnimationFrame(() => {
-            // Solo resetear si no hay más gestos activos
-            if (gestureTimeoutRef.current) {
-              clearTimeout(gestureTimeoutRef.current);
-              gestureTimeoutRef.current = setTimeout(() => {
-                setIsProcessingGesture(false);
-                gestureTimeoutRef.current = undefined;
-              }, 200);
-            }
-          });
-        }}
-        moveOnMarkerPress={false}
-        pitchEnabled={false}
-        rotateEnabled={false}
-        zoomEnabled={false}
-        scrollEnabled={true}
-        zoomTapEnabled={false}
-        loadingEnabled={true}
-        toolbarEnabled={false}
-      >
-        {location && (
-          <Marker
-            coordinate={{
-              latitude: location.latitude,
-              longitude: location.longitude,
-            }}
-            title={t('maps.you_are_here')}
-            pinColor={colors.primary}
-          />
-        )}
-        
-
-        {/* Geofence circles for auto timer jobs */}
-        {jobs.map((job) => 
-          job.location?.latitude && job.location?.longitude && job.autoTimer?.enabled ? (
-            <Circle
-              key={`circle-${job.id}`}
-              center={{
-                latitude: job.location.latitude,
-                longitude: job.location.longitude,
-              }}
-              radius={job.autoTimer.geofenceRadius || 100}
-              strokeColor={job.color}
-              fillColor={`${job.color}20`} // 20% opacity
-              strokeWidth={2}
-            />
-
-          ) : null
-        )}
-        
-      </MapView>
-      ) : (
         <View style={styles.map}>
           <LinearGradient
             colors={isDark 
@@ -2408,31 +2338,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
             style={styles.noLocationBackground}
             locations={[0, 0.5, 1]}
           >
-            {/* Background pattern */}
-            <View style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              opacity: 0.03,
-            }}>
-              {[...Array(20)].map((_, i) => (
-                <View
-                  key={i}
-                  style={{
-                    position: 'absolute',
-                    width: 200,
-                    height: 200,
-                    borderRadius: 100,
-                    borderWidth: 1,
-                    borderColor: colors.primary,
-                    top: `${(i % 4) * 25}%`,
-                    left: `${Math.floor(i / 4) * 20}%`,
-                  }}
-                />
-              ))}
-            </View>
+   
             
             {/* Stats cards at top */}
             {jobs.length > 0 && (
@@ -2498,7 +2404,22 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   activeOpacity={0.7}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <IconSymbol size={34} name="clock.fill" color={colors.success} />
+                    <View style={{ alignItems: 'flex-start' }}>
+                      <Animated.View style={animatedClockStyle}>
+                        <IconSymbol size={34} name="clock.fill" color={colors.success} />
+                      </Animated.View>
+                      {autoTimerStatus?.state === 'active' && (
+                        <Text style={{
+                          fontSize: 11,
+                          fontWeight: '700',
+                          color: colors.success,
+                          letterSpacing: 0.2,
+                          marginTop: 2,
+                        }}>
+                          {formatTime(elapsedTime)}
+                        </Text>
+                      )}
+                    </View>
                     <IconSymbol size={16} name="chevron.forward" color={colors.textSecondary} style={{ opacity: 0.5 }} />
                   </View>
          
@@ -2730,386 +2651,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
             </View>
           </LinearGradient>
         </View>
-      )}
+
       {/* Capa invisible para interceptar toques problemáticos - REMOVIDA para evitar conflictos */}
       </View>
-
-      {/* Privacy Notice for Auto Timer - Shows once when auto timer activates */}
-      {showPrivacyNotice && (
-        <Animated.View style={[styles.privacyNoticeContainer, animatedPrivacyNoticeStyle]}>
-          <View style={styles.privacyNoticeCard}>
-            <View style={styles.privacyNoticeContent}>
-              <IconSymbol 
-                size={20} 
-                name="info.circle.fill" 
-                color="#FFFFFF" 
-                style={styles.privacyNoticeIcon}
-              />
-              <Text style={styles.privacyNoticeText}>
-                {t('timer.auto_timer.privacy_notice')}
-              </Text>
-            </View>
-            <TouchableOpacity 
-              style={styles.privacyNoticeCloseButton}
-              onPress={handleDismissPrivacyNotice}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.privacyNoticeButtonText}>
-                {t('timer.auto_timer.dismiss_notice')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-      )}
-
-
-     
-      {(() => {
-        const shouldShow = autoTimerStatus && (autoTimerStatus.state === 'active' || autoTimerStatus.state === 'cancelled' || autoTimerStatus.state === 'pre-start') && jobs.some(job => job.autoTimer?.enabled) && !showPrivacyNotice;
-        console.log('🔍 MapLocation AutoTimer overlay condition:', {
-          hasAutoTimerStatus: !!autoTimerStatus,
-          autoTimerState: autoTimerStatus?.state,
-          autoTimerJobId: autoTimerStatus?.jobId,
-          hasEnabledJob: jobs.some(job => job.autoTimer?.enabled),
-          showPrivacyNotice,
-          shouldShow,
-          elapsedTime
-        });
-        return shouldShow;
-      })() && (
-          <Animated.View style={[styles.autoTimerStatusOverlay, animatedAutoTimerStyle]}>
-            {isAutoTimerMinimized ? (
-              // Vista minimizada - solo icono con pulso
-              <TouchableOpacity
-                onPress={() => setIsAutoTimerMinimized(false)}
-                style={[
-                  styles.minimizedAutoTimer,
-                  {
-                    backgroundColor: 
-                      autoTimerStatus?.state === 'active' && isTimerPaused ? colors.warning :
-                      autoTimerStatus?.state === 'active' ? colors.success : 
-                      colors.primary
-                  }
-                ]}
-              >
-                <IconSymbol 
-                  size={50} 
-                  name={isTimerPaused ? "pause.fill" : "clock.fill"} 
-                  color="#FFFFFF" 
-                />
-              </TouchableOpacity>
-            ) : (
-              // Vista expandida normal
-              <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.autoTimerStatusCard}>
-            <View style={styles.autoTimerStatusHeader}>
-              <View style={[styles.autoTimerJobRow, { marginBottom: 0, flex: 1, paddingVertical: 6, paddingHorizontal: 8, borderRadius: 20 }]}>
-                {jobs.filter(job => job.autoTimer?.enabled).length === 1 ? (
-                  <>
-                    <View style={[styles.autoTimerJobDot, { backgroundColor: jobs.filter(job => job.autoTimer?.enabled)[0]?.color }]} />
-                    <Text 
-                      style={styles.autoTimerJobName}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                      allowFontScaling={false}
-                    >
-                      {jobs.filter(job => job.autoTimer?.enabled)[0]?.name || 'Trabajo'}
-                    </Text>
-                  </>
-                ) : (
-                  <>
-                    <View style={[styles.autoTimerJobDot, { backgroundColor: colors.primary }]} />
-                    <Text 
-                      style={styles.autoTimerJobName}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                      allowFontScaling={false}
-                    >
-                      {jobs.filter(job => job.autoTimer?.enabled).length} trabajos
-                    </Text>
-                  </>
-                )}
-              </View>
-              
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                {/* Botón minimizar */}
-                <TouchableOpacity
-                  onPress={() => setIsAutoTimerMinimized(true)}
-                  style={[styles.disableButton, { backgroundColor: 'rgba(142, 142, 147, 0.3)' }]}
-                >
-                  <IconSymbol size={10} name="minus" color="#FFFFFF" />
-                </TouchableOpacity>
-                
-                {/* Botones de control cuando está activo */}
-                {autoTimerStatus?.state === 'active' && (
-                  <>
-                    {/* Botón pausar/reanudar */}
-                    <TouchableOpacity
-                      onPress={async () => {
-                        try {
-                          const activeSession = await JobService.getActiveSession();
-                          if (activeSession) {
-                            const isPaused = (activeSession as any).isPaused || false;
-                            
-                            if (isPaused) {
-                              // Reanudar - similar a TimerScreen resumeTimer
-                              const pausedElapsedTime = (activeSession as any).pausedElapsedTime || 0;
-                              const now = new Date();
-                              const adjustedStartTime = new Date(now.getTime() - (pausedElapsedTime * 1000));
-                              
-                              const resumeSession: StoredActiveSession = {
-                                jobId: activeSession.jobId,
-                                startTime: adjustedStartTime.toISOString(),
-                                notes: activeSession.notes,
-                                isPaused: false,
-                                pausedElapsedTime: 0,
-                              };
-                              await JobService.saveActiveSession(resumeSession);
-                              
-                              console.log('▶️ Timer resumed from MapLocation');
-                            } else {
-                              // Pausar - similar a TimerScreen pauseTimer
-                              const startTime = new Date(activeSession.startTime);
-                              const now = new Date();
-                              const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-                              
-                              const pauseSession: StoredActiveSession = {
-                                jobId: activeSession.jobId,
-                                startTime: activeSession.startTime,
-                                notes: activeSession.notes,
-                                isPaused: true,
-                                pausedElapsedTime: elapsed,
-                              };
-                              await JobService.saveActiveSession(pauseSession);
-                              
-                              console.log('⏸️ Timer paused from MapLocation');
-                            }
-                          }
-                        } catch (error) {
-                          console.error('Error toggling pause:', error);
-                          Alert.alert('Error', 'No se pudo pausar/reanudar el timer');
-                        }
-                      }}
-                      style={[
-                        styles.disableButton,
-                        { backgroundColor: isTimerPaused ? '#34C759' : '#FF9500' }
-                      ]}
-                    >
-                      <IconSymbol 
-                        size={10} 
-                        name={isTimerPaused ? "play.fill" : "pause.fill"} 
-                        color="#FFFFFF" 
-                      />
-                    </TouchableOpacity>
-                    
-                    {/* Botón para ir a TimerScreen */}
-                    <TouchableOpacity
-                      onPress={() => onNavigate?.('timer')}
-                      style={[styles.disableButton, { backgroundColor: '#ff0000ff' }]}
-                    >
-                      <IconSymbol size={10} name="stop.fill" color="#FFFFFF" />
-                    </TouchableOpacity>
-                  </>
-                )}
-                
-                {/* Botón de acción para otros estados */}
-                {autoTimerStatus?.state !== 'active' && (
-                  <TouchableOpacity
-                    onPress={async () => {
-                      const AutoTimerService = require('../services/AutoTimerService').default;
-                      const autoTimerService = AutoTimerService.getInstance();
-                      const status = autoTimerService.getStatus();
-                      
-                      try {
-                        if (status.state === 'cancelled') {
-                          // Reactivar desde estado cancelado
-                          await autoTimerService.manualRestart();
-                          console.log('AutoTimer reactivado manualmente');
-                        } else if (status.state === 'entering' || status.state === 'leaving' || status.state === 'pre-start') {
-                          // Cancelar countdown
-                          await autoTimerService.cancelPendingAction();
-                          console.log('Countdown cancelado por usuario');
-                        }
-                      } catch (error) {
-                        console.error('Error en acción AutoTimer:', error);
-                        Alert.alert('Error', 'No se pudo ejecutar la acción');
-                      }
-                    }}
-                    style={[
-                      styles.disableButton,
-                      {
-                        backgroundColor: 
-                          autoTimerStatus?.state === 'cancelled' ? '#34C759' :  // Verde para play
-                          '#FF3B30'  // Rojo para stop
-                      }
-                    ]}
-                  >
-                    <IconSymbol 
-                      size={10} 
-                      name={
-                        autoTimerStatus?.state === 'cancelled' ? "play.fill" :
-                        "stop.fill"
-                      } 
-                      color="#FFFFFF" 
-                    />
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-{jobs.filter(job => job.autoTimer?.enabled).map((job) => {
-              // Get real proximity status from geofence service
-              const geofenceService = require('../services/GeofenceService').default.getInstance();
-              const jobStatus = geofenceService.getJobStatus(job.id);
-              
-              // Fallback: calculate distance manually if geofence service doesn't have data
-              let isNearby = jobStatus?.isInside || false;
-              let calculatedDistance = jobStatus?.distance || null;
-              
-              if (!jobStatus && location && job.location?.latitude && job.location?.longitude) {
-                // Calculate distance manually
-                const distance = calculateDistance(
-                  location.latitude,
-                  location.longitude,
-                  job.location.latitude,
-                  job.location.longitude
-                );
-                calculatedDistance = distance;
-                const radius = job.autoTimer?.geofenceRadius || 100;
-                isNearby = distance <= radius;
-                
-                console.log(`📍 Manual calculation for ${job.name}: ${distance.toFixed(0)}m (radius: ${radius}m) = ${isNearby ? 'INSIDE' : 'OUTSIDE'}`);
-              }
-              
-              console.log(`🔍 MapLocation Debug - Job: ${job.name}`);
-              console.log(`   - Job ID: ${job.id}`);
-              console.log(`   - Job Status:`, jobStatus);
-              console.log(`   - Is Nearby: ${isNearby}`);
-              console.log(`   - Distance: ${calculatedDistance || 'N/A'}m`);
-              console.log(`   - AutoTimer enabled: ${job.autoTimer?.enabled}`);
-              console.log(`   - Geofence radius: ${job.autoTimer?.geofenceRadius || 100}m`);
-              
-              // Check if this job has AutoTimer activity
-              const isAutoTimerActive = autoTimerStatus && autoTimerStatus.jobId === job.id;
-              
-              // Enhanced debug logging
-              console.log(`🔍 MapLocation Job ${job.name} (${job.id}) AutoTimer check:`, {
-                hasAutoTimerStatus: !!autoTimerStatus,
-                autoTimerJobId: autoTimerStatus?.jobId,
-                jobId: job.id,
-                idsMatch: autoTimerStatus?.jobId === job.id,
-                autoTimerState: autoTimerStatus?.state,
-                isAutoTimerActive,
-                jobHasAutoTimer: !!job.autoTimer?.enabled
-              });
-              
-              // Debug logging
-              if (autoTimerStatus && autoTimerStatus.jobId === job.id) {
-                console.log(`🎯 MapLocation UI Debug for job ${job.name}:`, {
-                  isAutoTimerActive,
-                  state: autoTimerStatus.state,
-                  remainingTime: autoTimerStatus.remainingTime,
-                  totalDelayTime: autoTimerStatus.totalDelayTime,
-                  autoTimerEnabled: job.autoTimer?.enabled,
-                  shouldShowCountdown: false // Countdown removed
-                });
-              }
-              
-              let statusText = isNearby ? t('maps.in_range') : t('maps.out_of_range');
-              let statusColor = isNearby ? colors.success : colors.textSecondary;
-              
-              // Override with AutoTimer status if active AND job has autoTimer enabled
-              if (isAutoTimerActive && autoTimerStatus.state !== 'inactive' && job.autoTimer?.enabled) {
-                statusText = getAutoTimerMessage(autoTimerStatus);
-                statusColor = autoTimerStatus.state === 'entering' || autoTimerStatus.state === 'leaving' || autoTimerStatus.state === 'pre-start'
-                  ? colors.warning 
-                  : autoTimerStatus.state === 'active' 
-                    ? colors.success 
-                    : colors.textSecondary;
-              }
-              
-              return (
-                <View key={job.id}>
-                  {/* Mostrar barra de progreso cuando hay pre-start countdown */}
-                  {isAutoTimerActive && autoTimerStatus?.state === 'pre-start' && autoTimerStatus.remainingTime > 0 && (
-                    <View style={styles.autoTimerProgressContainer}>
-                      <View style={styles.autoTimerProgressBar}>
-                        <Animated.View 
-                          style={[
-                            styles.autoTimerProgressFill,
-                            {
-                              width: `${((autoTimerStatus.totalDelayTime - autoTimerStatus.remainingTime) / autoTimerStatus.totalDelayTime) * 100}%`,
-                              backgroundColor: colors.warning
-                            }
-                          ]}
-                        />
-                      </View>
-                      <Text style={[styles.autoTimerCountdown, { color: colors.warning }]}>
-                        {Math.ceil(autoTimerStatus.remainingTime)}s
-                      </Text>
-                    </View>
-                  )}
-                  {/* Mostrar tiempo transcurrido cuando está activo */}
-                  {(() => {
-                    const shouldShowTime = isAutoTimerActive && autoTimerStatus?.state === 'active';
-                    console.log('🔍 MapLocation showing time condition:', {
-                      isAutoTimerActive,
-                      autoTimerState: autoTimerStatus?.state,
-                      jobId: job.id,
-                      autoTimerJobId: autoTimerStatus?.jobId,
-                      shouldShowTime,
-                      elapsedTime
-                    });
-                    return shouldShowTime;
-                  })() && (
-                    <View style={[styles.autoTimerProgressContainer, { justifyContent: 'space-between' }]}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <IconSymbol 
-                          size={14} 
-                          name="clock.arrow.circlepath" 
-                          color={colors.success} 
-                        />
-                        <Text style={{
-                          fontSize: 13,
-                          fontWeight: '600',
-                          color: colors.success
-                        }}>
-                          AUTOTIMER
-                        </Text>
-                      </View>
-                      <View style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 4,
-                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-                        borderRadius: 8,
-                        paddingHorizontal: 8,
-                        paddingVertical: 3
-                      }}>
-                        <IconSymbol 
-                          size={11} 
-                          name="clock" 
-                          color={colors.text} 
-                        />
-                        <Text style={{
-                          fontSize: 13,
-                          fontWeight: '600',
-                          color: isTimerPaused ? colors.warning : colors.text
-                        }}>
-                          {isTimerPaused ? '⏸ ' : ''}{formatTime(elapsedTime)}
-                        </Text>
-                      </View>
-                    </View>
-                  )}
-                </View>
-              );
-            })}
-            
-            {/* Texto explicativo del countdown */}
-            {/* Countdown removed - AutoTimer now starts/stops immediately */}
-              </BlurView>
-            )}
-          </Animated.View>
-      )}
-
 
       {/* Simple info overlay */}
       {jobs.length === 0 && !showJobForm && (
@@ -3140,33 +2684,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
         </View>
       )}
 
-      {/* Floating job cards button - only show when map is active and mini calendar is not visible */}
-      {jobs.length > 0 && (autoTimerStatus?.state === 'active' || autoTimerStatus?.state === 'cancelled') && !shouldShowMiniCalendar && (
-        <TouchableOpacity
-          style={[styles.floatingAddButton, { bottom: 120 }]} // Subido más arriba
-          onPress={() => setShowJobCardsModal(true)}
-          activeOpacity={0.8}
-        >
-          <View style={styles.floatingAddButtonInner}>
-            <LinearGradient
-              colors={isDark 
-                ? [colors.primary + '90', colors.primary + '60'] 
-                : [colors.primary + '90', colors.primary + '70']
-              }
-              style={styles.fabGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            />
-            <IconSymbol size={32} name="briefcase.fill" color="#FFFFFF" />
-            {jobs.length > 1 && (
-              <View style={styles.mainActionBadge}>
-                <Text style={styles.mainActionBadgeText}>{jobs.length}</Text>
-              </View>
-            )}
-          </View>
-        </TouchableOpacity>
-      )}
-
+      
       {/* Job cards modal swiper */}
       <JobCardsSwiper
         visible={showJobCardsModal}
@@ -3291,6 +2809,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
         onJobSelect={handleJobSelect}
         title={selectedEditType ? getEditInfo(selectedEditType).title : t('job_selector.title')}
         subtitle={selectedEditType ? getEditInfo(selectedEditType).subtitle : t('job_selector.subtitle')}
+        showAutoTimerHeader={selectedEditType === 'location'}
+        onNavigateToTimer={() => navigateTo('timer')}
       />
 
       {/* Job Form Modal */}

@@ -26,6 +26,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'react-native';
+import MapView, { Marker, Circle, PROVIDER_DEFAULT } from 'react-native-maps';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
@@ -87,7 +88,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.success,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -965,6 +966,67 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontWeight: '500',
     color: colors.textSecondary,
   },
+  // Map styles
+  mapContainer: {
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  mapTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  mapWrapper: {
+    height: 250,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.separator,
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  mapDescription: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 8,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  markerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  marker: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  userMarker: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(30, 144, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  userMarkerDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#1E90FF',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
 });
 
 export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true }: JobFormModalProps) {
@@ -975,6 +1037,14 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [previousAutoSchedule, setPreviousAutoSchedule] = useState<boolean | undefined>(undefined);
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(isLocationEnabled);
+  const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
+  const [jobCoordinates, setJobCoordinates] = useState<{latitude: number; longitude: number} | null>(null);
+  const [mapRegion, setMapRegion] = useState<{
+    latitude: number;
+    longitude: number;
+    latitudeDelta: number;
+    longitudeDelta: number;
+  } | null>(null);
 
   // Animation values
   const modalScale = useSharedValue(0);
@@ -1054,6 +1124,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [hasCheckedFirstTime, setHasCheckedFirstTime] = useState(false);
+  const [activeTimerElapsed, setActiveTimerElapsed] = useState<number>(0);
   
   const styles = getStyles(colors, isDark);
 
@@ -1239,6 +1310,92 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     // Initialize previous autoSchedule value
     setPreviousAutoSchedule(scheduleToUse?.autoSchedule || false);
   }, [editingJob, visible]);
+
+  // Get user location when auto-timer is enabled
+  useEffect(() => {
+    const getUserLocation = async () => {
+      if (formData.autoTimer?.enabled && hasLocationPermission) {
+        try {
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.High,
+          });
+          setUserLocation({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
+        } catch (error) {
+          console.log('Error getting user location:', error);
+        }
+      }
+    };
+
+    getUserLocation();
+  }, [formData.autoTimer?.enabled, hasLocationPermission]);
+
+  // Check active timer status for this job
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    const checkActiveTimer = async () => {
+      if (editingJob && formData.autoTimer?.enabled && currentTab === 'auto') {
+        try {
+          const activeSession = await JobService.getActiveSession();
+          if (activeSession && activeSession.jobId === editingJob.id) {
+            const startTime = new Date(activeSession.startTime);
+            const now = new Date();
+            const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+            setActiveTimerElapsed(elapsedSeconds);
+          } else {
+            setActiveTimerElapsed(0);
+          }
+        } catch (error) {
+          console.error('Error checking active timer:', error);
+        }
+      }
+    };
+    
+    if (visible && currentTab === 'auto') {
+      checkActiveTimer();
+      interval = setInterval(checkActiveTimer, 1000);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [visible, currentTab, editingJob, formData.autoTimer?.enabled]);
+
+  // Geocode job address when it changes and auto-timer is enabled
+  useEffect(() => {
+    const geocodeAddress = async () => {
+      if (formData.autoTimer?.enabled && (formData.address || formData.street || formData.city)) {
+        const fullAddress = `${formData.street || ''} ${formData.city || ''} ${formData.postalCode || ''} ${formData.address || ''}`.trim();
+        
+        if (fullAddress) {
+          try {
+            const geocoded = await Location.geocodeAsync(fullAddress);
+            if (geocoded && geocoded.length > 0) {
+              const coords = {
+                latitude: geocoded[0].latitude,
+                longitude: geocoded[0].longitude,
+              };
+              setJobCoordinates(coords);
+              
+              // Set map region centered on job location
+              setMapRegion({
+                ...coords,
+                latitudeDelta: 0.005,
+                longitudeDelta: 0.005,
+              });
+            }
+          } catch (error) {
+            console.log('Error geocoding address:', error);
+          }
+        }
+      }
+    };
+
+    geocodeAddress();
+  }, [formData.autoTimer?.enabled, formData.address, formData.street, formData.city, formData.postalCode]);
 
   // Track changes in autoSchedule to clean up when disabled
   useEffect(() => {
@@ -2609,6 +2766,17 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 formData.postalCode?.trim());
     };
 
+    const formatTime = (seconds: number): string => {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      
+      if (hours > 0) {
+        return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
+      }
+      return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    };
+
     const handleAutoTimerToggle = async (value: boolean) => {
       if (!hasLocationPermission) {
         // No hacer nada si no hay permisos de ubicación
@@ -2845,8 +3013,89 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               </View>
             </View>
 
+            {/* Map showing job location and geofence radius */}
+            {mapRegion && jobCoordinates && (
+              <View style={styles.mapContainer}>
+                <Text style={styles.mapTitle}>📍 Ubicación del trabajo y área de geofencing</Text>
+                <View style={styles.mapWrapper}>
+                  {activeTimerElapsed > 0 && (
+                    <View style={{
+                      position: 'absolute',
+                      top: 10,
+                      right: 10,
+                      zIndex: 1000,
+                      backgroundColor: 'rgba(76, 217, 100, 0.95)',
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      borderRadius: 10,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 5,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.15,
+                      shadowRadius: 3,
+                      elevation: 3,
+                    }}>
+                      <IconSymbol size={12} name="clock.fill" color="#FFFFFF" />
+                      <Text style={{
+                        fontSize: 12,
+                        fontWeight: '700',
+                        color: '#FFFFFF',
+                        letterSpacing: 0.2,
+                      }}>
+                        {formatTime(activeTimerElapsed)}
+                      </Text>
+                    </View>
+                  )}
+                  <MapView
+                    style={styles.map}
+                    region={mapRegion}
+                    provider={PROVIDER_DEFAULT}
+                    showsUserLocation={true}
+                    showsMyLocationButton={true}
+                  >
+                    {/* Job location marker */}
+                    <Marker
+                      coordinate={jobCoordinates}
+                      title={formData.name || 'Trabajo'}
+                      description={`${formData.street || ''} ${formData.city || ''}`}
+                    >
+                      <View style={styles.markerContainer}>
+                        <View style={[styles.marker, { backgroundColor: formData.color || colors.primary }]}>
+                          <IconSymbol size={20} name="briefcase.fill" color="#FFFFFF" />
+                        </View>
+                      </View>
+                    </Marker>
 
+                    {/* Geofence radius circle */}
+                    <Circle
+                      center={jobCoordinates}
+                      radius={formData.autoTimer?.geofenceRadius || 50}
+                      fillColor={`${formData.color || colors.primary}20`}
+                      strokeColor={formData.color || colors.primary}
+                      strokeWidth={2}
+                    />
 
+                    {/* User location marker (if available) */}
+                    {userLocation && (
+                      <Marker
+                        coordinate={userLocation}
+                        title="Mi ubicación"
+                        anchor={{ x: 0.5, y: 0.5 }}
+                      >
+                        <View style={styles.userMarker}>
+                          <View style={styles.userMarkerDot} />
+                        </View>
+                      </Marker>
+                    )}
+                  </MapView>
+                </View>
+                <Text style={styles.mapDescription}>
+                  El círculo muestra el área de {formData.autoTimer?.geofenceRadius || 50} metros donde se activará el timer automáticamente
+                </Text>
+              </View>
+            )}
 
             
             <View style={styles.inputGroup}>

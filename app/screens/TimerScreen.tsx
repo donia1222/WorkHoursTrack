@@ -28,7 +28,7 @@ import TimerSuccessModal from '../components/TimerSuccessModal';
 import { Job, WorkDay, StoredActiveSession } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
-import { simulateGeofenceEvent } from '../services/BackgroundGeofenceTask';
+
 import { useBackNavigation, useNavigation } from '../context/NavigationContext';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
@@ -1809,253 +1809,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   return (
     <SafeAreaView style={styles.container}>
 
-      {/* DEBUG Test Buttons - Always visible in dev mode */}
-      {__DEV__ && selectedJobId && (
-        <View style={{ padding: 16 }}>
-          <Text style={{ color: colors.text, fontSize: 14, marginBottom: 8, fontWeight: '600' }}>
-            🧪 DEBUG: Test Background Geofencing
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 6, marginBottom: 6 }}>
-            {/* Primera fila: Background tests */}
-            <TouchableOpacity
-              onPress={async () => {
-                console.log('🧪 TEST: Simulating BACKGROUND ENTER for job:', selectedJobId);
-                // Simular evento de background geofencing
-                await simulateGeofenceEvent(selectedJobId, 'enter');
-                console.log('✅ Background ENTER simulado - revisa notificaciones y sesión activa');
-              }}
-              style={{ 
-                backgroundColor: colors.success, 
-                padding: 12, 
-                borderRadius: 8, 
-                flex: 1 
-              }}
-            >
-              <Text style={{ 
-                color: 'white', 
-                fontSize: 12, 
-                fontWeight: '600', 
-                textAlign: 'center' 
-              }}>
-                📍 BG ENTER
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              onPress={async () => {
-                console.log('🧪 TEST: Simulating BACKGROUND EXIT for job:', selectedJobId);
-                // Simular evento de background geofencing
-                await simulateGeofenceEvent(selectedJobId, 'exit');
-                console.log('✅ Background EXIT simulado - revisa notificaciones y reportes');
-              }}
-              style={{ 
-                backgroundColor: colors.error, 
-                padding: 12, 
-                borderRadius: 8, 
-                flex: 1 
-              }}
-            >
-              <Text style={{ 
-                color: 'white', 
-                fontSize: 12, 
-                fontWeight: '600', 
-                textAlign: 'center' 
-              }}>
-                🚪 BG EXIT
-              </Text>
-            </TouchableOpacity>
-          </View>
-          
-          <View style={{ flexDirection: 'row', gap: 6 }}>
-            {/* Segunda fila: Foreground tests */}
-            <TouchableOpacity
-              onPress={async () => {
-                console.log('TEST: Simulating FOREGROUND ENTER for job:', selectedJobId);
-                // Simular evento de geofence usando el GeofenceService
-                const GeofenceService = require('../services/GeofenceService').default;
-                const geofenceService = GeofenceService.getInstance();
-                const job = jobs.find(j => j.id === selectedJobId);
-                if (job && job.autoTimer?.enabled) {
-                  // Disparar evento de entrada
-                  geofenceService['triggerEvent']({
-                    jobId: selectedJobId,
-                    jobName: job.name,
-                    eventType: 'enter',
-                    timestamp: new Date(),
-                    location: {
-                      latitude: job.location?.latitude || 0,
-                      longitude: job.location?.longitude || 0,
-                    }
-                  });
-                  Alert.alert('Test', '✅ Simulado ENTRAR - Timer debe iniciar');
-                } else {
-                  Alert.alert('Error', 'AutoTimer no está activado para este trabajo');
-                }
-              }}
-              style={{ 
-                backgroundColor: colors.success, 
-                padding: 12, 
-                borderRadius: 8, 
-                flex: 1 
-              }}
-            >
-              <Text style={{ color: 'white', fontSize: 12, fontWeight: '600', textAlign: 'center' }}>
-                📍 FG ENTER
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              onPress={async () => {
-                console.log('TEST: Simulating EXIT for job:', selectedJobId);
-                
-                // Verificar si hay sesión activa primero
-                const activeSession = await JobService.getActiveSession();
-                if (activeSession && activeSession.jobId === selectedJobId) {
-                  // Si hay sesión activa, usar GeofenceService para disparar el evento
-                  const GeofenceService = require('../services/GeofenceService').default;
-                  const geofenceService = GeofenceService.getInstance();
-                  const job = jobs.find(j => j.id === selectedJobId);
-                  
-                  if (job) {
-                    // Disparar evento de salida
-                    geofenceService['triggerEvent']({
-                      jobId: selectedJobId,
-                      jobName: job.name,
-                      eventType: 'exit',
-                      timestamp: new Date(),
-                      location: {
-                        latitude: job.location?.latitude || 0,
-                        longitude: job.location?.longitude || 0,
-                      }
-                    });
-                    Alert.alert('Test', '✅ Simulado SALIR - Timer detenido');
-                  }
-                } else {
-                  // Si no hay sesión activa, solo enviar notificación de prueba
-                  Alert.alert('Info', 'No hay timer activo para detener');
-                }
-              }}
-              style={{ 
-                backgroundColor: colors.error, 
-                padding: 12, 
-                borderRadius: 8, 
-                flex: 1 
-              }}
-            >
-              <Text style={{ color: 'white', fontSize: 12, fontWeight: '600', textAlign: 'center' }}>
-                🚪 FG EXIT
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
-      {/* Auto Timer Status */}
-      {autoTimerStatus && autoTimerStatus.state !== 'inactive' && (() => {
-        const selectedJob = jobs.find(job => job.id === selectedJobId);
-        const hasLocation = selectedJob?.location?.latitude && selectedJob?.location?.longitude;
-        return hasLocation && selectedJob?.autoTimer?.enabled;
-      })() && (
-        <View style={styles.autoTimerStatusContainer}>
-          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.autoTimerStatusCard}>
-
-            <View style={styles.autoTimerStatusHeader}>
-
-              <IconSymbol 
-                size={18} 
-                name={
-                  autoTimerStatus.state === 'entering' ? 'location.fill' :
-                  autoTimerStatus.state === 'active' ? 'clock.fill' :
-                  'location'
-                } 
-                color={
-                  autoTimerStatus.state === 'active' ? colors.success : 
-                  autoTimerStatus.state === 'entering' ? colors.warning : 
-                  colors.primary
-                } 
-              />
-              <Text style={styles.autoTimerStatusTitle}>
-                {autoTimerStatus.jobName || 'AutoTimer'}
-              </Text>
-
-              {autoTimerStatus.state === 'active' ? (
-                <TouchableOpacity 
-                  onPress={handleStopButton}
-                  style={[styles.cancelAutoTimerButton, { backgroundColor: colors.error + '20' }]}
-                >
-                  <IconSymbol size={16} name="stop.fill" color={colors.error} />
-                </TouchableOpacity>
-              ) : autoTimerStatus.state === 'entering' || autoTimerStatus.state === 'leaving' ? (
-                // Countdown activo: mostrar botón parar
-                <TouchableOpacity 
-                  onPress={async () => {
-                    await autoTimerService.cancelPendingAction();
-                  }}
-                  style={[styles.cancelAutoTimerButton, { backgroundColor: colors.warning + '20' }]}
-                >
-                  <IconSymbol size={16} name="stop.fill" color={colors.warning} />
-                </TouchableOpacity>
-              ) : autoTimerStatus.state === 'cancelled' ? (
-                // Countdown pausado: mostrar botón reanudar
-                <>
-                  {console.log('📱 TimerScreen: Showing RESUME button for cancelled AutoTimer')}
-                  <TouchableOpacity 
-                    onPress={async () => {
-                      console.log('🔄 TimerScreen: User pressed resume button');
-                      await autoTimerService.manualRestart();
-                    }}
-                    style={[styles.cancelAutoTimerButton, { backgroundColor: colors.success + '20' }]}
-                  >
-                    <IconSymbol size={16} name="play.fill" color={colors.success} />
-                  </TouchableOpacity>
-                </>
-              
-              ) : (
-                // Estado inactivo: botón para desactivar
-                <TouchableOpacity 
-                  onPress={async () => {
-                    await autoTimerService.setManualMode();
-                  }}
-                  style={styles.cancelAutoTimerButton}
-                >
-                  <IconSymbol size={16} name="xmark" color={colors.textSecondary} />
-                </TouchableOpacity>
-              )}
-            </View>
-            <Text style={styles.autoTimerStatusMessage}>
-              {getAutoTimerMessage(autoTimerStatus)}
-            </Text>
-            {autoTimerStatus.remainingTime > 0 && autoTimerStatus.state !== 'active' && (
-              <View style={styles.autoTimerProgressContainer}>
-                <View style={styles.autoTimerProgressBar}>
-                  <Animated.View 
-                    style={[
-                      styles.autoTimerProgressFill,
-                      {
-                        width: `${((autoTimerStatus.totalDelayTime - autoTimerStatus.remainingTime) / autoTimerStatus.totalDelayTime) * 100}%`,
-                        backgroundColor: autoTimerStatus.state === 'entering' ? colors.warning : colors.error
-                      }
-                    ]}
-                  />
-                </View>
-                <Text style={styles.autoTimerCountdown}>
-                  {(() => {
-                    const totalSeconds = Math.floor(autoTimerStatus.remainingTime);
-                    if (totalSeconds >= 60) {
-                      const minutes = Math.floor(totalSeconds / 60);
-                      const seconds = totalSeconds % 60;
-                      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                    } else {
-                      return `${totalSeconds}s`;
-                    }
-                  })()}
-                </Text>
-              </View>
-            )}
-          </BlurView>
-        </View>
-      )}
-
                                      {/* Auto Timer Quick Setup */}
             {!isRunning && !activeSession && selectedJobId && autoTimerStatus?.state !== 'active' && (
               (() => {
@@ -2104,6 +1857,37 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           <View style={styles.timerContent}>
       
             <Animated.View style={[styles.timerDisplay, animatedTimerStyle]}>
+              {autoTimerStatus?.state === 'active' && activeSession && (
+                <View style={{
+                  position: 'absolute',
+                  top: -30,
+                  alignSelf: 'center',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(76, 217, 100, 0.15)',
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: 'rgba(76, 217, 100, 0.25)',
+                  gap: 5,
+                }}>
+                  <View style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: '#4CD964',
+                  }} />
+                  <Text style={{
+                    fontSize: 11,
+                    fontWeight: '700',
+                    color: '#4CD964',
+                    letterSpacing: 0.5,
+                  }}>
+                    AutoTimer
+                  </Text>
+                </View>
+              )}
               <View style={styles.timerTimeContainer}>
                 <Animated.Text style={[styles.timerTime, animatedTimeTextStyle]}>
                   {formatTime(elapsedTime)}

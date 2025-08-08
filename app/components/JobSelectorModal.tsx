@@ -16,6 +16,7 @@ import Animated, {
   useAnimatedGestureHandler, 
   withSpring, 
   withTiming,
+  withRepeat,
   runOnJS 
 } from 'react-native-reanimated';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -34,14 +35,81 @@ interface JobSelectorModalProps {
   onJobSelect: (job: Job) => void;
   title: string;
   subtitle: string;
+  onNavigateToTimer?: () => void;
+  showAutoTimerHeader?: boolean;
 }
+
+// Componente animado para el círculo de color
+const AnimatedColorDot = ({ color, isDark }: { color: string; isDark: boolean }) => {
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    // Animación de pulso
+    scale.value = withRepeat(
+      withTiming(1.2, { duration: 1000 }),
+      -1,
+      true
+    );
+    
+    // Animación de opacidad
+    opacity.value = withRepeat(
+      withTiming(0.6, { duration: 1000 }),
+      -1,
+      true
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  const pulseRingStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value * 1.3 }],
+    opacity: opacity.value * 0.3,
+  }));
+
+  return (
+    <View style={{ position: 'relative', width: 20, height: 20, justifyContent: 'center', alignItems: 'center' }}>
+      <Animated.View 
+        style={[
+          {
+            position: 'absolute',
+            width: 20,
+            height: 20,
+            borderRadius: 10,
+            backgroundColor: color,
+            opacity: 0.3,
+          },
+          pulseRingStyle
+        ]} 
+      />
+      <Animated.View 
+        style={[
+          {
+            width: 20,
+            height: 20,
+            borderRadius: 10,
+            backgroundColor: color,
+            borderWidth: 2,
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+          },
+          animatedStyle
+        ]} 
+      />
+    </View>
+  );
+};
 
 export default function JobSelectorModal({ 
   visible, 
   onClose, 
   onJobSelect, 
   title, 
-  subtitle 
+  subtitle,
+  onNavigateToTimer,
+  showAutoTimerHeader = false 
 }: JobSelectorModalProps) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
@@ -50,6 +118,7 @@ export default function JobSelectorModal({
   const [loading, setLoading] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
   const [selectedJobForStats, setSelectedJobForStats] = useState<Job | null>(null);
+  const [activeTimers, setActiveTimers] = useState<{ [jobId: string]: number }>({});
   
   const screenHeight = Dimensions.get('window').height;
   const styles = getStyles(colors, isDark, jobs.length, screenHeight);
@@ -61,8 +130,21 @@ export default function JobSelectorModal({
   useEffect(() => {
     if (visible) {
       loadJobs();
+      checkActiveTimers();
     }
   }, [visible]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (visible && Object.keys(activeTimers).length > 0) {
+      interval = setInterval(() => {
+        checkActiveTimers();
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [visible, activeTimers]);
 
   const loadJobs = async () => {
     setLoading(true);
@@ -81,10 +163,31 @@ export default function JobSelectorModal({
     onClose();
   };
 
-  const handleShowStatistics = (job: Job, event: any) => {
-    event.stopPropagation();
-    setSelectedJobForStats(job);
-    setShowStatistics(true);
+  const checkActiveTimers = async () => {
+    try {
+      const activeSession = await JobService.getActiveSession();
+      if (activeSession) {
+        const startTime = new Date(activeSession.startTime);
+        const now = new Date();
+        const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+        setActiveTimers({ [activeSession.jobId]: elapsedSeconds });
+      } else {
+        setActiveTimers({});
+      }
+    } catch (error) {
+      console.error('Error checking active timers:', error);
+    }
+  };
+
+  const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
+    }
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
   // Gesture handler for drag to close
@@ -138,7 +241,12 @@ export default function JobSelectorModal({
             {/* Drag handle */}
             <View style={styles.dragHandle} />
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={styles.headerTitle}>{title}</Text>
+            <View style={styles.headerContent}>
+              <Text style={styles.headerTitle}>{title}</Text>
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <IconSymbol size={30} name="xmark.circle.fill" color={colors.textTertiary} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.content}>
@@ -184,34 +292,83 @@ export default function JobSelectorModal({
                   key={job.id}
                   style={styles.jobCard}
                   onPress={() => handleJobSelect(job)}
+                  activeOpacity={0.7}
                 >
                   <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.jobCardInner}>
+                    {job.autoTimer?.enabled && showAutoTimerHeader && (
+                      <TouchableOpacity 
+                        style={styles.autoTimerHeader}
+                        onPress={() => {
+                          if (onNavigateToTimer) {
+                            onClose();
+                            onNavigateToTimer();
+                          }
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.autoTimerContent}>
+                          <IconSymbol size={12} name="location.fill" color="#4CD964" />
+                          <Text style={styles.autoTimerHeaderText}>AutoTimer</Text>
+                        </View>
+                        {activeTimers[job.id] && (
+                          <View style={styles.timerBadge}>
+                            <IconSymbol size={10} name="clock.fill" color="#4CD964" />
+                            <Text style={styles.timerText}>{formatTime(activeTimers[job.id])}</Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    )}
                     <LinearGradient
-                      colors={isDark ? ['rgba(34, 197, 94, 0.08)', 'rgba(34, 197, 94, 0.02)'] : ['rgba(34, 197, 94, 0.05)', 'rgba(34, 197, 94, 0.015)']}
+                      colors={[
+                        `${job.color}15`,
+                        `${job.color}08`,
+                        `${job.color}03`
+                      ]}
                       style={styles.jobCardGradient}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                     />
-                    <View style={styles.jobInfo}>
-                      <View style={[styles.jobColorDot, { backgroundColor: job.color }]} />
-                      <View style={styles.jobDetails}>
-                        <Text style={[styles.jobName, { color: colors.text }]}>{job.name}</Text>
-                        {job.company && (
-                          <Text style={[styles.jobCompany, { color: colors.textSecondary }]}>{job.company}</Text>
-                        )}
-                        <View style={styles.jobMeta}>
-                    
-                          {job.salary && job.salary.amount > 0 && (
-                            <Text style={[styles.jobMetaText, { color: colors.textTertiary }]}>
-                              • {job.salary.amount} {job.salary.currency}
-                              /{job.salary.type === 'hourly' ? t('job_selector.time_periods.hour') : job.salary.type === 'monthly' ? t('job_selector.time_periods.month') : t('job_selector.time_periods.year')}
-                            </Text>
+                    <View style={styles.jobContent}>
+                      <View style={styles.jobInfo}>
+                        <View style={[styles.jobIconContainer, { backgroundColor: `${job.color}20` }]}>
+                          {job.autoTimer?.enabled ? (
+                            <AnimatedColorDot color={job.color} isDark={isDark} />
+                          ) : (
+                            <View style={[styles.jobColorDot, { backgroundColor: job.color }]} />
                           )}
                         </View>
+                        <View style={styles.jobDetails}>
+                          <Text style={[styles.jobName, { color: colors.text }]} numberOfLines={1}>{job.name}</Text>
+                          {job.company && (
+                            <Text style={[styles.jobCompany, { color: colors.textSecondary }]} numberOfLines={1}>
+                              <IconSymbol size={12} name="building.2" color={colors.textTertiary} /> {job.company}
+                            </Text>
+                          )}
+                          <View style={styles.jobMeta}>
+                            {job.location?.address && (
+                              <View style={styles.jobMetaItem}>
+                                <IconSymbol size={12} name="map.fill" color={colors.primary} />
+                                <Text style={[styles.jobMetaText, { color: colors.textTertiary }]} numberOfLines={1}>
+                                  {job.location.address.split(',')[0]}
+                                </Text>
+                              </View>
+                            )}
+                            {job.salary && job.salary.amount > 0 && (
+                              <View style={styles.jobMetaItem}>
+                                <IconSymbol size={12} name="dollarsign.circle.fill" color={colors.success} />
+                                <Text style={[styles.jobMetaText, { color: colors.textTertiary }]}>
+                                  {job.salary.amount} {job.salary.currency}/{job.salary.type === 'hourly' ? 'h' : job.salary.type === 'monthly' ? 'mes' : 'año'}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                        </View>
                       </View>
-                    </View>
-                    <View style={styles.jobActions}>
-                      <IconSymbol size={21} name="chevron.right" color={colors.primary} />
+                      <View style={styles.jobActions}>
+                        <View style={[styles.jobArrowContainer, { backgroundColor: `${colors.primary}10` }]}>
+                          <IconSymbol size={16} name="chevron.right" color={colors.primary} />
+                        </View>
+                      </View>
                     </View>
                   </BlurView>
                 </TouchableOpacity>
@@ -292,6 +449,15 @@ const getStyles = (colors: ThemeColors, isDark: boolean, jobsCount: number, scre
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  closeButton: {
+    padding: 4,
   },
   headerTitle: {
     fontSize: 18,
@@ -409,10 +575,6 @@ const getStyles = (colors: ThemeColors, isDark: boolean, jobsCount: number, scre
     marginBottom: 16,
   },
   jobCardInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 28,
     borderRadius: 24,
     borderWidth: 1,
     borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
@@ -426,6 +588,42 @@ const getStyles = (colors: ThemeColors, isDark: boolean, jobsCount: number, scre
     elevation: 12,
     overflow: 'hidden',
   },
+  autoTimerHeader: {
+    backgroundColor: 'rgba(76, 217, 100, 0.15)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(76, 217, 100, 0.2)',
+  },
+  autoTimerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  autoTimerHeaderText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#4CD964',
+    marginLeft: 6,
+    letterSpacing: 0.5,
+  },
+  timerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    gap: 4,
+  },
+  timerText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#4CD964',
+    letterSpacing: 0.3,
+  },
   jobCardGradient: {
     position: 'absolute',
     top: 0,
@@ -434,16 +632,29 @@ const getStyles = (colors: ThemeColors, isDark: boolean, jobsCount: number, scre
     bottom: 0,
     borderRadius: 24,
   },
+  jobContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+  },
   jobInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
+  jobIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
   jobColorDot: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    marginRight: 20,
     borderWidth: 2,
     borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
     shadowColor: '#000',
@@ -472,14 +683,26 @@ const getStyles = (colors: ThemeColors, isDark: boolean, jobsCount: number, scre
     alignItems: 'center',
     flexWrap: 'wrap',
   },
-  jobMetaText: {
-    fontSize: 12,
-    marginRight: 12,
-  },
-  jobActions: {
+  jobMetaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    marginRight: 12,
+    marginTop: 4,
+  },
+  jobMetaText: {
+    fontSize: 12,
+    marginLeft: 4,
+  },
+  jobActions: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  jobArrowContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   statsButton: {
     padding: 12,
