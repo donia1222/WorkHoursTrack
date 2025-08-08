@@ -18,7 +18,7 @@ declare global {
 import Loading from '../components/Loading';
 import MapLocation from '../components/MapLocation';
 import NoLocationMapView from '../components/NoLocationMapView';
-import OnboardingScreen from '../screens/OnboardingScreen';
+import WelcomeModal from '../components/WelcomeModal';
 import Header from '../components/Header';
 import ProfileModal from '../components/ProfileModal';
 // import SideMenu from '../components/SideMenu'; // Removed - using BottomNavigation
@@ -457,7 +457,10 @@ function AppContent() {
 
   if (showOnboarding) {
     return (
-      <OnboardingScreen
+      <WelcomeModal
+        visible={true}
+        isOnboarding={true}
+        onClose={() => setShowOnboarding(false)}
         onDone={async () => {
           await AsyncStorage.setItem('onboardingSeen', 'true');
           setShowOnboarding(false);

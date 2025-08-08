@@ -79,14 +79,14 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: colors.text,
     fontWeight: '600',
     flex: 1,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   closeButton: {
     padding: Theme.spacing.sm,
   },
   closeButtonCircle: {
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
     borderRadius: 18,
     backgroundColor: colors.success,
     justifyContent: 'center',
@@ -1035,6 +1035,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const { isSubscribed } = useSubscription();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [showAutoTimerAlert, setShowAutoTimerAlert] = useState(false);
+  const [hasShownAutoTimerAlert, setHasShownAutoTimerAlert] = useState(false);
   const [previousAutoSchedule, setPreviousAutoSchedule] = useState<boolean | undefined>(undefined);
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(isLocationEnabled);
   const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
@@ -1363,6 +1365,56 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       if (interval) clearInterval(interval);
     };
   }, [visible, currentTab, editingJob, formData.autoTimer?.enabled]);
+
+  // Monitor AutoTimer status and show alert when needed
+  useEffect(() => {
+    const checkAutoTimerStatus = () => {
+      // Calculate if user is inside the work radius
+      if (userLocation && jobCoordinates && formData.autoTimer?.enabled) {
+        const distance = calculateDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          jobCoordinates.latitude,
+          jobCoordinates.longitude
+        );
+        
+        const radius = formData.autoTimer?.geofenceRadius || 100;
+        const isInsideRadius = distance <= radius;
+        
+        // Show alert only if outside radius and haven't shown it yet
+        if (!isInsideRadius && !hasShownAutoTimerAlert && currentTab === 'auto') {
+          setShowAutoTimerAlert(true);
+          setHasShownAutoTimerAlert(true);
+        }
+        // Hide alert if user enters the radius
+        else if (isInsideRadius && showAutoTimerAlert) {
+          setShowAutoTimerAlert(false);
+        }
+      }
+    };
+
+    // Helper function to calculate distance between two coordinates
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+      const R = 6371e3; // Earth radius in meters
+      const φ1 = lat1 * Math.PI/180;
+      const φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2-lat1) * Math.PI/180;
+      const Δλ = (lon2-lon1) * Math.PI/180;
+
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+      return R * c; // Distance in meters
+    };
+
+    if (visible && formData.autoTimer?.enabled && currentTab === 'auto') {
+      checkAutoTimerStatus();
+      const interval = setInterval(checkAutoTimerStatus, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [visible, formData.autoTimer?.enabled, currentTab, hasShownAutoTimerAlert, userLocation, jobCoordinates, showAutoTimerAlert, formData.autoTimer?.geofenceRadius]);
 
   // Geocode job address when it changes and auto-timer is enabled
   useEffect(() => {
@@ -2932,6 +2984,76 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
     return (
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* AutoTimer Alert */}
+        {showAutoTimerAlert && formData.autoTimer?.enabled && (
+          <View style={{
+            marginHorizontal: 16,
+            marginTop: 16,
+            marginBottom: 8,
+            backgroundColor: isDark ? 'rgba(255, 149, 0, 0.95)' : 'rgba(255, 149, 0, 0.95)',
+            borderRadius: 16,
+            padding: 16,
+            flexDirection: 'column',
+            alignItems: 'stretch',
+            justifyContent: 'space-between',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.15,
+            shadowRadius: 6,
+            elevation: 4,
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+          }}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: 16,
+            }}>
+              <IconSymbol size={24} name="clock.badge.exclamationmark" color="#FFFFFF" />
+              <Text style={{
+                fontSize: 14,
+                color: '#FFFFFF',
+                fontWeight: '600',
+                flex: 1,
+                lineHeight: 18,
+                marginLeft: 12,
+              }}>
+                {t('timer.auto_timer.activation_alert')}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={{
+                paddingHorizontal: 20,
+                paddingVertical: 12,
+                borderRadius: 12,
+                backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3,
+              }}
+              onPress={() => {
+                setShowAutoTimerAlert(false);
+                // Reset after some time to show again if needed
+                setTimeout(() => {
+                  setHasShownAutoTimerAlert(false);
+                }, 60000); // Reset after 1 minute
+              }}
+            >
+              <Text style={{
+                fontSize: 14,
+                color: '#FFFFFF',
+                fontWeight: '700',
+              }}>
+                {t('timer.auto_timer.dismiss_notice')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
           <Text style={styles.sectionTitle}>{t('job_form.auto_timer.title')}</Text>
           <Text style={styles.sectionSubtitle}>{t('job_form.auto_timer.subtitle')}</Text>

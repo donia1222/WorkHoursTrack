@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   ScrollView,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
@@ -15,10 +16,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import * as Location from 'expo-location';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface WelcomeModalProps {
   visible: boolean;
   onClose: () => void;
+  onDone?: () => Promise<void>;
+  isOnboarding?: boolean;
 }
 
 interface OnboardingStep {
@@ -26,6 +31,7 @@ interface OnboardingStep {
   description: string;
   icon: string;
   color: string;
+  requiresLocation?: boolean;
 }
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
@@ -349,6 +355,7 @@ const getOnboardingSteps = (colors: ThemeColors, t: (key: string) => string): On
     description: t('onboarding.steps.timer.description'),
     icon: 'clock.fill',
     color: colors.warning,
+    requiresLocation: true,
   },
   {
     title: t('onboarding.steps.statistics.title'),
@@ -364,10 +371,11 @@ const getOnboardingSteps = (colors: ThemeColors, t: (key: string) => string): On
   },
 ];
 
-export default function WelcomeModal({ visible, onClose }: WelcomeModalProps) {
+export default function WelcomeModal({ visible, onClose, onDone, isOnboarding = false }: WelcomeModalProps) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(0);
+  const [locationPermissionRequested, setLocationPermissionRequested] = useState(false);
   const onboardingSteps = getOnboardingSteps(colors, t);
   const screenWidth = Dimensions.get('window').width;
   
@@ -380,11 +388,53 @@ export default function WelcomeModal({ visible, onClose }: WelcomeModalProps) {
     }
   }, [visible]);
 
-  const handleNext = () => {
+  const requestLocationPermission = async () => {
+    try {
+      setLocationPermissionRequested(true);
+      
+      // Request location permissions
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          t('onboarding.location.permission_title'),
+          t('onboarding.location.permission_message'),
+          [{ text: t('onboarding.location.permission_understood'), style: 'default' }]
+        );
+      }
+      
+      // Continue to next step regardless of result
+      proceedToNextStep();
+    } catch (error) {
+      console.error('Error requesting location permission:', error);
+      proceedToNextStep();
+    }
+  };
+
+  const proceedToNextStep = () => {
     if (currentStep < onboardingSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
+      handleComplete();
+    }
+  };
+
+  const handleComplete = async () => {
+    if (isOnboarding && onDone) {
+      await onDone();
+    } else {
       onClose();
+    }
+  };
+
+  const handleNext = () => {
+    const currentStepData = onboardingSteps[currentStep];
+    
+    // If this step requires location permissions and they haven't been requested
+    if (currentStepData.requiresLocation && !locationPermissionRequested) {
+      requestLocationPermission();
+    } else {
+      proceedToNextStep();
     }
   };
 
@@ -417,7 +467,7 @@ export default function WelcomeModal({ visible, onClose }: WelcomeModalProps) {
           end={{ x: 1, y: 1 }}
         />
         
-        {/* Header with Close Button */}
+        {/* Header with Close/Skip Button */}
         <View style={styles.header}>
 
         </View>

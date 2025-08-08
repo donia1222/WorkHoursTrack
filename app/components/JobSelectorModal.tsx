@@ -244,7 +244,7 @@ export default function JobSelectorModal({
             <View style={styles.headerContent}>
               <Text style={styles.headerTitle}>{title}</Text>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <IconSymbol size={30} name="xmark.circle.fill" color={colors.textTertiary} />
+                <IconSymbol size={24} name="xmark.circle.fill" color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -287,7 +287,16 @@ export default function JobSelectorModal({
             </BlurView>
           ) : (
             <ScrollView style={styles.jobsList} showsVerticalScrollIndicator={false}>
-              {jobs.map((job) => (
+              {jobs
+                .slice()
+                .sort((a, b) => {
+                  // First sort by AutoTimer enabled (enabled first)
+                  if (a.autoTimer?.enabled && !b.autoTimer?.enabled) return -1;
+                  if (!a.autoTimer?.enabled && b.autoTimer?.enabled) return 1;
+                  // If both have same AutoTimer status, maintain original order
+                  return 0;
+                })
+                .map((job) => (
                 <TouchableOpacity
                   key={job.id}
                   style={styles.jobCard}

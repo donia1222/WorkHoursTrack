@@ -1,25 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  Modal,
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
+  Dimensions,
   Alert,
-  Linking,
-  Modal,
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import * as Location from 'expo-location';
-import PrivacyPolicyScreen from './PrivacyPolicyScreen';
-import TermsOfServiceScreen from './TermsOfServiceScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface OnboardingScreenProps {
-  onDone: () => Promise<void>;
+interface WelcomeModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onDone?: () => Promise<void>;
+  isOnboarding?: boolean;
 }
 
 interface OnboardingStep {
@@ -34,8 +38,27 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
   },
+  backgroundGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   header: {
-    borderBottomWidth: 1,
+    paddingHorizontal: 20,
+
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(142, 142, 147, 0.12)',
   },
   headerContent: {
     flexDirection: 'row',
@@ -71,62 +94,75 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 16,
-    
   },
   stepContainer: {
     marginVertical: 24,
     alignItems: 'center',
-    
   },
   stepCard: {
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 24,
+    padding: 32,
     alignItems: 'center',
     width: '100%',
-    
+    marginHorizontal: 16,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    overflow: 'hidden',
+    marginTop: -20,
+  },
+  stepCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
   },
   stepHeader: {
     alignItems: 'center',
   },
   iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    overflow: 'hidden',
+  },
+  iconGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 60,
   },
   stepTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: '800',
     textAlign: 'center',
     marginBottom: 16,
+    letterSpacing: -0.5,
   },
   stepDescription: {
-    fontSize: 16,
+    fontSize: 17,
     textAlign: 'center',
-    lineHeight: 24,
-    maxWidth: '90%',
-  },
-  permissionNotice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 20,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 12,
-    maxWidth: '100%',
-  },
-  permissionNoticeText: {
-    fontSize: 14,
-    flex: 1,
-    textAlign: 'center',
-    fontWeight: '500',
+    lineHeight: 26,
+    maxWidth: '85%',
+    letterSpacing: -0.2,
   },
   indicatorsContainer: {
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: -10,
   },
   indicators: {
     flexDirection: 'row',
@@ -146,14 +182,30 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontWeight: '600',
   },
   featuresCard: {
-    marginVertical: 16,
-    borderRadius: 16,
-    padding: 20,
+    marginVertical: 20,
+    marginHorizontal: 16,
+    borderRadius: 20,
+    padding: 24,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    overflow: 'hidden',
+  },
+  featuresCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 20,
   },
   featuresTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 20,
+    letterSpacing: -0.3,
   },
   featuresList: {
     gap: 12,
@@ -161,39 +213,78 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 16,
+    paddingVertical: 4,
+  },
+  featureIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(34, 197, 94, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   featureText: {
     fontSize: 16,
     flex: 1,
+    letterSpacing: -0.1,
+    lineHeight: 22,
   },
   tipsCard: {
-    marginVertical: 16,
-    marginBottom: 24,
-    borderRadius: 16,
-    padding: 20,
+    marginVertical: 20,
+    marginHorizontal: 16,
+    marginBottom: 32,
+    borderRadius: 20,
+    padding: 24,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    overflow: 'hidden',
+  },
+  tipsCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 20,
   },
   tipsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 20,
+    letterSpacing: -0.3,
   },
   tipItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
+    gap: 16,
+    marginBottom: 16,
+  },
+  tipIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 122, 255, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   tipText: {
-    fontSize: 14,
+    fontSize: 15,
     flex: 1,
+    lineHeight: 21,
+    letterSpacing: -0.1,
   },
   navigationContainer: {
     flexDirection: 'row',
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 24,
     gap: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
   },
   navigationButton: {
     flex: 1,
@@ -202,9 +293,15 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
+    padding: 18,
     borderRadius: 16,
     gap: 12,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    overflow: 'hidden',
   },
   previousButton: {},
   nextButton: {},
@@ -220,41 +317,23 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
+    padding: 18,
     borderRadius: 16,
     gap: 12,
-  },
-  footerLinksContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 5,
-    paddingTop: 5,
-    alignItems: 'center',
-    maxWidth: '95%',
-    alignSelf: 'center',
-  },
-  footerLinksBackground: {
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
     overflow: 'hidden',
   },
-  footerLinks: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  footerLink: {
-    paddingHorizontal: 2,
-    paddingVertical: 4,
-  },
-  footerLinkText: {
-    fontSize: 10,
-    fontWeight: '500',
-  },
-  footerDivider: {
-    fontSize: 12,
-    marginHorizontal: 1,
+  nextButtonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 16,
   },
 });
 
@@ -266,42 +345,54 @@ const getOnboardingSteps = (colors: ThemeColors, t: (key: string) => string): On
     color: colors.primary,
   },
   {
-    title: t('onboarding.steps.timer.title'),
-    description: t('onboarding.steps.timer.description'),
-    icon: 'clock.fill',
+    title: t('onboarding.steps.calendar.title'),
+    description: t('onboarding.steps.calendar.description'),
+    icon: 'calendar',
     color: colors.success,
   },
   {
-    title: t('onboarding.steps.location.title'),
-    description: t('onboarding.steps.location.description'),
-    icon: 'location.fill',
+    title: t('onboarding.steps.timer.title'),
+    description: t('onboarding.steps.timer.description'),
+    icon: 'clock.fill',
     color: colors.warning,
     requiresLocation: true,
   },
   {
-    title: t('onboarding.steps.reports.title'),
-    description: t('onboarding.steps.reports.description'),
+    title: t('onboarding.steps.statistics.title'),
+    description: t('onboarding.steps.statistics.description'),
     icon: 'chart.bar.fill',
     color: colors.error,
   },
+  {
+    title: t('onboarding.steps.chatbot.title'),
+    description: t('onboarding.steps.chatbot.description'),
+    icon: 'message.fill',
+    color: colors.primary,
+  },
 ];
 
-export default function OnboardingScreen({ onDone }: OnboardingScreenProps) {
+export default function WelcomeModal({ visible, onClose, onDone, isOnboarding = false }: WelcomeModalProps) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(0);
   const [locationPermissionRequested, setLocationPermissionRequested] = useState(false);
-  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
-  const [showTermsOfService, setShowTermsOfService] = useState(false);
   const onboardingSteps = getOnboardingSteps(colors, t);
+  const screenWidth = Dimensions.get('window').width;
   
   const styles = getStyles(colors, isDark);
+
+  // Reset to first step when modal opens
+  useEffect(() => {
+    if (visible) {
+      setCurrentStep(0);
+    }
+  }, [visible]);
 
   const requestLocationPermission = async () => {
     try {
       setLocationPermissionRequested(true);
       
-      // Solicitar permisos de ubicación
+      // Request location permissions
       const { status } = await Location.requestForegroundPermissionsAsync();
       
       if (status !== 'granted') {
@@ -312,10 +403,10 @@ export default function OnboardingScreen({ onDone }: OnboardingScreenProps) {
         );
       }
       
-      // Continuar al siguiente paso independientemente del resultado
+      // Continue to next step regardless of result
       proceedToNextStep();
     } catch (error) {
-      console.log('Error requesting location permission:', error);
+      console.error('Error requesting location permission:', error);
       proceedToNextStep();
     }
   };
@@ -324,14 +415,22 @@ export default function OnboardingScreen({ onDone }: OnboardingScreenProps) {
     if (currentStep < onboardingSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      onDone();
+      handleComplete();
+    }
+  };
+
+  const handleComplete = async () => {
+    if (isOnboarding && onDone) {
+      await onDone();
+    } else {
+      onClose();
     }
   };
 
   const handleNext = () => {
     const currentStepData = onboardingSteps[currentStep];
     
-    // Si este paso requiere permisos de ubicación y no se han solicitado
+    // If this step requires location permissions and they haven't been requested
     if (currentStepData.requiresLocation && !locationPermissionRequested) {
       requestLocationPermission();
     } else {
@@ -345,50 +444,72 @@ export default function OnboardingScreen({ onDone }: OnboardingScreenProps) {
     }
   };
 
-  const handleSkip = () => {
-    onDone();
-  };
 
-  const openEmail = () => {
-    Linking.openURL('mailto:info@lweb.ch?subject=WorkTrack Support');
-  };
-
-  const openTerms = () => {
-    setShowTermsOfService(true);
-  };
-
-  const openPrivacy = () => {
-    setShowPrivacyPolicy(true);
-  };
 
   const currentStepData = onboardingSteps[currentStep];
 
   return (
-    <>
+    <Modal 
+      visible={visible} 
+      animationType="slide" 
+      presentationStyle="pageSheet" 
+      onRequestClose={onClose}
+    >
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* Background Gradient */}
+        <LinearGradient
+          colors={isDark 
+            ? ['rgba(99, 102, 241, 0.06)', 'rgba(139, 92, 246, 0.04)', 'rgba(59, 130, 246, 0.02)'] 
+            : ['rgba(99, 102, 241, 0.04)', 'rgba(139, 92, 246, 0.03)', 'rgba(59, 130, 246, 0.02)']
+          }
+          style={styles.backgroundGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+        
+        {/* Header with Close/Skip Button */}
+        <View style={styles.header}>
+          {!isOnboarding ? (
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <IconSymbol size={20} name="xmark" color={colors.textSecondary} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.skipButton} onPress={handleComplete}>
+              <Text style={[styles.skipButtonText, { color: colors.primary }]}>
+                {t('onboarding.navigation.skip')}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.stepContainer}>
-            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.stepCard, { backgroundColor: colors.surface }]}>
+            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.stepCard}>
+              <LinearGradient
+                colors={isDark 
+                  ? [`${currentStepData.color}15`, `${currentStepData.color}08`, 'transparent'] 
+                  : [`${currentStepData.color}12`, `${currentStepData.color}06`, 'transparent']
+                }
+                style={styles.stepCardGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
               <View style={styles.stepHeader}>
-                <View style={[styles.iconContainer, { backgroundColor: `${currentStepData.color}20` }]}>
+                <View style={styles.iconContainer}>
+                  <LinearGradient
+                    colors={[`${currentStepData.color}25`, `${currentStepData.color}15`]}
+                    style={styles.iconGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  />
                   <IconSymbol 
-                    size={48} 
+                    size={56} 
                     name={currentStepData.icon as any} 
                     color={currentStepData.color} 
                   />
                 </View>
                 <Text style={[styles.stepTitle, { color: colors.text }]}>{currentStepData.title}</Text>
                 <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>{currentStepData.description}</Text>
-                
-                {/* Mostrar aviso de permisos de ubicación si es necesario */}
-                {currentStepData.requiresLocation && !locationPermissionRequested && (
-                  <View style={[styles.permissionNotice, { backgroundColor: `${colors.warning}15`, borderColor: `${colors.warning}30` }]}>
-                    <IconSymbol size={20} name="exclamationmark.triangle.fill" color={colors.warning} />
-                    <Text style={[styles.permissionNoticeText, { color: colors.text }]}>
-                      {t('onboarding.location.permission_notice')}
-                    </Text>
-                  </View>
-                )}
               </View>
             </BlurView>
           </View>
@@ -413,64 +534,63 @@ export default function OnboardingScreen({ onDone }: OnboardingScreenProps) {
           </View>
 
           {/* Features overview */}
-          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.featuresCard, { backgroundColor: colors.surface }]}>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.featuresCard}>
+            <LinearGradient
+              colors={isDark 
+                ? ['rgba(34, 197, 94, 0.08)', 'rgba(34, 197, 94, 0.04)', 'transparent'] 
+                : ['rgba(34, 197, 94, 0.06)', 'rgba(34, 197, 94, 0.03)', 'transparent']
+              }
+              style={styles.featuresCardGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
             <Text style={[styles.featuresTitle, { color: colors.text }]}>{t('onboarding.features.title')}</Text>
             <View style={styles.featuresList}>
               <View style={styles.featureItem}>
-                <IconSymbol size={16} name="checkmark.circle.fill" color={colors.success} />
+                <View style={styles.featureIconContainer}>
+                  <IconSymbol size={14} name="checkmark" color={colors.success} />
+                </View>
                 <Text style={[styles.featureText, { color: colors.textSecondary }]}>{t('onboarding.features.smart_timer')}</Text>
               </View>
               <View style={styles.featureItem}>
-                <IconSymbol size={16} name="checkmark.circle.fill" color={colors.success} />
+                <View style={styles.featureIconContainer}>
+                  <IconSymbol size={14} name="checkmark" color={colors.success} />
+                </View>
                 <Text style={[styles.featureText, { color: colors.textSecondary }]}>{t('onboarding.features.visual_calendar')}</Text>
               </View>
               <View style={styles.featureItem}>
-                <IconSymbol size={16} name="checkmark.circle.fill" color={colors.success} />
+                <View style={styles.featureIconContainer}>
+                  <IconSymbol size={14} name="checkmark" color={colors.success} />
+                </View>
                 <Text style={[styles.featureText, { color: colors.textSecondary }]}>{t('onboarding.features.interactive_map')}</Text>
               </View>
               <View style={styles.featureItem}>
-                <IconSymbol size={16} name="checkmark.circle.fill" color={colors.success} />
+                <View style={styles.featureIconContainer}>
+                  <IconSymbol size={14} name="checkmark" color={colors.success} />
+                </View>
                 <Text style={[styles.featureText, { color: colors.textSecondary }]}>{t('onboarding.features.detailed_stats')}</Text>
               </View>
               <View style={styles.featureItem}>
-                <IconSymbol size={16} name="checkmark.circle.fill" color={colors.success} />
+                <View style={styles.featureIconContainer}>
+                  <IconSymbol size={14} name="checkmark" color={colors.success} />
+                </View>
                 <Text style={[styles.featureText, { color: colors.textSecondary }]}>{t('onboarding.features.data_export')}</Text>
               </View>
             </View>
           </BlurView>
 
           {/* Tips card */}
-          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.tipsCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.tipsTitle, { color: colors.text }]}>{t('onboarding.tips.title')}</Text>
-            <View style={styles.tipItem}>
-              <IconSymbol size={16} name="hand.tap" color={colors.primary} />
-              <Text style={[styles.tipText, { color: colors.textSecondary }]}>
-                {t('onboarding.tips.long_press')}
-              </Text>
-            </View>
-            <View style={styles.tipItem}>
-              <IconSymbol size={16} name="square.and.arrow.up" color={colors.primary} />
-              <Text style={[styles.tipText, { color: colors.textSecondary }]}>
-                {t('onboarding.tips.share_stats')}
-              </Text>
-            </View>
-            <View style={styles.tipItem}>
-              <IconSymbol size={16} name="arrow.down" color={colors.primary} />
-              <Text style={[styles.tipText, { color: colors.textSecondary }]}>
-                {t('onboarding.tips.swipe_close')}
-              </Text>
-            </View>
-          </BlurView>
+         
         </ScrollView>
 
         {/* Navigation buttons */}
-        <View style={[styles.navigationContainer, { borderTopColor: colors.border }]}>
+        <View style={styles.navigationContainer}>
           <TouchableOpacity
             style={[styles.navigationButton, styles.previousButton]}
             onPress={handlePrevious}
             disabled={currentStep === 0}
           >
-            <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={[styles.navigationButtonInner, { backgroundColor: colors.surface }]}>
+            <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.navigationButtonInner}>
               <IconSymbol 
                 size={20} 
                 name="chevron.left" 
@@ -491,75 +611,26 @@ export default function OnboardingScreen({ onDone }: OnboardingScreenProps) {
             style={[styles.navigationButton, styles.nextButton]}
             onPress={handleNext}
           >
-            <View style={[styles.nextButtonInner, { backgroundColor: colors.primary }]}>
+            <View style={styles.nextButtonInner}>
+              <LinearGradient
+                colors={['#007AFF', '#0056CC', '#003D99']}
+                style={styles.nextButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
               <Text style={[styles.nextButtonText, { color: '#FFFFFF' }]}>
-                {currentStep === onboardingSteps.length - 1 ? t('onboarding.navigation.start') : 
-                 currentStepData.requiresLocation && !locationPermissionRequested ? t('onboarding.navigation.allow_location') : t('onboarding.navigation.next')}
+                {currentStep === onboardingSteps.length - 1 ? t('onboarding.navigation.start') : t('onboarding.navigation.next')}
               </Text>
               <IconSymbol 
                 size={20} 
-                name={currentStep === onboardingSteps.length - 1 ? 'checkmark' : 
-                     currentStepData.requiresLocation && !locationPermissionRequested ? 'location.fill' : 'chevron.right'} 
+                name={currentStep === onboardingSteps.length - 1 ? 'checkmark' : 'chevron.right'} 
                 color="#FFFFFF" 
               />
             </View>
           </TouchableOpacity>
         </View>
-        
-        {/* Footer Links */}
-        <View style={styles.footerLinksContainer}>
-          <BlurView 
-            intensity={85} 
-            tint={isDark ? "dark" : "light"} 
-            style={[styles.footerLinksBackground, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }]}
-          >
-            <View style={styles.footerLinks}>
-              <TouchableOpacity style={styles.footerLink} onPress={openPrivacy}>
-                <Text style={[styles.footerLinkText, { color: colors.primary }]}>
-                  {t('help_support.legal.privacy')}
-                </Text>
-              </TouchableOpacity>
-              
-              <Text style={[styles.footerDivider, { color: colors.textTertiary }]}>•</Text>
-              
-              <TouchableOpacity style={styles.footerLink} onPress={openTerms}>
-                <Text style={[styles.footerLinkText, { color: colors.primary }]}>
-                  {t('help_support.legal.terms')}
-                </Text>
-              </TouchableOpacity>
-              
-              <Text style={[styles.footerDivider, { color: colors.textTertiary }]}>•</Text>
-              
-              <TouchableOpacity style={styles.footerLink} onPress={openEmail}>
-                <Text style={[styles.footerLinkText, { color: colors.primary }]}>
-                  {t('help_support.contact.email')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </BlurView>
-        </View>
       </SafeAreaView>
-
-      {/* Privacy Policy Modal */}
-      <Modal
-        visible={showPrivacyPolicy}
-        animationType="slide"
-        presentationStyle="formSheet"
-        onRequestClose={() => setShowPrivacyPolicy(false)}
-      >
-        <PrivacyPolicyScreen onClose={() => setShowPrivacyPolicy(false)} />
-      </Modal>
-      
-      {/* Terms of Service Modal */}
-      <Modal
-        visible={showTermsOfService}
-        animationType="slide"
-        presentationStyle="formSheet"
-        onRequestClose={() => setShowTermsOfService(false)}
-      >
-        <TermsOfServiceScreen onClose={() => setShowTermsOfService(false)} />
-      </Modal>
-    </>
+    </Modal>
   );
 }
 

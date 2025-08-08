@@ -164,8 +164,8 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
             <View style={styles.dragHandle} />
              <ScrollView
                 ref={scrollViewRef}
-                horizontal={true}
-                showsHorizontalScrollIndicator={false}
+                horizontal={false}
+                showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContainer}
                 style={styles.scrollView}
                 bounces={true}
@@ -178,7 +178,15 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                 }}
                 scrollEventThrottle={16}
               >
-                {jobs.slice().reverse().map((job, index) => {
+                {jobs.slice()
+                  .sort((a, b) => {
+                    // First sort by AutoTimer enabled (enabled first)
+                    if (a.autoTimer?.enabled && !b.autoTimer?.enabled) return -1;
+                    if (!a.autoTimer?.enabled && b.autoTimer?.enabled) return 1;
+                    // If both have same AutoTimer status, maintain original order
+                    return 0;
+                  })
+                  .map((job, index) => {
                   const isActive = isJobCurrentlyActive(job);
                   const jobStats = getJobStatistics ? getJobStatistics(job) : null;
 
@@ -212,10 +220,7 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                             </View>
                           )}
                         </View>
-                        {showAutoTimer && onAutoTimerToggle && (() => {
-                          const hasAnyAutoTimer = jobs.some(j => j.autoTimer?.enabled);
-                          return hasAnyAutoTimer ? job.autoTimer?.enabled : true;
-                        })() && (
+                        {showAutoTimer && onAutoTimerToggle && job.autoTimer?.enabled && (
                             <View style={styles.autoTimerContainer}>
                               <Text style={styles.autoTimerLabel}>
                                 {t('maps.auto_timer')}
@@ -400,27 +405,7 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                               </TouchableOpacity>
                             </View>
                           </View>
-          {/* Dots Indicator - Only if multiple jobs */}
-              {jobs.length > 1 && (
-                <View style={styles.dotsContainer}>
-                  {jobs.map((_, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={[
-                        styles.dot,
-                        index === currentIndex && styles.dotActive
-                      ]}
-                      onPress={() => {
-                        scrollViewRef.current?.scrollTo({
-                          x: index * screenWidth,
-                          animated: true
-                        });
-                        setCurrentIndex(index);
-                      }}
-                    />
-                  ))}
-                </View>
-              )}
+          {/* Dots removed - not needed with vertical scroll */}
                           {/* Footer - solo mostrar si hay onTimerToggle */}
                           {onTimerToggle && (
                             <View style={styles.footer}>
@@ -569,7 +554,8 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     backgroundColor: colors.surfaces,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    height: '63%',
+    maxHeight: '90%',
+    minHeight: 200,
     paddingTop: 8,
     paddingBottom: 20,
     shadowColor: '#000',
@@ -598,7 +584,8 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     // No height constraint, let it size to content
   },
   scrollContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column',
+    paddingBottom: 20,
   },
   jobContainer: {
     paddingHorizontal: 20,

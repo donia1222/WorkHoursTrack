@@ -317,7 +317,7 @@ export default function Header({ title, onProfilePress, onBackPress, showBackBut
               onPress={() => { triggerHaptic('light'); onClosePress(); }}
               style={styles.closeButton}
             >
-              <IconSymbol size={24} name="xmark" color={colors.primary} />
+              <IconSymbol size={18} name="xmark" color={colors.textSecondary} />
             </TouchableOpacity>
           ) : currentScreen === 'reports' && onExportPress ? (
             <TouchableOpacity 

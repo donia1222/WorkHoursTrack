@@ -56,14 +56,16 @@ export default function SubscriptionScreen() {
     slideInValue.value = withSpring(0, { damping: 15, stiffness: 100 });
     scaleValue.value = withSpring(1, { damping: 12, stiffness: 120 });
     
-    // Crown rotation animation
-    const rotateCrown = () => {
-      crownRotation.value = withTiming(360, { duration: 2500 }, () => {
-        crownRotation.value = 0;
-        runOnJS(rotateCrown)();
-      });
-    };
-    rotateCrown();
+    // Crown rotation animation - solo para usuarios suscritos
+    if (isSubscribed) {
+      const rotateCrown = () => {
+        crownRotation.value = withTiming(360, { duration: 2500 }, () => {
+          crownRotation.value = 0;
+          runOnJS(rotateCrown)();
+        });
+      };
+      rotateCrown();
+    }
   }, []);
   
   const containerAnimatedStyle = useAnimatedStyle(() => {
@@ -109,6 +111,21 @@ export default function SubscriptionScreen() {
   };
 
   const handleRestore = async () => {
+    // Si ya está suscrito, mostrar mensaje diferente
+    if (isSubscribed) {
+      Alert.alert(
+        'Already Premium',
+        'You already have an active subscription. Enjoy all premium features!',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigateTo('mapa'),
+          },
+        ]
+      );
+      return;
+    }
+    
     setPurchasing(true);
     const result = await restorePurchases();
     setPurchasing(false);
@@ -117,23 +134,95 @@ export default function SubscriptionScreen() {
       // Forzar una verificación adicional del estado de suscripción
       await checkSubscriptionStatus();
       
-      Alert.alert(
-        t('subscription.restore_success.title'),
-        t('subscription.restore_success.message'),
-        [
-          {
-            text: 'OK',
-            onPress: () => navigateTo('mapa'),
-          },
-        ]
-      );
+      // Verificar si realmente hay una suscripción activa después de restaurar
+      const customerInfo = result.customerInfo;
+      const hasActiveSubscription = !!customerInfo?.entitlements?.active?.['premium'] || 
+                                    Object.keys(customerInfo?.activeSubscriptions || {}).length > 0;
+      
+      if (hasActiveSubscription) {
+        // Se restauraron compras exitosamente
+        Alert.alert(
+          t('subscription.restore_success.title'),
+          t('subscription.restore_success.message'),
+          [
+            {
+              text: 'OK',
+              onPress: () => navigateTo('mapa'),
+            },
+          ]
+        );
+      } else {
+        // No se encontraron compras para restaurar
+        Alert.alert(
+          t('subscription.restore_no_purchases.title') || 'No Purchases Found',
+          t('subscription.restore_no_purchases.message') || 'No previous purchases found to restore. Please make a purchase to unlock premium features.',
+          [
+            {
+              text: 'OK',
+              style: 'default',
+            },
+          ]
+        );
+      }
     } else {
-      Alert.alert('Error', t('subscription.errors.restore_failed'));
+      Alert.alert('Error', 'Failed to connect to the store. Please try again later.');
     }
   };
 
-  const openEmail = () => {
-    Linking.openURL('mailto:info@lweb.ch?subject=WorkTrack Support');
+  const openEmail = async () => {
+    // Obtener información del usuario y suscripción
+    const userInfo = [];
+    
+    // Estado de suscripción
+    userInfo.push(`Subscription Status: ${isSubscribed ? 'PREMIUM ✓' : 'FREE'}`);
+    
+    // ID de usuario
+    if (customerInfo?.originalAppUserId) {
+      userInfo.push(`User ID: ${customerInfo.originalAppUserId}`);
+    }
+    
+    // Fecha de primera compra si está suscrito
+    if (isSubscribed && customerInfo?.firstSeen) {
+      const firstPurchaseDate = new Date(customerInfo.firstSeen).toLocaleDateString();
+      userInfo.push(`Customer Since: ${firstPurchaseDate}`);
+    }
+    
+    // Si tiene suscripción activa, mostrar fecha de expiración
+    if (isSubscribed && customerInfo?.entitlements?.active?.['premium']) {
+      const premium = customerInfo.entitlements.active['premium'];
+      if (premium.expirationDate) {
+        const expirationDate = new Date(premium.expirationDate).toLocaleDateString();
+        userInfo.push(`Expires: ${expirationDate}`);
+      }
+      if (premium.willRenew !== undefined) {
+        userInfo.push(`Auto-Renewal: ${premium.willRenew ? 'ON' : 'OFF'}`);
+      }
+    }
+    
+    // Información del dispositivo
+    userInfo.push(`Platform: ${Platform.OS} ${Platform.Version}`);
+    userInfo.push(`App Version: 1.0.0`);
+    
+    // Construir el body del email
+    const emailBody = `
+
+--------------------
+Support Information:
+--------------------
+${userInfo.join('\n')}
+--------------------
+
+Please describe your issue below:
+
+
+`;
+    
+    // Crear el URL del email con la información
+    const subject = encodeURIComponent('WorkTrack Support Request');
+    const body = encodeURIComponent(emailBody);
+    const emailUrl = `mailto:info@lweb.ch?subject=${subject}&body=${body}`;
+    
+    Linking.openURL(emailUrl);
   };
 
   const openTerms = () => {
@@ -423,9 +512,10 @@ export default function SubscriptionScreen() {
                 end={{ x: 1, y: 1 }}
               >
                 <View style={styles.iconShadow}>
-                  <Animated.View style={crownAnimatedStyle}>
+                  {/* Corona estática sin animación cuando no está suscrito */}
+                  <View>
                     <IconSymbol size={52} name="crown.fill" color="#000" />
-                  </Animated.View>
+                  </View>
                 </View>
               </LinearGradient>
               <View style={styles.premiumIconGlow} />
@@ -540,35 +630,38 @@ export default function SubscriptionScreen() {
 
         {/* Footer Links */}
         <View style={styles.footerLinksContainer}>
-          <BlurView 
-            intensity={85} 
-            tint={isDark ? "dark" : "light"} 
-            style={[styles.footerLinksBackground, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }]}
+          {/* Botón de Privacidad */}
+          <TouchableOpacity 
+            style={[styles.footerButton, { backgroundColor: colors.card }]} 
+            onPress={openPrivacy}
           >
-            <View style={styles.footerLinks}>
-              <TouchableOpacity style={styles.footerLink} onPress={openPrivacy}>
-                <Text style={[styles.footerLinkText, { color: colors.primary }]}>
-                  {t('help_support.legal.privacy')}
-                </Text>
-              </TouchableOpacity>
-              
-              <Text style={[styles.footerDivider, { color: colors.textTertiary }]}>•</Text>
-              
-              <TouchableOpacity style={styles.footerLink} onPress={openTerms}>
-                <Text style={[styles.footerLinkText, { color: colors.primary }]}>
-                  {t('help_support.legal.terms')}
-                </Text>
-              </TouchableOpacity>
-              
-              <Text style={[styles.footerDivider, { color: colors.textTertiary }]}>•</Text>
-              
-              <TouchableOpacity style={styles.footerLink} onPress={openEmail}>
-                <Text style={[styles.footerLinkText, { color: colors.primary }]}>
-                  {t('help_support.contact.email')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </BlurView>
+            <IconSymbol name="lock.shield.fill" size={20} color={colors.primary} />
+            <Text style={[styles.footerButtonText, { color: colors.text }]}>
+              {t('help_support.legal.privacy')}
+            </Text>
+          </TouchableOpacity>
+          
+          {/* Botón de Términos */}
+          <TouchableOpacity 
+            style={[styles.footerButton, { backgroundColor: colors.card }]} 
+            onPress={openTerms}
+          >
+            <IconSymbol name="doc.text.fill" size={20} color={colors.primary} />
+            <Text style={[styles.footerButtonText, { color: colors.text }]}>
+              {t('help_support.legal.terms')}
+            </Text>
+          </TouchableOpacity>
+          
+          {/* Botón de Email */}
+          <TouchableOpacity 
+            style={[styles.footerButton, { backgroundColor: colors.card }]} 
+            onPress={openEmail}
+          >
+            <IconSymbol name="envelope.fill" size={20} color={colors.primary} />
+            <Text style={[styles.footerButtonText, { color: colors.text }]}>
+              {t('help_support.contact.email')}
+            </Text>
+          </TouchableOpacity>
         </View>
 
           {purchasing && (
@@ -1425,34 +1518,60 @@ const styles = StyleSheet.create({
   },
   footerLinksContainer: {
     paddingHorizontal: 20,
-    paddingBottom: 5,
-    paddingTop: 15,
+    paddingBottom: 20,
+    paddingTop: 20,
+    gap: 12,
+    width: '100%',
+  },
+  footerButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    maxWidth: '95%',
-    alignSelf: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  footerButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    flex: 1,
   },
   footerLinksBackground: {
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     overflow: 'hidden',
+    width: '100%',
+    maxWidth: 400,
   },
   footerLinks: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
+    justifyContent: 'space-evenly',
+    width: '100%',
   },
   footerLink: {
-    paddingHorizontal: 2,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    flex: 1,
+    alignItems: 'center',
   },
   footerLinkText: {
-    fontSize: 10,
-    fontWeight: '500',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   footerDivider: {
-    fontSize: 12,
-    marginHorizontal: 1,
+    fontSize: 14,
+    marginHorizontal: 4,
+    opacity: 0.4,
   },
 });

@@ -9,11 +9,13 @@ import {
   Linking,
   Modal,
   Share,
+  Platform,
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useSubscription } from '../contexts/SubscriptionContext';
 import { BlurView } from 'expo-blur';
 import Header from '../components/Header';
 import PrivacyPolicyScreen from './PrivacyPolicyScreen';
@@ -155,13 +157,67 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
 export default function SupportTermsScreen({ onClose }: SupportTermsScreenProps) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
+  const { isSubscribed, customerInfo } = useSubscription();
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTermsOfService, setShowTermsOfService] = useState(false);
   
   const styles = getStyles(colors, isDark);
 
-  const openEmail = () => {
-    Linking.openURL('mailto:info@lweb.ch?subject=WorkTrack Support');
+  const openEmail = async () => {
+    
+    // Obtener información del usuario y suscripción
+    const userInfo = [];
+    
+    // Estado de suscripción
+    userInfo.push(`Subscription Status: ${isSubscribed ? 'PREMIUM ✓' : 'FREE'}`);
+    
+    // ID de usuario
+    if (customerInfo?.originalAppUserId) {
+      userInfo.push(`User ID: ${customerInfo.originalAppUserId}`);
+    }
+    
+    // Fecha de primera compra si está suscrito
+    if (isSubscribed && customerInfo?.firstSeen) {
+      const firstPurchaseDate = new Date(customerInfo.firstSeen).toLocaleDateString();
+      userInfo.push(`Customer Since: ${firstPurchaseDate}`);
+    }
+    
+    // Si tiene suscripción activa, mostrar fecha de expiración
+    if (isSubscribed && customerInfo?.entitlements?.active?.['premium']) {
+      const premium = customerInfo.entitlements.active['premium'];
+      if (premium.expirationDate) {
+        const expirationDate = new Date(premium.expirationDate).toLocaleDateString();
+        userInfo.push(`Expires: ${expirationDate}`);
+      }
+      if (premium.willRenew !== undefined) {
+        userInfo.push(`Auto-Renewal: ${premium.willRenew ? 'ON' : 'OFF'}`);
+      }
+    }
+    
+    // Información del dispositivo
+    userInfo.push(`Platform: ${Platform.OS} ${Platform.Version}`);
+    userInfo.push(`App Version: 1.0.0`);
+    
+    // Construir el body del email
+    const emailBody = `
+
+--------------------
+Support Information:
+--------------------
+${userInfo.join('\n')}
+--------------------
+
+Please describe your issue below:
+
+
+`;
+    
+    // Crear el URL del email con la información
+    const subject = encodeURIComponent('WorkTrack Support Request');
+    const body = encodeURIComponent(emailBody);
+    const emailUrl = `mailto:info@lweb.ch?subject=${subject}&body=${body}`;
+    
+    Linking.openURL(emailUrl);
   };
 
   const openWhatsApp = () => {

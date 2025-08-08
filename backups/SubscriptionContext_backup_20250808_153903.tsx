@@ -44,9 +44,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       try {
         const customerInfoUpdateListener = (info: CustomerInfo) => {
           console.log('🔔 CustomerInfo actualizado automáticamente');
-          // Verificar el entitlement 'premium'
-          const isSubscribed = !!info?.entitlements?.active?.['premium'] || 
-                               Object.keys(info?.activeSubscriptions || {}).length > 0;
+          const hasActiveEntitlements = Object.keys(info.entitlements.active || {}).length > 0;
+          const hasActiveSubscriptions = Object.keys(info.activeSubscriptions || {}).length > 0;
+          const isSubscribed = hasActiveEntitlements || hasActiveSubscriptions;
           
           setState(prev => ({
             ...prev,
@@ -83,25 +83,13 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
       console.log('🚀 Inicializando RevenueCat...');
       
-      // Recuperar o generar un User ID persistente
-      let appUserId = await AsyncStorage.getItem('revenueCatUserId');
-      
-      if (!appUserId) {
-        // Generar un ID único basado en timestamp y random
-        appUserId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-        await AsyncStorage.setItem('revenueCatUserId', appUserId);
-        console.log('🆔 Nuevo User ID generado:', appUserId);
-      } else {
-        console.log('🆔 User ID recuperado:', appUserId);
-      }
-      
-      Purchases.configure({
+      await Purchases.configure({
         apiKey: 'appl_QZiBEvsooXdbhkjQuKjzDQKEEIf',
-        appUserID: appUserId, // Usar ID persistente en lugar de undefined
+        appUserID: undefined,
       });
 
       setState(prev => ({ ...prev, isInitialized: true }));
-      console.log('✅ RevenueCat inicializado correctamente con User ID:', appUserId);
+      console.log('✅ RevenueCat inicializado correctamente');
 
       await checkSubscriptionStatus();
       await loadOfferings();
@@ -114,11 +102,6 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   const checkSubscriptionStatus = async () => {
     try {
       console.log('🔍 Verificando estado de suscripción...');
-      
-      // Mostrar el User ID actual
-      const currentUserId = await Purchases.getAppUserID();
-      console.log('🆔 Verificando suscripción para User ID:', currentUserId);
-      
       const customerInfo = await Purchases.getCustomerInfo();
       
       // Debug: Mostrar toda la información disponible (con verificaciones de seguridad)
@@ -169,21 +152,17 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         console.error('❌ Error mostrando detalles:', error);
       }
 
-      // Verificar el entitlement 'premium' específicamente
+      // Verificar tanto entitlements como suscripciones activas
+      let hasActiveEntitlements = false;
+      let hasActiveSubscriptions = false;
       let isSubscribed = false;
       
       try {
-        // Verificar si tiene el entitlement 'premium'
-        isSubscribed = !!customerInfo?.entitlements?.active?.['premium'];
+        hasActiveEntitlements = Object.keys(activeEntitlements).length > 0;
+        hasActiveSubscriptions = Object.keys(activeSubscriptions).length > 0;
+        isSubscribed = hasActiveEntitlements || hasActiveSubscriptions;
         
-        // Opción de respaldo: verificar también suscripciones activas
-        if (!isSubscribed && customerInfo?.activeSubscriptions) {
-          const hasActiveSubscriptions = Object.keys(customerInfo.activeSubscriptions).length > 0;
-          isSubscribed = hasActiveSubscriptions;
-          console.log(`🔍 Verificación por suscripciones (respaldo): ${hasActiveSubscriptions}`);
-        }
-        
-        console.log(`🔍 Verificación: Entitlement 'premium'=${!!customerInfo?.entitlements?.active?.['premium']}, Estado final=${isSubscribed}`);
+        console.log(`🔍 Verificación: Entitlements=${hasActiveEntitlements}, Subscriptions=${hasActiveSubscriptions}`);
       } catch (error) {
         console.error('❌ Error en verificación final:', error);
         isSubscribed = false;
@@ -233,9 +212,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       console.log('💳 Iniciando compra...');
       
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
-      // Verificar el entitlement 'premium'
-      const isSubscribed = !!customerInfo?.entitlements?.active?.['premium'] || 
-                           Object.keys(customerInfo?.activeSubscriptions || {}).length > 0;
+      const isSubscribed = Object.keys(customerInfo.entitlements.active).length > 0;
       
       setState(prev => ({
         ...prev,
@@ -266,22 +243,8 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       setState(prev => ({ ...prev, isLoading: true }));
       console.log('🔄 Restaurando compras...');
       
-      // Obtener el User ID actual antes de restaurar
-      const currentUserId = await Purchases.getAppUserID();
-      console.log('🆔 User ID actual antes de restaurar:', currentUserId);
-      
       const customerInfo = await Purchases.restorePurchases();
-      
-      // Verificar si el User ID cambió después de restaurar
-      const newUserId = await Purchases.getAppUserID();
-      if (currentUserId !== newUserId) {
-        console.log('⚠️ User ID cambió después de restaurar:', newUserId);
-        // Actualizar el User ID guardado si cambió
-        await AsyncStorage.setItem('revenueCatUserId', newUserId);
-      }
-      // Verificar el entitlement 'premium'
-      const isSubscribed = !!customerInfo?.entitlements?.active?.['premium'] || 
-                           Object.keys(customerInfo?.activeSubscriptions || {}).length > 0;
+      const isSubscribed = Object.keys(customerInfo.entitlements.active).length > 0;
       
       setState(prev => ({
         ...prev,
@@ -291,13 +254,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       }));
 
       await AsyncStorage.setItem('isSubscribed', JSON.stringify(isSubscribed));
-      // Verificar si realmente se restauraron compras
-      if (!isSubscribed) {
-        console.log('ℹ️ No se encontraron compras para restaurar');
-        return { success: true, customerInfo, message: 'No se encontraron compras anteriores' };
-      }
-      
-      console.log('✅ Compras restauradas exitosamente para User ID:', newUserId || currentUserId);
+      console.log('✅ Compras restauradas');
       
       return { success: true, customerInfo };
     } catch (error: any) {

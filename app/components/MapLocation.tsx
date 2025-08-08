@@ -1519,25 +1519,31 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
     const handleAutoTimerAlert = (showAlert: boolean) => {
       if (showAlert && !hasShownActivationAlert) {
-        console.log('🔔 Showing AutoTimer activation alert');
+        console.log('🔔 AutoTimer alert is now handled in JobFormModal');
         setHasShownActivationAlert(true);
         
-        // Show properly translated alert
-        Alert.alert(
-          t('timer.auto_timer.activation_title'),
-          t('timer.auto_timer.activation_alert'),
-          [{ 
-            text: t('timer.auto_timer.dismiss_notice'), 
-            style: 'default',
-            onPress: () => {
-              console.log('🔔 AutoTimer alert dismissed');
-              // Reset flag after a delay to allow showing again later
-              setTimeout(() => {
-                setHasShownActivationAlert(false);
-              }, 5000);
-            }
-          }]
-        );
+        // Alert is now shown in JobFormModal.tsx as a visual component
+        // The alert will appear when user opens the Auto tab in JobFormModal
+        // Alert.alert(
+        //   t('timer.auto_timer.activation_title'),
+        //   t('timer.auto_timer.activation_alert'),
+        //   [{ 
+        //     text: t('timer.auto_timer.dismiss_notice'), 
+        //     style: 'default',
+        //     onPress: () => {
+        //       console.log('🔔 AutoTimer alert dismissed');
+        //       // Reset flag after a delay to allow showing again later
+        //       setTimeout(() => {
+        //         setHasShownActivationAlert(false);
+        //       }, 5000);
+        //     }
+        //   }]
+        // );
+        
+        // Reset flag after a delay to allow showing again later
+        setTimeout(() => {
+          setHasShownActivationAlert(false);
+        }, 60000); // Reset after 1 minute
       }
     };
 
