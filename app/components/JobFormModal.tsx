@@ -1432,11 +1432,11 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               };
               setJobCoordinates(coords);
               
-              // Set map region centered on job location
+              // Set map region centered on job location with more zoom
               setMapRegion({
                 ...coords,
-                latitudeDelta: 0.005,
-                longitudeDelta: 0.005,
+                latitudeDelta: 0.002,  // Más zoom (más cerca)
+                longitudeDelta: 0.002,  // Más zoom (más cerca)
               });
             }
           } catch (error) {
@@ -2376,7 +2376,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             <View style={styles.financialCard}>
               <View style={styles.financialCardHeader}>
                 <IconSymbol size={20} name="dollarsign.circle.fill" color={colors.primary} />
-                <Text style={styles.financialCardTitle}>Moneda</Text>
+                <Text style={styles.financialCardTitle}>{t('job_form.financial.currency_label')}</Text>
               </View>
               <View style={styles.currencyInputContainer}>
                 <TextInput
@@ -2394,13 +2394,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             <View style={styles.financialCard}>
               <View style={styles.financialCardHeader}>
                 <IconSymbol size={20} name="clock.fill" color={colors.primary} />
-                <Text style={styles.financialCardTitle}>Tipo de Pago</Text>
+                <Text style={styles.financialCardTitle}>{t('job_form.financial.payment_type')}</Text>
               </View>
               <View style={styles.salaryTypeSelector}>
                 {[
-                  { key: 'hourly', label: 'Por Hora', icon: '⏰' },
-                  { key: 'monthly', label: 'Por Mes', icon: '📅' },
-                  { key: 'annual', label: 'Por Año', icon: '📊' },
+                  { key: 'hourly', label: t('job_form.financial.per_hour'), icon: '⏰' },
+                  { key: 'monthly', label: t('job_form.financial.per_month'), icon: '📅' },
+                  { key: 'annual', label: t('job_form.financial.per_year'), icon: '📊' },
                 ].map((option) => (
                   <TouchableOpacity
                     key={option.key}
@@ -2429,8 +2429,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               <View style={styles.financialCardHeader}>
                 <IconSymbol size={20} name="banknote.fill" color={colors.primary} />
                 <Text style={styles.financialCardTitle}>
-                  {formData.salary?.type === 'hourly' ? 'Cantidad por Hora' :
-                   formData.salary?.type === 'monthly' ? 'Cantidad por Mes' : 'Cantidad por Año'}
+                  {formData.salary?.type === 'hourly' ? t('job_form.financial.amount_per_hour') :
+                   formData.salary?.type === 'monthly' ? t('job_form.financial.amount_per_month') : t('job_form.financial.amount_per_year')}
                 </Text>
               </View>
               <View style={styles.amountInputContainer}>
@@ -2789,20 +2789,20 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             </Text>
             <Text style={styles.previewText}>
               {formData.billing?.userData?.isCompany ? (
-                `🏢 ${formData.billing?.userData?.companyName || 'Nombre Empresa'}\n` +
-                `CIF: ${formData.billing?.userData?.taxId || 'CIF/NIF'}`
+                `🏢 ${formData.billing?.userData?.companyName || t('job_form.billing.user_data.preview_company_name')}\n` +
+                `CIF: ${formData.billing?.userData?.taxId || t('job_form.billing.user_data.preview_tax_id')}`
               ) : (
-                `👤 ${formData.billing?.userData?.name || 'Nombre Usuario'}`
+                `👤 ${formData.billing?.userData?.name || t('job_form.billing.user_data.preview_user_name')}`
               )}
-              {'\n'}📍 {formData.billing?.userData?.address || 'Dirección completa'}
-              {'\n'}📞 {formData.billing?.userData?.phone || 'Teléfono'}
-              {'\n'}✉️ {formData.billing?.userData?.email || 'Email'}
+              {'\n'}📍 {formData.billing?.userData?.address || t('job_form.billing.user_data.preview_address')}
+              {'\n'}📞 {formData.billing?.userData?.phone || t('job_form.billing.user_data.preview_phone')}
+              {'\n'}✉️ {formData.billing?.userData?.email || t('job_form.billing.user_data.preview_email')}
               {formData.billing?.userData?.website ? `\n🌐 ${formData.billing.userData.website}` : ''}
               {formData.billing?.userData?.bankAccount ? `\n\n💳 ${formData.billing.userData.bankAccount}` : ''}
               {formData.billing?.userData?.bankName ? `\n🏦 ${formData.billing.userData.bankName}` : ''}
               {formData.billing?.userData?.swiftCode ? `\n🔗 SWIFT: ${formData.billing.userData.swiftCode}` : ''}
-              {'\n\n'}Prefijo: {formData.billing?.invoicePrefix || 'INV'}
-              {'\n'}Impuestos: {formData.billing?.taxRate || 0}%
+              {'\n\n'}{t('job_form.billing.user_data.preview_prefix')}: {formData.billing?.invoicePrefix || 'INV'}
+              {'\n'}{t('job_form.billing.user_data.preview_taxes')}: {formData.billing?.taxRate || 0}%
             </Text>
           </View>
         </BlurView>
@@ -3164,7 +3164,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 </TouchableOpacity>
                 <View style={styles.counterValue}>
                   <Text style={styles.counterText}>{formData.autoTimer?.geofenceRadius || 50}</Text>
-                  <Text style={styles.counterUnit}>metros</Text>
+                  <Text style={styles.counterUnit}>{t('common.meters')}</Text>
                 </View>
                 <TouchableOpacity 
                   style={styles.counterButton}
@@ -3182,7 +3182,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             {/* Map showing job location and geofence radius */}
             {mapRegion && jobCoordinates && (
               <View style={styles.mapContainer}>
-                <Text style={styles.mapTitle}>📍 Ubicación del trabajo y área de geofencing</Text>
+                <Text style={styles.mapTitle}>{t('job_form.auto_timer.map_title')}</Text>
                 <View style={styles.mapWrapper}>
                   {activeTimerElapsed > 0 && (
                     <View style={{
@@ -3258,7 +3258,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   </MapView>
                 </View>
                 <Text style={styles.mapDescription}>
-                  El círculo muestra el área de {formData.autoTimer?.geofenceRadius || 50} metros donde se activará el timer automáticamente
+                  {t('job_form.auto_timer.map_description', { radius: formData.autoTimer?.geofenceRadius || 50 })}
                 </Text>
               </View>
             )}
@@ -3279,8 +3279,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               </View>
             </View>
    <View style={styles.previewCard}>
-              <Text style={styles.previewTitle}>📍 Vista Previa</Text>
+   
               <Text style={styles.previewText}>
+                           <Text style={styles.previewTitle}>📍</Text>
                 {t('job_form.auto_timer.preview', {
                   delayStart: formData.autoTimer?.delayStart || 2,
                   delayStop: formData.autoTimer?.delayStop || 2

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -173,6 +173,14 @@ export default function AutoBackupModal({
   const [localEnabled, setLocalEnabled] = useState(enabled);
   const [localFrequency, setLocalFrequency] = useState(frequency);
 
+  // Sync local state with props when modal opens
+  useEffect(() => {
+    if (visible) {
+      setLocalEnabled(enabled);
+      setLocalFrequency(frequency);
+    }
+  }, [visible, enabled, frequency]);
+
   const handleSave = () => {
     onConfigChange(localEnabled, localFrequency);
     onClose();
@@ -218,7 +226,11 @@ export default function AutoBackupModal({
                 <Text style={styles.settingLabel}>{t('auto_backup.enable')}</Text>
                 <Switch
                   value={localEnabled}
-                  onValueChange={setLocalEnabled}
+                  onValueChange={(value) => {
+                    setLocalEnabled(value);
+                    // Save immediately when toggling the switch
+                    onConfigChange(value, localFrequency);
+                  }}
                   trackColor={{ false: colors.separator, true: colors.primary }}
                   thumbColor={localEnabled ? '#FFFFFF' : colors.textSecondary}
                 />
@@ -237,7 +249,11 @@ export default function AutoBackupModal({
                         styles.frequencyOption,
                         localFrequency === option.value && styles.frequencyOptionActive,
                       ]}
-                      onPress={() => setLocalFrequency(option.value)}
+                      onPress={() => {
+                        setLocalFrequency(option.value);
+                        // Save immediately when changing frequency
+                        onConfigChange(localEnabled, option.value);
+                      }}
                     >
                       <IconSymbol
                         size={16}

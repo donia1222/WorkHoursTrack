@@ -8,7 +8,8 @@
     "delete": "Supprimer",
     "confirm_delete": "Confirmer la suppression",
     "loading": "Synchronisation...",
-    "error": "Erreur"
+    "error": "Erreur",
+    "meters": "mètres"
   },
   "preferences": {
     "title": "Préférences",
@@ -548,6 +549,14 @@
       "amount": "Montant",
       "amount_placeholder": "0",
       "currency": "Devise",
+      "currency_label": "Devise",
+      "payment_type": "Type de Paiement",
+      "per_hour": "Par Heure",
+      "per_month": "Par Mois",
+      "per_year": "Par An",
+      "amount_per_hour": "Montant par Heure",
+      "amount_per_month": "Montant par Mois",
+      "amount_per_year": "Montant par An",
       "currency_placeholder": "EUR",
       "hourly_rate": "Tarif horaire (pour facturation)",
       "hourly_rate_placeholder": "0"
@@ -588,7 +597,15 @@
         "bank_name_placeholder": "ex: BNP Paribas",
         "swift_code": "Code SWIFT/BIC",
         "swift_code_placeholder": "ex: BNPAFRPP",
-        "preview_title": "Aperçu de Facture"
+        "preview_title": "Aperçu de Facture",
+        "preview_company_name": "Nom de l'entreprise",
+        "preview_tax_id": "SIRET/TVA",
+        "preview_user_name": "Nom de l'utilisateur",
+        "preview_address": "Adresse complète",
+        "preview_phone": "Téléphone",
+        "preview_email": "Email",
+        "preview_prefix": "Préfixe",
+        "preview_taxes": "Taxes"
       }
     },
     "location": {
@@ -626,6 +643,8 @@
       "notifications": "Afficher les notifications",
       "notifications_desc": "Notifier quand le minuteur automatique change d'état",
       "preview": "Aperçu : Démarrera après {{delayStart}} min au travail, s'arrêtera {{delayStop}} min après être parti",
+      "map_title": "📍 Lieu de travail et zone de géofencing",
+      "map_description": "Le cercle montre la zone de {{radius}} mètres où le minuteur s'activera automatiquement",
       "address_required_title": "Adresse Requise",
       "address_required_message": "Pour activer le minuteur automatique, vous devez d'abord ajouter une adresse dans l'onglet 'De base'. L'adresse est nécessaire pour la détection automatique par localisation.",
       "stopped_no_time": "Minuteur arrêté - aucun temps actif n'était en cours",
@@ -1062,6 +1081,10 @@
   },
   "onboarding": {
     "steps": {
+      "location": {
+        "title": "Votre Vie Privée est Importante",
+        "description": "WorkTrack utilise votre localisation uniquement pour détecter quand vous arrivez et partez du travail. Toutes les données sont stockées localement sur votre appareil. Nous n'avons pas de serveurs, ne collectons aucune donnée et ne partageons jamais vos informations. Vous pouvez modifier cette autorisation à tout moment dans les Paramètres du système."
+      },
       "jobs": {
         "title": "Travaux",
         "description": "Ajoutez et modifiez des travaux, configurez les horaires et tarifs. Toutes vos données sont stockées localement, pensez à faire des sauvegardes."

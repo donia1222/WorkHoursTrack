@@ -8,7 +8,8 @@
     "delete": "Elimina",
     "confirm_delete": "Conferma eliminazione",
     "loading": "Sincronizzazione...",
-    "error": "Errore"
+    "error": "Errore",
+    "meters": "metri"
   },
   "preferences": {
     "title": "Preferenze",
@@ -548,6 +549,14 @@
       "amount": "Importo",
       "amount_placeholder": "0",
       "currency": "Valuta",
+      "currency_label": "Valuta",
+      "payment_type": "Tipo di Pagamento",
+      "per_hour": "All'Ora",
+      "per_month": "Al Mese",
+      "per_year": "All'Anno",
+      "amount_per_hour": "Importo all'Ora",
+      "amount_per_month": "Importo al Mese",
+      "amount_per_year": "Importo all'Anno",
       "currency_placeholder": "EUR",
       "hourly_rate": "Tariffa oraria (per fatturazione)",
       "hourly_rate_placeholder": "0"
@@ -588,7 +597,15 @@
         "bank_name_placeholder": "es: UniCredit",
         "swift_code": "Codice SWIFT/BIC",
         "swift_code_placeholder": "es: UNCRITMM",
-        "preview_title": "Anteprima Fattura"
+        "preview_title": "Anteprima Fattura",
+        "preview_company_name": "Nome Azienda",
+        "preview_tax_id": "P.IVA/CF",
+        "preview_user_name": "Nome Utente",
+        "preview_address": "Indirizzo completo",
+        "preview_phone": "Telefono",
+        "preview_email": "Email",
+        "preview_prefix": "Prefisso",
+        "preview_taxes": "Tasse"
       }
     },
     "location": {
@@ -626,6 +643,8 @@
       "notifications": "Mostra notifiche",
       "notifications_desc": "Notifica quando il timer automatico cambia stato",
       "preview": "Anteprima: Si avvierà dopo {{delayStart}} min al lavoro, si fermerà {{delayStop}} min dopo essere uscito",
+      "map_title": "📍 Posizione del lavoro e area di geofencing",
+      "map_description": "Il cerchio mostra l'area di {{radius}} metri dove il timer si attiverà automaticamente",
       "address_required_title": "Indirizzo Richiesto",
       "address_required_message": "Per attivare il timer automatico, devi prima aggiungere un indirizzo nella scheda 'Base'. L'indirizzo è necessario per il rilevamento automatico della posizione.",
       "stopped_no_time": "Timer fermato - nessun tempo attivo era in corso",
@@ -1054,6 +1073,10 @@
   },
   "onboarding": {
     "steps": {
+      "location": {
+        "title": "La Tua Privacy è Importante",
+        "description": "WorkTrack usa la tua posizione solo per rilevare quando arrivi e lasci il lavoro. Tutti i dati sono memorizzati localmente sul tuo dispositivo. Non abbiamo server, non raccogliamo dati e non condividiamo mai le tue informazioni. Puoi modificare questa autorizzazione in qualsiasi momento dalle Impostazioni di sistema."
+      },
       "jobs": {
         "title": "Lavori",
         "description": "Aggiungi e modifica lavori, configura orari e tariffe. Tutti i dati sono salvati localmente, ricorda di fare backup."

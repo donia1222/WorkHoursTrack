@@ -350,39 +350,8 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
     <SafeAreaView style={styles.container}>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Jobs Management Section */}
-        <BlurView 
-          intensity={98} 
-          tint={isDark ? "dark" : "light"} 
-          style={styles.sectionCard}
-        >
-          <LinearGradient
-            colors={isDark ? ['rgba(0, 122, 255, 0.15)', 'rgba(0, 122, 255, 0.05)'] : ['rgba(0, 122, 255, 0.1)', 'rgba(0, 122, 255, 0.03)']}
-            style={styles.sectionCardGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          />
-          <View style={{ marginBottom: 8 }}>
-            <Text style={styles.sectionTitle}>{t('settings.jobs.title')}</Text>
-            <Text style={styles.sectionDescription}>
-              {t('settings.jobs.description')}
-            </Text>
-          </View>
-          
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={() => setShowJobsManagement(true)}
-          >
-            <View style={[styles.settingIcon, styles.primaryIconBg]}>
-              <IconSymbol size={24} name="chart.bar.fill" color={colors.primary} />
-            </View>
-            <View style={styles.settingContent}>
-              <Text style={styles.settingTitle}>{t('settings.jobs.my_jobs')}</Text>
-              <Text style={styles.settingDescription}>{t('settings.jobs.my_jobs_desc')}</Text>
-            </View>
-            <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
-          </TouchableOpacity>
-        </BlurView>
+
+  
 
 
 
@@ -661,6 +630,13 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
         onConfigChange={async (enabled, frequency) => {
           try {
             await AutoBackupService.updateConfig({ enabled, frequency });
+            
+            // If enabling auto backup, create a backup immediately
+            if (enabled) {
+              console.log('🎯 Auto backup enabled, creating initial backup...');
+              await AutoBackupService.createAutoBackup();
+            }
+            
             await loadAutoBackupConfig();
           } catch (error) {
             console.error('Error updating auto backup config:', error);
@@ -726,6 +702,7 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
             setShowJobsManagement(false);
             setOpenAddJobModal(false);
           }} 
+          onNavigate={onNavigate}
           openAddModal={openAddJobModal}
           editJob={navigationOptions?.editJob}
           initialTab={navigationOptions?.initialTab}

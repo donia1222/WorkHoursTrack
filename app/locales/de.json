@@ -8,7 +8,8 @@
     "delete": "Löschen",
     "confirm_delete": "Löschung bestätigen",
     "loading": "Synchronisiert...",
-    "error": "Fehler"
+    "error": "Fehler",
+    "meters": "Meter"
   },
   "preferences": {
     "title": "Einstellungen",
@@ -566,6 +567,14 @@
       "amount": "Betrag",
       "amount_placeholder": "0",
       "currency": "Währung",
+      "currency_label": "Währung",
+      "payment_type": "Zahlungsart",
+      "per_hour": "Pro Stunde",
+      "per_month": "Pro Monat",
+      "per_year": "Pro Jahr",
+      "amount_per_hour": "Betrag pro Stunde",
+      "amount_per_month": "Betrag pro Monat",
+      "amount_per_year": "Betrag pro Jahr",
       "currency_placeholder": "EUR",
       "hourly_rate": "Stundensatz (für Abrechnung)",
       "hourly_rate_placeholder": "0"
@@ -606,7 +615,15 @@
         "bank_name_placeholder": "z.B.: Deutsche Bank",
         "swift_code": "SWIFT/BIC-Code",
         "swift_code_placeholder": "z.B.: DEUTDEFF",
-        "preview_title": "Rechnungsvorschau"
+        "preview_title": "Rechnungsvorschau",
+        "preview_company_name": "Firmenname",
+        "preview_tax_id": "Steuernummer",
+        "preview_user_name": "Benutzername",
+        "preview_address": "Vollständige Adresse",
+        "preview_phone": "Telefon",
+        "preview_email": "E-Mail",
+        "preview_prefix": "Präfix",
+        "preview_taxes": "Steuern"
       }
     },
     "location": {
@@ -644,6 +661,8 @@
       "notifications": "Benachrichtigungen anzeigen",
       "notifications_desc": "Benachrichtigen wenn automatischer Timer Status ändert",
       "preview": "Vorschau: Startet nach {{delayStart}} Min am Arbeitsplatz, stoppt {{delayStop}} Min nach Verlassen",
+      "map_title": "📍 Arbeitsort und Geofencing-Bereich",
+      "map_description": "Der Kreis zeigt den {{radius}} Meter Bereich, in dem der Timer automatisch aktiviert wird",
       "address_required_title": "Adresse Erforderlich",
       "address_required_message": "Um den automatischen Timer zu aktivieren, müssen Sie zuerst eine Adresse im Tab 'Grundlagen' hinzufügen. Die Adresse ist für die automatische Standorterkennung erforderlich.",
       "stopped_no_time": "Timer gestoppt - keine aktive Zeit lief",
@@ -1088,6 +1107,10 @@
   },
   "onboarding": {
     "steps": {
+      "location": {
+        "title": "Deine Privatsphäre ist Wichtig",
+        "description": "WorkTrack nutzt deinen Standort nur, um zu erkennen, wann du bei der Arbeit ankommst und gehst. Alle Daten werden lokal auf deinem Gerät gespeichert. Wir haben keine Server, sammeln keine Daten und teilen niemals deine Informationen. Du kannst diese Berechtigung jederzeit in den Systemeinstellungen ändern."
+      },
       "jobs": {
         "title": "Arbeiten",
         "description": "Arbeiten hinzufügen und bearbeiten, Zeitpläne und Tarife konfigurieren. Alle Daten werden lokal gespeichert, denken Sie an Backups."

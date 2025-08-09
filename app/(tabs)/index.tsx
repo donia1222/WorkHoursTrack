@@ -21,6 +21,7 @@ import NoLocationMapView from '../components/NoLocationMapView';
 import WelcomeModal from '../components/WelcomeModal';
 import Header from '../components/Header';
 import ProfileModal from '../components/ProfileModal';
+import PrivacyLocationModal from '../components/PrivacyLocationModal';
 // import SideMenu from '../components/SideMenu'; // Removed - using BottomNavigation
 import BottomNavigation from '../components/BottomNavigation';
 
@@ -31,6 +32,7 @@ import CalendarScreen from '../screens/CalendarScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 import ChatbotScreen from '../screens/ChatbotScreen';
 import HelpSupportScreen from '../screens/HelpSupportScreen';
+import AutoBackupModal from '../components/AutoBackupModal';
 
 import { NavigationProvider, useNavigation, ScreenName } from '../context/NavigationContext';
 import { OnboardingService } from '../services/OnboardingService';
@@ -38,6 +40,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useSubscription } from '../hooks/useSubscription';
 import AutoTimerService from '../services/AutoTimerService';
+import { AutoBackupService, BackupFrequency } from '../services/AutoBackupService';
 import { JobService } from '../services/JobService';
 import { Job } from '../types/WorkTypes';
 
@@ -67,6 +70,12 @@ function AppContent() {
   const [showFeaturesModal, setShowFeaturesModal] = useState(false);
   const [showHelpSupport, setShowHelpSupport] = useState(false);
   const [showInfoButton, setShowInfoButton] = useState(true);
+  const [showAutoBackupModal, setShowAutoBackupModal] = useState(false);
+  const [showPrivacyLocationModal, setShowPrivacyLocationModal] = useState<boolean | null>(null);
+  const [autoBackupEnabled, setAutoBackupEnabled] = useState(false);
+  const [autoBackupFrequency, setAutoBackupFrequency] = useState<BackupFrequency>('daily');
+  const [availableBackups, setAvailableBackups] = useState<any[]>([]);
+  const [lastBackupDate, setLastBackupDate] = useState<string | null>(null);
   const [showAutoTimerAlert, setShowAutoTimerAlert] = useState(false);
   const [autoTimerJob, setAutoTimerJob] = useState<Job | null>(null);
   const [hasShownAutoTimerAlert, setHasShownAutoTimerAlert] = useState(false); // Track if already shown this session
@@ -75,7 +84,27 @@ function AppContent() {
   const { t } = useLanguage();
   const { isSubscribed, isLoading: subscriptionLoading, customerInfo } = useSubscription();
 
+  // Auto Backup Functions
+  const loadAutoBackupConfig = async () => {
+    try {
+      const config = await AutoBackupService.getConfig();
+      setAutoBackupEnabled(config.enabled);
+      setAutoBackupFrequency(config.frequency);
+      setLastBackupDate(config.lastBackupDate || null);
+      
+      const backups = await AutoBackupService.getAvailableBackups();
+      setAvailableBackups(backups);
+    } catch (error) {
+      console.error('Error loading auto backup config:', error);
+    }
+  };
+
   useEffect(() => {
+    // Check if privacy/location modal has been shown
+    AsyncStorage.getItem('privacyLocationSeen').then((value) => {
+      setShowPrivacyLocationModal(value !== 'true'); // true = ya visto
+    });
+    
     // Verificar si ya se mostró el onboarding
     AsyncStorage.getItem('onboardingSeen').then((value) => {
       setShowOnboarding(value !== 'true'); // true = ya visto
@@ -85,6 +114,9 @@ function AppContent() {
     AsyncStorage.getItem('infoButtonPressed').then((value) => {
       setShowInfoButton(value !== 'true'); // true = ya presionado
     });
+    
+    // Load auto backup config
+    loadAutoBackupConfig();
   }, []);
 
   // Verificar estado de suscripción al iniciar la app
@@ -540,8 +572,26 @@ function AppContent() {
     }
   };
 
-  if (showOnboarding === null) {
+  // Show privacy/location modal as the very first thing
+  if (showPrivacyLocationModal === null || showOnboarding === null) {
     return <Loading showMessage={false} />;
+  }
+
+  // Show privacy/location modal first before anything else
+  if (showPrivacyLocationModal) {
+    return (
+      <PrivacyLocationModal
+        visible={true}
+        onClose={() => {
+          setShowPrivacyLocationModal(false);
+          // After closing without accepting, check onboarding
+        }}
+        onAccept={() => {
+          setShowPrivacyLocationModal(false);
+          // After accepting location, check onboarding
+        }}
+      />
+    );
   }
 
   if (showOnboarding) {
@@ -591,6 +641,10 @@ function AppContent() {
             // Guardar que el botón fue presionado
             await AsyncStorage.setItem('infoButtonPressed', 'true');
             setShowInfoButton(false);
+          } : undefined}
+          onBackupPress={currentScreen === 'mapa' && !showInfoButton ? async () => {
+            await loadAutoBackupConfig();
+            setShowAutoBackupModal(true);
           } : undefined}
         />
       )}
@@ -806,6 +860,58 @@ function AppContent() {
       >
         <HelpSupportScreen onClose={() => setShowHelpSupport(false)} />
       </Modal>
+
+      {/* Auto Backup Modal */}
+      <AutoBackupModal
+        visible={showAutoBackupModal}
+        onClose={() => setShowAutoBackupModal(false)}
+        enabled={autoBackupEnabled}
+        frequency={autoBackupFrequency}
+        availableBackups={availableBackups}
+        lastBackupDate={lastBackupDate}
+        onConfigChange={async (enabled, frequency) => {
+          try {
+            await AutoBackupService.updateConfig({ enabled, frequency });
+            
+            // If enabling auto backup, create a backup immediately
+            if (enabled) {
+              console.log('🎯 Auto backup enabled, creating initial backup...');
+              await AutoBackupService.createAutoBackup();
+            }
+            
+            await loadAutoBackupConfig();
+          } catch (error) {
+            console.error('Error updating auto backup config:', error);
+          }
+        }}
+        onDownloadBackup={async (backup) => {
+          try {
+            await AutoBackupService.downloadBackup(backup);
+          } catch (error) {
+            console.error('Error downloading backup:', error);
+          }
+        }}
+        onRefreshBackups={async () => {
+          try {
+            await loadAutoBackupConfig();
+            // Also create new backup if auto backup is enabled
+            if (autoBackupEnabled) {
+              await AutoBackupService.createBackupNow();
+              await loadAutoBackupConfig(); // Reload to show the new backup
+            }
+          } catch (error) {
+            console.error('Error refreshing backups:', error);
+          }
+        }}
+        onDeleteBackup={async (backup) => {
+          try {
+            await AutoBackupService.deleteBackup(backup);
+            await loadAutoBackupConfig(); // Reload to update the list
+          } catch (error) {
+            console.error('Error deleting backup:', error);
+          }
+        }}
+      />
     </View>
   );
 }

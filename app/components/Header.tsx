@@ -22,6 +22,7 @@ interface HeaderProps {
   onSyncPress?: () => void;
   onNotesPress?: () => void;
   onInfoPress?: () => void;
+  onBackupPress?: () => void;
 }
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
@@ -260,7 +261,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
 });
 
-export default function Header({ title, onProfilePress, onBackPress, showBackButton, showCloseButton, onClosePress, isSettingsActive, currentScreen, onExportPress, onSyncPress, onNotesPress, onInfoPress }: HeaderProps) {
+export default function Header({ title, onProfilePress, onBackPress, showBackButton, showCloseButton, onClosePress, isSettingsActive, currentScreen, onExportPress, onSyncPress, onNotesPress, onInfoPress, onBackupPress }: HeaderProps) {
   const { colors, isDark } = useTheme();
   const { triggerHaptic } = useHapticFeedback();
   const { isSubscribed } = useSubscription();
@@ -370,6 +371,18 @@ export default function Header({ title, onProfilePress, onBackPress, showBackBut
             >
               <View style={styles.infoButtonInner}>
                 <IconSymbol size={20} name="info.circle.fill" color={colors.textSecondary} />
+              </View>
+            </TouchableOpacity>
+          ) : currentScreen === 'mapa' && onBackupPress ? (
+            <TouchableOpacity 
+              onPress={() => { 
+                triggerHaptic('light'); 
+                onBackupPress();
+              }} 
+              style={styles.infoButton}
+            >
+              <View style={styles.infoButtonInner}>
+                <IconSymbol size={20} name="clock.arrow.circlepath" color={colors.success} />
               </View>
             </TouchableOpacity>
           ) : !isSubscribed && currentScreen === 'settings' ? (

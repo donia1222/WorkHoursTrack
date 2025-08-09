@@ -8,7 +8,8 @@
     "delete": "Eliminar",
     "confirm_delete": "Confirmar eliminación",
     "loading": "Sincronizando...",
-    "error": "Error"
+    "error": "Error",
+    "meters": "metros"
   },
   "preferences": {
     "title": "Preferencias",
@@ -543,6 +544,10 @@
   },
   "onboarding": {
     "steps": {
+      "location": {
+        "title": "Tu Privacidad es Importante",
+        "description": "WorkTrack usa tu ubicación únicamente para detectar cuando llegas y sales del trabajo. Todos los datos se almacenan localmente en tu dispositivo. No tenemos servidores, no recopilamos datos y nunca compartimos tu información. Puedes cambiar este permiso en cualquier momento desde los Ajustes del sistema."
+      },
       "jobs": {
         "title": "Trabajos",
         "description": "Añade y edita trabajos, configura horarios y tarifas. Todos tus datos se guardan localmente, recuerda hacer copias de seguridad."
@@ -724,6 +729,14 @@
       "amount": "Cantidad",
       "amount_placeholder": "0",
       "currency": "Moneda",
+      "currency_label": "Moneda",
+      "payment_type": "Tipo de Pago",
+      "per_hour": "Por Hora",
+      "per_month": "Por Mes",
+      "per_year": "Por Año",
+      "amount_per_hour": "Cantidad por Hora",
+      "amount_per_month": "Cantidad por Mes",
+      "amount_per_year": "Cantidad por Año",
       "currency_placeholder": "EUR",
       "hourly_rate": "Tarifa por hora (para facturación)",
       "hourly_rate_placeholder": "0"
@@ -764,7 +777,15 @@
         "bank_name_placeholder": "Ej: Banco Santander",
         "swift_code": "Código SWIFT/BIC",
         "swift_code_placeholder": "Ej: BSCHESMM",
-        "preview_title": "Vista Previa de Factura"
+        "preview_title": "Vista Previa de Factura",
+        "preview_company_name": "Nombre Empresa",
+        "preview_tax_id": "CIF/NIF",
+        "preview_user_name": "Nombre Usuario",
+        "preview_address": "Dirección completa",
+        "preview_phone": "Teléfono",
+        "preview_email": "Email",
+        "preview_prefix": "Prefijo",
+        "preview_taxes": "Impuestos"
       }
     },
     "location": {
@@ -817,6 +838,8 @@
       "notifications": "Mostrar notificaciones",
       "notifications_desc": "Avisar cuando el timer automático cambie de estado",
       "preview": "Vista previa: Se iniciará después de {{delayStart}} min en el trabajo, se parará {{delayStop}} min después de salir",
+      "map_title": "📍 Ubicación del trabajo y área de geofencing",
+      "map_description": "El círculo muestra el área de {{radius}} metros donde se activará el timer automáticamente",
       "address_required_title": "Dirección Requerida",
       "address_required_message": "Para activar el timer automático, primero necesitas añadir una dirección en la pestaña 'Básico'. La dirección es necesaria para la detección automática por ubicación.",
       "stopped_no_time": "Timer parado - no había tiempo activo",

@@ -21,6 +21,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
 import { JobCardsSwiper } from './JobCardsSwiper';
+import JobsManagementScreen from '../screens/JobsManagementScreen';
 import { useFocusEffect } from '@react-navigation/native';
 
 // Dark mode map style
@@ -1185,6 +1186,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [miniCalendarData, setMiniCalendarData] = useState<any[]>([]);
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
   const [showJobCardsModal, setShowJobCardsModal] = useState(false);
+  const [showJobsManagement, setShowJobsManagement] = useState(false);
   const [shouldShowMiniCalendar, setShouldShowMiniCalendar] = useState(true);
   const [wasJobCardsModalOpen, setWasJobCardsModalOpen] = useState(false);
   const [shouldReopenJobCardsModal, setShouldReopenJobCardsModal] = useState(false);
@@ -2371,7 +2373,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     shadowRadius: 6,
                     elevation: 2,
                   }}
-                  onPress={() => setShowJobCardsModal(true)}
+                  onPress={() => setShowJobsManagement(true)}
                   activeOpacity={0.7}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -2715,6 +2717,19 @@ export default function MapLocation({ location, onNavigate }: Props) {
         onNavigateToSubscription={() => navigateTo('subscription')}
         t={t}
       />
+
+      {/* Jobs Management Modal */}
+      <Modal
+        visible={showJobsManagement}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => setShowJobsManagement(false)}
+      >
+        <JobsManagementScreen 
+          onClose={() => setShowJobsManagement(false)} 
+          onNavigate={(screen) => navigateTo(screen as any)}
+        />
+      </Modal>
 
       {/* Job action modal */}
       <Modal

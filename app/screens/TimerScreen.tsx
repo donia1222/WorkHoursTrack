@@ -468,7 +468,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     elevation: 8,
   },
   miniMap: {
-    height: 200,
+    height: 260,
     width: '100%',
   },
   miniMapTitle: {
@@ -1946,7 +1946,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
               </Text>
             </Animated.View>
 
-            {activeSession && currentSelectedJob && (
+            {activeSession && currentSelectedJob && autoTimerStatus?.state !== 'active' && (
               <View style={styles.activeJobInfo}>
                 <View style={[styles.jobColorDot, { backgroundColor: currentSelectedJob.color }]} />
                 <Text style={styles.activeJobName}>{currentSelectedJob.name}</Text>
@@ -2031,25 +2031,22 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
             const mapRegion = {
               latitude: activeAutoTimerJob.location.latitude,
               longitude: activeAutoTimerJob.location.longitude,
-              latitudeDelta: 0.005,
-              longitudeDelta: 0.005,
+              latitudeDelta: 0.002,  // Más zoom (más cerca)
+              longitudeDelta: 0.002,  // Más zoom (más cerca)
             };
             
             return (
               <View style={styles.miniMapContainer}>
-                <Text style={styles.miniMapTitle}>
-                  📍 {activeAutoTimerJob.name}
-                </Text>
                 <MapView
-                  style={styles.miniMap}
+                  style={[styles.miniMap, { borderRadius: 24 }]}
                   region={mapRegion}
                   provider={PROVIDER_DEFAULT}
                   showsUserLocation={true}
                   showsMyLocationButton={false}
-                  scrollEnabled={false}
-                  zoomEnabled={false}
-                  rotateEnabled={false}
-                  pitchEnabled={false}
+                  scrollEnabled={true}     // Permitir mover el mapa
+                  zoomEnabled={true}       // Permitir zoom con gestos
+                  rotateEnabled={true}     // Permitir rotar
+                  pitchEnabled={true}      // Permitir inclinar
                 >
                   {/* Job location marker */}
                   <Marker
@@ -2076,6 +2073,41 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                     strokeWidth={2}
                   />
                 </MapView>
+                {/* Chip flotante con el nombre del trabajo */}
+                <View style={{
+                  position: 'absolute',
+                  top: 12,
+                  right: 12,
+                  backgroundColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)',
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  borderRadius: 20,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  borderWidth: 1,
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 4,
+                  elevation: 3,
+                }}>
+                  <View style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: activeAutoTimerJob.color || colors.primary,
+                    marginRight: 8,
+                  }} />
+                  <Text style={{
+                    fontSize: 13,
+                    fontWeight: '600',
+                    color: colors.text,
+                    letterSpacing: 0.2,
+                  }}>
+                    {activeAutoTimerJob.name}
+                  </Text>
+                </View>
               </View>
             );
           }

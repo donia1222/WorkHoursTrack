@@ -694,12 +694,12 @@ function JobCard({ job, onEdit, onDelete, onToggleActive, isInactive }: JobCardP
           <TouchableOpacity style={styles.actionButton} onPress={() => { triggerHaptic('medium'); onToggleActive(); }}>
             <IconSymbol 
               size={18} 
-              name={(isInactive ? "play.fill" : "pause.fill") as IconSymbolName} 
+              name={(isInactive ? "checkmark.circle.fill" : "xmark.circle.fill") as IconSymbolName} 
               color={isInactive ? colors.success : colors.warning} 
             />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton} onPress={() => { triggerHaptic('warning'); onDelete(); }}>
-            <IconSymbol size={18} name="xmark" color={colors.error} />
+            <IconSymbol size={18} name="trash.fill" color={colors.error} />
           </TouchableOpacity>
         </View>
       </View>

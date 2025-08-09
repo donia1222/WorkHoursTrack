@@ -9,6 +9,7 @@ import {
   ScrollView,
   Dimensions,
   Alert,
+  Linking,
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
@@ -18,6 +19,8 @@ import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import TermsOfServiceModal from '../components/TermsOfServiceModal';
+import PrivacyPolicyModal from '../components/PrivacyPolicyModal';
 
 interface WelcomeModalProps {
   visible: boolean;
@@ -335,9 +338,36 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     bottom: 0,
     borderRadius: 16,
   },
+  legalButtonsContainer: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(255, 0, 0, 0.1)', // Debug: red background to see if it renders
+  },
+  legalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  legalButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
 });
 
 const getOnboardingSteps = (colors: ThemeColors, t: (key: string) => string): OnboardingStep[] => [
+  {
+    title: t('onboarding.steps.location.title'),
+    description: t('onboarding.steps.location.description'),
+    icon: 'location.fill',
+    color: colors.warning,
+    requiresLocation: true,
+  },
   {
     title: t('onboarding.steps.jobs.title'),
     description: t('onboarding.steps.jobs.description'),
@@ -354,8 +384,7 @@ const getOnboardingSteps = (colors: ThemeColors, t: (key: string) => string): On
     title: t('onboarding.steps.timer.title'),
     description: t('onboarding.steps.timer.description'),
     icon: 'clock.fill',
-    color: colors.warning,
-    requiresLocation: true,
+    color: colors.success,
   },
   {
     title: t('onboarding.steps.statistics.title'),
@@ -376,6 +405,8 @@ export default function WelcomeModal({ visible, onClose, onDone, isOnboarding = 
   const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(0);
   const [locationPermissionRequested, setLocationPermissionRequested] = useState(false);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const onboardingSteps = getOnboardingSteps(colors, t);
   const screenWidth = Dimensions.get('window').width;
   
@@ -385,8 +416,15 @@ export default function WelcomeModal({ visible, onClose, onDone, isOnboarding = 
   useEffect(() => {
     if (visible) {
       setCurrentStep(0);
+      console.log('🔍 OnboardingScreen: Reset to first step, currentStep = 0');
     }
   }, [visible]);
+
+  // Debug current step
+  useEffect(() => {
+    console.log('🔍 OnboardingScreen: currentStep =', currentStep);
+    console.log('🔍 OnboardingScreen: Should show legal buttons?', currentStep === 0);
+  }, [currentStep]);
 
   const requestLocationPermission = async () => {
     try {
@@ -442,6 +480,30 @@ export default function WelcomeModal({ visible, onClose, onDone, isOnboarding = 
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const openEmail = async () => {
+    const email = 'info@lweb.ch';
+    const subject = 'WorkTrack App - Contact';
+    const url = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
+    
+    const canOpen = await Linking.canOpenURL(url);
+    if (canOpen) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert(
+        t('help_support.contact.email_error_title') || 'Email',
+        email
+      );
+    }
+  };
+
+  const openTerms = () => {
+    setShowTermsOfService(true);
+  };
+
+  const openPrivacy = () => {
+    setShowPrivacyPolicy(true);
   };
 
 
@@ -512,6 +574,51 @@ export default function WelcomeModal({ visible, onClose, onDone, isOnboarding = 
                 <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>{currentStepData.description}</Text>
               </View>
             </BlurView>
+            
+            {/* Legal buttons - Only show on location step (first step) */}
+            {currentStep === 0 && (
+              <View style={styles.legalButtonsContainer}>
+                <Text style={{ color: 'red', fontSize: 18, textAlign: 'center' }}>DEBUG: LEGAL BUTTONS SHOULD BE HERE</Text>
+                <TouchableOpacity 
+                  style={[styles.legalButton, { 
+                    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.1)' : 'rgba(0, 122, 255, 0.08)',
+                    borderColor: isDark ? 'rgba(0, 122, 255, 0.3)' : 'rgba(0, 122, 255, 0.2)',
+                  }]}
+                  onPress={openEmail}
+                >
+                  <IconSymbol size={20} name="envelope.fill" color={colors.primary} />
+                  <Text style={[styles.legalButtonText, { color: colors.primary }]}>
+                    {t('help_support.contact.title')}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.legalButton, { 
+                    backgroundColor: isDark ? 'rgba(142, 142, 147, 0.1)' : 'rgba(142, 142, 147, 0.08)',
+                    borderColor: isDark ? 'rgba(142, 142, 147, 0.3)' : 'rgba(142, 142, 147, 0.2)',
+                  }]}
+                  onPress={openTerms}
+                >
+                  <IconSymbol size={20} name="doc.text.fill" color={colors.textSecondary} />
+                  <Text style={[styles.legalButtonText, { color: colors.textSecondary }]}>
+                    {t('help_support.legal.terms')}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.legalButton, { 
+                    backgroundColor: isDark ? 'rgba(52, 199, 89, 0.1)' : 'rgba(52, 199, 89, 0.08)',
+                    borderColor: isDark ? 'rgba(52, 199, 89, 0.3)' : 'rgba(52, 199, 89, 0.2)',
+                  }]}
+                  onPress={openPrivacy}
+                >
+                  <IconSymbol size={20} name="lock.fill" color={colors.success} />
+                  <Text style={[styles.legalButtonText, { color: colors.success }]}>
+                    {t('help_support.legal.privacy')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           {/* Step indicators */}
@@ -630,6 +737,18 @@ export default function WelcomeModal({ visible, onClose, onDone, isOnboarding = 
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+      
+      {/* Terms of Service Modal */}
+      <TermsOfServiceModal
+        visible={showTermsOfService}
+        onClose={() => setShowTermsOfService(false)}
+      />
+      
+      {/* Privacy Policy Modal */}
+      <PrivacyPolicyModal
+        visible={showPrivacyPolicy}
+        onClose={() => setShowPrivacyPolicy(false)}
+      />
     </Modal>
   );
 }

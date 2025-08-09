@@ -108,12 +108,15 @@ export class AutoBackupService {
    */
   static async shouldCreateBackup(): Promise<boolean> {
     const config = await this.getConfig();
+    console.log('🔍 Checking if backup needed. Config:', config);
     
     if (!config.enabled) {
+      console.log('❌ Auto backup is disabled');
       return false;
     }
 
     if (!config.lastBackupDate) {
+      console.log('✅ No previous backup found, will create first backup');
       return true; // First backup
     }
 
@@ -123,6 +126,7 @@ export class AutoBackupService {
     switch (config.frequency) {
       case 'daily':
         const daysDiff = Math.floor((now.getTime() - lastBackup.getTime()) / (1000 * 60 * 60 * 24));
+        console.log(`📅 Daily backup check: ${daysDiff} days since last backup`);
         return daysDiff >= 1;
         
       case 'weekly':

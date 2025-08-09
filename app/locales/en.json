@@ -8,7 +8,8 @@
     "delete": "Delete",
     "confirm_delete": "Confirm deletion",
     "loading": "Syncing...",
-    "error": "Error"
+    "error": "Error",
+    "meters": "meters"
   },
   "preferences": {
     "title": "Preferences",
@@ -524,6 +525,10 @@
   },
   "onboarding": {
     "steps": {
+      "location": {
+        "title": "Your Privacy Matters",
+        "description": "WorkTrack uses your location solely to detect when you arrive and leave work. All data is stored locally on your device. We have no servers, collect no data, and never share your information. You can change this permission anytime in System Settings."
+      },
       "jobs": {
         "title": "Jobs",
         "description": "Add and edit jobs, configure schedules and rates. All your data is stored locally, remember to make backups."
@@ -695,6 +700,14 @@
       "amount": "Amount",
       "amount_placeholder": "0",
       "currency": "Currency",
+      "currency_label": "Currency",
+      "payment_type": "Payment Type",
+      "per_hour": "Per Hour",
+      "per_month": "Per Month",
+      "per_year": "Per Year",
+      "amount_per_hour": "Amount per Hour",
+      "amount_per_month": "Amount per Month",
+      "amount_per_year": "Amount per Year",
       "currency_placeholder": "USD",
       "hourly_rate": "Hourly rate (for billing)",
       "hourly_rate_placeholder": "0"
@@ -735,7 +748,15 @@
         "bank_name_placeholder": "e.g.: Chase Bank",
         "swift_code": "SWIFT/BIC Code",
         "swift_code_placeholder": "e.g.: CHASUS33",
-        "preview_title": "Invoice Preview"
+        "preview_title": "Invoice Preview",
+        "preview_company_name": "Company Name",
+        "preview_tax_id": "TAX ID",
+        "preview_user_name": "User Name",
+        "preview_address": "Full address",
+        "preview_phone": "Phone",
+        "preview_email": "Email",
+        "preview_prefix": "Prefix",
+        "preview_taxes": "Taxes"
       }
     },
     "location": {
@@ -788,6 +809,8 @@
       "notifications": "Show notifications",
       "notifications_desc": "Notify when automatic timer changes state",
       "preview": "Preview: Will start after {{delayStart}} min at work, will stop {{delayStop}} min after leaving",
+      "map_title": "📍 Job location and geofencing area",
+      "map_description": "The circle shows the {{radius}} meter area where the timer will activate automatically",
       "address_required_title": "Address Required",
       "address_required_message": "To enable automatic timer, you first need to add an address in the 'Basic' tab. The address is necessary for automatic location detection.",
       "stopped_no_time": "Timer stopped - no active time was running",
