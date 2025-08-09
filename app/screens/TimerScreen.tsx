@@ -28,6 +28,7 @@ import TimerSuccessModal from '../components/TimerSuccessModal';
 import { Job, WorkDay, StoredActiveSession } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
+import MapView, { Marker, Circle, PROVIDER_DEFAULT } from 'react-native-maps';
 
 import { useBackNavigation, useNavigation } from '../context/NavigationContext';
 import { Theme } from '../constants/Theme';
@@ -111,20 +112,20 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginVertical: 12,
   },
   timerCard: {
-    marginVertical: 20,
-    marginHorizontal: 4,
+    marginVertical: 12,
+    marginHorizontal: 12,
     borderRadius: 28,
-    padding: 40,
-    shadowColor: colors.primary,
+    padding: 20,
+    shadowColor: isDark ? colors.primary : '#000',
     shadowOffset: {
       width: 0,
-      height: 10,
+      height: 12,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 15,
-    borderWidth: 0.5,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+    shadowOpacity: isDark ? 0.4 : 0.15,
+    shadowRadius: 24,
+    elevation: 18,
+    borderWidth: 1.5,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.8)',
     overflow: 'hidden',
   },
   timerCardGradient: {
@@ -152,15 +153,16 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   timerTime: {
     fontSize: 72,
-    fontWeight: '100',
+    fontWeight: '200',
     fontFamily: 'System',
-    marginBottom: 12,
+    marginBottom: 8,
     color: colors.text,
-    textShadowColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 3 },
-    textShadowRadius: 8,
+    textShadowColor: isDark ? 'rgba(0, 122, 255, 0.4)' : 'rgba(0, 0, 0, 0.08)',
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 12,
     letterSpacing: -2,
     textAlign: 'center',
+        marginTop: 10,
   },
   timerHours: {
     fontSize: 18,
@@ -169,6 +171,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.5,
     opacity: 0.8,
+
   },
   notesEditButton: {
     position: 'absolute',
@@ -236,18 +239,18 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    borderRadius: 24,
+    paddingVertical: 20,
+    paddingHorizontal: 28,
+    borderRadius: 28,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 6,
+      height: 8,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
-    borderWidth: 1.5,
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
+    borderWidth: 2,
     borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.6)',
     overflow: 'hidden',
     transform: [{ scale: 1 }],
@@ -445,6 +448,50 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     top: 120,
     right: 16,
     zIndex: 1000,
+  },
+  miniMapContainer: {
+    marginTop: 24,
+    marginBottom: 80,
+    marginHorizontal: 12,
+    borderRadius: 24,
+    overflow: 'hidden',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.95)',
+    borderWidth: 1.5,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    shadowColor: colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  miniMap: {
+    height: 200,
+    width: '100%',
+  },
+  miniMapTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.text,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 10,
+    backgroundColor: isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.8)',
+    letterSpacing: 0.3,
+  },
+  jobMarkerContainer: {
+    backgroundColor: colors.primary,
+    borderRadius: 24,
+    padding: 10,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
   },
   floatingButton: {
     flexDirection: 'row',
@@ -1701,7 +1748,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
             
             {jobs.map((job) => (
               <TouchableOpacity
-                key={job.id}
+                key={`tab-${job.id}`}
                 style={[
                   styles.compactJobTab,
                   selectedJobId === job.id && styles.compactJobTabActive
@@ -1772,7 +1819,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
             
             {jobs.map((job, index) => (
               <TouchableOpacity
-                key={job.id}
+                key={`scroll-${job.id}`}
                 style={[
                   styles.compactJobTab,
                   selectedJobId === job.id && styles.compactJobTabActive,
@@ -1860,26 +1907,26 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
               {autoTimerStatus?.state === 'active' && activeSession && (
                 <View style={{
                   position: 'absolute',
-                  top: -30,
+                  top:-5,
                   alignSelf: 'center',
                   flexDirection: 'row',
                   alignItems: 'center',
-                  backgroundColor: 'rgba(76, 217, 100, 0.15)',
-                  paddingHorizontal: 10,
-                  paddingVertical: 4,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: 'rgba(76, 217, 100, 0.25)',
-                  gap: 5,
+                  backgroundColor: 'rgba(76, 217, 100, 0.18)',
+                  paddingHorizontal: 14,
+                  paddingVertical: 6,
+                  borderRadius: 14,
+                  borderWidth: 1.5,
+                  borderColor: 'rgba(76, 217, 100, 0.35)',
+                  gap: 6,
                 }}>
                   <View style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
+                    width: 10,
+                    height: 10,
+                    borderRadius: 5,
                     backgroundColor: '#4CD964',
                   }} />
                   <Text style={{
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: '700',
                     color: '#4CD964',
                     letterSpacing: 0.5,
@@ -1977,8 +2024,66 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           </View>
         </BlurView>
 
-        {/* Recent Timer Sessions - Only show if there are sessions */}
-        {recentTimerSessions.length > 0 && (
+        {/* Mini Map - Show when AutoTimer is active */}
+        {autoTimerStatus?.state === 'active' && autoTimerStatus?.jobId && (() => {
+          const activeAutoTimerJob = jobs.find(j => j.id === autoTimerStatus.jobId);
+          if (activeAutoTimerJob?.location?.latitude && activeAutoTimerJob?.location?.longitude) {
+            const mapRegion = {
+              latitude: activeAutoTimerJob.location.latitude,
+              longitude: activeAutoTimerJob.location.longitude,
+              latitudeDelta: 0.005,
+              longitudeDelta: 0.005,
+            };
+            
+            return (
+              <View style={styles.miniMapContainer}>
+                <Text style={styles.miniMapTitle}>
+                  📍 {activeAutoTimerJob.name}
+                </Text>
+                <MapView
+                  style={styles.miniMap}
+                  region={mapRegion}
+                  provider={PROVIDER_DEFAULT}
+                  showsUserLocation={true}
+                  showsMyLocationButton={false}
+                  scrollEnabled={false}
+                  zoomEnabled={false}
+                  rotateEnabled={false}
+                  pitchEnabled={false}
+                >
+                  {/* Job location marker */}
+                  <Marker
+                    coordinate={{
+                      latitude: activeAutoTimerJob.location.latitude,
+                      longitude: activeAutoTimerJob.location.longitude,
+                    }}
+                    title={activeAutoTimerJob.name}
+                  >
+                    <View style={styles.jobMarkerContainer}>
+                      <IconSymbol size={16} name="building.2.fill" color="#FFFFFF" />
+                    </View>
+                  </Marker>
+                  
+                  {/* Geofence circle */}
+                  <Circle
+                    center={{
+                      latitude: activeAutoTimerJob.location.latitude,
+                      longitude: activeAutoTimerJob.location.longitude,
+                    }}
+                    radius={activeAutoTimerJob.autoTimer?.geofenceRadius || 100}
+                    fillColor="rgba(0, 122, 255, 0.15)"
+                    strokeColor="rgba(0, 122, 255, 0.5)"
+                    strokeWidth={2}
+                  />
+                </MapView>
+              </View>
+            );
+          }
+          return null;
+        })()}
+
+        {/* Recent Timer Sessions - Only show if there are sessions and AutoTimer is not active */}
+        {recentTimerSessions.length > 0 && autoTimerStatus?.state !== 'active' && (
           <View style={styles.recentSessionsContainer}>
             <View style={styles.recentSessionsHeader}>
               <Text style={styles.recentSessionsTitle}>

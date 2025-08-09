@@ -1464,7 +1464,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                   <View style={styles.jobStatDetails}>
                     <Text style={styles.jobStatName}>{stat.job.name}</Text>
                     <Text style={styles.jobStatHours}>
-                      {stat.hours.toFixed(1)}h • {stat.days} días • {stat.percentage.toFixed(1)}%
+                      {stat.hours.toFixed(1)}h • {stat.percentage.toFixed(1)}%
                     </Text>
                   </View>
                 </View>

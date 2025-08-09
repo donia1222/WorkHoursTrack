@@ -37,6 +37,9 @@ import { OnboardingService } from '../services/OnboardingService';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useSubscription } from '../hooks/useSubscription';
+import AutoTimerService from '../services/AutoTimerService';
+import { JobService } from '../services/JobService';
+import { Job } from '../types/WorkTypes';
 
 // Componente con animaciones suaves para transiciones
 const ScreenWrapper = ({ children, screenKey }: { children: React.ReactNode; screenKey: string }) => {
@@ -64,6 +67,9 @@ function AppContent() {
   const [showFeaturesModal, setShowFeaturesModal] = useState(false);
   const [showHelpSupport, setShowHelpSupport] = useState(false);
   const [showInfoButton, setShowInfoButton] = useState(true);
+  const [showAutoTimerAlert, setShowAutoTimerAlert] = useState(false);
+  const [autoTimerJob, setAutoTimerJob] = useState<Job | null>(null);
+  const [hasShownAutoTimerAlert, setHasShownAutoTimerAlert] = useState(false); // Track if already shown this session
   const { currentScreen, navigateTo } = useNavigation();
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
@@ -211,6 +217,89 @@ function AppContent() {
 
     checkAndShowFeaturesModal();
   }, []);
+
+  // Monitor AutoTimer status and check if user is outside work radius
+  useEffect(() => {
+    const checkAutoTimerStatus = async () => {
+      try {
+        // Get all jobs
+        const jobs = await JobService.getJobs();
+        console.log('🔍 Checking AutoTimer status, found jobs:', jobs.length);
+        
+        // Find job with AutoTimer enabled
+        const jobWithAutoTimer = jobs.find(job => job.autoTimer?.enabled);
+        console.log('🔍 Job with AutoTimer enabled:', jobWithAutoTimer?.name);
+        
+        if (jobWithAutoTimer && location) {
+          setAutoTimerJob(jobWithAutoTimer);
+          
+          // Check if user is outside the work radius
+          if (jobWithAutoTimer.location?.latitude && jobWithAutoTimer.location?.longitude) {
+            const distance = calculateDistance(
+              location.latitude,
+              location.longitude,
+              jobWithAutoTimer.location.latitude,
+              jobWithAutoTimer.location.longitude
+            );
+            
+            const radius = jobWithAutoTimer.autoTimer?.geofenceRadius || 100;
+            const isInsideRadius = distance <= radius;
+            
+            console.log('🔍 Distance from job:', distance, 'meters');
+            console.log('🔍 Geofence radius:', radius, 'meters');
+            console.log('🔍 Is inside radius:', isInsideRadius);
+            console.log('🔍 Has shown alert before:', hasShownAutoTimerAlert);
+            
+            // Show alert only once per session if user is outside radius (when AutoTimer is enabled)
+            if (!isInsideRadius && jobWithAutoTimer.autoTimer?.enabled && !hasShownAutoTimerAlert) {
+              console.log('✅ Showing AutoTimer alert - outside radius! (First time this session)');
+              setShowAutoTimerAlert(true);
+              setHasShownAutoTimerAlert(true); // Mark as shown for this session
+            } else if (isInsideRadius && showAutoTimerAlert) {
+              // If user enters the radius and alert is showing, hide it
+              console.log('❌ User entered radius - hiding alert');
+              setShowAutoTimerAlert(false);
+            }
+          } else {
+            console.log('⚠️ Job has no location coordinates');
+          }
+        } else {
+          console.log('⚠️ No job with AutoTimer or no location');
+          setAutoTimerJob(null);
+          // Don't reset hasShownAutoTimerAlert here
+          if (showAutoTimerAlert) {
+            setShowAutoTimerAlert(false);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking AutoTimer status:', error);
+      }
+    };
+
+    // Helper function to calculate distance between two coordinates
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+      const R = 6371e3; // Earth radius in meters
+      const φ1 = lat1 * Math.PI/180;
+      const φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2-lat1) * Math.PI/180;
+      const Δλ = (lon2-lon1) * Math.PI/180;
+
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+      return R * c; // Distance in meters
+    };
+
+    // Check initially
+    checkAutoTimerStatus();
+
+    // Check periodically
+    const interval = setInterval(checkAutoTimerStatus, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [location, hasShownAutoTimerAlert, showAutoTimerAlert]); // Include dependencies to track state properly
 
   const requestLocationPermission = async () => {
     setIsRequestingLocation(true);
@@ -505,6 +594,122 @@ function AppContent() {
           } : undefined}
         />
       )}
+      
+      {/* AutoTimer Alert - Shown globally when AutoTimer is active but user is outside work radius */}
+      {showAutoTimerAlert && autoTimerJob && (
+        <View 
+          style={{
+            position: 'absolute',
+            top: 85, // Below the header
+            left: 12,
+            right: 12,
+            zIndex: 1000,
+            backgroundColor: isDark ? 'rgba(255, 149, 0, 0.98)' : 'rgba(255, 149, 0, 0.98)',
+            borderRadius: 20,
+            padding: 20,
+            flexDirection: 'column',
+            alignItems: 'stretch',
+            justifyContent: 'space-between',
+            shadowColor: '#FF9500',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.3,
+            shadowRadius: 16,
+            elevation: 8,
+            borderWidth: 1.5,
+            borderColor: 'rgba(255, 255, 255, 0.4)',
+            minHeight: 140,
+          }}>
+          {/* Decorative background pattern */}
+          <View style={{
+            position: 'absolute',
+            top: -20,
+            right: -20,
+            width: 100,
+            height: 100,
+            borderRadius: 50,
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          }} />
+          <View style={{
+            position: 'absolute',
+            bottom: -30,
+            left: -30,
+            width: 120,
+            height: 120,
+            borderRadius: 60,
+            backgroundColor: 'rgba(255, 255, 255, 0.08)',
+          }} />
+          
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 16,
+          }}>
+            <View style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              borderRadius: 16,
+              padding: 12,
+              marginRight: 14,
+            }}>
+              <IconSymbol size={32} name="location.slash.fill" color="#FFFFFF" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                fontSize: 16,
+                color: '#FFFFFF',
+                fontWeight: '700',
+                marginBottom: 4,
+                letterSpacing: 0.3,
+              }}>
+                AutoTimer Activo
+              </Text>
+              <Text style={{
+                fontSize: 13,
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontWeight: '500',
+                lineHeight: 18,
+              }}>
+                {t('timer.auto_timer.activation_alert')}
+              </Text>
+            </View>
+          </View>
+          
+          <View style={{
+            flexDirection: 'row',
+            gap: 10,
+          }}>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                paddingHorizontal: 20,
+                paddingVertical: 12,
+                borderRadius: 14,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+              onPress={() => {
+                setShowAutoTimerAlert(false);
+                // Don't re-show - it will only show once per session
+              }}
+            >
+              <Text style={{
+                fontSize: 14,
+                color: '#FF9500',
+                fontWeight: '700',
+                letterSpacing: 0.2,
+              }}>
+                {t('timer.auto_timer.dismiss_notice')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+      
       <View style={{ flex: 1 }}>
         {renderCurrentScreen()}
       </View>
