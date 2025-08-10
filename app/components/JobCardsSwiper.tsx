@@ -537,7 +537,11 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
   );
 };
 
-const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => {
+  const { width: screenWidth } = Dimensions.get('window');
+  const isTablet = screenWidth >= 768;
+  
+  return StyleSheet.create({
   modalOverlay: {
     flex: 1,
   
@@ -1122,3 +1126,4 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     opacity: 1,
   },
 });
+};

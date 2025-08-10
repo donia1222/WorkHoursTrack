@@ -688,18 +688,15 @@ function JobCard({ job, onEdit, onDelete, onToggleActive, isInactive }: JobCardP
           </View>
         </View>
         <View style={styles.jobActions}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => { triggerHaptic('light'); onEdit(); }}>
-            <IconSymbol size={18} name="gear" color={colors.primary} />
-          </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton} onPress={() => { triggerHaptic('medium'); onToggleActive(); }}>
             <IconSymbol 
-              size={18} 
-              name={(isInactive ? "checkmark.circle.fill" : "xmark.circle.fill") as IconSymbolName} 
-              color={isInactive ? colors.success : colors.warning} 
+              size={24} 
+              name={(isInactive ? "eye" : "eye.slash") as IconSymbolName} 
+              color={isInactive ? colors.success : colors.success} 
             />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton} onPress={() => { triggerHaptic('warning'); onDelete(); }}>
-            <IconSymbol size={18} name="trash.fill" color={colors.error} />
+            <IconSymbol size={21} name="trash.fill" color={colors.error} />
           </TouchableOpacity>
         </View>
       </View>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MapView, { Marker, Circle } from 'react-native-maps';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, Modal, Dimensions, Switch, InteractionManager } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, Modal, Dimensions, Switch, InteractionManager, useWindowDimensions } from 'react-native';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming, Easing, runOnJS } from 'react-native-reanimated';
@@ -221,7 +221,7 @@ type Props = {
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean, daySize: number, dayFontSize: number) => StyleSheet.create({
+const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean, daySize: number, dayFontSize: number, isTablet: boolean) => StyleSheet.create({
   mapContainer: {
     flex: 1,
     overflow: 'hidden',
@@ -235,6 +235,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
   },
   map: {
     flex: 1,
+    marginTop:- 5,
   },
   overlay: {
     position: 'absolute',
@@ -820,8 +821,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     textShadowRadius: 2,
   },
   miniCalendarContainer: {
-    marginBottom: isSmallScreen ? 8 : 16,
-    marginHorizontal: isSmallScreen ? 8 : 0,
+    marginBottom: isTablet ? 20 : (isSmallScreen ? 8 : 16),
+    marginHorizontal: isTablet ? -6 : (isSmallScreen ? 8 : 0),
+    maxWidth: isTablet ? 600 : undefined,
+    alignSelf: isTablet ? 'center' : undefined,
+    marginTop:60,
   },
   miniCalendarCard: {
     borderRadius: 14,
@@ -834,9 +838,9 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
 
   },
   miniCalendarBlur: {
-    paddingTop: isSmallScreen ? 8 : 10,
-    paddingBottom: isSmallScreen ? 6 : 8,
-    paddingHorizontal: isSmallScreen ? 8 : 12,
+    paddingTop: isTablet ? 16 : (isSmallScreen ? 8 : 10),
+    paddingBottom: isTablet ? 14 : (isSmallScreen ? 6 : 8),
+    paddingHorizontal: isTablet ? 20 : (isSmallScreen ? 8 : 12),
     backgroundColor: isDark ?  'rgba(67, 53, 107, 0.13)' : 'rgba(67, 53, 107, 0.13)',
   },
   miniCalendarHeader: {
@@ -847,8 +851,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     paddingVertical: 2,
   },
   miniCalendarTitle: {
-    fontSize: isSmallScreen ? 14 : 16,
-    fontWeight: '500',
+    fontSize: isTablet ? 20 : (isSmallScreen ? 14 : 16),
+    fontWeight: isTablet ? '600' : '500',
     color: colors.text,
     letterSpacing: -0.3,
   },
@@ -916,7 +920,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
   miniCalendarDayLabel: {
     width: '13.5%',
     textAlign: 'center',
-    fontSize: isSmallScreen ? 8 : 10,
+    fontSize: isTablet ? 13 : (isSmallScreen ? 8 : 10),
     fontWeight: '700',
     color: isDark ? colors.textSecondary : colors.textTertiary,
     opacity: 1,
@@ -1158,10 +1162,23 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [showJobForm, setShowJobForm] = useState(false);
   
   // Responsive dimensions for mini calendar
-  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+  const windowDimensions = useWindowDimensions();
+  const screenWidth = windowDimensions.width;
+  const screenHeight = windowDimensions.height;
   const isSmallScreen = screenWidth < 380; // iPhone SE and similar
-  const daySize = isSmallScreen ? 40 : 48;
-  const dayFontSize = isSmallScreen ? 11 : 13;
+  const isTablet = screenWidth >= 768; // iPad and tablets
+  const isPortrait = screenHeight > screenWidth; // Detect portrait orientation
+  const isIPadPortrait = isTablet && isPortrait; // Detect iPad in portrait mode
+  const daySize = isTablet ? 60 : (isSmallScreen ? 40 : 48);
+  const dayFontSize = isTablet ? 16 : (isSmallScreen ? 11 : 13);
+  
+  console.log('🔍 Screen detection:', {
+    screenWidth,
+    screenHeight,
+    isTablet,
+    isPortrait,
+    isIPadPortrait
+  });
   
   // Animation values for modal
   const modalScale = useSharedValue(0);
@@ -1260,7 +1277,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const noLocationButtonsOpacity = useSharedValue(1);
   const noLocationButtonsTranslateY = useSharedValue(0);
   
-  const styles = getStyles(colors, isDark, isSmallScreen, daySize, dayFontSize);
+  const styles = getStyles(colors, isDark, isSmallScreen, daySize, dayFontSize, isTablet);
 
   // Gestión del arrastre para AutoTimer (funciona para ambos estados)
   // Removed panGesture - AutoTimer is now fixed
@@ -1340,7 +1357,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
     loadJobs();
     checkActiveTimer();
     loadPrivacyNoticeState();
-    loadMiniCalendarData(weekStart);
+    loadMiniCalendarData(weekStart, isIPadPortrait);
     
     // Initial animation for mini calendar - delayed and smoother
     setTimeout(() => {
@@ -1376,20 +1393,26 @@ export default function MapLocation({ location, onNavigate }: Props) {
     return t(`chatbot.months.${months[date.getMonth()]}`);
   };
 
-  const loadMiniCalendarData = async (weekStart?: Date) => {
+  const loadMiniCalendarData = async (weekStart?: Date, forceIPadPortrait?: boolean) => {
     try {
       const today = new Date();
       const baseDate = weekStart || currentWeekStart;
       
-      // Crear array de 7 días de la semana
+      // Usar el valor pasado o el calculado en el componente
+      const shouldShow14Days = forceIPadPortrait !== undefined ? forceIPadPortrait : isIPadPortrait;
+      
+      // Crear array de días (7 para normal, 14 para iPad vertical)
+      const daysToShow = shouldShow14Days ? 14 : 7;
+      
+      console.log('📅 Calendar days to show:', daysToShow, 'isIPadPortrait:', shouldShow14Days);
       const startOfWeek = new Date(baseDate);
       const dayOfWeek = startOfWeek.getDay();
       const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Empezar en lunes
       startOfWeek.setDate(startOfWeek.getDate() + mondayOffset);
       
-      // Obtener días de trabajo de todos los meses que aparecen en la semana
+      // Obtener días de trabajo de todos los meses que aparecen en el período
       const monthsToLoad = new Set<string>();
-      for (let i = 0; i < 7; i++) {
+      for (let i = 0; i < daysToShow; i++) {
         const dayDate = new Date(startOfWeek);
         dayDate.setDate(startOfWeek.getDate() + i);
         const monthKey = `${dayDate.getFullYear()}-${dayDate.getMonth() + 1}`;
@@ -1407,7 +1430,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
       console.log('📅 Mini Calendar MapLocation: Loaded', allWorkDays.length, 'work days');
       
       const calendarDays = [];
-      for (let i = 0; i < 7; i++) {
+      for (let i = 0; i < daysToShow; i++) {
         const dayDate = new Date(startOfWeek);
         dayDate.setDate(startOfWeek.getDate() + i);
         
@@ -1444,7 +1467,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
     const newWeekStart = new Date(currentWeekStart);
     newWeekStart.setDate(newWeekStart.getDate() + (directionValue * 7));
     setCurrentWeekStart(newWeekStart);
-    loadMiniCalendarData(newWeekStart);
+    loadMiniCalendarData(newWeekStart, isIPadPortrait);
   };
 
   // Gesture handler for calendar swipe
@@ -1820,7 +1843,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
       setJobStatistics(statsMap);
       
       // Reload calendar data when jobs change
-      loadMiniCalendarData();
+      loadMiniCalendarData(undefined, isIPadPortrait);
     } catch (error) {
       console.error('Error loading jobs:', error);
     }
@@ -2361,100 +2384,108 @@ export default function MapLocation({ location, onNavigate }: Props) {
             {jobs.length > 0 && (
               <View style={{
                 position: 'absolute',
-                top: 40,
+                top: isIPadPortrait ? 30 : (isSmallScreen ? 20 : 40),
                 left: '50%',
-                transform: [{ translateX: -160 }],
-                width: 320,
-                flexDirection: 'row',
-                gap: 10,
+                transform: [{ translateX: isSmallScreen ? -140 : (isIPadPortrait ? -160 : -160) }],
+                width: isSmallScreen ? 280 : (isIPadPortrait ? 320 : 320),
+                flexDirection: isIPadPortrait ? 'column' : 'row',
+                gap: isSmallScreen ? 8 : 10,
               }}>
                 <TouchableOpacity
                   style={{
-                    flex: 1,
+                    flex: isIPadPortrait ? 0 : 1,
+                    width: isIPadPortrait ? 320 : (isSmallScreen ? undefined : undefined),
+                    height: isIPadPortrait ? 70 : (isSmallScreen ? undefined : undefined),
                     backgroundColor: isDark ? 'rgba(73, 129, 240, 0.15)' : 'rgba(60, 144, 246, 0.14)',
-                    borderRadius: 14,
-                    padding: 16,
+                    borderRadius: isSmallScreen ? 12 : 14,
+                    padding: isSmallScreen ? 12 : (isIPadPortrait ? 14 : 16),
                     borderWidth: 1,
                     borderColor: isDark ? 'rgba(255, 255, 255, 0)' : 'rgba(0, 0, 0, 0)',
                     shadowColor: isDark ? '#000' : '#000',
                     shadowOffset: { width: 0, height: 1 },
                     shadowOpacity: isDark ? 0.12 : 0.08,
-                    shadowRadius: 6,
+                    shadowRadius: isSmallScreen ? 4 : 6,
                     elevation: 2,
                   }}
                   onPress={() => setShowJobCardsModal(true)}
                   activeOpacity={0.7}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <IconSymbol size={26} name="briefcase.fill" color={colors.primary} />
-                    <IconSymbol size={16} name="chevron.forward" color={colors.textSecondary} style={{ opacity: 0.5 }} />
+                    <View style={{ flexDirection: isIPadPortrait ? 'row' : 'column', alignItems: isIPadPortrait ? 'center' : 'flex-start', gap: isIPadPortrait ? 12 : 0 }}>
+                      <IconSymbol size={isSmallScreen ? 22 : (isIPadPortrait ? 28 : 26)} name="briefcase.fill" color={colors.primary} />
+                      <View style={{ flexDirection: isIPadPortrait ? 'row' : 'column', alignItems: isIPadPortrait ? 'baseline' : 'flex-start', gap: isIPadPortrait ? 8 : 0 }}>
+                        <Text style={{
+                          fontSize: isSmallScreen ? 18 : (isIPadPortrait ? 22 : 21),
+                          fontWeight: '700',
+                          color: colors.text,
+                          marginTop: isIPadPortrait ? 0 : (isSmallScreen ? 6 : 8),
+                        }}>{jobs.length}</Text>
+                        <Text style={{
+                          fontSize: isSmallScreen ? 11 : (isIPadPortrait ? 14 : 12),
+                          color: colors.textSecondary,
+                          marginTop: isIPadPortrait ? 0 : 2,
+                          fontWeight: '600',
+                        }}>{t('maps.active_jobs')}</Text>
+                      </View>
+                    </View>
+                    <IconSymbol size={isSmallScreen ? 14 : 16} name="chevron.forward" color={colors.textSecondary} style={{ opacity: 0.5 }} />
                   </View>
-                  <Text style={{
-                    fontSize: 21,
-                    fontWeight: '700',
-                    color: colors.text,
-                    marginTop: 8,
-                  }}>{jobs.length}</Text>
-                  <Text style={{
-                    fontSize: 12,
-                    color: colors.textSecondary,
-                    marginTop: 2,
-                    fontWeight: '600',
-                  }}>{t('maps.active_jobs')}</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity
                   style={{
-                    flex: 1,
+                    flex: isIPadPortrait ? 0 : 1,
+                    width: isIPadPortrait ? 320 : (isSmallScreen ? undefined : undefined),
+                    height: isIPadPortrait ? 70 : (isSmallScreen ? undefined : undefined),
                     backgroundColor: isDark ? 'rgba(52, 211, 153, 0.15)' : 'rgba(52, 211, 153, 0.12)',
-                    borderRadius: 14,
-                    padding: 16,
+                    borderRadius: isSmallScreen ? 12 : 14,
+                    padding: isSmallScreen ? 12 : (isIPadPortrait ? 14 : 16),
                     borderWidth: 1,
                     borderColor: isDark ? 'rgba(255, 255, 255, 0)' : 'rgba(0, 0, 0, 0)',
                     shadowColor: isDark ? '#000' : '#000',
                     shadowOffset: { width: 0, height: 1 },
                     shadowOpacity: isDark ? 0.12 : 0.08,
-                    shadowRadius: 6,
+                    shadowRadius: isSmallScreen ? 4 : 6,
                     elevation: 2,
                   }}
                   onPress={() => handleEditCategory('location')}
                   activeOpacity={0.7}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <View style={{ alignItems: 'flex-start' }}>
+                    <View style={{ flexDirection: isIPadPortrait ? 'row' : 'column', alignItems: isIPadPortrait ? 'center' : 'flex-start', gap: isIPadPortrait ? 12 : 0 }}>
                       <Animated.View style={animatedClockStyle}>
-                        <IconSymbol size={34} name="clock.fill" color={colors.success} />
+                        <IconSymbol size={isSmallScreen ? 28 : (isIPadPortrait ? 32 : 34)} name="clock.fill" color={colors.success} />
                       </Animated.View>
-                      {autoTimerStatus?.state === 'active' && (
+                      <View>
                         <Text style={{
-                          fontSize: 11,
+                          fontSize: isSmallScreen ? 10 : (isIPadPortrait ? 12 : 11),
                           fontWeight: '700',
-                          color: colors.success,
+                          color: autoTimerStatus?.state === 'active' ? colors.success : colors.textSecondary,
                           letterSpacing: 0.2,
-                          marginTop: 2,
+                          marginTop: isIPadPortrait ? 20 : 2,
+                          opacity: autoTimerStatus?.state === 'active' ? 1 : 0.7,
                         }}>
                           {formatTime(elapsedTime)}
                         </Text>
-                      )}
+                        <Text style={{
+                          fontSize: isSmallScreen ? 11 : (isIPadPortrait ? 13 : 12),
+                          color: colors.textSecondary,
+
+                          fontWeight: '600',
+                          marginTop: isIPadPortrait ? 6 : 10,
+                        }}>{t('maps.auto_timer')}</Text>
+                      </View>
                     </View>
-                    <IconSymbol size={16} name="chevron.forward" color={colors.textSecondary} style={{ opacity: 0.5 }} />
+                    <IconSymbol size={isSmallScreen ? 14 : 16} name="chevron.forward" color={colors.textSecondary} style={{ opacity: 0.5 }} />
                   </View>
-         
-                  <Text style={{
-                    fontSize: 12,
-                    color: colors.textSecondary,
-                    position: 'absolute',
-                    fontWeight: '600',
-                    bottom: 15,
-                    left: 10,
-                  
-                  }}>{t('maps.auto_timer')}</Text>
                 
                 </TouchableOpacity>
               </View>
             )}
             
-            <View style={styles.noLocationContent}>
+            <View style={[styles.noLocationContent, { 
+              marginTop: isIPadPortrait ? -40 : (isTablet && !isPortrait ? 100 : 0) 
+            }]}>
               {/* Botón Ver Trabajos - solo si hay trabajos */}
               {!showJobForm && jobs.length > 0 && (
               <Animated.View style={[styles.noLocationButtons, animatedNoLocationButtonsStyle]}>
