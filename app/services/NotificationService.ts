@@ -89,6 +89,21 @@ export type NotificationType =
   | 'timer_will_start'   // Timer se iniciará en X minutos
   | 'timer_will_stop';   // Timer se pausará en X minutos
 
+interface NotificationTranslations {
+  timer_started_title: string;
+  timer_started_body: string;
+  timer_stopped_title: string;
+  timer_stopped_body: string;
+  timer_will_start_title: string;
+  timer_will_start_body: string;
+  timer_will_stop_title: string;
+  timer_will_stop_body: string;
+  default_title: string;
+  default_body: string;
+  minute: string;
+  minutes: string;
+}
+
 class NotificationService {
   private static instance: NotificationService;
   private hasPermissions = false;
@@ -101,6 +116,20 @@ class NotificationService {
     reminderMinutes: 15,
   };
   private pendingBackgroundNotifications: Map<string, any> = new Map();
+  private translations: NotificationTranslations = {
+    timer_started_title: '⏰ Timer Iniciado',
+    timer_started_body: 'Timer automático iniciado para',
+    timer_stopped_title: '⏹️ Timer Pausado',
+    timer_stopped_body: 'Timer automático pausado para',
+    timer_will_start_title: '🚀 Timer se Iniciará',
+    timer_will_start_body: 'Timer se iniciará en',
+    timer_will_stop_title: '⏸️ Timer se Pausará',
+    timer_will_stop_body: 'Timer se pausará en',
+    default_title: '📱 Notificación',
+    default_body: 'Evento para',
+    minute: 'minuto',
+    minutes: 'minutos',
+  };
 
   private constructor() {
     this.initializeService();
@@ -524,32 +553,32 @@ class NotificationService {
     switch (type) {
       case 'timer_started':
         return {
-          title: '⏰ Timer Iniciado',
-          body: `Timer automático iniciado para "${jobName}"`,
+          title: this.translations.timer_started_title,
+          body: `${this.translations.timer_started_body} "${jobName}"`,
         };
 
       case 'timer_stopped':
         return {
-          title: '⏹️ Timer Pausado',
-          body: `Timer automático pausado para "${jobName}"`,
+          title: this.translations.timer_stopped_title,
+          body: `${this.translations.timer_stopped_body} "${jobName}"`,
         };
 
       case 'timer_will_start':
         return {
-          title: '🚀 Timer se Iniciará',
-          body: `Timer se iniciará en ${minutes} minutos para "${jobName}"`,
+          title: this.translations.timer_will_start_title,
+          body: `${this.translations.timer_will_start_body} ${minutes} ${minutes === 1 ? this.translations.minute : this.translations.minutes} para "${jobName}"`,
         };
 
       case 'timer_will_stop':
         return {
-          title: '⏸️ Timer se Pausará',
-          body: `Timer se pausará en ${minutes} minutos para "${jobName}"`,
+          title: this.translations.timer_will_stop_title,
+          body: `${this.translations.timer_will_stop_body} ${minutes} ${minutes === 1 ? this.translations.minute : this.translations.minutes} para "${jobName}"`,
         };
 
       default:
         return {
-          title: '📱 Notificación',
-          body: `Evento para "${jobName}"`,
+          title: this.translations.default_title,
+          body: `${this.translations.default_body} "${jobName}"`,
         };
     }
   }
@@ -587,6 +616,14 @@ class NotificationService {
     }
     
     console.log('📱 Notification settings updated:', this.settings);
+  }
+
+  /**
+   * Update notification translations
+   */
+  updateTranslations(translations: Partial<NotificationTranslations>): void {
+    this.translations = { ...this.translations, ...translations };
+    console.log('🌐 Notification translations updated');
   }
 
   /**

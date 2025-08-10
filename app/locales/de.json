@@ -50,6 +50,16 @@
       "open_settings": "Einstellungen Öffnen",
       "auto_timer": "Auto-Timer",
       "auto_timer_desc": "Benachrichtigungen wenn Auto-Timer startet oder pausiert",
+      "timer_started_title": "⏰ Timer Gestartet",
+      "timer_started_body": "Automatischer Timer gestartet für \"{{jobName}}\"",
+      "timer_stopped_title": "⏹️ Timer Pausiert",
+      "timer_stopped_body": "Automatischer Timer pausiert für \"{{jobName}}\"",
+      "timer_will_start_title": "🚀 Timer Wird Starten",
+      "timer_will_start_body": "Timer startet in {{minutes}} Minuten für \"{{jobName}}\"",
+      "timer_will_stop_title": "⏸️ Timer Wird Pausieren",
+      "timer_will_stop_body": "Timer pausiert in {{minutes}} Minuten für \"{{jobName}}\"",
+      "default_notification_title": "📱 Benachrichtigung",
+      "default_notification_body": "Ereignis für \"{{jobName}}\"",
       "reminder_time": "Erinnerungszeit",
       "reminder_time_desc": "Konfigurieren Sie, wann Sie Erinnerungen vor Ihrem Arbeitsplan erhalten möchten"
     },
@@ -577,7 +587,13 @@
       "amount_per_year": "Betrag pro Jahr",
       "currency_placeholder": "EUR",
       "hourly_rate": "Stundensatz (für Abrechnung)",
-      "hourly_rate_placeholder": "0"
+      "hourly_rate_placeholder": "0",
+      "period_hour": "h",
+      "period_month": "Monat",
+      "period_year": "Jahr",
+      "amount_helper_hourly": "z.B.: 15€/Stunde für Freelance-Arbeit",
+      "amount_helper_monthly": "z.B.: 1800€/Monat für Festanstellung",
+      "amount_helper_annual": "z.B.: 35000€/Jahr für Jahresgehälter"
     },
     "billing": {
       "title": "Abrechnungskonfiguration",

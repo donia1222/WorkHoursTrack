@@ -527,26 +527,7 @@ Please describe your issue below:
           </Text>
         </BlurView>
 
-        {/* Cancellation Info */}
-        <BlurView intensity={85} tint={isDark ? "dark" : "light"} style={styles.cancellationContainer}>
-          <LinearGradient
-            colors={isDark 
-              ? ['rgba(34, 197, 94, 0.08)', 'rgba(34, 197, 94, 0.04)', 'transparent'] 
-              : ['rgba(34, 197, 94, 0.06)', 'rgba(34, 197, 94, 0.03)', 'transparent']
-            }
-            style={styles.cancellationGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          />
-          <View style={styles.cancellationContent}>
-            <View style={[styles.cancellationIconContainer, { backgroundColor: colors.success + '20' }]}>
-              <IconSymbol size={16} name="checkmark.shield.fill" color={colors.success} />
-            </View>
-            <Text style={[styles.cancellationText, { color: colors.textSecondary }]}>
-              {t('subscription.cancellation_text')}
-            </Text>
-          </View>
-        </BlurView>
+
 
         {/* Subscription Packages */}
         {offerings && offerings.availablePackages.length > 0 && (
@@ -594,6 +575,26 @@ Please describe your issue below:
                 </BlurView>
               </TouchableOpacity>
             ))}
+                    {/* Cancellation Info */}
+        <BlurView intensity={85} tint={isDark ? "dark" : "light"} style={styles.cancellationContainer}>
+          <LinearGradient
+            colors={isDark 
+              ? ['rgba(34, 197, 94, 0.08)', 'rgba(34, 197, 94, 0.04)', 'transparent'] 
+              : ['rgba(34, 197, 94, 0.06)', 'rgba(34, 197, 94, 0.03)', 'transparent']
+            }
+            style={styles.cancellationGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
+          <View style={styles.cancellationContent}>
+            <View style={[styles.cancellationIconContainer, { backgroundColor: colors.success + '20' }]}>
+              <IconSymbol size={16} name="checkmark.shield.fill" color={colors.success} />
+            </View>
+            <Text style={[styles.cancellationText, { color: colors.textSecondary }]}>
+              {t('subscription.cancellation_text')}
+            </Text>
+          </View>
+        </BlurView>
           </View>
         )}
 
@@ -1226,24 +1227,13 @@ const styles = StyleSheet.create({
   // Enhanced Hero Section Styles
   heroCard: {
     borderRadius: 28,
-    margin: 20,
         marginTop: -10,
     padding: 32,
+    marginBottom: 20,
     alignItems: 'center',
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 20 },
-        shadowOpacity: 0.2,
-        shadowRadius: 32,
-      },
-      android: {
-        elevation: 16,
-      },
-    }),
+
+
   },
   heroGradientOverlay: {
     position: 'absolute',
@@ -1299,7 +1289,7 @@ const styles = StyleSheet.create({
     }),
   },
   heroTitle: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: '900',
     textAlign: 'center',
     marginBottom: 12,
@@ -1311,7 +1301,7 @@ const styles = StyleSheet.create({
     }),
   },
   heroSubtitle: {
-    fontSize: 18,
+    fontSize: 17,
     textAlign: 'center',
     lineHeight: 28,
     paddingHorizontal: 16,
@@ -1460,22 +1450,10 @@ const styles = StyleSheet.create({
   },
   cancellationContainer: {
     marginHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: -20,
     borderRadius: 16,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(34, 197, 94, 0.15)',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#22C55E',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+
   },
   cancellationGradient: {
     position: 'absolute',

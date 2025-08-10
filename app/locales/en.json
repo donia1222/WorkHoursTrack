@@ -50,6 +50,16 @@
       "open_settings": "Open Settings",
       "auto_timer": "Auto Timer",
       "auto_timer_desc": "Notifications when auto timer starts or pauses",
+      "timer_started_title": "⏰ Timer Started",
+      "timer_started_body": "Automatic timer started for \"{{jobName}}\"",
+      "timer_stopped_title": "⏹️ Timer Stopped",
+      "timer_stopped_body": "Automatic timer stopped for \"{{jobName}}\"",
+      "timer_will_start_title": "🚀 Timer Will Start",
+      "timer_will_start_body": "Timer will start in {{minutes}} minutes for \"{{jobName}}\"",
+      "timer_will_stop_title": "⏸️ Timer Will Stop",
+      "timer_will_stop_body": "Timer will stop in {{minutes}} minutes for \"{{jobName}}\"",
+      "default_notification_title": "📱 Notification",
+      "default_notification_body": "Event for \"{{jobName}}\"",
       "reminder_time": "Reminder Time",
       "reminder_time_desc": "Configure when to receive reminders before your work schedule"
     },
@@ -710,7 +720,13 @@
       "amount_per_year": "Amount per Year",
       "currency_placeholder": "USD",
       "hourly_rate": "Hourly rate (for billing)",
-      "hourly_rate_placeholder": "0"
+      "hourly_rate_placeholder": "0",
+      "period_hour": "h",
+      "period_month": "month",
+      "period_year": "year",
+      "amount_helper_hourly": "E.g.: 15$/hour for freelance work",
+      "amount_helper_monthly": "E.g.: 1800$/month for fixed jobs",
+      "amount_helper_annual": "E.g.: 35000$/year for annual salaries"
     },
     "billing": {
       "title": "Billing Configuration",

@@ -232,6 +232,18 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     backgroundColor: isDark ? 'rgba(52, 199, 89, 0.15)' : 'rgba(52, 199, 89, 0.1)',
     borderWidth: 1,
     borderColor: isDark ? 'rgba(52, 199, 89, 0.3)' : 'rgba(52, 199, 89, 0.2)',
+    position: 'relative',
+  },
+  plusBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colors.success,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   historyButton: {
     padding: 4,
@@ -344,7 +356,10 @@ export default function Header({ title, onProfilePress, onBackPress, showBackBut
               style={styles.notesButton}
             >
               <View style={styles.notesButtonInner}>
-                <IconSymbol size={18} name="pencil" color={colors.success} />
+                <IconSymbol size={18} name="note.text" color={colors.success} />
+                <View style={styles.plusBadge}>
+                  <IconSymbol size={10} name="plus" color="white" />
+                </View>
               </View>
             </TouchableOpacity>
           ) : currentScreen === 'chatbot' ? (

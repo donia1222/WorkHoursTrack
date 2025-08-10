@@ -21,7 +21,6 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
 import { JobCardsSwiper } from './JobCardsSwiper';
-import JobsManagementScreen from '../screens/JobsManagementScreen';
 import { useFocusEffect } from '@react-navigation/native';
 
 // Dark mode map style
@@ -252,16 +251,23 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     paddingHorizontal: 20,
   },
   mainActionCard: {
-    width: 280,
+    width: 300,
     pointerEvents: 'auto',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 10,
   },
   mainActionCardInner: {
-    borderRadius: 24,
-    padding: 28,
+    borderRadius: 28,
+    padding: 32,
     alignItems: 'center',
     position: 'relative',
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+
     overflow: 'hidden',
   },
   mainActionCardGradient: {
@@ -273,36 +279,39 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     borderRadius: 24,
   },
   mainActionIcon: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 92,
+    height: 92,
+    borderRadius: 46,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#4C87AF',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
     marginBottom: 24,
     borderWidth: 2,
     borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
-    shadowColor: colors.success,
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
   },
   
   mainActionTitle: {
-    fontSize: 20,
+    fontSize: 22,
     color: colors.text,
     textAlign: 'center',
-    marginBottom: 12,
-    fontWeight: '600',
+    marginBottom: 14,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   mainActionDescription: {
     fontSize: 16,
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 24,
+    opacity: 0.9,
+    paddingHorizontal: 10,
   },
   mainActionBadge: {
     position: 'absolute',
@@ -1186,7 +1195,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [miniCalendarData, setMiniCalendarData] = useState<any[]>([]);
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
   const [showJobCardsModal, setShowJobCardsModal] = useState(false);
-  const [showJobsManagement, setShowJobsManagement] = useState(false);
   const [shouldShowMiniCalendar, setShouldShowMiniCalendar] = useState(true);
   const [wasJobCardsModalOpen, setWasJobCardsModalOpen] = useState(false);
   const [shouldReopenJobCardsModal, setShouldReopenJobCardsModal] = useState(false);
@@ -2050,6 +2058,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
 
   const handleAddJob = () => {
+    triggerHaptic('light');
     setEditingJob(null);
     setShowJobForm(true);
   };
@@ -2373,7 +2382,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     shadowRadius: 6,
                     elevation: 2,
                   }}
-                  onPress={() => setShowJobsManagement(true)}
+                  onPress={() => setShowJobCardsModal(true)}
                   activeOpacity={0.7}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -2670,17 +2679,24 @@ export default function MapLocation({ location, onNavigate }: Props) {
             <TouchableOpacity
               style={styles.mainActionCard}
               onPress={handleAddJob}
+              activeOpacity={0.95}
             >
-              <BlurView intensity={85} tint={isDark ? "dark" : "light"} style={[styles.mainActionCardInner, {
-                backgroundColor: isDark ? 'rgba(76, 135, 175, 0.25)' : 'rgba(76, 135, 175, 0.25)' ,
-                borderWidth: 0,
-                borderColor: 'transparent'
+              <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={[styles.mainActionCardInner, {
+                backgroundColor: isDark ? 'rgba(76, 135, 175, 0.3)' : 'rgba(76, 135, 175, 0.2)',
               }]}>
+                <LinearGradient
+                  colors={isDark 
+                    ? ['rgba(76, 135, 175, 0.4)', 'rgba(76, 135, 175, 0.1)']
+                    : ['rgba(76, 135, 175, 0.3)', 'rgba(76, 135, 175, 0.05)']
+                  }
+                  style={StyleSheet.absoluteFillObject}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
                 <View style={[styles.mainActionIcon, {
-                  backgroundColor: isDark ? 'rgba(76, 135, 175, 0.25)' : 'rgba(76, 135, 175, 0.25)' ,
-                  borderWidth: 0
+                  backgroundColor: colors.primary,
                 }]}>
-                  <IconSymbol size={36} name="plus" color={colors.primary} />
+                  <IconSymbol size={40} name="plus" color="white" weight="bold" />
                 </View>
                 <Text style={styles.mainActionTitle}>{t('maps.add_job')}</Text>
                 <Text style={styles.mainActionDescription}>
@@ -2717,19 +2733,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
         onNavigateToSubscription={() => navigateTo('subscription')}
         t={t}
       />
-
-      {/* Jobs Management Modal */}
-      <Modal
-        visible={showJobsManagement}
-        animationType="slide"
-        presentationStyle="formSheet"
-        onRequestClose={() => setShowJobsManagement(false)}
-      >
-        <JobsManagementScreen 
-          onClose={() => setShowJobsManagement(false)} 
-          onNavigate={(screen) => navigateTo(screen as any)}
-        />
-      </Modal>
 
       {/* Job action modal */}
       <Modal

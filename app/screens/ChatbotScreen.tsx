@@ -136,6 +136,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 14,
     fontSize: 16,
+    marginBottom: 3,
     fontWeight: '400',
     color: colors.text,
     maxHeight: 110,

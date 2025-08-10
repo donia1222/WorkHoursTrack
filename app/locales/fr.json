@@ -50,6 +50,16 @@
       "open_settings": "Ouvrir les Paramètres",
       "auto_timer": "Minuteur Automatique",
       "auto_timer_desc": "Notifications quand le minuteur automatique démarre ou se met en pause",
+      "timer_started_title": "⏰ Minuteur Démarré",
+      "timer_started_body": "Minuteur automatique démarré pour \"{{jobName}}\"",
+      "timer_stopped_title": "⏹️ Minuteur Arrêté",
+      "timer_stopped_body": "Minuteur automatique arrêté pour \"{{jobName}}\"",
+      "timer_will_start_title": "🚀 Le Minuteur Va Démarrer",
+      "timer_will_start_body": "Le minuteur démarrera dans {{minutes}} minutes pour \"{{jobName}}\"",
+      "timer_will_stop_title": "⏸️ Le Minuteur Va S'arrêter",
+      "timer_will_stop_body": "Le minuteur s'arrêtera dans {{minutes}} minutes pour \"{{jobName}}\"",
+      "default_notification_title": "📱 Notification",
+      "default_notification_body": "Événement pour \"{{jobName}}\"",
       "reminder_time": "Heure de Rappel",
       "reminder_time_desc": "Configurez quand recevoir des rappels avant votre horaire de travail"
     },
@@ -559,7 +569,13 @@
       "amount_per_year": "Montant par An",
       "currency_placeholder": "EUR",
       "hourly_rate": "Tarif horaire (pour facturation)",
-      "hourly_rate_placeholder": "0"
+      "hourly_rate_placeholder": "0",
+      "period_hour": "h",
+      "period_month": "mois",
+      "period_year": "an",
+      "amount_helper_hourly": "Ex : 15€/heure pour travail freelance",
+      "amount_helper_monthly": "Ex : 1800€/mois pour emplois fixes",
+      "amount_helper_annual": "Ex : 35000€/an pour salaires annuels"
     },
     "billing": {
       "title": "Configuration de facturation",

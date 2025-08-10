@@ -2450,14 +2450,16 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 />
                 <View style={styles.periodIndicator}>
                   <Text style={styles.periodIndicatorText}>
-                    /{formData.salary?.type === 'hourly' ? 'h' :
-                      formData.salary?.type === 'monthly' ? 'mes' : 'año'}
+                    /{formData.salary?.type === 'hourly' ? t('job_form.financial.period_hour') :
+                      formData.salary?.type === 'monthly' ? t('job_form.financial.period_month') : 
+                      t('job_form.financial.period_year')}
                   </Text>
                 </View>
               </View>
               <Text style={styles.amountHelper}>
-                {formData.salary?.type === 'hourly' ? 'Ej: 15€/hora para trabajos freelance' :
-                 formData.salary?.type === 'monthly' ? 'Ej: 1800€/mes para empleos fijos' : 'Ej: 35000€/año para salarios anuales'}
+                {formData.salary?.type === 'hourly' ? t('job_form.financial.amount_helper_hourly') :
+                 formData.salary?.type === 'monthly' ? t('job_form.financial.amount_helper_monthly') : 
+                 t('job_form.financial.amount_helper_annual')}
               </Text>
             </View>
 

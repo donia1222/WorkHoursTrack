@@ -50,6 +50,16 @@
       "open_settings": "Apri Impostazioni",
       "auto_timer": "Timer Automatico",
       "auto_timer_desc": "Notifiche quando il timer automatico si avvia o si mette in pausa",
+      "timer_started_title": "⏰ Timer Avviato",
+      "timer_started_body": "Timer automatico avviato per \"{{jobName}}\"",
+      "timer_stopped_title": "⏹️ Timer Fermato",
+      "timer_stopped_body": "Timer automatico fermato per \"{{jobName}}\"",
+      "timer_will_start_title": "🚀 Il Timer Si Avvierà",
+      "timer_will_start_body": "Il timer si avvierà tra {{minutes}} minuti per \"{{jobName}}\"",
+      "timer_will_stop_title": "⏸️ Il Timer Si Fermerà",
+      "timer_will_stop_body": "Il timer si fermerà tra {{minutes}} minuti per \"{{jobName}}\"",
+      "default_notification_title": "📱 Notifica",
+      "default_notification_body": "Evento per \"{{jobName}}\"",
       "reminder_time": "Orario Promemoria",
       "reminder_time_desc": "Configura quando ricevere promemoria prima del tuo orario di lavoro"
     },
@@ -559,7 +569,13 @@
       "amount_per_year": "Importo all'Anno",
       "currency_placeholder": "EUR",
       "hourly_rate": "Tariffa oraria (per fatturazione)",
-      "hourly_rate_placeholder": "0"
+      "hourly_rate_placeholder": "0",
+      "period_hour": "h",
+      "period_month": "mese",
+      "period_year": "anno",
+      "amount_helper_hourly": "Es: 15€/ora per lavori freelance",
+      "amount_helper_monthly": "Es: 1800€/mese per impieghi fissi",
+      "amount_helper_annual": "Es: 35000€/anno per stipendi annuali"
     },
     "billing": {
       "title": "Configurazione fatturazione",

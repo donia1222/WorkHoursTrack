@@ -50,6 +50,16 @@
       "open_settings": "Abrir Configuración",
       "auto_timer": "Timer Automático",
       "auto_timer_desc": "Notificaciones cuando el timer automático se inicie o pause",
+      "timer_started_title": "⏰ Timer Iniciado",
+      "timer_started_body": "Timer automático iniciado para \"{{jobName}}\"",
+      "timer_stopped_title": "⏹️ Timer Pausado",
+      "timer_stopped_body": "Timer automático pausado para \"{{jobName}}\"",
+      "timer_will_start_title": "🚀 Timer se Iniciará",
+      "timer_will_start_body": "Timer se iniciará en {{minutes}} minutos para \"{{jobName}}\"",
+      "timer_will_stop_title": "⏸️ Timer se Pausará",
+      "timer_will_stop_body": "Timer se pausará en {{minutes}} minutos para \"{{jobName}}\"",
+      "default_notification_title": "📱 Notificación",
+      "default_notification_body": "Evento para \"{{jobName}}\"",
       "reminder_time": "Tiempo de aviso",
       "reminder_time_desc": "Configura cuándo recibir el recordatorio antes de tu horario de trabajo"
     },
@@ -739,7 +749,13 @@
       "amount_per_year": "Cantidad por Año",
       "currency_placeholder": "EUR",
       "hourly_rate": "Tarifa por hora (para facturación)",
-      "hourly_rate_placeholder": "0"
+      "hourly_rate_placeholder": "0",
+      "period_hour": "h",
+      "period_month": "mes",
+      "period_year": "año",
+      "amount_helper_hourly": "Ej: 15€/hora para trabajos freelance",
+      "amount_helper_monthly": "Ej: 1800€/mes para empleos fijos",
+      "amount_helper_annual": "Ej: 35000€/año para salarios anuales"
     },
     "billing": {
       "title": "Configuración de Facturación",
