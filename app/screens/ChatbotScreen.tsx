@@ -629,9 +629,15 @@ export default function ChatbotScreen() {
       return;
     }
 
+    // Guardar el texto antes de limpiarlo
+    const messageText = inputText;
+    
+    // Limpiar el input INMEDIATAMENTE
+    setInputText('');
+    
     const userMessage: ChatMessageData = {
       id: Date.now(),
-      text: inputText,
+      text: messageText,
       image: selectedImage,
       document: selectedDocument,
       isUser: true,
@@ -641,7 +647,6 @@ export default function ChatbotScreen() {
     console.log('👤 [CHAT] Mensaje de usuario creado:', userMessage);
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
-    setInputText('');
     const imageToAnalyze = selectedImage;
     const documentToAnalyze = selectedDocument;
     setSelectedImage(undefined);
