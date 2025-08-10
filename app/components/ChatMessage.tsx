@@ -15,7 +15,7 @@ import { useNavigation } from '@/app/context/NavigationContext';
 import { ChatDataParser } from '@/app/services/ChatDataParser';
 import { JobService } from '@/app/services/JobService';
 import ExportCalendarModal from './ExportCalendarModal';
-import PersonSelectionButtons from './PersonSelectionButtons';
+import InteractiveSelection, { SelectionData } from './InteractiveSelection';
 import { Job } from '@/app/types/WorkTypes';
 
 export interface ChatMessageData {
@@ -166,52 +166,83 @@ export default function ChatMessage({ message, jobs = [], onExportToCalendar, on
   // Detectar si el mensaje contiene datos de horarios (solo para mensajes del bot)
   const hasWorkScheduleData = !message.isUser && ChatDataParser.hasWorkScheduleData(message.text);
   
-  // Detectar si el mensaje menciona múltiples personas
-  const detectMultiplePersons = (text: string): string[] => {
-    // Buscar patrones que indiquen múltiples personas
-    if (text.includes('DETECCIÓN DE PERSONAS') || 
-        text.includes('Múltiples personas detectadas') ||
-        text.includes('Múltiples nombres detectados') ||
-        text.includes('varios nombres en este plan') ||
-        text.includes('Veo varios nombres')) {
-      
-      // Extraer nombres del texto - mejorado para capturar hasta el final
+  // Detectar si el mensaje contiene selección interactiva estructurada
+  const detectInteractiveSelection = (text: string): SelectionData | null => {
+    // Buscar el formato estructurado [INTERACTIVE_SELECTION]...[/INTERACTIVE_SELECTION]
+    const structuredPattern = /\[INTERACTIVE_SELECTION\]([\s\S]*?)\[\/INTERACTIVE_SELECTION\]/;
+    const match = text.match(structuredPattern);
+    
+    if (match && match[1]) {
+      try {
+        // Parsear el contenido estructurado
+        const content = match[1].trim();
+        const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+        
+        let type: any = 'option';
+        let options: string[] = [];
+        let question = '';
+        
+        for (const line of lines) {
+          if (line.startsWith('type:')) {
+            type = line.replace('type:', '').trim();
+          } else if (line.startsWith('options:')) {
+            // Parsear array de opciones
+            const optionsStr = line.replace('options:', '').trim();
+            // Remover corchetes y dividir por comas
+            const cleanOptions = optionsStr.replace(/^\[|\]$/g, '');
+            options = cleanOptions.split(',').map(opt => opt.trim());
+          } else if (line.startsWith('question:')) {
+            question = line.replace('question:', '').trim();
+          }
+        }
+        
+        if (options.length > 0) {
+          console.log('🎯 [ChatMessage] Selección interactiva detectada:', { type, options, question });
+          return { type, options, question };
+        }
+      } catch (error) {
+        console.error('Error parseando selección interactiva:', error);
+      }
+    }
+    
+    // Fallback: detectar el formato antiguo de múltiples personas
+    if (!message.isUser && (
+      text.includes('DETECCIÓN DE PERSONAS') || 
+      text.includes('Múltiples personas detectadas') ||
+      text.includes('varios nombres en este plan')
+    )) {
       const namePatterns = [
         /Veo varios nombres en este plan:\s*(.+?)(?:\.|¿|$)/s,
         /detectados:\s*(.+?)(?:\.|¿|$)/s,
-        /nombres:\s*(.+?)(?:\.|¿|$)/s,
       ];
       
       for (const pattern of namePatterns) {
         const match = text.match(pattern);
         if (match && match[1]) {
-          // Limpiar el texto y dividir por comas
           let namesText = match[1];
-          
-          // Eliminar preguntas finales como "¿De cuál persona quieres..."
           namesText = namesText.replace(/¿De cuál persona.*$/i, '').trim();
-          namesText = namesText.replace(/\.?\s*¿.*$/i, '').trim();
           
-          // Dividir por comas o "y" al final
           const names = namesText
             .split(/,\s*|\s+y\s+/)
             .map(name => name.trim())
             .filter(name => name.length > 2 && !name.includes('¿'));
           
-          return names;
+          if (names.length > 0) {
+            console.log('👥 [ChatMessage] Personas detectadas (formato antiguo):', names);
+            return {
+              type: 'person',
+              options: names,
+              question: '¿De cuál persona quieres que extraiga los horarios?'
+            };
+          }
         }
       }
     }
-    return [];
+    
+    return null;
   };
   
-  const detectedPersons = !message.isUser ? detectMultiplePersons(message.text) : [];
-  
-  // Debug: log personas detectadas
-  if (detectedPersons.length > 0) {
-    console.log('👥 [ChatMessage] Personas detectadas:', detectedPersons);
-    console.log('📝 [ChatMessage] Texto original:', message.text.substring(0, 500));
-  }
+  const interactiveSelection = !message.isUser ? detectInteractiveSelection(message.text) : null;
 
   const handleExportPress = () => {
     if (hasWorkScheduleData) {
@@ -395,11 +426,11 @@ export default function ChatMessage({ message, jobs = [], onExportToCalendar, on
         </TouchableOpacity>
       )}
 
-      {/* Botones de selección de persona si se detectaron múltiples */}
-      {detectedPersons.length > 0 && onSelectPerson && (
-        <PersonSelectionButtons 
-          names={detectedPersons}
-          onSelectPerson={onSelectPerson}
+      {/* Selección interactiva si se detectó */}
+      {interactiveSelection && onSelectPerson && (
+        <InteractiveSelection 
+          selectionData={interactiveSelection}
+          onSelect={onSelectPerson}
         />
       )}
 
