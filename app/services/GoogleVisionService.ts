@@ -22,22 +22,30 @@ export class GoogleVisionService {
   // Helper method to detect if the message is asking for specific person analysis
   private static isSpecificPersonAnalysis(userMessage: string): boolean {
     const specificAnalysisPatterns = [
-      'Extrae los horarios específicamente de',     // Spanish
-      'Extract schedules specifically from',        // English
+      'Extrae los horarios específicamente de',     // Spanish old
+      'extrae ÚNICAMENTE los horarios',            // Spanish new
+      'Extract schedules specifically from',        // English old
+      'extract ONLY the schedules',                // English new
       'Extrahieren Sie die Arbeitszeiten speziell von', // German
       'Extrayez les horaires spécifiquement de',   // French
-      'Estrai gli orari specificamente da'         // Italian
+      'Estrai gli orari specificamente da',        // Italian
+      'persona:',                                   // Generic pattern
+      'person:'                                     // Generic pattern English
     ];
     
-    return specificAnalysisPatterns.some(pattern => userMessage.includes(pattern));
+    return specificAnalysisPatterns.some(pattern => userMessage.toLowerCase().includes(pattern.toLowerCase()));
   }
 
   // Helper method to extract person name from the message
   private static extractPersonName(userMessage: string): string {
     // Pattern matching for different languages
     const patterns = [
-      /Extrae los horarios específicamente de "([^"]+)"/,     // Spanish
-      /Extract schedules specifically from "([^"]+)"/,        // English  
+      /Extrae los horarios específicamente de "([^"]+)"/,     // Spanish old
+      /de la persona:\s*([^.]+)/i,                             // Spanish new
+      /Extract schedules specifically from "([^"]+)"/,        // English old
+      /for the person:\s*([^.]+)/i,                           // English new
+      /person:\s*([^.]+)/i,                                    // Generic
+      /persona:\s*([^.]+)/i,                                   // Generic Spanish
       /Extrahieren Sie die Arbeitszeiten speziell von "([^"]+)"/, // German
       /Extrayez les horaires spécifiquement de "([^"]+)"/,   // French
       /Estrai gli orari specificamente da "([^"]+)"/         // Italian

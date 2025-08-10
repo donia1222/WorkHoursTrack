@@ -574,6 +574,83 @@ export default function ChatbotScreen() {
     );
   };
 
+  const handlePersonSelection = async (personName: string) => {
+    console.log('👤 [CHAT] Persona seleccionada mediante botón:', personName);
+    
+    // Crear mensaje del usuario
+    const userMessage: ChatMessageData = {
+      id: Date.now(),
+      text: personName,
+      image: undefined,
+      document: undefined,
+      isUser: true,
+      timestamp: new Date(),
+    };
+
+    // Add thinking message
+    const thinkingMessage: ChatMessageData = {
+      id: Date.now() + 1,
+      text: '',
+      isUser: false,
+      timestamp: new Date(),
+      isThinking: true,
+    };
+
+    setMessages(prev => [...prev, userMessage, thinkingMessage]);
+    setIsLoading(true);
+
+    // Procesar la selección de persona
+    try {
+      let responseText = '';
+      
+      if (lastAnalyzedDocument) {
+        console.log('📄 [CHAT] Analizando documento PDF con persona seleccionada:', personName);
+        responseText = await GoogleVisionService.analyzePDFDocument(
+          lastAnalyzedDocument.uri,
+          lastAnalyzedDocument.name,
+          t('chatbot.extract_specific_person', { personName }),
+          language
+        );
+      } else if (lastAnalyzedImage) {
+        console.log('🖼️ [CHAT] Analizando imagen con persona seleccionada:', personName);
+        responseText = await GoogleVisionService.analyzeWorkPlan(
+          lastAnalyzedImage.uri,
+          t('chatbot.extract_specific_person', { personName }),
+          language
+        );
+      }
+      
+      // Limpiar estado de espera
+      setWaitingForPersonSelection(false);
+      
+      const botMessage: ChatMessageData = {
+        id: Date.now() + 1,
+        text: responseText,
+        isUser: false,
+        timestamp: new Date(),
+      };
+
+      // Remove thinking message and add bot response
+      setMessages(prev => prev.filter(msg => !msg.isThinking).concat(botMessage));
+      
+    } catch (error) {
+      console.error('❌ [CHAT] Error procesando selección de persona:', error);
+      const errorMessage: ChatMessageData = {
+        id: Date.now() + 1,
+        text: t('chatbot.error_processing_request'),
+        isUser: false,
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => prev.filter(msg => !msg.isThinking).concat(errorMessage));
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  };
+
   const sendMessage = async () => {
 
         if (!isSubscribed) {
@@ -889,6 +966,7 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
               message={item} 
               jobs={jobs} 
               onExportToCalendar={exportToCalendar}
+              onSelectPerson={handlePersonSelection}
             />
           );
         }}

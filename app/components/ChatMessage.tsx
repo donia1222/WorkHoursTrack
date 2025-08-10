@@ -15,6 +15,7 @@ import { useNavigation } from '@/app/context/NavigationContext';
 import { ChatDataParser } from '@/app/services/ChatDataParser';
 import { JobService } from '@/app/services/JobService';
 import ExportCalendarModal from './ExportCalendarModal';
+import PersonSelectionButtons from './PersonSelectionButtons';
 import { Job } from '@/app/types/WorkTypes';
 
 export interface ChatMessageData {
@@ -31,6 +32,7 @@ interface ChatMessageProps {
   message: ChatMessageData;
   jobs?: Job[];
   onExportToCalendar?: (selectedJobId: string, parsedData: any) => void;
+  onSelectPerson?: (personName: string) => void;
 }
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
@@ -148,7 +150,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
 });
 
-export default function ChatMessage({ message, jobs = [], onExportToCalendar }: ChatMessageProps) {
+export default function ChatMessage({ message, jobs = [], onExportToCalendar, onSelectPerson }: ChatMessageProps) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
   const { navigateTo } = useNavigation();
@@ -163,6 +165,53 @@ export default function ChatMessage({ message, jobs = [], onExportToCalendar }: 
 
   // Detectar si el mensaje contiene datos de horarios (solo para mensajes del bot)
   const hasWorkScheduleData = !message.isUser && ChatDataParser.hasWorkScheduleData(message.text);
+  
+  // Detectar si el mensaje menciona múltiples personas
+  const detectMultiplePersons = (text: string): string[] => {
+    // Buscar patrones que indiquen múltiples personas
+    if (text.includes('DETECCIÓN DE PERSONAS') || 
+        text.includes('Múltiples personas detectadas') ||
+        text.includes('Múltiples nombres detectados') ||
+        text.includes('varios nombres en este plan') ||
+        text.includes('Veo varios nombres')) {
+      
+      // Extraer nombres del texto - mejorado para capturar hasta el final
+      const namePatterns = [
+        /Veo varios nombres en este plan:\s*(.+?)(?:\.|¿|$)/s,
+        /detectados:\s*(.+?)(?:\.|¿|$)/s,
+        /nombres:\s*(.+?)(?:\.|¿|$)/s,
+      ];
+      
+      for (const pattern of namePatterns) {
+        const match = text.match(pattern);
+        if (match && match[1]) {
+          // Limpiar el texto y dividir por comas
+          let namesText = match[1];
+          
+          // Eliminar preguntas finales como "¿De cuál persona quieres..."
+          namesText = namesText.replace(/¿De cuál persona.*$/i, '').trim();
+          namesText = namesText.replace(/\.?\s*¿.*$/i, '').trim();
+          
+          // Dividir por comas o "y" al final
+          const names = namesText
+            .split(/,\s*|\s+y\s+/)
+            .map(name => name.trim())
+            .filter(name => name.length > 2 && !name.includes('¿'));
+          
+          return names;
+        }
+      }
+    }
+    return [];
+  };
+  
+  const detectedPersons = !message.isUser ? detectMultiplePersons(message.text) : [];
+  
+  // Debug: log personas detectadas
+  if (detectedPersons.length > 0) {
+    console.log('👥 [ChatMessage] Personas detectadas:', detectedPersons);
+    console.log('📝 [ChatMessage] Texto original:', message.text.substring(0, 500));
+  }
 
   const handleExportPress = () => {
     if (hasWorkScheduleData) {
@@ -344,6 +393,14 @@ export default function ChatMessage({ message, jobs = [], onExportToCalendar }: 
           <Ionicons name="calendar" size={16} color="#FFFFFF" />
           <Text style={styles.exportButtonText}>{t('chatbot.export_calendar.export_button')}</Text>
         </TouchableOpacity>
+      )}
+
+      {/* Botones de selección de persona si se detectaron múltiples */}
+      {detectedPersons.length > 0 && onSelectPerson && (
+        <PersonSelectionButtons 
+          names={detectedPersons}
+          onSelectPerson={onSelectPerson}
+        />
       )}
 
       {/* Modal de exportación */}
