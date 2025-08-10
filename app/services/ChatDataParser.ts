@@ -16,6 +16,7 @@ export interface ParsedWorkData {
   observations: string;
   // Nuevo: campos para permitir al usuario especificar el mes/año
   needsMonthYear?: boolean;
+  suggestedReplies?: string[];
 }
 
 export class ChatDataParser {
@@ -292,5 +293,16 @@ export class ChatDataParser {
     });
 
     return workDays;
+  }
+
+  /**
+   * Parsea las respuestas sugeridas del texto del bot
+   */
+  static parseSuggestedReplies(text: string): string[] {
+    const match = text.match(/SUGGESTED_REPLIES:\[([^\]]+)\]/);
+    if (match && match[1]) {
+      return match[1].split(',').map(reply => reply.trim());
+    }
+    return [];
   }
 }

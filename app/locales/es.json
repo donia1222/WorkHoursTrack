@@ -1162,7 +1162,7 @@
     "text_extracted_message": "📝 TEXTO EXTRAÍDO DEL PLAN DE TRABAJO:\n\n\"{{extractedText}}\"\n\n{{inputText}}\n\nAhora analizo este texto para identificar días de trabajo, horarios y vacaciones.",
     "pdf_analysis_default": "Analiza este documento PDF de plan de trabajo y extrae los días laborales, días libres y vacaciones",
     "image_analysis_default": "Analiza este plan de trabajo y extrae los días laborales, días libres y vacaciones",
-    "extract_specific_person": "Extrae los horarios específicamente de \"{{personName}}\". {{personName}}",
+    "extract_specific_person": "Analiza el documento y extrae ÚNICAMENTE los horarios y días de trabajo de la persona: {{personName}}. Por favor responde solo con la información de esta persona específica.",
     "pdf_context_message": "\n\nContexto: Hay un documento PDF activo llamado \"{{documentName}}\" que fue analizado previamente.",
     "reset_commands": ["limpiar contexto", "reset", "nueva imagen"],
     "detection_patterns": {

@@ -1172,7 +1172,7 @@
     "text_extracted_message": "📝 TEXT EXTRACTED FROM WORK PLAN:\n\n\"{{extractedText}}\"\n\n{{inputText}}\n\nNow I analyze this text to identify work days, schedules and vacations.",
     "pdf_analysis_default": "Analyze this PDF work plan document and extract work days, free days and vacations",
     "image_analysis_default": "Analyze this work plan and extract work days, free days and vacations",
-    "extract_specific_person": "Extract schedules specifically from \"{{personName}}\". {{personName}}",
+    "extract_specific_person": "Analyze the document and extract ONLY the schedules and workdays for the person: {{personName}}. Please respond only with this specific person's information.",
     "pdf_context_message": "\n\nContext: There is an active PDF document named \"{{documentName}}\" that was previously analyzed.",
     "reset_commands": ["clear context", "reset", "new image"],
     "detection_patterns": {

@@ -29,7 +29,7 @@ import { useNavigation, useBackNavigation } from '@/app/context/NavigationContex
 import { useSubscription } from '@/app/hooks/useSubscription';
 import { useHapticFeedback } from '@/app/hooks/useHapticFeedback';
 import { JobService } from '@/app/services/JobService';
-import { LinearGradient } from 'expo-linear-gradient';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ChatHistoryModal, { ChatSession } from '@/app/components/ChatHistoryModal';
 
@@ -187,6 +187,38 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   removeButton: {
     padding: 4,
   },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingContainer: {
+    backgroundColor: colors.surface,
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: isDark ? '#FFFFFF' : '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: isDark ? 0.1 : 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: '500',
+    color: colors.text,
+    textAlign: 'center',
+  },
   // Premium Modal Styles
   premiumModalOverlay: {
     flex: 1,
@@ -308,7 +340,7 @@ export default function ChatbotScreen() {
   const { colors, isDark } = useTheme(); // Obtener colores del tema actual
   const { exportToCalendar, navigateTo } = useNavigation(); // Obtener función de exportación
   const { isSubscribed } = useSubscription(); // Obtener estado de suscripción
-  const { handleBack } = useBackNavigation(); // Hook de navegación hacia atrás
+  
   const { triggerHaptic } = useHapticFeedback(); // Hook de feedback háptico
   const styles = getStyles(colors, isDark); // Generar estilos dinámicos
   
@@ -359,7 +391,7 @@ export default function ChatbotScreen() {
       }
       delete globalThis.chatbotScreenHistoryHandler;
     };
-  }, [messages]);
+  }, [messages, saveChatSession]);
   
   // Función para detectar si el bot está preguntando por múltiples nombres (multiidioma)
   const isAskingForPersonSelection = (text: string): boolean => {
@@ -612,17 +644,8 @@ export default function ChatbotScreen() {
       timestamp: new Date(),
     };
 
-    // Add thinking message
-    const thinkingMessage: ChatMessageData = {
-      id: Date.now() + 1,
-      text: '',
-      isUser: false,
-      timestamp: new Date(),
-      isThinking: true,
-    };
-
     console.log('👤 [CHAT] Mensaje de usuario creado:', userMessage);
-    setMessages(prev => [...prev, userMessage, thinkingMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     const imageToAnalyze = selectedImage;
     const documentToAnalyze = selectedDocument;
@@ -817,8 +840,7 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
       };
 
       console.log('🤖 [CHAT] Mensaje del bot creado:', botMessage);
-      // Remove thinking message and add bot response
-      setMessages(prev => prev.filter(msg => !msg.isThinking).concat(botMessage));
+      setMessages(prev => [...prev, botMessage]);
       console.log('✅ [CHAT] Mensaje agregado a la lista');
       
     } catch (error) {
@@ -833,8 +855,7 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
       };
       
       console.log('⚠️ [CHAT] Mensaje de error creado:', errorMessage);
-      // Remove thinking message and add error message
-      setMessages(prev => prev.filter(msg => !msg.isThinking).concat(errorMessage));
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       console.log('🔄 [CHAT] Finalizando sendMessage...');
       setIsLoading(false);
@@ -846,26 +867,7 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
   };
 
 
-  const renderMessage = ({ item, index }: { item: ChatMessageData; index: number }) => {
-    // Mostrar el mensaje de bienvenida como primer elemento si no hay mensajes
-    if (messages.length === 0 && index === 0) {
-      return <WelcomeMessage />;
-    }
-    return (
-      <ChatMessage 
-        message={item} 
-        jobs={jobs} 
-        onExportToCalendar={exportToCalendar}
-      />
-    );
-  };
-
-  const renderWelcomeHeader = () => {
-    if (messages.length === 0) {
-      return <WelcomeMessage />;
-    }
-    return null;
-  };
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -921,48 +923,64 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
         </View>
       )}
 
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>
+              {selectedImage || selectedDocument 
+                ? t('chatbot.analyzing_document')
+                : t('chatbot.generating_response')
+              }
+            </Text>
+          </View>
+        </View>
+      )}
 
-      {!isLoading && (
-        <View style={styles.inputContainer}>
-          <TouchableOpacity 
-            onPress={showFileOptions} 
-            style={styles.imageButton}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="attach" size={24} color={colors.primary} />
-          </TouchableOpacity>
+      <View style={styles.inputContainer}>
+        <TouchableOpacity 
+          onPress={showFileOptions} 
+          style={styles.imageButton}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="attach" size={24} color={colors.primary} />
+        </TouchableOpacity>
 
-          <TextInput
-            style={styles.textInput}
-            value={inputText}
-            onChangeText={setInputText}
-            placeholder={
-              waitingForPersonSelection ? t('chatbot.placeholder_waiting') : 
-              waitingForClarification ? 'Explícame qué significa...' : 
-              t('chatbot.placeholder_default')
-            }
-            placeholderTextColor={colors.textSecondary}
-            multiline
-            maxLength={500}
-          />
+        <TextInput
+          style={styles.textInput}
+          value={inputText}
+          onChangeText={setInputText}
+          placeholder={
+            waitingForPersonSelection ? t('chatbot.placeholder_waiting') : 
+            waitingForClarification ? 'Explícame qué significa...' : 
+            t('chatbot.placeholder_default')
+          }
+          placeholderTextColor={colors.textSecondary}
+          multiline
+          maxLength={500}
+          editable={!isLoading}
+        />
 
-          <TouchableOpacity 
-            onPress={sendMessage} 
-            style={[
-              styles.sendButton,
-              (!inputText.trim() && !selectedImage && !selectedDocument) && styles.sendButtonDisabled
-            ]}
-            disabled={!inputText.trim() && !selectedImage && !selectedDocument}
-            activeOpacity={0.7}
-          >
+        <TouchableOpacity 
+          onPress={sendMessage} 
+          style={[
+            styles.sendButton,
+            (isLoading || (!inputText.trim() && !selectedImage && !selectedDocument)) && styles.sendButtonDisabled
+          ]}
+          disabled={isLoading || (!inputText.trim() && !selectedImage && !selectedDocument)}
+          activeOpacity={0.7}
+        >
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
             <Ionicons 
               name="send" 
               size={20} 
               color={(!inputText.trim() && !selectedImage && !selectedDocument) ? colors.textTertiary : '#FFFFFF'} 
             />
-          </TouchableOpacity>
-        </View>
-      )}
+          )}
+        </TouchableOpacity>
+      </View>
 
       {/* Premium Modal */}
       <Modal
@@ -1015,7 +1033,7 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
                         case 'es': return 'Análisis de imágenes con IA';
                         case 'en': return 'AI image analysis';
                         case 'de': return 'KI-Bildanalyse';
-                        case 'fr': return 'Analyse d\'images par IA';
+                        case 'fr': return "Analyse d'images par IA";
                         case 'it': return 'Analisi delle immagini con IA';
                         default: return 'AI image analysis';
                       }
@@ -1110,7 +1128,7 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
                         case 'es': return 'Suscribirse';
                         case 'en': return 'Subscribe';
                         case 'de': return 'Abonnieren';
-                        case 'fr': return 'S\'abonner';
+                        case 'fr': return "S'abonner";
                         case 'it': return 'Iscriviti';
                         default: return 'Subscribe';
                       }
@@ -1135,3 +1153,4 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
     </SafeAreaView>
   );
 }
+

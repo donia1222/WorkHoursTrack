@@ -520,8 +520,11 @@ function AppContent() {
               style={styles.headerLogo}
               resizeMode="contain"
             />
-            <Text style={[styles.workText, { color: '#007AFF' }]}>Work</Text>
-            <Text style={[styles.trackText, { color: '#34C759' }]}>Track</Text>
+            <Text style={styles.workText}>
+              <Text style={{ color: '#007AFF' }}>Work</Text>
+              <Text style={{ color: '#0056CC' }}>Hours</Text>
+              <Text style={{ color: '#003D99' }}>Track</Text>
+            </Text>
           </View>
         );
       case 'timer':
@@ -564,9 +567,12 @@ function AppContent() {
       default:
         return (
           <View style={styles.workTrackTitle}>
-            <IconSymbol size={22} name="clock.fill" color="#34C759" />
-            <Text style={[styles.workText, { color: '#007AFF' }]}>Work</Text>
-            <Text style={[styles.trackText, { color: '#34C759' }]}>Track</Text>
+            <IconSymbol size={22} name="clock.fill" color="#007AFF" />
+            <Text style={styles.workText}>
+              <Text style={{ color: '#007AFF' }}>Work</Text>
+              <Text style={{ color: '#0056CC' }}>Hours</Text>
+              <Text style={{ color: '#003D99' }}>Track</Text>
+            </Text>
           </View>
         );
     }
@@ -938,6 +944,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 0,
+
   },
   titleIcon: {
     marginRight: 4,
@@ -951,6 +958,7 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: '600',
     letterSpacing: -0.3,
+  
   },
   trackText: {
     fontSize: 21,

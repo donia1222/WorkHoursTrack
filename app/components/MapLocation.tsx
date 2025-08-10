@@ -2372,8 +2372,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
         <View style={styles.map}>
           <LinearGradient
             colors={isDark 
-              ? ['#0a0a0a', '#1a1a1a', '#0f0f0f'] 
-              : ['transparent', '#4b75df1e', '#4b75df54']
+              ? ['#000000ff', '#151515ff', '#0f0f0f'] 
+              : ['transparent', '#4b75df1b', '#4b75df27']
             }
             style={styles.noLocationBackground}
             locations={[0, 0.5, 1]}
@@ -2462,7 +2462,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           fontWeight: '700',
                           color: autoTimerStatus?.state === 'active' ? colors.success : colors.textSecondary,
                           letterSpacing: 0.2,
-                          marginTop: isIPadPortrait ? 20 : 2,
+                          marginTop: isIPadPortrait ? 2 : 2,
                           opacity: autoTimerStatus?.state === 'active' ? 1 : 0.7,
                         }}>
                           {formatTime(elapsedTime)}
@@ -2472,7 +2472,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           color: colors.textSecondary,
 
                           fontWeight: '600',
-                          marginTop: isIPadPortrait ? 6 : 10,
+                          marginTop: isIPadPortrait ? 1 : 6,
                         }}>{t('maps.auto_timer')}</Text>
                       </View>
                     </View>

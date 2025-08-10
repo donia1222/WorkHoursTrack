@@ -223,14 +223,14 @@ export default function WorkDayModal({
         const secondEnd = selectedJob.schedule.hasSplitShift ? selectedJob.schedule.secondEndTime : undefined;
         
         const jobHours = calculateHoursFromTime(
-          selectedJob.schedule.startTime, 
-          selectedJob.schedule.endTime,
+          selectedJob.schedule.startTime || '09:00', 
+          selectedJob.schedule.endTime || '17:00',
           secondStart,
           secondEnd
         );
         setHours(jobHours);
-        setStartTime(selectedJob.schedule.startTime);
-        setEndTime(selectedJob.schedule.endTime);
+        setStartTime(selectedJob.schedule.startTime || '09:00');
+        setEndTime(selectedJob.schedule.endTime || '17:00');
         setHasSplitShift(selectedJob.schedule.hasSplitShift || false);
         if (selectedJob.schedule.secondStartTime) setSecondStartTime(selectedJob.schedule.secondStartTime);
         if (selectedJob.schedule.secondEndTime) setSecondEndTime(selectedJob.schedule.secondEndTime);
@@ -287,8 +287,8 @@ export default function WorkDayModal({
           // Use job schedule if available and enabled
           if (preselectedJob.schedule && preselectedJob.schedule.enabled) {
             setScheduleMode('job');
-            setStartTime(preselectedJob.schedule.startTime);
-            setEndTime(preselectedJob.schedule.endTime);
+            setStartTime(preselectedJob.schedule.startTime || '09:00');
+            setEndTime(preselectedJob.schedule.endTime || '17:00');
           } else {
             setScheduleMode('manual');
           }
@@ -303,8 +303,8 @@ export default function WorkDayModal({
           // Use job schedule if available and enabled
           if (defaultJob.schedule && defaultJob.schedule.enabled) {
             setScheduleMode('job');
-            setStartTime(defaultJob.schedule.startTime);
-            setEndTime(defaultJob.schedule.endTime);
+            setStartTime(defaultJob.schedule.startTime || '09:00');
+            setEndTime(defaultJob.schedule.endTime || '17:00');
           } else {
             setScheduleMode('manual');
           }
@@ -584,7 +584,7 @@ export default function WorkDayModal({
                         </Text>
                         {scheduleMode === 'job' && (
                           <Text style={styles.scheduleTimeText}>
-                            {schedule.startTime} - {schedule.endTime}
+                            {schedule.startTime || '09:00'} - {schedule.endTime || '17:00'}
                           </Text>
                         )}
                       </TouchableOpacity>

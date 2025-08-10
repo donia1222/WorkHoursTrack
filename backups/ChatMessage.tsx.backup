@@ -1,14 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withRepeat, 
-  withSequence, 
-  withDelay, 
-  withTiming 
-} from 'react-native-reanimated';
 import { useTheme, ThemeColors } from '@/app/contexts/ThemeContext';
 import { useLanguage } from '@/app/contexts/LanguageContext';
 import { useNavigation } from '@/app/context/NavigationContext';
@@ -24,13 +16,13 @@ export interface ChatMessageData {
   document?: { uri: string; name: string; type: string };
   isUser: boolean;
   timestamp: Date;
-  isThinking?: boolean;
 }
 
 interface ChatMessageProps {
   message: ChatMessageData;
   jobs?: Job[];
   onExportToCalendar?: (selectedJobId: string, parsedData: any) => void;
+  onSuggestedReply?: (reply: string) => void;
 }
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
@@ -131,24 +123,27 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
   },
-  thinkingMessage: {
-    minWidth: 80,
-    padding: 16,
-  },
-  thinkingDots: {
+  suggestedRepliesContainer: {
     flexDirection: 'row',
-    gap: 4,
-    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginTop: 12,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.textSecondary,
+  suggestedReplyButton: {
+    backgroundColor: colors.primary + '20',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  suggestedReplyText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 
-export default function ChatMessage({ message, jobs = [], onExportToCalendar }: ChatMessageProps) {
+export default function ChatMessage({ message, jobs = [], onExportToCalendar, onSuggestedReply }: ChatMessageProps) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
   const { navigateTo } = useNavigation();
@@ -163,6 +158,7 @@ export default function ChatMessage({ message, jobs = [], onExportToCalendar }: 
 
   // Detectar si el mensaje contiene datos de horarios (solo para mensajes del bot)
   const hasWorkScheduleData = !message.isUser && ChatDataParser.hasWorkScheduleData(message.text);
+  const suggestedReplies = !message.isUser ? ChatDataParser.parseSuggestedReplies(message.text) : [];
 
   const handleExportPress = () => {
     if (hasWorkScheduleData) {
@@ -226,70 +222,6 @@ export default function ChatMessage({ message, jobs = [], onExportToCalendar }: 
     }
   };
 
-  // Animación para los puntos de pensando
-  const dot1Opacity = useSharedValue(0.3);
-  const dot2Opacity = useSharedValue(0.3);
-  const dot3Opacity = useSharedValue(0.3);
-
-  useEffect(() => {
-    if (message.isThinking) {
-      dot1Opacity.value = withRepeat(
-        withSequence(
-          withTiming(1, { duration: 400 }),
-          withTiming(0.3, { duration: 400 })
-        ),
-        -1
-      );
-      dot2Opacity.value = withDelay(200,
-        withRepeat(
-          withSequence(
-            withTiming(1, { duration: 400 }),
-            withTiming(0.3, { duration: 400 })
-          ),
-          -1
-        )
-      );
-      dot3Opacity.value = withDelay(400,
-        withRepeat(
-          withSequence(
-            withTiming(1, { duration: 400 }),
-            withTiming(0.3, { duration: 400 })
-          ),
-          -1
-        )
-      );
-    }
-  }, [message.isThinking]);
-
-  const dot1Style = useAnimatedStyle(() => ({
-    opacity: dot1Opacity.value,
-  }));
-
-  const dot2Style = useAnimatedStyle(() => ({
-    opacity: dot2Opacity.value,
-  }));
-
-  const dot3Style = useAnimatedStyle(() => ({
-    opacity: dot3Opacity.value,
-  }));
-
-  // Si es un mensaje de pensando, mostrar animación
-  if (message.isThinking) {
-    return (
-      <View style={[
-        styles.messageContainer,
-        styles.botMessage,
-        styles.thinkingMessage
-      ]}>
-        <View style={styles.thinkingDots}>
-          <Animated.View style={[styles.dot, dot1Style]} />
-          <Animated.View style={[styles.dot, dot2Style]} />
-          <Animated.View style={[styles.dot, dot3Style]} />
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View style={[
       styles.messageContainer, 
@@ -335,7 +267,7 @@ export default function ChatMessage({ message, jobs = [], onExportToCalendar }: 
       </Text>
 
       {/* Botón de exportación para mensajes del bot con datos de horarios */}
-      {hasWorkScheduleData && (
+      {hasWorkScheduleData && jobs.length > 0 && (
         <TouchableOpacity 
           style={styles.exportButton} 
           onPress={handleExportPress}
@@ -344,6 +276,21 @@ export default function ChatMessage({ message, jobs = [], onExportToCalendar }: 
           <Ionicons name="calendar" size={16} color="#FFFFFF" />
           <Text style={styles.exportButtonText}>{t('chatbot.export_calendar.export_button')}</Text>
         </TouchableOpacity>
+      )}
+
+      {/* Botones de respuestas sugeridas */}
+      {suggestedReplies.length > 0 && (
+        <View style={styles.suggestedRepliesContainer}>
+          {suggestedReplies.map((reply, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.suggestedReplyButton}
+              onPress={() => onSuggestedReply && onSuggestedReply(reply)}
+            >
+              <Text style={styles.suggestedReplyText}>{reply}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       )}
 
       {/* Modal de exportación */}

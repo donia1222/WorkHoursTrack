@@ -187,6 +187,38 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   removeButton: {
     padding: 4,
   },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingContainer: {
+    backgroundColor: colors.surface,
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: isDark ? '#FFFFFF' : '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: isDark ? 0.1 : 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: '500',
+    color: colors.text,
+    textAlign: 'center',
+  },
   // Premium Modal Styles
   premiumModalOverlay: {
     flex: 1,
@@ -612,17 +644,8 @@ export default function ChatbotScreen() {
       timestamp: new Date(),
     };
 
-    // Add thinking message
-    const thinkingMessage: ChatMessageData = {
-      id: Date.now() + 1,
-      text: '',
-      isUser: false,
-      timestamp: new Date(),
-      isThinking: true,
-    };
-
     console.log('👤 [CHAT] Mensaje de usuario creado:', userMessage);
-    setMessages(prev => [...prev, userMessage, thinkingMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     const imageToAnalyze = selectedImage;
     const documentToAnalyze = selectedDocument;
@@ -817,8 +840,7 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
       };
 
       console.log('🤖 [CHAT] Mensaje del bot creado:', botMessage);
-      // Remove thinking message and add bot response
-      setMessages(prev => prev.filter(msg => !msg.isThinking).concat(botMessage));
+      setMessages(prev => [...prev, botMessage]);
       console.log('✅ [CHAT] Mensaje agregado a la lista');
       
     } catch (error) {
@@ -833,8 +855,7 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
       };
       
       console.log('⚠️ [CHAT] Mensaje de error creado:', errorMessage);
-      // Remove thinking message and add error message
-      setMessages(prev => prev.filter(msg => !msg.isThinking).concat(errorMessage));
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       console.log('🔄 [CHAT] Finalizando sendMessage...');
       setIsLoading(false);
@@ -921,48 +942,64 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
         </View>
       )}
 
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>
+              {selectedImage || selectedDocument 
+                ? t('chatbot.analyzing_document')
+                : t('chatbot.generating_response')
+              }
+            </Text>
+          </View>
+        </View>
+      )}
 
-      {!isLoading && (
-        <View style={styles.inputContainer}>
-          <TouchableOpacity 
-            onPress={showFileOptions} 
-            style={styles.imageButton}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="attach" size={24} color={colors.primary} />
-          </TouchableOpacity>
+      <View style={styles.inputContainer}>
+        <TouchableOpacity 
+          onPress={showFileOptions} 
+          style={styles.imageButton}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="attach" size={24} color={colors.primary} />
+        </TouchableOpacity>
 
-          <TextInput
-            style={styles.textInput}
-            value={inputText}
-            onChangeText={setInputText}
-            placeholder={
-              waitingForPersonSelection ? t('chatbot.placeholder_waiting') : 
-              waitingForClarification ? 'Explícame qué significa...' : 
-              t('chatbot.placeholder_default')
-            }
-            placeholderTextColor={colors.textSecondary}
-            multiline
-            maxLength={500}
-          />
+        <TextInput
+          style={styles.textInput}
+          value={inputText}
+          onChangeText={setInputText}
+          placeholder={
+            waitingForPersonSelection ? t('chatbot.placeholder_waiting') : 
+            waitingForClarification ? 'Explícame qué significa...' : 
+            t('chatbot.placeholder_default')
+          }
+          placeholderTextColor={colors.textSecondary}
+          multiline
+          maxLength={500}
+          editable={!isLoading}
+        />
 
-          <TouchableOpacity 
-            onPress={sendMessage} 
-            style={[
-              styles.sendButton,
-              (!inputText.trim() && !selectedImage && !selectedDocument) && styles.sendButtonDisabled
-            ]}
-            disabled={!inputText.trim() && !selectedImage && !selectedDocument}
-            activeOpacity={0.7}
-          >
+        <TouchableOpacity 
+          onPress={sendMessage} 
+          style={[
+            styles.sendButton,
+            (isLoading || (!inputText.trim() && !selectedImage && !selectedDocument)) && styles.sendButtonDisabled
+          ]}
+          disabled={isLoading || (!inputText.trim() && !selectedImage && !selectedDocument)}
+          activeOpacity={0.7}
+        >
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
             <Ionicons 
               name="send" 
               size={20} 
               color={(!inputText.trim() && !selectedImage && !selectedDocument) ? colors.textTertiary : '#FFFFFF'} 
             />
-          </TouchableOpacity>
-        </View>
-      )}
+          )}
+        </TouchableOpacity>
+      </View>
 
       {/* Premium Modal */}
       <Modal
@@ -1135,3 +1172,4 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
     </SafeAreaView>
   );
 }
+

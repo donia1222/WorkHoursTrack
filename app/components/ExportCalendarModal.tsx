@@ -550,30 +550,33 @@ export default function ExportCalendarModal({
             {/* Buttons */}
             <View style={styles.buttonContainer}>
       
+              {/* Solo mostrar botón de sincronizar con trabajo si hay trabajos */}
+              {jobs.length > 0 && (
+                <TouchableOpacity 
+                  style={[
+                    styles.button, 
+                    styles.exportButton,
+                    (!selectedJobId && jobs.length > 1) && styles.disabledButton
+                  ]} 
+                  onPress={handleExport}
+                  disabled={!selectedJobId && jobs.length > 1}
+                >
+                  <Ionicons name="calendar" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={[styles.buttonText, styles.exportButtonText]}>
+                    {t('chatbot.export_calendar.sync_button')}
+                  </Text>
+                </TouchableOpacity>
+              )}
               
-              <TouchableOpacity 
-                style={[
-                  styles.button, 
-                  styles.exportButton,
-                  (!selectedJobId && jobs.length > 1) && styles.disabledButton
-                ]} 
-                onPress={handleExport}
-                disabled={!selectedJobId && jobs.length > 1}
-              >
-                <Ionicons name="calendar" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-                <Text style={[styles.buttonText, styles.exportButtonText]}>
-                  {t('chatbot.export_calendar.sync_button')}
-                </Text>
-              </TouchableOpacity>
-              
+              {/* Botón de exportar al calendario nativo siempre disponible */}
               <TouchableOpacity 
                 style={[
                   styles.button, 
                   styles.nativeExportButton,
-                  ((!selectedJobId && jobs.length > 1) || isLoading) && styles.disabledButton
+                  isLoading && styles.disabledButton
                 ]} 
                 onPress={handleExportToNativeCalendar}
-                disabled={(!selectedJobId && jobs.length > 1) || isLoading}
+                disabled={isLoading}
               >
                 {isLoading ? (
                   <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
