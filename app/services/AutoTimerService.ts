@@ -2,6 +2,7 @@ import { Job } from '../types/WorkTypes';
 import { JobService } from './JobService';
 import GeofenceService, { GeofenceEvent } from './GeofenceService';
 import NotificationService from './NotificationService';
+import LiveActivityService from './LiveActivityService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, AppStateStatus } from 'react-native';
 import * as Location from 'expo-location';
@@ -37,6 +38,7 @@ class AutoTimerService {
   private static instance: AutoTimerService;
   private geofenceService: GeofenceService;
   private notificationService: NotificationService;
+  private liveActivityService: LiveActivityService;
   private currentDelayedAction: DelayedAction | null = null;
   private currentState: AutoTimerState = 'inactive';
   private currentJobId: string | null = null;
@@ -52,6 +54,7 @@ class AutoTimerService {
   constructor() {
     this.geofenceService = GeofenceService.getInstance();
     this.notificationService = NotificationService.getInstance();
+    this.liveActivityService = LiveActivityService.getInstance();
     this.bindGeofenceEvents();
     this.setupAppStateListener();
   }
@@ -358,6 +361,9 @@ class AutoTimerService {
       // Save state immediately to persist the start time
       await this.saveState();
       
+      // Start Live Activity for Dynamic Island
+      await this.liveActivityService.startLiveActivity(job.name, job.address);
+      
       // Enviar notificación de inicio
       await this.notificationService.sendNotification('timer_started', job.name);
       
@@ -399,6 +405,10 @@ class AutoTimerService {
         
         await JobService.addWorkDay(workDay);
         await JobService.clearActiveSession();
+        
+        // End Live Activity with elapsed seconds
+        const elapsedSeconds = Math.floor(elapsedHours * 3600);
+        await this.liveActivityService.endLiveActivity(elapsedSeconds);
         
         // Enviar notificación de parada
         await this.notificationService.sendNotification('timer_stopped', job.name);

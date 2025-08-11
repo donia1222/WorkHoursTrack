@@ -19,7 +19,9 @@
         "NSUserNotificationsUsageDescription": "Esta app necesita permisos de notificación para avisarte cuando el timer automático se inicie o pause.",
         "NSPhotoLibraryUsageDescription": "Esta app necesita acceso a tus fotos para que puedas seleccionar imágenes y analizarlas con el chatbot IA.",
         "NSCameraUsageDescription": "Esta app necesita acceso a la cámara para que puedas tomar fotos y analizarlas con el chatbot IA.",
-        "UIBackgroundModes": ["location", "remote-notification"]
+        "UIBackgroundModes": ["location", "remote-notification"],
+        "NSSupportsLiveActivities": true,
+        "NSSupportsLiveActivitiesFrequentUpdates": true
       },
       "bundleIdentifier": "com.tuusuario.geolocalizacionapp"
     },
