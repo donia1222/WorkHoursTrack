@@ -1,3 +1,10 @@
+//
+//  WorkTrackWidgetLiveActivity.swift
+//  WorkTrackWidget
+//
+//  Created by roberto on 12/8/25.
+//
+
 import ActivityKit
 import WidgetKit
 import SwiftUI
@@ -5,70 +12,93 @@ import SwiftUI
 struct WorkTrackWidgetLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: WorkTrackWidgetAttributes.self) { context in
-            // Vista para la pantalla de bloqueo
-            LockScreenLiveActivityView(context: context)
-                .padding()
-                .background(Color(UIColor.systemBackground))
+            // Lock screen/banner UI goes here
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: "timer")
+                        .foregroundColor(.blue)
+                    Text(context.attributes.jobName)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Text(formatTime(context.state.elapsedSeconds))
+                        .font(.system(.title2, design: .monospaced))
+                        .foregroundColor(.blue)
+                }
+                
+                HStack {
+                    Image(systemName: "location.fill")
+                        .foregroundColor(.gray)
+                        .font(.caption)
+                    Text(context.attributes.location)
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                    Spacer()
+                    Text(context.state.isRunning ? "Activo" : "Pausado")
+                        .font(.caption)
+                        .foregroundColor(context.state.isRunning ? .green : .orange)
+                }
+            }
+            .padding()
+            .activityBackgroundTint(Color(UIColor.systemBackground))
+            .activitySystemActionForegroundColor(Color.blue)
+
         } dynamicIsland: { context in
             DynamicIsland {
-                // Vista expandida del Dynamic Island
+                // Expanded UI goes here
                 DynamicIslandExpandedRegion(.leading) {
                     HStack {
                         Image(systemName: "timer")
                             .foregroundColor(.blue)
-                        Text("WorkTrack")
-                            .font(.caption)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(context.attributes.jobName)
+                                .font(.caption)
+                                .lineLimit(1)
+                            Text(context.attributes.location)
+                                .font(.caption2)
+                                .foregroundColor(.gray)
+                                .lineLimit(1)
+                        }
                     }
-                }
-                DynamicIslandExpandedRegion(.center) {
-                    Text(context.attributes.jobName)
-                        .font(.headline)
-                        .foregroundColor(.primary)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     Text(formatTime(context.state.elapsedSeconds))
-                        .font(.system(.title3, design: .monospaced))
+                        .font(.system(.title2, design: .monospaced))
                         .foregroundColor(.blue)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     HStack {
-                        Image(systemName: "location.fill")
+                        Label("Iniciado", systemImage: "clock")
                             .font(.caption)
-                        Text(context.attributes.location)
+                        Spacer()
+                        Text(context.attributes.startTime, style: .time)
                             .font(.caption)
-                            .lineLimit(1)
                     }
-                    .foregroundColor(.secondary)
                 }
             } compactLeading: {
-                // Vista compacta izquierda
                 Image(systemName: "timer")
                     .foregroundColor(.blue)
             } compactTrailing: {
-                // Vista compacta derecha - tiempo
                 Text(formatTimeCompact(context.state.elapsedSeconds))
-                    .font(.system(.body, design: .monospaced))
+                    .font(.system(.caption, design: .monospaced))
                     .foregroundColor(.blue)
             } minimal: {
-                // Vista mínima
-                Image(systemName: "timer")
+                Image(systemName: "timer.circle.fill")
                     .foregroundColor(.blue)
             }
             .widgetURL(URL(string: "worktrack://timer"))
-            .keylineTint(.blue)
+            .keylineTint(Color.blue)
         }
     }
     
-    // Formatear tiempo para vista expandida
-    func formatTime(_ seconds: Int) -> String {
+    private func formatTime(_ seconds: Int) -> String {
         let hours = seconds / 3600
         let minutes = (seconds % 3600) / 60
         let secs = seconds % 60
         return String(format: "%02d:%02d:%02d", hours, minutes, secs)
     }
     
-    // Formatear tiempo para vista compacta
-    func formatTimeCompact(_ seconds: Int) -> String {
+    private func formatTimeCompact(_ seconds: Int) -> String {
         let hours = seconds / 3600
         let minutes = (seconds % 3600) / 60
         if hours > 0 {
@@ -79,65 +109,36 @@ struct WorkTrackWidgetLiveActivity: Widget {
     }
 }
 
-// Vista para la pantalla de bloqueo
-struct LockScreenLiveActivityView: View {
-    let context: ActivityViewContext<WorkTrackWidgetAttributes>
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Header
-            HStack {
-                Image(systemName: "briefcase.fill")
-                    .foregroundColor(.blue)
-                Text("WorkTrack")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Spacer()
-                if context.state.isRunning {
-                    Image(systemName: "circle.fill")
-                        .foregroundColor(.green)
-                        .font(.caption2)
-                } else {
-                    Image(systemName: "pause.circle.fill")
-                        .foregroundColor(.orange)
-                        .font(.caption2)
-                }
-            }
-            
-            // Nombre del trabajo
-            Text(context.attributes.jobName)
-                .font(.headline)
-                .foregroundColor(.primary)
-            
-            // Tiempo transcurrido
-            HStack {
-                Image(systemName: "timer")
-                    .font(.title2)
-                    .foregroundColor(.blue)
-                Text(formatTime(context.state.elapsedSeconds))
-                    .font(.system(.title2, design: .monospaced))
-                    .foregroundColor(.primary)
-                Spacer()
-            }
-            
-            // Ubicación
-            HStack {
-                Image(systemName: "location.fill")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Text(context.attributes.location)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-            }
-        }
-        .padding(.vertical, 4)
+// Previews para desarrollo
+extension WorkTrackWidgetAttributes {
+    fileprivate static var preview: WorkTrackWidgetAttributes {
+        WorkTrackWidgetAttributes(
+            jobName: "Oficina Principal",
+            location: "Calle Mayor 123",
+            startTime: Date()
+        )
     }
-    
-    func formatTime(_ seconds: Int) -> String {
-        let hours = seconds / 3600
-        let minutes = (seconds % 3600) / 60
-        let secs = seconds % 60
-        return String(format: "%02d:%02d:%02d", hours, minutes, secs)
+}
+
+extension WorkTrackWidgetAttributes.ContentState {
+    fileprivate static var running: WorkTrackWidgetAttributes.ContentState {
+        WorkTrackWidgetAttributes.ContentState(
+            elapsedSeconds: 3661,
+            isRunning: true
+        )
     }
+     
+    fileprivate static var paused: WorkTrackWidgetAttributes.ContentState {
+        WorkTrackWidgetAttributes.ContentState(
+            elapsedSeconds: 7200,
+            isRunning: false
+        )
+    }
+}
+
+#Preview("Notification", as: .content, using: WorkTrackWidgetAttributes.preview) {
+   WorkTrackWidgetLiveActivity()
+} contentStates: {
+    WorkTrackWidgetAttributes.ContentState.running
+    WorkTrackWidgetAttributes.ContentState.paused
 }

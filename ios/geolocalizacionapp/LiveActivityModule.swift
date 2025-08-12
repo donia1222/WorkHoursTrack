@@ -131,16 +131,3 @@ class LiveActivityModule: NSObject {
         }
     }
 }
-
-// Necesitamos también definir las estructuras en el target principal
-@available(iOS 16.2, *)
-struct WorkTrackWidgetAttributes: ActivityAttributes {
-    public struct ContentState: Codable, Hashable {
-        var elapsedSeconds: Int
-        var isRunning: Bool
-    }
-    
-    var jobName: String
-    var location: String
-    var startTime: Date
-}
