@@ -283,20 +283,52 @@ class AutoTimerService {
         console.log(`⏱️ Restored start time from active session: ${this.autoTimerStartTime.toLocaleTimeString()}`);
       }
       
-      // Update Live Activity with current time if not already active
-      const elapsedSeconds = Math.floor((Date.now() - new Date(activeSession.startTime).getTime()) / 1000);
-      if (!this.liveActivityService.isActive()) {
-        await this.liveActivityService.startLiveActivity(job.name, job.address);
+      // Update Live Activity with current time
+      // const elapsedSeconds = Math.floor((Date.now() - new Date(activeSession.startTime).getTime()) / 1000);
+      
+      // Solo intentar crear Live Activity la PRIMERA vez
+      // Si ya se intentó antes, no hacer nada para evitar duplicados
+      const liveActivityKey = `@live_activity_created_${activeSession.jobId}`;
+      const alreadyCreated = await AsyncStorage.getItem(liveActivityKey);
+      
+      if (alreadyCreated) {
+        console.log('📱 Live Activity already created for this session, checking if needs restart');
+        // Verificar si el Live Activity está activo y reiniciar actualizaciones
+        const hasActive = await this.liveActivityService.checkExistingLiveActivity();
+        if (!hasActive) {
+          // Si no hay Live Activity activo, crear uno nuevo
+          console.log('📱 No active Live Activity found, creating new one');
+          const sessionStartTime = new Date(activeSession.startTime);
+          await this.liveActivityService.startLiveActivity(job.name, job.address, sessionStartTime);
+        }
+        
+        // IMPORTANTE: Siempre reiniciar el timer de actualizaciones
+        if (this.statusUpdateInterval) {
+          clearInterval(this.statusUpdateInterval);
+        }
+        this.statusUpdateInterval = setInterval(() => {
+          this.updateLiveActivityTime();
+        }, 5000);
+        console.log('⏱️ Update timer restarted');
+        return;
       }
-      this.liveActivityService.updateLiveActivity(elapsedSeconds);
+      
+      // Marcar que vamos a crear el Live Activity para esta sesión
+      await AsyncStorage.setItem(liveActivityKey, 'true');
+      
+      // Crear Live Activity
+      console.log('📱 Creating Live Activity for first time in this session');
+      const sessionStartTime = new Date(activeSession.startTime);
+      await this.liveActivityService.startLiveActivity(job.name, job.address, sessionStartTime);
       
       // Start update interval
       if (this.statusUpdateInterval) {
         clearInterval(this.statusUpdateInterval);
       }
+      // Actualizar cada 5 segundos (no necesitamos actualizar tan frecuente como LiveActivityService)
       this.statusUpdateInterval = setInterval(() => {
         this.updateLiveActivityTime();
-      }, 10000);
+      }, 5000);
       
       await this.saveState();
       this.notifyStatusChange();
@@ -377,16 +409,16 @@ class AutoTimerService {
       // Save state immediately to persist the start time
       await this.saveState();
       
-      // Start Live Activity for Dynamic Island
-      await this.liveActivityService.startLiveActivity(job.name, job.address);
+      // Start Live Activity for Dynamic Island with actual start time
+      await this.liveActivityService.startLiveActivity(job.name, job.address, this.autoTimerStartTime);
       
-      // Start updating Live Activity every 10 seconds
+      // Start updating Live Activity every 5 seconds
       if (this.statusUpdateInterval) {
         clearInterval(this.statusUpdateInterval);
       }
       this.statusUpdateInterval = setInterval(() => {
         this.updateLiveActivityTime();
-      }, 10000);
+      }, 5000);
       
       // Enviar notificación de inicio
       await this.notificationService.sendNotification('timer_started', job.name);
@@ -406,12 +438,12 @@ class AutoTimerService {
    */
   private async stopAutoTimer(job: Job): Promise<void> {
     try {
-      const activeSession = await JobService.getActiveSession();
-      if (activeSession && activeSession.jobId === job.id) {
+      const currentSession = await JobService.getActiveSession();
+      if (currentSession && currentSession.jobId === job.id) {
         console.log(`🛑 Auto-stopping timer for ${job.name}`);
         
         // Calculate elapsed time (simplified version - we'll use 1 hour as default)
-        const sessionStart = new Date(activeSession.startTime);
+        const sessionStart = new Date(currentSession.startTime);
         const now = new Date();
         const elapsedMs = now.getTime() - sessionStart.getTime();
         const elapsedHours = Math.max(0.01, parseFloat(((elapsedMs / (1000 * 60 * 60))).toFixed(2)));
@@ -422,7 +454,7 @@ class AutoTimerService {
           date: today,
           jobId: job.id,
           hours: elapsedHours,
-          notes: activeSession.notes || 'Auto-stopped',
+          notes: currentSession.notes || 'Auto-stopped',
           overtime: elapsedHours > 8,
           type: 'work' as const,
         };
@@ -439,6 +471,13 @@ class AutoTimerService {
         // End Live Activity with elapsed seconds
         const elapsedSeconds = Math.floor(elapsedHours * 3600);
         await this.liveActivityService.endLiveActivity(elapsedSeconds);
+        
+        // IMPORTANTE: Limpiar la marca de Live Activity para esta sesión
+        if (currentSession?.jobId) {
+          const liveActivityKey = `@live_activity_created_${currentSession.jobId}`;
+          await AsyncStorage.removeItem(liveActivityKey);
+          console.log('📱 Cleaned Live Activity marker for ended session');
+        }
         
         // Enviar notificación de parada
         await this.notificationService.sendNotification('timer_stopped', job.name);

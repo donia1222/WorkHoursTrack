@@ -28,6 +28,7 @@ import TimerSuccessModal from '../components/TimerSuccessModal';
 import { Job, WorkDay, StoredActiveSession } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
+import LiveActivityService from '../services/LiveActivityService';
 import MapView, { Marker, Circle, PROVIDER_DEFAULT } from 'react-native-maps';
 
 import { useBackNavigation, useNavigation } from '../context/NavigationContext';
@@ -1244,6 +1245,14 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       setIsRunning(true);
       setElapsedTime(0);
       
+      // Iniciar Live Activity para timer manual
+      const job = jobs.find(j => j.id === selectedJobId);
+      if (job) {
+        const liveActivityService = LiveActivityService.getInstance();
+        await liveActivityService.startLiveActivity(job.name, job.address, new Date());
+        console.log('📱 Live Activity started for manual timer');
+      }
+      
       // Notify auto timer service about manual start
       autoTimerService.handleManualTimerStart(selectedJobId);
     } catch (error) {
@@ -1320,6 +1329,11 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       const hours = getSessionHours();
       const today = new Date().toISOString().split('T')[0];
       console.log(`Stopping timer - Elapsed time: ${elapsedTime}s, Hours: ${hours}`);
+      
+      // Terminar el Live Activity con el tiempo final
+      const liveActivityService = LiveActivityService.getInstance();
+      await liveActivityService.endLiveActivity(elapsedTime);
+      console.log('📱 Live Activity ended');
       
       // Check if there's already a work day for this date and job
       const allWorkDays = await JobService.getWorkDays();

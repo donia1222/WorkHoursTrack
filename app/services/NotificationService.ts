@@ -175,7 +175,7 @@ class NotificationService {
         name: 'Auto Timer',
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
-        sound: true,
+        sound: 'default',
         enableVibrate: true,
         enableLights: true,
         showBadge: true,
@@ -187,7 +187,7 @@ class NotificationService {
         name: 'Work Reminders',
         importance: Notifications.AndroidImportance.HIGH,
         vibrationPattern: [0, 250, 250, 250],
-        sound: true,
+        sound: 'default',
         enableVibrate: true,
         enableLights: true,
         showBadge: true,
@@ -307,7 +307,7 @@ class NotificationService {
               allowCriticalAlerts: false,
               provideAppNotificationSettings: false,
               allowProvisional: false,
-              allowAnnouncements: false,
+              // allowAnnouncements: false, // May not exist in older SDK
             },
             android: {
               allowAlert: true,
@@ -428,7 +428,7 @@ class NotificationService {
         content: {
           title,
           body,
-          sound: true,
+          sound: 'default',
           priority: Notifications.AndroidNotificationPriority.HIGH,
           autoDismiss: false,
           vibrate: [0, 250, 250, 250],
@@ -497,7 +497,7 @@ class NotificationService {
         content: {
           title,
           body,
-          sound: true,
+          sound: 'default',
           priority: Notifications.AndroidNotificationPriority.HIGH,
           autoDismiss: false,
           vibrate: isAutoTimer ? [0, 250, 250, 250] : undefined,
@@ -678,10 +678,11 @@ class NotificationService {
         content: {
           title: '🧪 Test Notification',
           body: 'If you see this, notifications are working correctly',
-          sound: true,
+          sound: 'default',
           priority: Notifications.AndroidNotificationPriority.HIGH,
         },
         trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
           seconds: 1, // Delay 1 second to help with background delivery
         },
       });
@@ -692,7 +693,7 @@ class NotificationService {
       await Notifications.presentNotificationAsync({
         title: '🧪 Foreground Test',
         body: 'This should show as alert in foreground',
-        sound: true,
+        sound: 'default',
         priority: Notifications.AndroidNotificationPriority.HIGH,
       });
       
@@ -718,7 +719,7 @@ class NotificationService {
         content: {
           title: '🧪 Background Test',
           body: `This notification was scheduled ${delaySeconds} seconds ago. If you see this, background notifications work!`,
-          sound: true,
+          sound: 'default',
           priority: Notifications.AndroidNotificationPriority.HIGH,
         },
         trigger: {
@@ -808,7 +809,7 @@ class NotificationService {
         content: {
           title,
           body,
-          sound: true,
+          sound: 'default',
           priority: Notifications.AndroidNotificationPriority.HIGH,
           data: {
             type: 'work_reminder',

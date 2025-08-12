@@ -3021,11 +3021,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         return;
       }
       
-      if (value && !isSubscribed) {
-        setShowPremiumModal(true);
-      } else {
-        handleAutoTimerToggle(value);
-      }
+      // Temporalmente deshabilitado para pruebas - permitir activar sin suscripción
+      // if (value && !isSubscribed) {
+      //   setShowPremiumModal(true);
+      // } else {
+      //   handleAutoTimerToggle(value);
+      // }
+      handleAutoTimerToggle(value);
     };
 
     return (

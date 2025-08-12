@@ -45,18 +45,58 @@ class LiveActivityService {
   }
 
   /**
-   * Inicia un Live Activity para el auto-timer
+   * Verifica si hay un Live Activity activo al iniciar la app
    */
-  async startLiveActivity(jobName: string, location?: string): Promise<boolean> {
+  async checkExistingLiveActivity(): Promise<boolean> {
     if (!this.isSupported) {
-      console.log('❌ Live Activities not supported on this device');
       return false;
     }
 
-    // Si ya hay un Live Activity activo, terminarlo primero
-    if (this.activityId) {
-      console.log('⚠️ Live Activity already active, ending previous one');
-      await this.endLiveActivity(0);
+    try {
+      const LiveActivityModule = NativeModules.LiveActivityModule;
+      if (!LiveActivityModule || !LiveActivityModule.hasActiveLiveActivity) {
+        return false;
+      }
+
+      const hasActive = await LiveActivityModule.hasActiveLiveActivity();
+      console.log(`📱 Existing Live Activity found: ${hasActive}`);
+      return hasActive;
+    } catch (error) {
+      console.error('Error checking existing Live Activity:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Termina todas las Live Activities existentes
+   */
+  async endAllLiveActivities(): Promise<void> {
+    if (!this.isSupported) {
+      return;
+    }
+
+    try {
+      const LiveActivityModule = NativeModules.LiveActivityModule;
+      if (!LiveActivityModule || !LiveActivityModule.endAllLiveActivities) {
+        return;
+      }
+
+      await LiveActivityModule.endAllLiveActivities();
+      this.activityId = null;
+      this.stopUpdateTimer();
+      console.log('✅ All Live Activities ended');
+    } catch (error) {
+      console.error('Error ending all Live Activities:', error);
+    }
+  }
+
+  /**
+   * Inicia un Live Activity para el auto-timer
+   */
+  async startLiveActivity(jobName: string, location?: string, existingStartTime?: Date): Promise<boolean> {
+    if (!this.isSupported) {
+      console.log('❌ Live Activities not supported on this device');
+      return false;
     }
 
     try {
@@ -69,23 +109,21 @@ class LiveActivityService {
         return false;
       }
 
-      // Configurar el estado inicial
-      const initialState = {
-        jobName,
-        location: location || '',
-        startTime: new Date().toISOString(),
-        elapsedSeconds: 0,
-        isRunning: true,
-      };
-
+      // El módulo nativo ahora maneja la verificación de duplicados
       // Iniciar el Live Activity
       this.activityId = await LiveActivityModule.startLiveActivity(jobName, location || '');
       
       if (this.activityId) {
-        console.log('✅ Live Activity started with ID:', this.activityId);
+        console.log('✅ Live Activity started/reused with ID:', this.activityId);
         
-        // Iniciar actualizaciones periódicas del tiempo transcurrido
-        this.startUpdateTimer();
+        // Solo iniciar el timer si no está ya corriendo
+        if (!this.updateInterval) {
+          // Iniciar actualizaciones periódicas del tiempo transcurrido
+          // Si hay un tiempo de inicio existente, usarlo para calcular el tiempo transcurrido
+          this.startUpdateTimer(existingStartTime);
+        } else {
+          console.log('⏱️ Update timer already running, skipping');
+        }
         
         return true;
       } else {
@@ -150,24 +188,25 @@ class LiveActivityService {
   /**
    * Inicia el timer de actualizaciones periódicas
    */
-  private startUpdateTimer(): void {
+  private startUpdateTimer(existingStartTime?: Date): void {
     if (this.updateInterval) {
-      return;
+      clearInterval(this.updateInterval);
     }
 
-    const startTime = Date.now();
+    // Usar el tiempo de inicio existente o el actual
+    const startTime = existingStartTime ? existingStartTime.getTime() : Date.now();
 
-    // Actualizar cada 10 segundos para mostrar progreso visible
-    // pero no tan frecuente como para gastar batería
+    // Actualizar cada segundo para mostrar el tiempo en tiempo real
     this.updateInterval = setInterval(() => {
       const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
       this.updateLiveActivity(elapsedSeconds);
-    }, 10000); // Actualizar cada 10 segundos
+    }, 1000); // Actualizar cada segundo
 
-    // Actualizar inmediatamente al iniciar
-    this.updateLiveActivity(0);
+    // Actualizar inmediatamente con el tiempo ya transcurrido
+    const initialElapsed = existingStartTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
+    this.updateLiveActivity(initialElapsed);
 
-    console.log('⏱️ Update timer started');
+    console.log('⏱️ Update timer started with 1s interval, initial elapsed:', initialElapsed);
   }
 
   /**
