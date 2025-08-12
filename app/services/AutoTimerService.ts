@@ -282,6 +282,22 @@ class AutoTimerService {
         this.autoTimerStartTime = new Date(activeSession.startTime);
         console.log(`⏱️ Restored start time from active session: ${this.autoTimerStartTime.toLocaleTimeString()}`);
       }
+      
+      // Update Live Activity with current time if not already active
+      const elapsedSeconds = Math.floor((Date.now() - new Date(activeSession.startTime).getTime()) / 1000);
+      if (!this.liveActivityService.isActive()) {
+        await this.liveActivityService.startLiveActivity(job.name, job.address);
+      }
+      this.liveActivityService.updateLiveActivity(elapsedSeconds);
+      
+      // Start update interval
+      if (this.statusUpdateInterval) {
+        clearInterval(this.statusUpdateInterval);
+      }
+      this.statusUpdateInterval = setInterval(() => {
+        this.updateLiveActivityTime();
+      }, 10000);
+      
       await this.saveState();
       this.notifyStatusChange();
       return;
@@ -364,6 +380,14 @@ class AutoTimerService {
       // Start Live Activity for Dynamic Island
       await this.liveActivityService.startLiveActivity(job.name, job.address);
       
+      // Start updating Live Activity every 10 seconds
+      if (this.statusUpdateInterval) {
+        clearInterval(this.statusUpdateInterval);
+      }
+      this.statusUpdateInterval = setInterval(() => {
+        this.updateLiveActivityTime();
+      }, 10000);
+      
       // Enviar notificación de inicio
       await this.notificationService.sendNotification('timer_started', job.name);
       
@@ -405,6 +429,12 @@ class AutoTimerService {
         
         await JobService.addWorkDay(workDay);
         await JobService.clearActiveSession();
+        
+        // Stop Live Activity updates
+        if (this.statusUpdateInterval) {
+          clearInterval(this.statusUpdateInterval);
+          this.statusUpdateInterval = null;
+        }
         
         // End Live Activity with elapsed seconds
         const elapsedSeconds = Math.floor(elapsedHours * 3600);
@@ -521,6 +551,16 @@ class AutoTimerService {
       }
     }
     return 0;
+  }
+
+  /**
+   * Update Live Activity with current elapsed time
+   */
+  private updateLiveActivityTime(): void {
+    if (this.currentState === 'active' && this.autoTimerStartTime) {
+      const elapsedSeconds = Math.floor((Date.now() - this.autoTimerStartTime.getTime()) / 1000);
+      this.liveActivityService.updateLiveActivity(elapsedSeconds);
+    }
   }
 
   /**
@@ -793,6 +833,20 @@ class AutoTimerService {
           this.autoTimerStartTime = new Date(state.autoTimerStartTime);
           const elapsedSeconds = Math.floor((Date.now() - this.autoTimerStartTime.getTime()) / 1000);
           console.log(`⏱️ AutoTimer was running: ${elapsedSeconds} seconds elapsed since ${this.autoTimerStartTime.toLocaleTimeString()}`);
+          
+          // DON'T start a new Live Activity when restoring - it should already be running
+          // Just update the existing one with elapsed time if needed
+          if (this.liveActivityService.isActive()) {
+            this.liveActivityService.updateLiveActivity(elapsedSeconds);
+          }
+          
+          // Start update interval
+          if (this.statusUpdateInterval) {
+            clearInterval(this.statusUpdateInterval);
+          }
+          this.statusUpdateInterval = setInterval(() => {
+            this.updateLiveActivityTime();
+          }, 10000);
         }
         
         // Check if we should restore a delayed action or if it already executed

@@ -12,34 +12,56 @@ import SwiftUI
 struct WorkTrackWidgetLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: WorkTrackWidgetAttributes.self) { context in
-            // Lock screen/banner UI goes here
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
+            // Lock screen/banner UI goes here - Diseño mejorado
+            HStack(spacing: 16) {
+                // Ícono principal con fondo
+                ZStack {
+                    Circle()
+                        .fill(Color.blue.opacity(0.15))
+                        .frame(width: 45, height: 45)
                     Image(systemName: "timer")
-                        .foregroundColor(.blue)
-                    Text(context.attributes.jobName)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                    Spacer()
-                    Text(formatTime(context.state.elapsedSeconds))
-                        .font(.system(.title2, design: .monospaced))
+                        .font(.system(size: 22))
                         .foregroundColor(.blue)
                 }
                 
-                HStack {
-                    Image(systemName: "location.fill")
-                        .foregroundColor(.gray)
-                        .font(.caption)
-                    Text(context.attributes.location)
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    Spacer()
-                    Text(context.state.isRunning ? "Activo" : "Pausado")
-                        .font(.caption)
-                        .foregroundColor(context.state.isRunning ? .green : .orange)
+                // Información del trabajo
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(context.attributes.jobName)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.blue)
+                        .lineLimit(1)
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(.gray)
+                        Text(context.attributes.location)
+                            .font(.system(size: 12))
+                            .foregroundColor(.gray)
+                            .lineLimit(1)
+                    }
+                }
+                
+                Spacer()
+                
+                // Timer con estado
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(formatTime(context.state.elapsedSeconds))
+                        .font(.system(size: 20, weight: .medium, design: .monospaced))
+                        .foregroundColor(.blue)
+                    
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(context.state.isRunning ? Color.green : Color.orange)
+                            .frame(width: 6, height: 6)
+                        Text(context.state.isRunning ? "Activo" : "Pausado")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(context.state.isRunning ? .green : .orange)
+                    }
                 }
             }
-            .padding()
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
             .activityBackgroundTint(Color(UIColor.systemBackground))
             .activitySystemActionForegroundColor(Color.blue)
 
@@ -111,7 +133,7 @@ struct WorkTrackWidgetLiveActivity: Widget {
 
 // Previews para desarrollo
 extension WorkTrackWidgetAttributes {
-    fileprivate static var preview: WorkTrackWidgetAttributes {
+    static var preview: WorkTrackWidgetAttributes {
         WorkTrackWidgetAttributes(
             jobName: "Oficina Principal",
             location: "Calle Mayor 123",
@@ -121,14 +143,14 @@ extension WorkTrackWidgetAttributes {
 }
 
 extension WorkTrackWidgetAttributes.ContentState {
-    fileprivate static var running: WorkTrackWidgetAttributes.ContentState {
+    static var running: WorkTrackWidgetAttributes.ContentState {
         WorkTrackWidgetAttributes.ContentState(
             elapsedSeconds: 3661,
             isRunning: true
         )
     }
      
-    fileprivate static var paused: WorkTrackWidgetAttributes.ContentState {
+    static var paused: WorkTrackWidgetAttributes.ContentState {
         WorkTrackWidgetAttributes.ContentState(
             elapsedSeconds: 7200,
             isRunning: false

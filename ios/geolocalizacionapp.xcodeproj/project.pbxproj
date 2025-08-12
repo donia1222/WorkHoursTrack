@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -14,11 +14,11 @@
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		44FDB54A466F8550103A2477 /* libPods-geolocalizacionapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B3B6AB9D1E33EA9A8C1741A4 /* libPods-geolocalizacionapp.a */; };
 		47FF13A030B6CB4C88BA0123 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 095AD82A61BC8E2960001237 /* PrivacyInfo.xcprivacy */; };
-		624CA3E82E4AAF4E003F8385 /* LiveActivityModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 624CA3E62E4AAF4E003F8385 /* LiveActivityModule.m */; };
-		624CA3E92E4AAF4E003F8385 /* LiveActivityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 624CA3E72E4AAF4E003F8385 /* LiveActivityModule.swift */; };
 		62FCA2DE2E4B656D009443BD /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 624CA3EF2E4AB50D003F8385 /* WidgetKit.framework */; };
 		62FCA2DF2E4B656D009443BD /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 624CA3F12E4AB50D003F8385 /* SwiftUI.framework */; };
 		62FCA2EC2E4B656F009443BD /* WorkTrackWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 62FCA2DD2E4B656D009443BD /* WorkTrackWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		62FCA36F2E4B7B6E009443BD /* LiveActivityModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 62FCA36D2E4B7B6E009443BD /* LiveActivityModule.m */; };
+		62FCA3702E4B7B6E009443BD /* LiveActivityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62FCA36E2E4B7B6E009443BD /* LiveActivityModule.swift */; };
 		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 /* End PBXBuildFile section */
@@ -56,12 +56,12 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = geolocalizacionapp/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = geolocalizacionapp/main.m; sourceTree = "<group>"; };
 		25DC214B203D5BF3475BB616 /* Pods-geolocalizacionapp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-geolocalizacionapp.release.xcconfig"; path = "Target Support Files/Pods-geolocalizacionapp/Pods-geolocalizacionapp.release.xcconfig"; sourceTree = "<group>"; };
-		624CA3E62E4AAF4E003F8385 /* LiveActivityModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LiveActivityModule.m; sourceTree = "<group>"; };
-		624CA3E72E4AAF4E003F8385 /* LiveActivityModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityModule.swift; sourceTree = "<group>"; };
 		624CA3EF2E4AB50D003F8385 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		624CA3F12E4AB50D003F8385 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		62FCA2DD2E4B656D009443BD /* WorkTrackWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WorkTrackWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		62FCA2F32E4B67D7009443BD /* WorkTrackWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WorkTrackWidgetExtension.entitlements; sourceTree = "<group>"; };
+		62FCA36D2E4B7B6E009443BD /* LiveActivityModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LiveActivityModule.m; sourceTree = "<group>"; };
+		62FCA36E2E4B7B6E009443BD /* LiveActivityModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityModule.swift; sourceTree = "<group>"; };
 		8433610D6F4B4A6E9ED36292 /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "geolocalizacionapp/noop-file.swift"; sourceTree = "<group>"; };
 		9CAD3DF76C8B474B9AF967D3 /* geolocalizacionapp-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "geolocalizacionapp-Bridging-Header.h"; path = "geolocalizacionapp/geolocalizacionapp-Bridging-Header.h"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = geolocalizacionapp/SplashScreen.storyboard; sourceTree = "<group>"; };
@@ -73,28 +73,24 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		62FCA2EF2E4B6570009443BD /* Exceptions for "WorkTrackWidget" folder in "WorkTrackWidgetExtension" target */ = {
+		62FCA2EF2E4B6570009443BD /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 62FCA2DC2E4B656D009443BD /* WorkTrackWidgetExtension */;
 		};
+		62FCA36C2E4B7B22009443BD /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				WorkTrackWidgetAttributes.swift,
+			);
+			target = 13B07F861A680F5B00A75B9A /* geolocalizacionapp */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		62FCA2E02E4B656D009443BD /* WorkTrackWidget */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				62FCA2EF2E4B6570009443BD /* Exceptions for "WorkTrackWidget" folder in "WorkTrackWidgetExtension" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = WorkTrackWidget;
-			sourceTree = "<group>";
-		};
+		62FCA2E02E4B656D009443BD /* WorkTrackWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (62FCA36C2E4B7B22009443BD /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 62FCA2EF2E4B6570009443BD /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = WorkTrackWidget; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -156,9 +152,9 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				62FCA36D2E4B7B6E009443BD /* LiveActivityModule.m */,
+				62FCA36E2E4B7B6E009443BD /* LiveActivityModule.swift */,
 				62FCA2F32E4B67D7009443BD /* WorkTrackWidgetExtension.entitlements */,
-				624CA3E62E4AAF4E003F8385 /* LiveActivityModule.m */,
-				624CA3E72E4AAF4E003F8385 /* LiveActivityModule.swift */,
 				13B07FAE1A68108700A75B9A /* geolocalizacionapp */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				62FCA2E02E4B656D009443BD /* WorkTrackWidget */,
@@ -454,11 +450,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				624CA3E82E4AAF4E003F8385 /* LiveActivityModule.m in Sources */,
-				624CA3E92E4AAF4E003F8385 /* LiveActivityModule.swift in Sources */,
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 				B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */,
+				62FCA36F2E4B7B6E009443BD /* LiveActivityModule.m in Sources */,
+				62FCA3702E4B7B6E009443BD /* LiveActivityModule.swift in Sources */,
 				3A741DDAED254A52AA25B004 /* noop-file.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -694,10 +690,7 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -754,10 +747,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;

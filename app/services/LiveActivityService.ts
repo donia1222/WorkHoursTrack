@@ -53,6 +53,12 @@ class LiveActivityService {
       return false;
     }
 
+    // Si ya hay un Live Activity activo, terminarlo primero
+    if (this.activityId) {
+      console.log('⚠️ Live Activity already active, ending previous one');
+      await this.endLiveActivity(0);
+    }
+
     try {
       console.log('🏃 Starting Live Activity for:', jobName);
 
@@ -149,13 +155,17 @@ class LiveActivityService {
       return;
     }
 
-    let elapsedSeconds = 0;
+    const startTime = Date.now();
 
-    // Actualizar cada 30 segundos para no consumir mucha batería
+    // Actualizar cada 10 segundos para mostrar progreso visible
+    // pero no tan frecuente como para gastar batería
     this.updateInterval = setInterval(() => {
-      elapsedSeconds += 30;
+      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
       this.updateLiveActivity(elapsedSeconds);
-    }, 30000);
+    }, 10000); // Actualizar cada 10 segundos
+
+    // Actualizar inmediatamente al iniciar
+    this.updateLiveActivity(0);
 
     console.log('⏱️ Update timer started');
   }
