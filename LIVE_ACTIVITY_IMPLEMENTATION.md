@@ -7,6 +7,7 @@
 
 ## 📁 ARCHIVOS CREADOS
 
+
 ### 1. WIDGET EXTENSION (Swift)
 **Ubicación:** `/ios/WorkTrackWidget/`
 
