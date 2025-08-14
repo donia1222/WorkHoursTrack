@@ -2365,7 +2365,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 }
               }}
               trackColor={{ false: colors.separator, true: colors.primary }}
-              thumbColor="#06004bff"
+              thumbColor="#ffffffff"
             />
           </View>
         </View>
@@ -3055,13 +3055,12 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         return;
       }
       
-      // Temporalmente deshabilitado para pruebas - permitir activar sin suscripción
-      // if (value && !isSubscribed) {
-      //   setShowPremiumModal(true);
-      // } else {
-      //   handleAutoTimerToggle(value);
-      // }
-      handleAutoTimerToggle(value);
+      // Verificar suscripción premium antes de activar
+      if (value && !isSubscribed) {
+        setShowPremiumModal(true);
+      } else {
+        handleAutoTimerToggle(value);
+      }
     };
 
     return (

@@ -1,0 +1,3554 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import MapView, { Marker, Circle } from 'react-native-maps';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, Modal, Dimensions, Switch, InteractionManager, useWindowDimensions } from 'react-native';
+import * as Location from 'expo-location';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming, Easing, runOnJS } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Job, StoredActiveSession } from '../types/WorkTypes';
+import { JobService } from '../services/JobService';
+import JobFormModal from '../components/JobFormModal';
+import JobStatisticsModal from '../components/JobStatisticsModal';
+import JobSelectorModal from '../components/JobSelectorModal';
+import { useNavigation } from '../context/NavigationContext';
+import { Theme } from '../constants/Theme';
+import { useTheme, ThemeColors } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useHapticFeedback } from '../hooks/useHapticFeedback';
+import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
+import { JobCardsSwiper } from './JobCardsSwiper';
+import { useFocusEffect } from '@react-navigation/native';
+import WidgetSyncService from '../services/WidgetSyncService';
+
+// Dark mode map style
+const darkMapStyle = [
+  {
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#212121"
+      }
+    ]
+  },
+  {
+    "elementType": "labels.icon",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#757575"
+      }
+    ]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      {
+        "color": "#212121"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#757575"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.country",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#9e9e9e"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.land_parcel",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.locality",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#bdbdbd"
+      }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#757575"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.park",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#181818"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.park",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#616161"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.park",
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      {
+        "color": "#1b1b1b"
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#2c2c2c"
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#8a8a8a"
+      }
+    ]
+  },
+  {
+    "featureType": "road.arterial",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#373737"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#3c3c3c"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway.controlled_access",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#4e4e4e"
+      }
+    ]
+  },
+  {
+    "featureType": "road.local",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#616161"
+      }
+    ]
+  },
+  {
+    "featureType": "transit",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#757575"
+      }
+    ]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#000000"
+      }
+    ]
+  },
+  {
+    "featureType": "water",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#3d3d3d"
+      }
+    ]
+  }
+];
+
+type Props = {
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
+  onNavigate?: (screen: string) => void;
+};
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean, daySize: number, dayFontSize: number, isTablet: boolean) => StyleSheet.create({
+  mapContainer: {
+    flex: 1,
+    overflow: 'hidden',
+    backgroundColor: isDark ? '#0a0a0a' : '#f5f5f5',
+  },
+  mapWrapper: {
+    flex: 1,
+    position: 'relative',
+    marginTop: 35,
+  },
+  container: {
+    flex: 1,
+  },
+  map: {
+    flex: 1,
+    marginTop:- 5,
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    pointerEvents: 'box-none',
+  },
+  centeredContent: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  mainActionCard: {
+    width: 300,
+    pointerEvents: 'auto',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  mainActionCardInner: {
+    borderRadius: 28,
+    padding: 32,
+    alignItems: 'center',
+    position: 'relative',
+
+    overflow: 'hidden',
+  },
+  mainActionCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
+  },
+  mainActionIcon: {
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#4C87AF',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+  },
+  
+  mainActionTitle: {
+    fontSize: 22,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 14,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  mainActionDescription: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 24,
+    opacity: 0.9,
+    paddingHorizontal: 10,
+  },
+  mainActionBadge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.surface,
+    zIndex: 10,
+    elevation: 4,
+  },
+  mainActionBadgeText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  infoOverlay: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    right: 20,
+    pointerEvents: 'none',
+  },
+  infoCard: {
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  infoContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  infoText: {
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: '400',
+  },
+  jobsOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'flex-end',
+  },
+  jobsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    backgroundColor: colors.surface,
+  },
+  jobsTitle: {
+    fontSize: 18,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  closeOverlayButton: {
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 122, 255, 0.15)',
+  },
+  jobsList: {
+    maxHeight: '60%',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    backgroundColor: colors.surface,
+  },
+  jobMapCard: {
+    marginBottom: 12,
+  },
+  jobMapCardInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.separator,
+  },
+  jobMapInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  jobMapActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  jobMapEditButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 122, 255, 0.15)',
+  },
+  jobMapColorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 12,
+  },
+  jobMapDetails: {
+    flex: 1,
+  },
+  jobMapName: {
+    fontSize: 16,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  jobMapCompany: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  jobMapAddress: {
+    fontSize: 12,
+    color: colors.textTertiary,
+  },
+  actionModal: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    pointerEvents: 'box-none',
+  },
+  actionModalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+  },
+  actionModalContent: {
+    borderRadius: 24,
+    margin: 20,
+    padding: 24,
+    minWidth: 300,
+    borderWidth: 2,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: isDark ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    overflow: 'hidden',
+    pointerEvents: 'auto',
+  },
+  actionModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  actionModalColorDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  actionModalInfo: {
+    flex: 1,
+  },
+  actionModalTitle: {
+    fontSize: 18,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  actionModalSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  actionModalButtons: {
+    gap: 12,
+    marginBottom: 16,
+  },
+  actionModalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.6)',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.8)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.10,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  actionModalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginLeft: 12,
+  },
+  actionModalButtonTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  autoTimerSwitchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 6,
+  },
+  autoTimerSwitchLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontWeight: '400',
+  },
+  autoTimerSwitch: {
+    transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }],
+  },
+  actionModalCancelButton: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  actionModalCancelText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  floatingAddButton: {
+    position: 'absolute',
+    bottom: 32,
+    right: 24,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    elevation: 6,
+    shadowColor: colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+  },
+  floatingAddButtonInner: {
+    flex: 1,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.8)',
+    overflow: 'visible',
+  },
+  fabGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 32,
+  },
+  oldSuccessIconBg: {
+    backgroundColor: 'rgba(52, 199, 89, 0.25)',
+    borderWidth: 2,
+    borderColor: 'rgba(52, 199, 89, 0.3)',
+  },
+  successButtonBg: {
+    backgroundColor: 'rgba(52, 199, 89, 0.18)',
+    borderColor: 'rgba(52, 199, 89, 0.25)',
+  },
+  primaryButtonBg: {
+    backgroundColor: 'rgba(0, 122, 255, 0.18)',
+    borderColor: 'rgba(0, 122, 255, 0.25)',
+  },
+  warningButtonBg: {
+    backgroundColor: 'rgba(255, 149, 0, 0.18)',
+    borderColor: 'rgba(255, 149, 0, 0.25)',
+  },
+  secondaryButtonBg: {
+    backgroundColor: 'rgba(142, 142, 147, 0.15)',
+    borderColor: 'rgba(142, 142, 147, 0.2)',
+  },
+  errorButtonBg: {
+    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+    borderColor: 'rgba(255, 59, 48, 0.25)',
+  },
+  autoTimerStatusOverlay: {
+    position: 'absolute',
+    bottom: 90,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+  },
+  disableButton: {
+    width: 24,
+    height: 24,
+    backgroundColor: '#FF3B30',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.8)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  autoTimerStatusCard: {
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: isDark ? 0.15 : 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  autoTimerStatusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+    gap: 8,
+  },
+  autoTimerStatusTitle: {
+    fontSize: 16,
+    color: colors.text,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  autoTimerJobRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
+    borderRadius: 12,
+    borderWidth: 0.5,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+    gap: 8,
+    flex: 1,
+    minWidth: 0,
+  },
+  autoTimerJobDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.9)',
+  },
+  autoTimerJobName: {
+    fontSize: 15,
+    color: colors.text,
+    flex: 1,
+    fontWeight: '400',
+    minWidth: 0,
+    flexShrink: 1,
+    textAlign: 'left',
+  },
+  autoTimerJobStatus: {
+    ...Theme.typography.caption2,
+    fontSize: 13,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  autoTimerProgressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+    paddingHorizontal: 4,
+  },
+  autoTimerProgressBar: {
+    flex: 1,
+    height: 4,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  autoTimerProgressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  autoTimerCountdown: {
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: '700',
+    minWidth: 28,
+    textAlign: 'center',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    overflow: 'hidden',
+  },
+  activeTimerText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.success,
+    marginTop: 2,
+    backgroundColor: isDark ? 'rgba(52, 199, 89, 0.1)' : 'rgba(52, 199, 89, 0.08)',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    textAlign: 'center',
+    alignSelf: 'flex-start',
+  },
+  minimizedAutoTimer: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+  },
+  privacyNoticeContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 999,
+    paddingHorizontal: 16,
+    paddingTop: 60,
+  },
+  privacyNoticeCard: {
+    backgroundColor: isDark ? 'rgba(255, 149, 0, 0.95)' : 'rgba(255, 149, 0, 0.95)',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  privacyNoticeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  privacyNoticeIcon: {
+    marginRight: 12,
+  },
+  privacyNoticeText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    flex: 1,
+    lineHeight: 18,
+  },
+  privacyNoticeCloseButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.6)',
+    minWidth: 120,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  privacyNoticeButtonText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  miniCalendarContainer: {
+    marginBottom: isTablet ? 20 : (isSmallScreen ? 8 : 16),
+    marginHorizontal: isTablet ? -6 : (isSmallScreen ? 8 : 0),
+    maxWidth: isTablet ? 600 : undefined,
+    alignSelf: isTablet ? 'center' : undefined,
+    marginTop:60,
+  },
+  miniCalendarCard: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: isDark ? '#000' : '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: isDark ? 0.12 : 0.08,
+    shadowRadius: 6,
+
+  },
+  miniCalendarBlur: {
+    paddingTop: isTablet ? 16 : (isSmallScreen ? 8 : 10),
+    paddingBottom: isTablet ? 14 : (isSmallScreen ? 6 : 8),
+    paddingHorizontal: isTablet ? 20 : (isSmallScreen ? 8 : 12),
+    backgroundColor: isDark ?  'rgba(67, 53, 107, 0.13)' : 'rgba(67, 53, 107, 0.13)',
+  },
+  miniCalendarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 6,
+    paddingVertical: 2,
+  },
+  miniCalendarTitle: {
+    fontSize: isTablet ? 20 : (isSmallScreen ? 14 : 16),
+    fontWeight: isTablet ? '600' : '500',
+    color: colors.text,
+    letterSpacing: -0.3,
+  },
+  miniCalendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+    paddingHorizontal: 1,
+    alignItems: 'flex-start',
+  },
+  miniCalendarDay: {
+    width: '13.5%',
+    height: daySize,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    position: 'relative',
+    marginBottom: 4,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.015)',
+  },
+  miniCalendarDayText: {
+    fontSize: dayFontSize,
+    fontWeight: '600',
+    letterSpacing: -0.2,
+  },
+  miniCalendarDot: {
+    position: 'absolute',
+    bottom: 3,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+  },
+  miniCalendarBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  miniCalendarBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: '700',
+  },
+  miniCalendarTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    gap: 10,
+  },
+  miniCalendarArrow: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+  },
+  miniCalendarDayLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+    paddingHorizontal: 1,
+  },
+  miniCalendarDayLabel: {
+    width: '13.5%',
+    textAlign: 'center',
+    fontSize: isTablet ? 13 : (isSmallScreen ? 8 : 10),
+    fontWeight: '700',
+    color: isDark ? colors.textSecondary : colors.textTertiary,
+    opacity: 1,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  miniCalendarDayToday: {
+    backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.12)',
+    borderWidth: 0,
+  },
+  miniCalendarTimeText: {
+    fontSize: 7,
+    color: colors.text,
+    textAlign: 'center',
+    marginTop: 2,
+    lineHeight: 9,
+    opacity: 0.8,
+    fontWeight: '600',
+    paddingHorizontal: 1,
+    letterSpacing: -0.3,
+  },
+  miniCalendarButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    marginTop: 8,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  miniCalendarButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  noLocationBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  noLocationContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: 60,
+  },
+  noLocationButtons: {
+    gap: 16,
+    width: '100%',
+    maxWidth: 320,
+    marginTop: -40,
+  },
+  noLocationButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.primary + '30',
+  },
+  noLocationButtonGradient: {
+    padding: 16,
+  },
+  noLocationButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  noLocationButtonText: {
+    flex: 1,
+  },
+  noLocationButtonTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  noLocationButtonSubtitle: {
+    fontSize: 13,
+    fontWeight: '400',
+  },
+  // Modern button styles
+  modernButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    overflow: 'hidden',
+        marginBottom: 4,
+  },
+  modernButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 13,
+
+  },
+  modernIconContainer: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  modernIconBackground: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modernBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#FF6B35',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  modernBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  modernTextContainer: {
+    flex: 1,
+  },
+  modernButtonTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 1,
+  },
+  modernButtonSubtitle: {
+    fontSize: 11,
+    fontWeight: '400',
+    opacity: 0.7,
+  },
+  modernChevron: {
+    marginLeft: 8,
+  },
+  // Estilos para las secciones de configuración
+  sectionCard: {
+    marginVertical: 8,
+    borderRadius: 12,
+    padding: 16,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.95)',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  sectionCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+    color: colors.text,
+
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginBottom: 12,
+    backgroundColor: isDark ? 'rgba(76, 92, 175, 0.1)' : 'rgba(76, 87, 175, 0.08)',
+     paddingHorizontal: 12,
+     borderRadius: 12,
+  },
+  settingIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  successIconBg: {
+    backgroundColor: isDark ? 'rgba(16, 185, 129, 0.2)' : 'rgba(6, 182, 212, 0.15)',
+    borderColor: isDark ? 'rgba(16, 185, 129, 0.3)' : 'rgba(6, 182, 212, 0.25)',
+    borderWidth: 1,
+  },
+  warningIconBg: {
+    backgroundColor: isDark ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.15)',
+    borderColor: isDark ? 'rgba(245, 158, 11, 0.3)' : 'rgba(245, 158, 11, 0.25)',
+    borderWidth: 1,
+  },
+  primaryIconBg: {
+    backgroundColor: isDark ? 'rgba(147, 51, 234, 0.2)' : 'rgba(99, 102, 241, 0.15)',
+    borderColor: isDark ? 'rgba(147, 51, 234, 0.3)' : 'rgba(99, 102, 241, 0.25)',
+    borderWidth: 1,
+  },
+  settingContent: {
+    flex: 1,
+  },
+  settingTitle: {
+    fontSize: 16,
+    marginBottom: 4,
+    fontWeight: '700',
+    color: colors.text,
+    letterSpacing: 0.3,
+  },
+  settingDescription: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    opacity: 0.9,
+    lineHeight: 18,
+    fontWeight: '500',
+  },
+});
+
+
+export default function MapLocation({ location, onNavigate }: Props) {
+  const { colors, isDark } = useTheme();
+  const { navigateTo } = useNavigation();
+  const { t } = useLanguage();
+  const { triggerHaptic } = useHapticFeedback();
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [showJobForm, setShowJobForm] = useState(false);
+  
+  // Responsive dimensions for mini calendar
+  const windowDimensions = useWindowDimensions();
+  const screenWidth = windowDimensions.width;
+  const screenHeight = windowDimensions.height;
+  const isSmallScreen = screenWidth < 380; // iPhone SE and similar
+  const isTablet = screenWidth >= 768; // iPad and tablets
+  const isPortrait = screenHeight > screenWidth; // Detect portrait orientation
+  const isIPadPortrait = isTablet && isPortrait; // Detect iPad in portrait mode
+  const daySize = isTablet ? 60 : (isSmallScreen ? 40 : 48);
+  const dayFontSize = isTablet ? 16 : (isSmallScreen ? 11 : 13);
+  
+  console.log('🔍 Screen detection:', {
+    screenWidth,
+    screenHeight,
+    isTablet,
+    isPortrait,
+    isIPadPortrait
+  });
+  
+  // Animation values for modal
+  const modalScale = useSharedValue(0);
+  const modalOpacity = useSharedValue(0);
+  
+  // Animated style for modal
+  const animatedModalStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: modalScale.value }],
+    opacity: modalOpacity.value,
+  }));
+  
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [showStatistics, setShowStatistics] = useState(false);
+  const [selectedJobForStats, setSelectedJobForStats] = useState<Job | null>(null);
+  const [jobStatistics, setJobStatistics] = useState<Map<string, { thisMonthHours: number; thisMonthDays: number }>>(new Map());
+  const [activeTimerJobId, setActiveTimerJobId] = useState<string | null>(null);
+  const [autoTimerStatus, setAutoTimerStatus] = useState<AutoTimerStatus | null>(null);
+  const [autoTimerService] = useState(() => AutoTimerService.getInstance());
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [isTimerPaused, setIsTimerPaused] = useState(false);
+  const [isAutoTimerMinimized, setIsAutoTimerMinimized] = useState(false);
+  const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
+  const [hasShownActivationAlert, setHasShownActivationAlert] = useState(false);
+  const [hasInvoicingData, setHasInvoicingData] = useState(false);
+  
+  // Estados para los modales de configuración
+  const [showJobSelector, setShowJobSelector] = useState(false);
+  const [selectedEditType, setSelectedEditType] = useState<'schedule' | 'location' | 'financial' | 'billing' | null>(null);
+  const [currentUserLocation, setCurrentUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
+  const [forceMapUpdate, setForceMapUpdate] = useState(0);
+  const [hasShownPrivacyNotice, setHasShownPrivacyNotice] = useState(false);
+  const [miniCalendarData, setMiniCalendarData] = useState<any[]>([]);
+  const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
+  const [showJobCardsModal, setShowJobCardsModal] = useState(false);
+  const [shouldShowMiniCalendar, setShouldShowMiniCalendar] = useState(true);
+  const [wasJobCardsModalOpen, setWasJobCardsModalOpen] = useState(false);
+  const [shouldReopenJobCardsModal, setShouldReopenJobCardsModal] = useState(false);
+  const [selectedDaySchedule, setSelectedDaySchedule] = useState<number | null>(null);
+  const mapRef = useRef<MapView>(null);
+  
+  // Optimización para prevenir congelamiento durante zoom rápido
+  const onRegionChangeComplete = useCallback((region: any) => {
+    // Solo loguear cuando sea necesario para debugging
+    // console.log('Region changed:', region);
+  }, []);
+
+  // Prevenir congelamiento por eventos táctiles múltiples
+  const [isProcessingGesture, setIsProcessingGesture] = useState(false);
+  const gestureTimeoutRef = useRef<NodeJS.Timeout>();
+  const lastGestureTime = useRef<number>(0);
+  const gestureDebounceDelay = 50; // ms entre gestos para evitar sobrecarga
+  
+  const handleMapRegionChange = useCallback((region: any) => {
+    const now = Date.now();
+    
+    // Throttle para evitar demasiados eventos en poco tiempo
+    if (now - lastGestureTime.current < gestureDebounceDelay) {
+      return;
+    }
+    
+    lastGestureTime.current = now;
+    
+    // Usar InteractionManager para manejar las interacciones de manera segura
+    InteractionManager.runAfterInteractions(() => {
+      // El código aquí se ejecutará después de que terminen las animaciones
+    });
+  }, []);
+  
+  const handleMapRegionChangeComplete = useCallback((region: any) => {
+    // Pequeño delay para asegurar que todos los gestos terminaron
+    setTimeout(() => {
+      setIsProcessingGesture(false);
+      if (gestureTimeoutRef.current) {
+        clearTimeout(gestureTimeoutRef.current);
+        gestureTimeoutRef.current = undefined;
+      }
+    }, 100);
+  }, []);
+
+  // AutoTimer position - fixed, no dragging
+  
+  // Animaciones para minimizar/maximizar
+  const scaleValue = useSharedValue(1);
+  const pulseAnimation = useSharedValue(1);
+  const clockPulse = useSharedValue(1);
+  
+  // Animaciones para mini calendario
+  const miniCalendarOpacity = useSharedValue(0);
+  const miniCalendarTranslateY = useSharedValue(-30);
+  const miniCalendarScale = useSharedValue(0.95);
+  
+  // Animaciones para notificación de privacidad
+  const privacyNoticeOpacity = useSharedValue(0);
+  const privacyNoticeTranslateY = useSharedValue(-20);
+  
+  // Animaciones para botones de no location
+  const noLocationButtonsOpacity = useSharedValue(1);
+  const noLocationButtonsTranslateY = useSharedValue(0);
+  
+  const styles = getStyles(colors, isDark, isSmallScreen, daySize, dayFontSize, isTablet);
+
+  // Gestión del arrastre para AutoTimer (funciona para ambos estados)
+  // Removed panGesture - AutoTimer is now fixed
+
+  const animatedAutoTimerStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { scale: scaleValue.value * pulseAnimation.value },
+      ],
+    };
+  });
+
+  const animatedClockStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: clockPulse.value }],
+    };
+  });
+
+  const animatedMiniCalendarStyle = useAnimatedStyle(() => {
+    return {
+      opacity: miniCalendarOpacity.value,
+      transform: [
+        { translateY: miniCalendarTranslateY.value },
+        { scale: miniCalendarScale.value },
+      ],
+    };
+  });
+
+  const animatedPrivacyNoticeStyle = useAnimatedStyle(() => {
+    return {
+      opacity: privacyNoticeOpacity.value,
+      transform: [
+        { translateY: privacyNoticeTranslateY.value },
+      ],
+    };
+  });
+
+  const animatedNoLocationButtonsStyle = useAnimatedStyle(() => {
+    return {
+      opacity: noLocationButtonsOpacity.value,
+      transform: [
+        { translateY: noLocationButtonsTranslateY.value },
+      ],
+    };
+  });
+
+  // Efecto para la animación de pulso cuando está minimizado
+  useEffect(() => {
+    if (isAutoTimerMinimized) {
+      // AutoTimer is now fixed in footer - no positioning needed
+      
+      // Iniciar animación de pulso
+      pulseAnimation.value = withRepeat(
+        withTiming(1.2, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+        -1,
+        true
+      );
+      
+      // Escalar a tamaño pequeño
+      scaleValue.value = withSpring(0.4);
+    } else {
+      // Detener animación de pulso
+      pulseAnimation.value = withTiming(1, { duration: 300 });
+      scaleValue.value = withSpring(1);
+    }
+  }, [isAutoTimerMinimized]);
+
+  useEffect(() => {
+    // Initialize current week start to today's week
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() + mondayOffset);
+    setCurrentWeekStart(weekStart);
+    
+    loadJobs();
+    checkActiveTimer();
+    
+    // Check for invoicing data
+    AsyncStorage.getItem('invoicing_data').then(data => {
+      setHasInvoicingData(data !== null);
+    }).catch(() => setHasInvoicingData(false));
+    loadPrivacyNoticeState();
+    loadMiniCalendarData(weekStart, isIPadPortrait);
+    
+    // Initial animation for mini calendar - delayed and smoother
+    setTimeout(() => {
+      miniCalendarOpacity.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.ease) });
+      miniCalendarTranslateY.value = withTiming(0, { duration: 400, easing: Easing.out(Easing.ease) });
+      miniCalendarScale.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.ease) });
+    }, 500); // Increased delay
+    
+    // Check active timer every 30 seconds
+    const interval = setInterval(checkActiveTimer, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Animar botones cuando se abre/cierra el modal de trabajos
+  useEffect(() => {
+    if (showJobCardsModal) {
+      // Ocultar botones cuando se abre el modal
+      noLocationButtonsOpacity.value = withTiming(0, { duration: 300 });
+      noLocationButtonsTranslateY.value = withTiming(20, { duration: 300 });
+    } else {
+      // Mostrar botones cuando se cierra el modal
+      noLocationButtonsOpacity.value = withTiming(1, { duration: 400 });
+      noLocationButtonsTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+    }
+  }, [showJobCardsModal]);
+
+  // Helper function to get month name from date
+  const getMonthName = (date: Date) => {
+    const months = [
+      'january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december'
+    ];
+    return t(`chatbot.months.${months[date.getMonth()]}`);
+  };
+
+  const loadMiniCalendarData = async (weekStart?: Date, forceIPadPortrait?: boolean) => {
+    try {
+      const today = new Date();
+      const baseDate = weekStart || currentWeekStart;
+      
+      // Usar el valor pasado o el calculado en el componente
+      const shouldShow14Days = forceIPadPortrait !== undefined ? forceIPadPortrait : isIPadPortrait;
+      
+      // Crear array de días (7 para normal, 14 para iPad vertical)
+      const daysToShow = shouldShow14Days ? 14 : 7;
+      
+      console.log('📅 Calendar days to show:', daysToShow, 'isIPadPortrait:', shouldShow14Days);
+      const startOfWeek = new Date(baseDate);
+      const dayOfWeek = startOfWeek.getDay();
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Empezar en lunes
+      startOfWeek.setDate(startOfWeek.getDate() + mondayOffset);
+      
+      // Obtener días de trabajo de todos los meses que aparecen en el período
+      const monthsToLoad = new Set<string>();
+      for (let i = 0; i < daysToShow; i++) {
+        const dayDate = new Date(startOfWeek);
+        dayDate.setDate(startOfWeek.getDate() + i);
+        const monthKey = `${dayDate.getFullYear()}-${dayDate.getMonth() + 1}`;
+        monthsToLoad.add(monthKey);
+      }
+      
+      // Cargar días de trabajo de todos los meses necesarios
+      let allWorkDays: any[] = [];
+      for (const monthKey of monthsToLoad) {
+        const [year, month] = monthKey.split('-').map(Number);
+        const workDays = await JobService.getWorkDaysForMonth(year, month);
+        allWorkDays = [...allWorkDays, ...workDays];
+      }
+      
+      console.log('📅 Mini Calendar MapLocation: Loaded', allWorkDays.length, 'work days');
+      
+      const calendarDays = [];
+      for (let i = 0; i < daysToShow; i++) {
+        const dayDate = new Date(startOfWeek);
+        dayDate.setDate(startOfWeek.getDate() + i);
+        
+        const dayNum = dayDate.getDate();
+        const dayMonth = dayDate.getMonth() + 1;
+        const dayYear = dayDate.getFullYear();
+        const dateStr = `${dayYear}-${dayMonth.toString().padStart(2, '0')}-${dayNum.toString().padStart(2, '0')}`;
+        
+        // Buscar si hay trabajo este día
+        const workDay = allWorkDays.find(wd => wd.date === dateStr);
+        const job = workDay ? jobs.find(j => j.id === workDay.jobId) : null;
+        
+        calendarDays.push({
+          day: dayNum,
+          dayOfWeek: i, // 0 = lunes, 6 = domingo
+          isToday: dayYear === today.getFullYear() && dayMonth === (today.getMonth() + 1) && dayNum === today.getDate(),
+          workDay,
+          job,
+          isCurrentMonth: dayMonth === (today.getMonth() + 1) && dayYear === today.getFullYear(),
+          date: dayDate
+        });
+      }
+      
+      setMiniCalendarData(calendarDays);
+    } catch (error) {
+      console.error('Error loading mini calendar data:', error);
+    }
+  };
+
+  const navigateWeek = (direction: 'prev' | 'next' | number) => {
+    const directionValue = typeof direction === 'string' 
+      ? (direction === 'prev' ? -1 : 1) 
+      : direction;
+    const newWeekStart = new Date(currentWeekStart);
+    newWeekStart.setDate(newWeekStart.getDate() + (directionValue * 7));
+    setCurrentWeekStart(newWeekStart);
+    loadMiniCalendarData(newWeekStart, isIPadPortrait);
+  };
+
+  // Gesture handler for calendar swipe
+  const calendarPanGesture = Gesture.Pan()
+    .onEnd((event) => {
+      const threshold = 50; // Minimum distance to trigger navigation
+      
+      if (Math.abs(event.translationX) > threshold) {
+        if (event.translationX > 0) {
+          // Swipe right - go to previous week
+          runOnJS(navigateWeek)(-1);
+        } else {
+          // Swipe left - go to next week
+          runOnJS(navigateWeek)(1);
+        }
+      }
+    });
+
+  // Load privacy notice dismissal state
+  const loadPrivacyNoticeState = async () => {
+    try {
+      const dismissed = await AsyncStorage.getItem('auto_timer_privacy_notice_shown');
+      setHasShownPrivacyNotice(dismissed === 'true');
+    } catch (error) {
+      console.error('Error loading privacy notice state:', error);
+    }
+  };
+
+  // Handle privacy notice dismissal
+  const handleDismissPrivacyNotice = async () => {
+    console.log('🔔 MapLocation: Dismissing privacy notice');
+    triggerHaptic('medium');
+    
+    // Animate privacy notice out
+    privacyNoticeOpacity.value = withTiming(0, { duration: 300 });
+    privacyNoticeTranslateY.value = withTiming(-20, { duration: 300 });
+    
+    try {
+      await AsyncStorage.setItem('auto_timer_privacy_notice_shown', 'true');
+      setHasShownPrivacyNotice(true);
+      
+      // Hide after animation completes
+      setTimeout(() => {
+        setShowPrivacyNotice(false);
+      }, 300);
+      
+      console.log('🔔 MapLocation: Privacy notice dismissed and saved');
+    } catch (error) {
+      console.error('Error saving privacy notice state:', error);
+      setHasShownPrivacyNotice(true);
+      
+      // Hide after animation completes
+      setTimeout(() => {
+        setShowPrivacyNotice(false);
+      }, 300);
+      
+      console.log('🔔 MapLocation: Privacy notice dismissed (save failed but still hidden)');
+    }
+  };
+
+  // Update selectedJob when jobs change to keep it in sync
+  useEffect(() => {
+    if (selectedJob && jobs.length > 0) {
+      const updatedJob = jobs.find(job => job.id === selectedJob.id);
+      if (updatedJob) {
+        setSelectedJob(updatedJob);
+      }
+    }
+  }, [jobs]);
+
+  // AutoTimer service initialization - runs only once
+  useEffect(() => {
+    const handleAutoTimerStatusChange = (status: AutoTimerStatus) => {
+      console.log('🔄 MapLocation received AutoTimer status change:', {
+        state: status.state,
+        jobId: status.jobId,
+        jobName: status.jobName,
+        remainingTime: status.remainingTime
+      });
+      setAutoTimerStatus(status);
+    };
+
+    const handleAutoTimerAlert = (showAlert: boolean) => {
+      if (showAlert && !hasShownActivationAlert) {
+        console.log('🔔 AutoTimer alert is now handled in JobFormModal');
+        setHasShownActivationAlert(true);
+        
+        // Alert is now shown in JobFormModal.tsx as a visual component
+        // The alert will appear when user opens the Auto tab in JobFormModal
+        // Alert.alert(
+        //   t('timer.auto_timer.activation_title'),
+        //   t('timer.auto_timer.activation_alert'),
+        //   [{ 
+        //     text: t('timer.auto_timer.dismiss_notice'), 
+        //     style: 'default',
+        //     onPress: () => {
+        //       console.log('🔔 AutoTimer alert dismissed');
+        //       // Reset flag after a delay to allow showing again later
+        //       setTimeout(() => {
+        //         setHasShownActivationAlert(false);
+        //       }, 5000);
+        //     }
+        //   }]
+        // );
+        
+        // Reset flag after a delay to allow showing again later
+        setTimeout(() => {
+          setHasShownActivationAlert(false);
+        }, 60000); // Reset after 1 minute
+      }
+    };
+
+    // Add listeners
+    autoTimerService.addStatusListener(handleAutoTimerStatusChange);
+    autoTimerService.addAlertListener(handleAutoTimerAlert);
+    
+    // Get current status immediately to sync with any ongoing countdown
+    const currentStatus = autoTimerService.getStatus();
+    setAutoTimerStatus(currentStatus);
+    console.log('🔄 MapLocation: Synced with current AutoTimer status:', currentStatus.state, currentStatus.remainingTime);
+
+    // Cleanup on unmount
+    return () => {
+      autoTimerService.removeStatusListener(handleAutoTimerStatusChange);
+      autoTimerService.removeAlertListener(handleAutoTimerAlert);
+    };
+  }, []); // Empty dependency array - runs only once
+
+  // Force update AutoTimer status when screen gains focus
+  useFocusEffect(
+    useCallback(() => {
+      console.log('🔄 MapLocation: Screen focused, updating AutoTimer status');
+      // Immediate update
+      const currentStatus = autoTimerService.getStatus();
+      setAutoTimerStatus(currentStatus);
+      console.log('🔄 MapLocation: Updated status on focus:', currentStatus.state);
+      
+      // Reset mini calendar animations to prevent header issues
+      miniCalendarOpacity.value = 0;
+      miniCalendarTranslateY.value = -30;
+      miniCalendarScale.value = 0.95;
+      
+      // Delayed update to catch any async state changes
+      const timeoutId = setTimeout(() => {
+        const delayedStatus = autoTimerService.getStatus();
+        setAutoTimerStatus(delayedStatus);
+        console.log('🔄 MapLocation: Delayed status update:', delayedStatus.state);
+        
+        // Re-animate mini calendar if needed
+        if ((!delayedStatus || delayedStatus.state === 'inactive') && !showPrivacyNotice) {
+          miniCalendarOpacity.value = withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) });
+          miniCalendarTranslateY.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.ease) });
+          miniCalendarScale.value = withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) });
+        }
+      }, 150);
+      
+      return () => clearTimeout(timeoutId);
+    }, [autoTimerService, showPrivacyNotice])
+  );
+
+  // Update jobs in AutoTimer service when jobs change
+  useEffect(() => {
+    const updateAutoTimerJobs = async () => {
+      if (jobs.length > 0) {
+        console.log('🔄 MapLocation: Updating AutoTimer with jobs:', jobs.length);
+        
+        // If service is not enabled, start it; otherwise just update jobs
+        if (!autoTimerService.isServiceEnabled()) {
+          console.log('🚀 MapLocation: Starting AutoTimer service');
+          autoTimerService.start(jobs);
+        } else {
+          console.log('🔄 MapLocation: Service already running, just updating jobs');
+          await autoTimerService.updateJobs(jobs);
+        }
+      }
+    };
+    
+    updateAutoTimerJobs();
+  }, [jobs]);
+
+  // Calculate elapsed time for active AutoTimer
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    console.log('🔄 MapLocation elapsed time effect triggered, autoTimerStatus:', autoTimerStatus?.state, 'jobId:', autoTimerStatus?.jobId);
+    
+    if (autoTimerStatus?.state === 'active' && autoTimerStatus?.jobId) {
+      // Start clock pulse animation
+      clockPulse.value = withRepeat(
+        withTiming(1.15, { duration: 1000 }),
+        -1,
+        true
+      );
+      const updateElapsedTime = async () => {
+        // Check if timer is paused
+        const activeSession = await JobService.getActiveSession();
+        if (activeSession) {
+          const isPaused = (activeSession as any).isPaused || false;
+          setIsTimerPaused(isPaused);
+          
+          // Use AutoTimerService's getElapsedTime method directly
+          const elapsed = await autoTimerService.getElapsedTime();
+          console.log('⏱️ MapLocation updating elapsed time:', elapsed, 'seconds for job:', autoTimerStatus.jobId, 'isPaused:', isPaused);
+          setElapsedTime(elapsed);
+        }
+      };
+
+      // Update immediately and then every second
+      updateElapsedTime();
+      interval = setInterval(updateElapsedTime, 1000);
+    } else {
+      console.log('🔄 MapLocation: AutoTimer not active or no jobId, resetting elapsed time to 0');
+      setElapsedTime(0);
+      // Stop clock pulse animation
+      clockPulse.value = withTiming(1, { duration: 300 });
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [autoTimerStatus?.state, autoTimerStatus?.jobId]);
+
+  // Show privacy notice when auto timer activates for the first time
+  useEffect(() => {
+    console.log('🔔 MapLocation: Privacy notice effect - checking conditions:', {
+      hasAutoTimerStatus: !!autoTimerStatus,
+      autoTimerState: autoTimerStatus?.state,
+      hasEnabledAutoTimer: jobs.some(job => job.autoTimer?.enabled),
+      hasShownPrivacyNotice,
+      showPrivacyNotice
+    });
+    
+    if (autoTimerStatus && 
+        autoTimerStatus.state !== 'inactive' && 
+        jobs.some(job => job.autoTimer?.enabled) && 
+        !hasShownPrivacyNotice && 
+        !showPrivacyNotice) {
+      console.log('🔔 MapLocation: Showing privacy notice');
+      setShowPrivacyNotice(true);
+      // Animate privacy notice in
+      privacyNoticeOpacity.value = withTiming(1, { duration: 400 });
+      privacyNoticeTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+    }
+  }, [autoTimerStatus, jobs, hasShownPrivacyNotice, showPrivacyNotice]);
+
+  // Effect to animate mini calendar appearance/disappearance
+  useEffect(() => {
+    // Always show mini calendar unless on small screen
+    const shouldShow = !isSmallScreen;
+    
+    console.log('📅 MapLocation: Mini calendar visibility check:', {
+      shouldShow,
+      currentlyShowing: shouldShowMiniCalendar,
+      autoTimerActive: autoTimerStatus?.state !== 'inactive',
+      hasEnabledAutoTimer: jobs.some(job => job.autoTimer?.enabled),
+      showPrivacyNotice
+    });
+
+    if (shouldShow !== shouldShowMiniCalendar) {
+      if (shouldShow) {
+        // Show animation: fade in and slide down
+        console.log('📅 MapLocation: Animating mini calendar IN');
+        setShouldShowMiniCalendar(true);
+        miniCalendarOpacity.value = withTiming(1, { duration: 400 });
+        miniCalendarTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+        miniCalendarScale.value = withSpring(1, { damping: 15, stiffness: 150 });
+      } else {
+        // Hide animation: fade out and slide up
+        console.log('📅 MapLocation: Animating mini calendar OUT');
+        miniCalendarOpacity.value = withTiming(0, { duration: 300 });
+        miniCalendarTranslateY.value = withTiming(-30, { duration: 300 });
+        miniCalendarScale.value = withTiming(0.95, { duration: 300, easing: Easing.inOut(Easing.ease) });
+        
+        // Hide after animation completes
+        setTimeout(() => {
+          setShouldShowMiniCalendar(false);
+        }, 300);
+      }
+    }
+  }, [autoTimerStatus, jobs, showPrivacyNotice, shouldShowMiniCalendar, isSmallScreen]);
+
+  // Location tracking every 30 seconds when AutoTimer is active
+  useEffect(() => {
+    let locationInterval: NodeJS.Timeout;
+    
+    const isAutoTimerActive = autoTimerStatus?.state === 'active';
+    
+    if (isAutoTimerActive) {
+      console.log('📍 MapLocation: Starting location tracking every 30s (AutoTimer active)');
+      
+      const updateLocation = async () => {
+        try {
+          const { status } = await Location.getForegroundPermissionsAsync();
+          if (status === 'granted') {
+            const locationResult = await Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.High,
+            });
+            setCurrentUserLocation({
+              latitude: locationResult.coords.latitude,
+              longitude: locationResult.coords.longitude,
+            });
+            console.log('📍 MapLocation: Location updated for AutoTimer tracking');
+          }
+        } catch (error) {
+          console.error('Error updating location for AutoTimer:', error);
+        }
+      };
+      
+      // Update immediately, then every 30 seconds
+      updateLocation();
+      locationInterval = setInterval(updateLocation, 30000);
+    } else {
+      console.log('📍 MapLocation: Stopping location tracking (AutoTimer inactive)');
+      setCurrentUserLocation(null);
+    }
+    
+    return () => {
+      if (locationInterval) {
+        clearInterval(locationInterval);
+      }
+    };
+  }, [autoTimerStatus?.state, jobs]);
+
+  const calculateJobStatistics = async (job: Job): Promise<{ thisMonthHours: number; thisMonthDays: number }> => {
+    try {
+      const workDays = await JobService.getWorkDaysForJob(job.id);
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      
+      let thisMonthHours = 0;
+      let thisMonthDays = 0;
+      
+      workDays.forEach((day: any) => {
+        const dayDate = new Date(day.date);
+        
+        // This month statistics
+        if (dayDate.getMonth() + 1 === currentMonth && dayDate.getFullYear() === currentYear) {
+          if (day.type === 'work') {
+            thisMonthHours += day.hours;
+            thisMonthDays++;
+          }
+        }
+      });
+      
+      return {
+        thisMonthHours,
+        thisMonthDays
+      };
+    } catch (error) {
+      console.error('Error calculating job statistics:', error);
+      return {
+        thisMonthHours: 0,
+        thisMonthDays: 0
+      };
+    }
+  };
+
+  const loadJobs = async () => {
+    try {
+      const loadedJobs = await JobService.getJobs();
+      console.log('📊 Jobs loaded with data:', loadedJobs.map(j => ({
+        name: j.name,
+        hourlyRate: j.hourlyRate,
+        defaultHours: j.defaultHours,
+        schedule: j.schedule,
+        salary: j.salary,
+        billing: j.billing
+      })));
+      const activeJobs = loadedJobs.filter(job => job.isActive);
+      setJobs(activeJobs);
+      
+      // Load statistics for all jobs
+      const statsMap = new Map();
+      for (const job of activeJobs) {
+        const stats = await calculateJobStatistics(job);
+        statsMap.set(job.id, stats);
+      }
+      setJobStatistics(statsMap);
+      
+      // Reload calendar data when jobs change
+      loadMiniCalendarData(undefined, isIPadPortrait);
+    } catch (error) {
+      console.error('Error loading jobs:', error);
+    }
+  };
+
+  const checkActiveTimer = async () => {
+    try {
+      const activeSession = await JobService.getActiveSession();
+      setActiveTimerJobId(activeSession?.jobId || null);
+    } catch (error) {
+      console.error('Error checking active timer:', error);
+    }
+  };
+
+  const isJobCurrentlyActive = (job: Job): boolean => {
+    return activeTimerJobId === job.id;
+  };
+
+  const getJobScheduleStatus = (job: Job): string | null => {
+    if (!job.schedule || !job.schedule.workDays?.length) return null;
+
+    const now = new Date();
+    const currentDay = now.getDay();
+    const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
+    const workDays = job.schedule.workDays;
+    const startTime = job.schedule.startTime;
+    const endTime = job.schedule.endTime;
+    const secondStartTime = job.schedule.secondStartTime;
+    const secondEndTime = job.schedule.secondEndTime;
+
+    // Check if currently in work hours (don't show next shift if currently working)
+    if (workDays.includes(currentDay)) {
+      if (startTime && endTime && isTimeInRange(currentTime, startTime, endTime)) {
+        return null; // Currently should be working
+      }
+      if (job.schedule.hasSplitShift && secondStartTime && secondEndTime && 
+          isTimeInRange(currentTime, secondStartTime, secondEndTime)) {
+        return null; // Currently should be working (second shift)
+      }
+    }
+
+    // Find the next work shift (could be today or future days)
+    const nextShift = findNextWorkShift(workDays, startTime, secondStartTime, job.schedule.hasSplitShift);
+    
+    if (nextShift) {
+      if (nextShift.isToday) {
+        return `${t('maps.next_shift')} ${nextShift.time}`;
+      } else {
+        return `${t('maps.next_shift')} ${getDayName(nextShift.day)} ${nextShift.time}`;
+      }
+    }
+
+    return null;
+  };
+
+  const isTimeInRange = (currentTime: string, startTime: string, endTime: string): boolean => {
+    return currentTime >= startTime && currentTime <= endTime;
+  };
+
+  const findNextWorkShift = (workDays: number[], startTime?: string, secondStartTime?: string, hasSplitShift?: boolean): {
+    day: number;
+    time: string;
+    isToday: boolean;
+  } | null => {
+    const now = new Date();
+    const today = now.getDay();
+    const currentTime = now.toTimeString().slice(0, 5);
+    
+    // First, check if there are upcoming shifts TODAY
+    if (workDays.includes(today)) {
+      // Check main shift
+      if (startTime && currentTime < startTime) {
+        return {
+          day: today,
+          time: startTime,
+          isToday: true
+        };
+      }
+      
+      // Check second shift (if split shift is enabled)
+      if (hasSplitShift && secondStartTime && currentTime < secondStartTime) {
+        return {
+          day: today,
+          time: secondStartTime,
+          isToday: true
+        };
+      }
+    }
+    
+    // Find next work day (tomorrow onwards)
+    for (let i = 1; i <= 7; i++) {
+      const nextDay = (today + i) % 7;
+      if (workDays.includes(nextDay)) {
+        // Return the main start time for the next work day
+        const nextTime = startTime || '09:00';
+        return {
+          day: nextDay,
+          time: nextTime,
+          isToday: false
+        };
+      }
+    }
+    
+    return null;
+  };
+
+  const findNextWorkDay = (workDays: number[]): number | null => {
+    const today = new Date().getDay();
+    
+    // Find next work day in the same week
+    for (let i = 1; i <= 7; i++) {
+      const nextDay = (today + i) % 7;
+      if (workDays.includes(nextDay)) {
+        return nextDay;
+      }
+    }
+    return null;
+  };
+
+  const getDayName = (dayNumber: number): string => {
+    const days = t('maps.days') as unknown as string[];
+    return days[dayNumber] || '';
+  };
+
+  // Calculate distance between two coordinates using Haversine formula
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c; // Distance in meters
+  };
+
+  // Convertir coordenadas geográficas a píxeles en la pantalla
+  const getScreenPositionFromCoords = (lat: number, lng: number) => {
+    if (!mapRef.current) return { x: 0, y: 0 };
+    
+    // Obtener el centro actual del mapa y el zoom
+    const mapCenter = {
+      latitude: location?.latitude || 0,
+      longitude: location?.longitude || 0,
+    };
+    
+    // Calcular la diferencia en grados
+    const deltaLat = lat - mapCenter.latitude;
+    const deltaLng = lng - mapCenter.longitude;
+    
+    // Convertir a píxeles (aproximación)
+    // En latitud: 1 grado ≈ 111320 metros
+    // En longitud: 1 grado ≈ 111320 * cos(lat) metros
+    const latToPixels = (deltaLat * 111320) / 10; // Factor de escala aproximado
+    const lngToPixels = (deltaLng * 111320 * Math.cos(mapCenter.latitude * Math.PI / 180)) / 10;
+    
+    return {
+      x: lngToPixels,
+      y: -latToPixels // Negativo porque las coordenadas Y van hacia abajo en pantalla
+    };
+  };
+
+  // Calcular posición inicial dentro del círculo del trabajo activo
+  const getPositionInsideJobCircle = () => {
+    if (!autoTimerStatus?.jobId) return { x: -screenWidth/2 + 120, y: -screenHeight/2 + 300 };
+    
+    // Encontrar el trabajo activo
+    const activeJob = jobs.find(job => job.id === autoTimerStatus.jobId);
+    if (!activeJob?.location?.latitude || !activeJob?.location?.longitude || !activeJob?.autoTimer?.enabled) {
+      return { x: -screenWidth/2 + 120, y: -screenHeight/2 + 300 };
+    }
+    
+    // Obtener la posición del trabajo en pantalla
+    const jobScreenPos = getScreenPositionFromCoords(
+      activeJob.location.latitude,
+      activeJob.location.longitude
+    );
+    
+    // Generar una posición aleatoria dentro del círculo del geofence
+    const radius = activeJob.autoTimer.geofenceRadius || 100;
+    const angle = Math.random() * 2 * Math.PI; // Ángulo aleatorio
+    const distance = Math.random() * (radius * 0.6); // Dentro del 60% del radio para que se vea bien
+    
+    const offsetX = Math.cos(angle) * distance / 10; // Factor de escala
+    const offsetY = Math.sin(angle) * distance / 10;
+    
+    return {
+      x: jobScreenPos.x + offsetX,
+      y: jobScreenPos.y + offsetY
+    };
+  };
+
+  // Format time in HH:MM:SS format
+  const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Get formatted AutoTimer message with translations
+  const getAutoTimerMessage = (status: AutoTimerStatus): string => {
+    const messageParts = status.message.split(':');
+    const messageType = messageParts[0];
+    const minutes = messageParts[1];
+
+    switch (messageType) {
+      case 'inactive':
+        return t('timer.auto_timer.inactive');
+      case 'pre-start':
+        const seconds = Math.ceil(parseFloat(minutes));
+        return t('timer.auto_timer.starting_in', { seconds });
+      case 'entering':
+        return t('timer.auto_timer.will_start', { minutes });
+      case 'active':
+        const timeDisplay = formatTime(elapsedTime);
+        return isTimerPaused 
+          ? `${t('timer.paused')} - ${timeDisplay}` 
+          : `${t('timer.auto_timer.started_auto')} - ${timeDisplay}`;
+      case 'leaving':
+        return t('timer.auto_timer.will_stop', { minutes });
+      case 'manual':
+        return t('timer.auto_timer.manual_override');
+      case 'cancelled':
+        return t('timer.auto_timer.cancelled');
+      default:
+        return status.message;
+    }
+  };
+
+
+  const handleAddJob = () => {
+    triggerHaptic('light');
+    setEditingJob(null);
+    setShowJobForm(true);
+  };
+
+  const handleEditJob = (job: Job) => {
+    console.log('🟡 MapLocation: handleEditJob called for job:', job.name);
+    console.log('🟡 MapLocation: showJobCardsModal was:', showJobCardsModal);
+    console.log('🟡 MapLocation: shouldReopenJobCardsModal:', shouldReopenJobCardsModal);
+    
+    setEditingJob(job);
+    setShowJobForm(true);
+    // Remember if job cards modal was open and close it
+    setWasJobCardsModalOpen(showJobCardsModal);
+    setShowJobCardsModal(false);
+    setSelectedJob(null);
+    
+    console.log('🟡 MapLocation: States after handleEditJob - showJobForm: true, showJobCardsModal: false');
+  };
+
+  const handleJobAction = (job: Job, action: 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map' | 'edit-auto') => {
+    if (action === 'statistics') {
+      navigateTo('reports', job);
+      closeModal();
+      return;
+    }
+
+    if (action === 'map') {
+      // Navigate to job location without opening modal
+      if (job.location?.latitude && job.location?.longitude && mapRef.current) {
+        mapRef.current.animateToRegion({
+          latitude: job.location.latitude,
+          longitude: job.location.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }, 1000);
+      }
+      return;
+    }
+
+    if (action === 'edit') {
+      // Set selectedEditType to null to use 'basic' as default
+      setSelectedEditType(null);
+      handleEditJob(job);
+      closeModal();
+      return;
+    }
+    if (action === 'delete') {
+      if (!job) {
+        Alert.alert(t('maps.error'), t('maps.no_job_selected'));
+        return;
+      }
+      
+      Alert.alert(
+        t('maps.delete_confirm_title'),
+        t('maps.delete_confirm_message', { jobName: job.name }),
+        [
+          { text: t('maps.cancel'), style: 'cancel' },
+          {
+            text: t('maps.delete_confirm_button'),
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await JobService.deleteJob(job.id);
+                await loadJobs();
+                closeModal();
+                Alert.alert(t('maps.success'), t('maps.delete_success'));
+              } catch (error) {
+                console.error('Error deleting job:', error);
+                Alert.alert('Error', t('maps.delete_error'));
+              }
+            },
+          },
+        ]
+      );
+      return;
+    }
+    
+    switch (action) {
+      case 'timer':
+        closeModal();
+        navigateTo('timer', job);
+        break;
+      case 'calendar':
+        navigateTo('calendar', job);
+        closeModal();
+        break;
+      case 'edit-auto':
+        closeModal();
+        setSelectedEditType('location');
+        handleEditJob(job);
+        break;
+    }
+  };
+
+  const handleJobFormSave = async () => {
+    try {
+      console.log('💾 MapLocation: Saving job data');
+      console.log('💾 MapLocation: Is editing?', !!editingJob);
+      
+      const wasEditing = !!editingJob;
+      
+      await loadJobs();
+      
+      // Sync jobs with widget after saving
+      console.log('🔄 MapLocation: Syncing jobs with widget...');
+      await WidgetSyncService.syncJobsToWidget();
+      console.log('✅ MapLocation: Widget sync completed');
+      
+      setShowJobForm(false);
+      setEditingJob(null);
+      
+      // If we were editing a job and the modal was open, reopen it (but not if coming from settings button)
+      if (wasEditing && wasJobCardsModalOpen && shouldReopenJobCardsModal) {
+        setTimeout(() => {
+          setShowJobCardsModal(true);
+          setWasJobCardsModalOpen(false);
+          setShouldReopenJobCardsModal(false);
+        }, 100);
+      } else {
+        // Reset flags
+        setWasJobCardsModalOpen(false);
+        setShouldReopenJobCardsModal(false);
+      }
+    } catch (error) {
+      console.error('Error saving job:', error);
+    }
+  };
+
+  // Función para manejar la selección de categoría de edición
+  const handleEditCategory = (category: 'schedule' | 'location' | 'financial' | 'billing') => {
+    setSelectedEditType(category);
+    
+    // Si solo hay 1 trabajo, ir directo a JobFormModal
+    if (jobs.length === 1) {
+      setEditingJob(jobs[0]);
+      setShowJobForm(true);
+    } else {
+      // Si hay más de 1 trabajo, mostrar el selector
+      setShowJobSelector(true);
+    }
+  };
+
+  // Función para manejar la selección de trabajo
+  const handleJobSelect = (job: Job) => {
+    setEditingJob(job);
+    setShowJobForm(true);
+    setShowJobSelector(false);
+  };
+
+  // Función para obtener información de edición
+  const getEditInfo = (type: string) => {
+    switch (type) {
+      case 'schedule':
+        return {
+          title: t('edit.schedule.title'),
+          subtitle: t('edit.schedule.subtitle'),
+          tab: 'schedule' as const,
+        };
+      case 'location':
+        return {
+          title: t('edit.autotimer.title'),
+          subtitle: t('edit.autotimer.subtitle'),
+          tab: 'auto' as const,
+        };
+      case 'financial':
+        return {
+          title:  t('edit.financial.title'),
+          subtitle: t('edit.financial.subtitle'),
+          tab: 'financial' as const,
+        };
+      case 'billing':
+        return {
+          title: t('edit.billing.title'),
+          subtitle: t('edit.billing.subtitle'),
+          tab: 'billing' as const,
+        };
+      default:
+        return {
+          title: t('edit.schedule.title'),
+          subtitle: t('edit.schedule.subtitle'),
+          tab: 'schedule' as const,
+        };
+    }
+  };
+
+  const hasJobAddress = (job: Job) => {
+    return !!(job.address?.trim() || 
+              job.street?.trim() || 
+              job.city?.trim() || 
+              job.postalCode?.trim());
+  };
+
+  const handleAutoTimerToggle = async (job: Job, value: boolean) => {
+    try {
+      const updatedJob = {
+        ...job,
+        autoTimer: {
+          ...job.autoTimer,
+          enabled: value,
+          geofenceRadius: job.autoTimer?.geofenceRadius || 100,
+          delayStart: job.autoTimer?.delayStart || 2,
+          delayStop: job.autoTimer?.delayStop || 2,
+          notifications: job.autoTimer?.notifications !== false,
+        }
+      };
+
+      await JobService.updateJob(job.id, updatedJob);
+      await loadJobs();
+      
+      // Restart AutoTimer service with updated jobs
+      const updatedJobs = await JobService.getJobs();
+      if (autoTimerService.isServiceEnabled()) {
+        console.log('🔄 Restarting AutoTimer service with updated jobs after toggle');
+        await autoTimerService.stop();
+        await autoTimerService.start(updatedJobs);
+      } else if (value) {
+        console.log('🚀 Starting AutoTimer service after enabling AutoTimer');
+        await autoTimerService.start(updatedJobs);
+      }
+      
+      if (value) {
+        // Auto-navegar al lugar del trabajo cuando se habilita auto timer
+        if (job.location?.latitude && job.location?.longitude && mapRef.current) {
+          mapRef.current.animateToRegion({
+            latitude: job.location.latitude,
+            longitude: job.location.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }, 1000);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating auto-timer:', error);
+      Alert.alert(
+        t('maps.error'),
+        t('maps.auto_timer_error')
+      );
+    }
+  };
+
+  const getJobStatistics = (job: Job): { thisMonthHours: number; thisMonthDays: number } | null => {
+    return jobStatistics.get(job.id) || null;
+  };
+
+  const handleJobPress = (job: Job) => {
+    // Navigate to job location if it has coordinates
+    if (job.location?.latitude && job.location?.longitude && mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: job.location.latitude,
+        longitude: job.location.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }, 1000);
+    }
+    
+    // Open action modal with animation
+    setSelectedJob(job);
+    
+    // Animate modal appearance
+    modalScale.value = withSpring(1, {
+      damping: 15,
+      stiffness: 300,
+      mass: 1,
+    });
+    modalOpacity.value = withTiming(1, {
+      duration: 200,
+      easing: Easing.out(Easing.quad),
+    });
+  };
+
+  const closeModal = () => {
+    // Animate modal disappearance
+    modalScale.value = withTiming(0, {
+      duration: 150,
+      easing: Easing.in(Easing.quad),
+    });
+    modalOpacity.value = withTiming(0, {
+      duration: 150,
+      easing: Easing.in(Easing.quad),
+    });
+    
+    // Clear selected job after animation
+    setTimeout(() => {
+      setSelectedJob(null);
+    }, 150);
+  };
+
+  return (
+    <View style={styles.container}>
+
+
+      <View style={styles.mapWrapper}>
+
+        <View style={styles.map}>
+          <LinearGradient
+            colors={isDark 
+              ? ['#000000', '#0a0a0a', '#1a1a1a', '#000000'] 
+              : ['#f0f4ff', '#e6f0ff', '#dae8ff', '#f8faff']
+            }
+            style={styles.noLocationBackground}
+            locations={[0, 0.3, 0.7, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+   
+            
+            {/* 6 WIDGET CARDS - MODERN GRADIENT STYLE */}
+            {jobs.length > 0 && (
+              <View style={{
+                position: 'absolute',
+                top: 50,
+                left: 12,
+                right: 12,
+                bottom: 90,
+                flexDirection: 'column',
+                gap: 15,
+                paddingHorizontal: 4,
+              }}>
+                {/* TOP ROW - 2 WIDGETS */}
+                <View style={{
+                  flexDirection: 'row',
+                  gap: 15,
+                  height: 145,
+                }}>
+                  {/* JOBS WIDGET */}
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      borderRadius: 22,
+                      padding: 18,
+                      shadowColor: '#3b82f6',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 12,
+                      elevation: 8,
+                      overflow: 'hidden',
+                    }}
+                    onPress={() => setShowJobCardsModal(true)}
+                    activeOpacity={0.9}
+                  >
+                    <LinearGradient
+                      colors={isDark ? ['#60a5fa41', '#3b83f669', '#2564eb71'] : ['#60a5fa', '#3b82f6']}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        borderRadius: 22,
+                      }}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    />
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <Text style={{
+                        fontSize: 14,
+                        fontWeight: '600',
+                        color: 'white',
+                        opacity: 0.9,
+                      }}>{t('maps.active_jobs')}</Text>
+                      <IconSymbol size={20} name="briefcase.fill" color="white" />
+                    </View>
+                    <Text style={{
+                      fontSize: 42,
+                      fontWeight: '400',
+                      color: 'white',
+                      marginTop: 12,
+                    }}>{jobs.length}</Text>
+                    <Text style={{
+                      fontSize: 12,
+                      color: 'white',
+                      opacity: 0.7,
+                    }}>{jobs.length > 0 ? jobs[0].name : ''}</Text>
+                  </TouchableOpacity>
+                  
+                  {/* TIMER WIDGET */}
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      borderRadius: 22,
+                      padding: 18,
+                      shadowColor: '#10b981',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 12,
+                      elevation: 8,
+                      overflow: 'hidden',
+                    }}
+                    onPress={() => handleEditCategory('location')}
+                    activeOpacity={0.9}
+                  >
+                    <LinearGradient
+                      colors={isDark ? ['#34d39955', '#10b98163', '#05966862'] : ['#34d399', '#10b981']}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        borderRadius: 22,
+                      }}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    />
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <Text style={{
+                        fontSize: 14,
+                        fontWeight: '600',
+                        color: 'white',
+                        opacity: 0.9,
+                      }}>{t('maps.auto_timer')}</Text>
+                      <Animated.View style={animatedClockStyle}>
+                        <IconSymbol size={20} name="clock.fill" color="white" />
+                      </Animated.View>
+                    </View>
+                    <Text style={{
+                      fontSize: 28,
+                      fontWeight: '500',
+                      color: 'white',
+                      marginTop: 16,
+                      letterSpacing: 1,
+                    }}>
+                      {formatTime(elapsedTime)}
+                    </Text>
+                    <Text style={{
+                      fontSize: 12,
+                      color: 'white',
+                      marginTop: 8,
+                      opacity: 0.7,
+                    }}>
+                      {autoTimerStatus?.state === 'active' ? t('maps.auto_timer_active') : t('maps.auto_timer_inactive')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* MIDDLE ROW - CALENDAR + SCHEDULES */}
+                <View style={{
+                  flexDirection: 'row',
+                  gap: 10,
+                  height: 150,
+                }}>
+                  {/* CALENDAR WIDGET */}
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.9)' : 'white',
+                      borderRadius: 20,
+                      padding: 16,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 8,
+                      elevation: 4,
+                    }}
+                    onPress={() => onNavigate?.('calendar')}
+                    activeOpacity={0.8}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <Text style={{
+                        fontSize: 14,
+                        fontWeight: '600',
+                        color: isDark ? '#374151' : '#6b7280',
+                        opacity: 0.9,
+                      }}>{t('calendar.title')}</Text>
+                      <IconSymbol size={20} name="calendar" color={isDark ? '#374151' : '#6b7280'} />
+                    </View>
+                    
+                    {/* Show next 3 days */}
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                      <View style={{ 
+                        flexDirection: 'row', 
+                        gap: 10,
+                        justifyContent: 'space-around',
+                      }}>
+                        {(() => {
+                          const today = new Date();
+                          const todayIndex = miniCalendarData.findIndex(d => d.isToday);
+                          const nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + 3) : [];
+                          
+                          // Si no hay días, crear días por defecto
+                          if (nextDays.length === 0) {
+                            for (let i = 0; i < 3; i++) {
+                              const date = new Date();
+                              date.setDate(date.getDate() + i);
+                              nextDays.push({
+                                day: date.getDate().toString(),
+                                isToday: i === 0,
+                                workDay: null
+                              });
+                            }
+                          }
+                          
+                          return nextDays.map((dayData, i) => {
+                            let badgeColor = null;
+                            if (dayData.workDay) {
+                              switch (dayData.workDay.type) {
+                                case 'work':
+                                  badgeColor = '#10b981';
+                                  break;
+                                case 'free':
+                                  badgeColor = '#f59e0b';
+                                  break;
+                                case 'vacation':
+                                  badgeColor = '#8b5cf6';
+                                  break;
+                                case 'sick':
+                                  badgeColor = '#ef4444';
+                                  break;
+                              }
+                            }
+                            
+                            return (
+                              <View
+                                key={i}
+                                style={{
+                                  flex: 1,
+                                  height: 60,
+                                  maxWidth: 50,
+                                  backgroundColor: i === 0
+                                    ? (isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(96, 165, 250, 0.15)')
+                                    : (badgeColor ? `${badgeColor}20` : 'transparent'),
+                                  borderWidth: i === 0 ? 2 : (badgeColor ? 1.5 : 1),
+                                  borderColor: i === 0 ? '#60a5fa' : (badgeColor || '#e5e7eb'),
+                                  borderRadius: 12,
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <View style={{ alignItems: 'center' }}>
+                                  <Text style={{
+                                    fontSize: 10,
+                                    color: i === 0 ? '#3b82f6' : (isDark ? '#6b7280' : '#9ca3af'),
+                                    fontWeight: '600',
+                                    marginBottom: 2,
+                                    textTransform: 'uppercase',
+                                  }}>
+                                    {(() => {
+                                      const date = new Date();
+                                      date.setDate(date.getDate() + i);
+                                      const dayName = t(`calendar.days_short.${['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()]}`);
+                                      return dayName.slice(0, 3);
+                                    })()}
+                                  </Text>
+                                  <Text style={{
+                                    fontSize: 20,
+                                    color: i === 0 ? '#3b82f6' : (isDark ? '#1f2937' : 'black'),
+                                    fontWeight: i === 0 ? '700' : '600',
+                                  }}>
+                                    {dayData.day}
+                                  </Text>
+                                </View>
+                              </View>
+                            );
+                          });
+                        })()}
+                      </View>
+                      {/* Work indicators below days */}
+                      <View style={{ 
+                        flexDirection: 'row', 
+                        gap: 10,
+                        justifyContent: 'space-around',
+                        marginTop: 8,
+                      }}>
+                        {(() => {
+                          const today = new Date();
+                          const todayIndex = miniCalendarData.findIndex(d => d.isToday);
+                          const nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + 3) : [];
+                          
+                          if (nextDays.length === 0) {
+                            for (let i = 0; i < 3; i++) {
+                              const date = new Date();
+                              date.setDate(date.getDate() + i);
+                              nextDays.push({
+                                day: date.getDate().toString(),
+                                isToday: i === 0,
+                                workDay: null
+                              });
+                            }
+                          }
+                          
+                          return nextDays.map((dayData, i) => {
+                            const isWork = dayData.workDay?.type === 'work';
+                            return (
+                              <View key={i} style={{ flex: 1, alignItems: 'center' }}>
+                                {isWork && (
+                                  <IconSymbol 
+                                    size={16} 
+                                    name="briefcase.fill" 
+                                    color={isDark ? '#10b981' : '#059669'}
+                                  />
+                                )}
+                              </View>
+                            );
+                          });
+                        })()}
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* SCHEDULES WIDGET */}
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      backgroundColor: isDark ? 'rgba(169, 85, 247, 0.96)' : '#8b5cf6',
+                      borderRadius: 20,
+                      padding: 16,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 8,
+                      elevation: 4,
+                    }}
+                    onPress={() => handleEditCategory('schedule')}
+                    activeOpacity={0.8}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <Text style={{
+                        fontSize: 14,
+                        fontWeight: '600',
+                        color: 'white',
+                        opacity: 0.9,
+                      }}>{t('settings.work_config.schedules')}</Text>
+                      <IconSymbol size={20} name="clock.fill" color="white" />
+                    </View>
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                      {(() => {
+                        const job = jobs[0];
+                        if (!job) {
+                          return (
+                            <Text style={{
+                              fontSize: 14,
+                              fontWeight: '500',
+                              color: 'white',
+                              marginTop: 12,
+                              opacity: 0.9,
+                            }}>{t('maps.configure_schedule')}</Text>
+                          );
+                        }
+                        
+                        // Check for weekly schedule first
+                        if (job.schedule?.weeklySchedule) {
+                          const schedules = Object.values(job.schedule.weeklySchedule).filter(s => s !== null);
+                          if (schedules.length > 0) {
+                            const firstSchedule = schedules[0];
+                            return (
+                              <>
+                                <Text style={{
+                                  fontSize: 16,
+                                  fontWeight: '600',
+                                  color: 'white',
+                                  marginTop: 8,
+                                }}>
+                                  {firstSchedule.startTime} - {firstSchedule.endTime}
+                                </Text>
+                                <Text style={{
+                                  fontSize: 12,
+                                  color: 'white',
+                                  marginTop: 4,
+                                  opacity: 0.7,
+                                }}>
+                                  {schedules.length} {t('calendar.days_per_week')}
+                                </Text>
+                              </>
+                            );
+                          }
+                        }
+                        
+                        // Check for simple schedule
+                        if (job.schedule?.startTime && job.schedule?.endTime) {
+                          return (
+                            <>
+                              <Text style={{
+                                fontSize: 16,
+                                fontWeight: '600',
+                                color: 'white',
+                                marginTop: 8,
+                              }}>
+                                {job.schedule.startTime} - {job.schedule.endTime}
+                              </Text>
+                              <Text style={{
+                                fontSize: 12,
+                                color: 'white',
+                                marginTop: 4,
+                                opacity: 0.7,
+                              }}>
+                                {job.schedule.workDays?.length || 5} {t('calendar.days_per_week')}
+                              </Text>
+                            </>
+                          );
+                        }
+                        
+                        // Check for default hours
+                        if (job.defaultHours > 0) {
+                          return (
+                            <>
+                              <Text style={{
+                                fontSize: 20,
+                                fontWeight: '600',
+                                color: 'white',
+                                marginTop: 8,
+                              }}>
+                                {job.defaultHours}h
+                              </Text>
+                              <Text style={{
+                                fontSize: 12,
+                                color: 'white',
+                                marginTop: 4,
+                                opacity: 0.7,
+                              }}>
+                                {t('calendar.per_day')}
+                              </Text>
+                            </>
+                          );
+                        }
+                        
+                        return (
+                          <Text style={{
+                            fontSize: 14,
+                            fontWeight: '500',
+                            color: 'white',
+                            marginTop: 12,
+                            opacity: 0.9,
+                          }}>{t('maps.configure_schedule')}</Text>
+                        );
+                      })()}
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+                {/* BOTTOM ROW - 2 CONFIG WIDGETS */}
+                <View style={{
+                  flexDirection: 'row',
+                  gap: 15,
+                  height: 145,
+                }}>
+                  {/* RATES WIDGET */}
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      borderRadius: 22,
+                      padding: 18,
+                      shadowColor: '#f59e0b',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 12,
+                      elevation: 8,
+                      overflow: 'hidden',
+                    }}
+                    onPress={() => handleEditCategory('financial')}
+                    activeOpacity={0.9}
+                  >
+                    <LinearGradient
+                      colors={isDark ? ['#fbbe2432', '#f59f0b5c', '#d977062c'] : ['#fbbe2494', '#f59f0bbe']}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        borderRadius: 22,
+                      }}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    />
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <Text style={{
+                        fontSize: 14,
+                        fontWeight: '600',
+                        color: 'white',
+                        opacity: 0.9,
+                      }}>{t('settings.financial_config.rates')}</Text>
+                      <IconSymbol size={20} name="dollarsign.circle.fill" color="white" />
+                    </View>
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                      {(() => {
+                        const job = jobs[0];
+                        if (!job) {
+                          return (
+                            <Text style={{
+                              fontSize: 14,
+                              fontWeight: '500',
+                              color: 'white',
+                              marginTop: 12,
+                              opacity: 0.9,
+                            }}>{t('maps.configure_rates')}</Text>
+                          );
+                        }
+                        
+                        // Check for hourly rate
+                        if (job.hourlyRate && job.hourlyRate > 0) {
+                          const currency = job.currency || '€';
+                          return (
+                            <>
+                              <Text style={{
+                                fontSize: 28,
+                                fontWeight: '500',
+                                color: 'white',
+                              }}>
+                                {currency} {job.hourlyRate}
+                              </Text>
+                              <Text style={{
+                                fontSize: 12,
+                                color: 'white',
+                                marginTop: 4,
+                                opacity: 0.7,
+                              }}>{t('maps.per_hour')}</Text>
+                            </>
+                          );
+                        }
+                        
+                        // Check for salary
+                        if (job.salary?.enabled && job.salary?.amount > 0) {
+                          const currency = job.salary.currency || '€';
+                          let period = '';
+                          switch(job.salary.type) {
+                            case 'monthly':
+                              period = t('calendar.monthly');
+                              break;
+                            case 'annual':
+                              period = t('calendar.annual');
+                              break;
+                            default:
+                              period = t('maps.per_hour');
+                          }
+                          return (
+                            <>
+                              <Text style={{
+                                fontSize: 22,
+                                fontWeight: '500',
+                                color: 'white',
+                              }}>
+                                {currency} {job.salary.amount}
+                              </Text>
+                              <Text style={{
+                                fontSize: 12,
+                                color: 'white',
+                                marginTop: 4,
+                                opacity: 0.7,
+                              }}>{period}</Text>
+                            </>
+                          );
+                        }
+                        
+                        return (
+                          <Text style={{
+                            fontSize: 14,
+                            fontWeight: '500',
+                            color: 'white',
+                            marginTop: 12,
+                            opacity: 0.9,
+                          }}>{t('maps.configure_rates')}</Text>
+                        );
+                      })()}
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* BILLING WIDGET */}
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      borderRadius: 22,
+                      padding: 18,
+                      shadowColor: '#ef4444',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 12,
+                      elevation: 8,
+                      overflow: 'hidden',
+                    }}
+                    onPress={() => handleEditCategory('billing')}
+                    activeOpacity={0.9}
+                  >
+                    <LinearGradient
+                      colors={isDark ? ['#f87171', '#ef4444', '#dc2626'] : ['#f87171', '#ef4444']}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        borderRadius: 22,
+                      }}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    />
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <Text style={{
+                        fontSize: 14,
+                        fontWeight: '600',
+                        color: 'white',
+                        opacity: 0.9,
+                      }}>{t('settings.financial_config.billing')}</Text>
+                      <IconSymbol size={20} name="chart.bar.fill" color="white" />
+                    </View>
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                      {(() => {
+                        const job = jobs[0];
+                        
+                        // Check if job has billing data configured
+                        if (job?.billing?.enabled && job?.billing?.userData?.name) {
+                          return (
+                            <>
+                              <Text style={{
+                                fontSize: 14,
+                                fontWeight: '500',
+                                color: 'white',
+                                marginTop: 8,
+                              }}>{job.billing.userData.companyName || job.billing.userData.name}</Text>
+                              <Text style={{
+                                fontSize: 12,
+                                color: 'white',
+                                marginTop: 4,
+                                opacity: 0.7,
+                              }}>{t('maps.ready_to_invoice')}</Text>
+                            </>
+                          );
+                        }
+                        
+                        // Check AsyncStorage for invoicing data
+                        if (hasInvoicingData) {
+                          return (
+                        <>
+                          <Text style={{
+                            fontSize: 14,
+                            fontWeight: '500',
+                            color: 'white',
+                            marginTop: 8,
+                          }}>{t('maps.company_configured')}</Text>
+                          <Text style={{
+                            fontSize: 12,
+                            color: 'white',
+                            marginTop: 4,
+                            opacity: 0.7,
+                          }}>{t('maps.ready_to_invoice')}</Text>
+                        </>
+                          );
+                        }
+                        
+                        // No data configured
+                        return (
+                        <Text style={{
+                          fontSize: 14,
+                          fontWeight: '500',
+                          color: 'white',
+                          marginTop: 12,
+                          opacity: 0.9,
+                        }}>{t('maps.configure_company')}</Text>
+                        );
+                      })()}
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* Hide old calendar and buttons */}
+            {false && (
+            
+            <View style={[styles.noLocationContent, { 
+              marginTop: isIPadPortrait ? -40 : (isTablet && !isPortrait ? 100 : 0) 
+            }]}>
+              {/* Botón Ver Trabajos - solo si hay trabajos */}
+              {!showJobForm && jobs.length > 0 && (
+              <Animated.View style={[styles.noLocationButtons, animatedNoLocationButtonsStyle]}>
+  
+
+         
+            {/* Mini Calendar - Conditional render */}
+            {shouldShowMiniCalendar && miniCalendarData.length > 0 && !isSmallScreen && (
+              <GestureDetector gesture={Gesture.Pan()
+                .onEnd((event) => {
+                  const { velocityX } = event;
+                  if (Math.abs(velocityX) > 500) {
+                    if (velocityX > 0) {
+                      runOnJS(navigateWeek)('prev');
+                    } else {
+                      runOnJS(navigateWeek)('next');
+                    }
+                  }
+                })}>
+                <View style={[styles.miniCalendarContainer, animatedMiniCalendarStyle]}>
+                  <View style={[
+                    styles.miniCalendarCard,
+                    {
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.25)',
+                      borderWidth: 1.5,
+                      borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)',
+                      shadowColor: isDark ? '#000' : '#6366f1',
+                      shadowOffset: { width: 0, height: 12 },
+                      shadowOpacity: isDark ? 0.3 : 0.1,
+                      shadowRadius: 20,
+                      elevation: 12,
+                    }
+                  ]}>
+                    <BlurView intensity={isDark ? 80 : 120} tint={isDark ? "dark" : "light"} style={styles.miniCalendarBlur}>
+                  <View style={styles.miniCalendarHeader}>
+          
+                    <View style={styles.miniCalendarTitleContainer}>
+                      <View style={{
+                        backgroundColor: isDark ? 'rgba(147, 51, 234, 0.2)' : 'rgba(99, 102, 241, 0.15)',
+                        borderRadius: 12,
+                        padding: 8,
+                        borderWidth: 1,
+                        borderColor: isDark ? 'rgba(147, 51, 234, 0.3)' : 'rgba(99, 102, 241, 0.2)',
+                      }}>
+                        <IconSymbol size={24} name="calendar" color={isDark ? '#a855f7' : '#6366f1'} />
+                      </View>
+                      <Text style={[
+                        styles.miniCalendarTitle,
+                        {
+                          fontSize: 18,
+                          fontWeight: '700',
+                          color: isDark ? '#f3f4f6' : '#1f2937',
+                          letterSpacing: 0.5,
+                        }
+                      ]}>{getMonthName(currentWeekStart)}</Text>
+                    </View>
+             
+                  </View>
+                  
+                  {/* Day labels */}
+                  <View style={styles.miniCalendarDayLabels}>
+                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day, index) => (
+                      <Text key={index} style={styles.miniCalendarDayLabel}>
+                        {t(`calendar.days_short.${day}`)}
+                      </Text>
+                    ))}
+                  </View>
+                  
+                  <View style={styles.miniCalendarGrid}>
+                    {miniCalendarData.map((dayData, i) => {
+                      // Determinar color del badge basado en el tipo de día de trabajo
+                      let badgeColor = null;
+                      let badgeText = '';
+                      let timeText = '';
+                      
+                      if (dayData.workDay) {
+                        console.log('📅 Badge rendering for day', dayData.day, 'type:', dayData.workDay.type);
+                        switch (dayData.workDay.type) {
+                          case 'work':
+                            badgeColor = isDark ? '#10b981' : '#059669'; // Verde vibrante
+                            badgeText = 'checkmark-circle';
+                            // Mostrar horario si existe
+                            if (dayData.workDay.startTime && dayData.workDay.endTime) {
+                              // Formatear horas sin el cero inicial si es necesario
+                              const formatTime = (time: string) => {
+                                const [hours, minutes] = time.split(':');
+                                return `${parseInt(hours)}:${minutes}`;
+                              };
+                              
+                              // Si hay turno partido, mostrar ambos bloques
+                              if (dayData.workDay.secondStartTime && dayData.workDay.secondEndTime) {
+                                timeText = `${formatTime(dayData.workDay.startTime)}-${formatTime(dayData.workDay.endTime)}\n${formatTime(dayData.workDay.secondStartTime)}-${formatTime(dayData.workDay.secondEndTime)}`;
+                              } else {
+                                // Horario simple
+                                timeText = `${formatTime(dayData.workDay.startTime)}\n${formatTime(dayData.workDay.endTime)}`;
+                              }
+                            }
+                            break;
+                          case 'free':
+                            badgeColor = isDark ? '#f59e0b' : '#f59e0b'; // Amarillo vibrante
+                            badgeText = 'sunny';
+                            break;
+                          case 'vacation':
+                            badgeColor = isDark ? '#8b5cf6' : '#7c3aed'; // Púrpura para vacaciones
+                            badgeText = 'airplane';
+                            break;
+                          case 'sick':
+                            badgeColor = isDark ? '#ef4444' : '#dc2626'; // Rojo vibrante
+                            badgeText = 'medkit';
+                            break;
+                          default:
+                            console.log('⚠️ Unknown workDay type:', dayData.workDay.type);
+                            break;
+                        }
+                      }
+                      
+                      return (
+                        <TouchableOpacity 
+                          key={i} 
+                          style={[
+                            styles.miniCalendarDay,
+                            {
+                              backgroundColor: dayData.isToday 
+                                ? (isDark ? 'rgba(147, 51, 234, 0.25)' : 'rgba(99, 102, 241, 0.15)')
+                                : (badgeColor ? 'rgba(255, 255, 255, 0.05)' : 'transparent'),
+                              borderWidth: dayData.isToday ? 2 : (badgeColor ? 1 : 0),
+                              borderColor: dayData.isToday 
+                                ? (isDark ? '#a855f7' : '#6366f1')
+                                : (badgeColor ? `${badgeColor}40` : 'transparent'),
+                              borderRadius: 12,
+                              shadowColor: dayData.isToday ? (isDark ? '#9333ea' : '#6366f1') : 'transparent',
+                              shadowOffset: { width: 0, height: 4 },
+                              shadowOpacity: dayData.isToday ? 0.3 : 0,
+                              shadowRadius: 8,
+                              elevation: dayData.isToday ? 4 : 0,
+                            }
+                          ]}
+                          onPress={() => {
+                            if (dayData.workDay && dayData.workDay.type === 'work' && dayData.workDay.startTime) {
+                              setSelectedDaySchedule(selectedDaySchedule === i ? null : i);
+                            } else {
+                              onNavigate?.('calendar');
+                            }
+                          }}
+                          activeOpacity={0.7}
+                          onLongPress={() => onNavigate?.('calendar')}
+                        >
+                          <Text style={[
+                            styles.miniCalendarDayText, 
+                            { 
+                              color: dayData.isToday ? colors.primary : (isDark ? colors.text : colors.textSecondary),
+                              fontWeight: dayData.isToday ? '700' : '600'
+                            }
+                          ]}>
+                            {dayData.day}
+                          </Text>
+                          {badgeColor && (
+                            <View style={[
+                              styles.miniCalendarBadge, 
+                              { 
+                                backgroundColor: badgeColor,
+                                shadowColor: badgeColor,
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.4,
+                                shadowRadius: 4,
+                                elevation: 3,
+                              }
+                            ]} />
+                          )}
+                          {dayData.isToday && !badgeColor && (
+                            <View style={[
+                              styles.miniCalendarDot, 
+                              { 
+                                backgroundColor: isDark ? '#a855f7' : '#6366f1',
+                                shadowColor: isDark ? '#a855f7' : '#6366f1',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.5,
+                                shadowRadius: 3,
+                                elevation: 2,
+                              }
+                            ]} />
+                          )}
+                          {/* Mostrar horario si está seleccionado */}
+                          {selectedDaySchedule === i && dayData.workDay && dayData.workDay.type === 'work' && timeText && (
+                            <View style={{
+                              position: 'absolute',
+                              zIndex: 1000,
+                              bottom: -18,
+                              left: -20,
+                              right: -20,
+                              backgroundColor: isDark ? 'rgba(0, 0, 0, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+                              borderRadius: 6,
+                              padding: 2,
+                  
+                              shadowColor: '#000',
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.2,
+                              shadowRadius: 4,
+                              elevation: 5,
+                              borderWidth: 1,
+                              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                            }}>
+                              <Text style={{
+                                fontSize: 9,
+                                color: colors.text,
+                                textAlign: 'center',
+                                fontWeight: '600',
+                                lineHeight: 11,
+                              }}>
+                                {timeText}
+                              </Text>
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+     
+                    </BlurView>
+                  </View>
+              </View>
+              </GestureDetector>
+            )}
+
+                  <TouchableOpacity 
+                    style={styles.settingItem}
+                    onPress={() => handleEditCategory('schedule')}
+                  >
+                    <View style={[styles.settingIcon, styles.successIconBg]}>
+                      <IconSymbol size={20} name="clock.fill" color={colors.success} />
+                    </View>
+                    <View style={styles.settingContent}>
+                      <Text style={styles.settingTitle}>{t('settings.work_config.schedules')}</Text>
+                      <Text style={styles.settingDescription}>{t('settings.work_config.schedules_desc')}</Text>
+                    </View>
+                    <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
+                  </TouchableOpacity>
+                  
+  
+
+                                    <TouchableOpacity 
+                    style={styles.settingItem}
+                    onPress={() => handleEditCategory('financial')}
+                  >
+                    <View style={[styles.settingIcon, styles.successIconBg]}>
+                      <IconSymbol size={20} name="dollarsign.circle.fill" color={colors.secondary} />
+                    </View>
+                    <View style={styles.settingContent}>
+                      <Text style={styles.settingTitle}>{t('settings.financial_config.rates')}</Text>
+                      <Text style={styles.settingDescription}>{t('settings.financial_config.rates_desc')}</Text>
+                    </View>
+                    <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
+                  </TouchableOpacity>
+
+                                    <TouchableOpacity 
+                    style={styles.settingItem}
+                    onPress={() => handleEditCategory('billing')}
+                  >
+                    <View style={[styles.settingIcon, styles.primaryIconBg]}>
+                      <IconSymbol size={20} name="chart.bar.fill" color={colors.primary} />
+                    </View>
+                    <View style={styles.settingContent}>
+                      <Text style={styles.settingTitle}>{t('settings.financial_config.billing')}</Text>
+                      <Text style={styles.settingDescription}>{t('settings.financial_config.billing_desc')}</Text>
+                    </View>
+                    <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
+                  </TouchableOpacity>
+                  
+
+               
+              </Animated.View>
+              )}
+            </View>
+            )}
+          </LinearGradient>
+        </View>
+
+      {/* Capa invisible para interceptar toques problemáticos - REMOVIDA para evitar conflictos */}
+      </View>
+
+      {/* Simple info overlay */}
+      {jobs.length === 0 && !showJobForm && (
+        <View style={styles.overlay}>
+          <View style={[styles.centeredContent, { marginBottom: 80 }]}>
+            <TouchableOpacity
+              style={styles.mainActionCard}
+              onPress={handleAddJob}
+              activeOpacity={0.95}
+            >
+              <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={[styles.mainActionCardInner, {
+                backgroundColor: isDark ? 'rgba(76, 135, 175, 0.3)' : 'rgba(76, 135, 175, 0.2)',
+              }]}>
+                <LinearGradient
+                  colors={isDark 
+                    ? ['rgba(76, 135, 175, 0.4)', 'rgba(76, 135, 175, 0.1)']
+                    : ['rgba(76, 135, 175, 0.3)', 'rgba(76, 135, 175, 0.05)']
+                  }
+                  style={StyleSheet.absoluteFillObject}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
+                <View style={[styles.mainActionIcon, {
+                  backgroundColor: colors.primary,
+                }]}>
+                  <IconSymbol size={40} name="plus" color="white" weight="bold" />
+                </View>
+                <Text style={styles.mainActionTitle}>{t('maps.add_job')}</Text>
+                <Text style={styles.mainActionDescription}>
+                  {t('maps.add_job_desc')}
+                </Text>
+              </BlurView>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      
+      {/* Job cards modal swiper */}
+      <JobCardsSwiper
+        visible={showJobCardsModal}
+        onClose={() => setShowJobCardsModal(false)}
+        jobs={jobs}
+        isJobCurrentlyActive={isJobCurrentlyActive}
+        getJobScheduleStatus={getJobScheduleStatus}
+        getJobStatistics={getJobStatistics}
+        onAction={(action, job) => {
+          console.log('🔴 MapLocation: onAction called with:', { action, jobName: job.name });
+          if (action === 'edit') {
+            // When coming from settings button, don't reopen the modal automatically
+            setShouldReopenJobCardsModal(false);
+            handleJobAction(job, action as 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map' | 'edit-auto');
+          } else {
+            handleJobAction(job, action as 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map' | 'edit-auto');
+          }
+        }}
+        showAutoTimer={true}
+        autoTimerEnabled={false}
+        onAutoTimerToggle={handleAutoTimerToggle}
+        onNavigateToSubscription={() => navigateTo('subscription')}
+        t={t}
+      />
+
+      {/* Job action modal */}
+      <Modal
+        visible={selectedJob !== null}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeModal}
+      >
+        <View style={styles.actionModal}>
+          <TouchableOpacity 
+            style={styles.actionModalBackdrop}
+            onPress={closeModal}
+          />
+          <Animated.View style={animatedModalStyle}>
+            <BlurView intensity={100} tint={isDark ? "dark" : "light"} style={styles.actionModalContent}>
+            {selectedJob && (
+              <>
+                <View style={styles.actionModalHeader}>
+                  <View style={[styles.actionModalColorDot, { backgroundColor: selectedJob.color }]} />
+                  <View style={styles.actionModalInfo}>
+                    <Text style={styles.actionModalTitle}>{selectedJob.name}</Text>
+                    {selectedJob.company && (
+                      <Text style={styles.actionModalSubtitle}>{selectedJob.company}</Text>
+                    )}
+                  </View>
+                </View>
+
+            <View style={styles.actionModalButtons}>
+              <TouchableOpacity
+                style={[styles.actionModalButton, styles.secondaryButtonBg]}
+                onPress={() => handleJobAction(selectedJob, 'edit')}
+              >
+                <IconSymbol size={24} name="gear" color={colors.textSecondary} />
+                <Text style={styles.actionModalButtonText}>
+                  {t('maps.edit_job')}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionModalButton, styles.successButtonBg]}
+                onPress={() => handleJobAction(selectedJob, 'timer')}
+              >
+                <IconSymbol size={24} name="clock.fill" color={colors.success} />
+                <Text style={styles.actionModalButtonText}>
+                  {t('maps.start_timer')}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionModalButton, styles.primaryButtonBg]}
+                onPress={() => handleJobAction(selectedJob, 'calendar')}
+              >
+                <IconSymbol size={24} name="calendar" color={colors.primary} />
+                <Text style={styles.actionModalButtonText}>
+                  {t('maps.view_calendar')}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionModalButton, styles.warningButtonBg]}
+                onPress={() => handleJobAction(selectedJob, 'statistics')}
+              >
+                <IconSymbol size={24} name="chart.bar.fill" color={colors.warning} />
+                <Text style={styles.actionModalButtonText}>
+                  {t('maps.view_statistics')}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionModalButton, styles.errorButtonBg]}
+                onPress={() => handleJobAction(selectedJob, 'delete')}
+              >
+                <IconSymbol size={24} name="trash.fill" color={colors.error} />
+                <Text style={styles.actionModalButtonText}>
+                  {t('maps.delete_job')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+                <TouchableOpacity
+                  style={styles.actionModalCancelButton}
+                  onPress={closeModal}
+                >
+                  <Text style={styles.actionModalCancelText}>{t('maps.cancel')}</Text>
+                </TouchableOpacity>
+              </>
+            )}
+            </BlurView>
+          </Animated.View>
+        </View>
+      </Modal>
+
+
+      {/* Job Selector Modal */}
+      <JobSelectorModal
+        visible={showJobSelector}
+        onClose={() => setShowJobSelector(false)}
+        onJobSelect={handleJobSelect}
+        title={selectedEditType ? getEditInfo(selectedEditType).title : t('job_selector.title')}
+        subtitle={selectedEditType ? getEditInfo(selectedEditType).subtitle : t('job_selector.subtitle')}
+        showAutoTimerHeader={selectedEditType === 'location'}
+        onNavigateToTimer={() => navigateTo('timer')}
+      />
+
+      {/* Job Form Modal */}
+      <JobFormModal
+        visible={showJobForm}
+        editingJob={editingJob}
+        initialTab={editingJob && selectedEditType ? getEditInfo(selectedEditType).tab : 'basic'}
+        onClose={() => {
+          console.log('🟡 MapLocation: JobFormModal closing');
+          setShowJobForm(false);
+          setEditingJob(null);
+          // If the modal was open before editing, reopen it (but not if coming from settings button)
+          if (wasJobCardsModalOpen && shouldReopenJobCardsModal) {
+            setTimeout(() => {
+              setShowJobCardsModal(true);
+              setWasJobCardsModalOpen(false);
+              setShouldReopenJobCardsModal(false);
+            }, 100);
+          } else {
+            // Reset flags
+            setWasJobCardsModalOpen(false);
+            setShouldReopenJobCardsModal(false);
+          }
+        }}
+        onSave={handleJobFormSave}
+        onNavigateToCalendar={() => onNavigate?.('calendar')}
+        onNavigateToSubscription={() => onNavigate?.('subscription')}
+      />
+      
+      {/* Job Statistics Modal */}
+      <JobStatisticsModal
+        visible={showStatistics}
+        onClose={() => {
+          setShowStatistics(false);
+          setSelectedJobForStats(null);
+        }}
+        job={selectedJobForStats}
+      />
+    </View>
+  );
+}
