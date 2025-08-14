@@ -22,6 +22,7 @@ import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
 import { JobCardsSwiper } from './JobCardsSwiper';
 import { useFocusEffect } from '@react-navigation/native';
+import WidgetSyncService from '../services/WidgetSyncService';
 
 // Dark mode map style
 const darkMapStyle = [
@@ -2184,6 +2185,12 @@ export default function MapLocation({ location, onNavigate }: Props) {
       const wasEditing = !!editingJob;
       
       await loadJobs();
+      
+      // Sync jobs with widget after saving
+      console.log('🔄 MapLocation: Syncing jobs with widget...');
+      await WidgetSyncService.syncJobsToWidget();
+      console.log('✅ MapLocation: Widget sync completed');
+      
       setShowJobForm(false);
       setEditingJob(null);
       

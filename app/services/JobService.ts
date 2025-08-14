@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Job, WorkDay, DEFAULT_JOB } from '../types/WorkTypes';
+import WidgetSyncService from './WidgetSyncService';
 
 const JOBS_KEY = 'jobs';
 const WORK_DAYS_KEY = 'work_days_v2';
@@ -24,6 +25,8 @@ export class JobService {
   static async saveJobs(jobs: Job[]): Promise<void> {
     try {
       await AsyncStorage.setItem(JOBS_KEY, JSON.stringify(jobs));
+      // Sync to widget
+      await WidgetSyncService.syncJobsToWidget();
     } catch (error) {
       console.error('Error saving jobs:', error);
     }
@@ -97,6 +100,8 @@ export class JobService {
   static async saveWorkDays(workDays: WorkDay[]): Promise<void> {
     try {
       await AsyncStorage.setItem(WORK_DAYS_KEY, JSON.stringify(workDays));
+      // Sync calendar to widget
+      await WidgetSyncService.syncCalendarToWidget();
     } catch (error) {
       console.error('Error saving work days:', error);
     }

@@ -89,6 +89,7 @@
 		<string>remote-notification</string>
 		<string>fetch</string>
 		<string>audio</string>
+		<string>external-accessory</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>SplashScreen</string>

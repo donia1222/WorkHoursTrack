@@ -3,8 +3,9 @@ import { JobService } from './JobService';
 import GeofenceService, { GeofenceEvent } from './GeofenceService';
 import NotificationService from './NotificationService';
 import LiveActivityService from './LiveActivityService';
+import WidgetCalendarService from './WidgetCalendarService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { startBackgroundGeofencing, stopBackgroundGeofencing } from './BackgroundGeofenceTask';
 
@@ -173,7 +174,13 @@ class AutoTimerService {
    * Stop the auto timer service
    */
   async stop(): Promise<void> {
+    console.log('🛑 Stopping AutoTimerService');
+    this.isEnabled = false;
+    this.cancelDelayedAction();
     this.geofenceService.stopMonitoring();
+    
+    // End all Live Activities when stopping the service
+    await this.liveActivityService.endAllLiveActivities();
     
     // Detener background geofencing
     try {
@@ -189,6 +196,11 @@ class AutoTimerService {
     this.currentJobId = null;
     this.pausedDelayedAction = null; // Clear paused state
     this.isEnabled = false;
+    
+    // FORZAR el cierre de TODOS los Live Activities
+    await this.liveActivityService.endAllLiveActivities();
+    console.log('📱 FORCE ended all Live Activities on AutoTimer stop');
+    
     this.clearNotificationHistory(); // Clear notification history when stopping
     this.notifyStatusChange();
     console.log('Auto timer service stopped');
@@ -462,6 +474,9 @@ class AutoTimerService {
         await JobService.addWorkDay(workDay);
         await JobService.clearActiveSession();
         
+        // Sync calendar data with widget
+        await WidgetCalendarService.syncCalendarData();
+        
         // Stop Live Activity updates
         if (this.statusUpdateInterval) {
           clearInterval(this.statusUpdateInterval);
@@ -479,7 +494,32 @@ class AutoTimerService {
           console.log('📱 Cleaned Live Activity marker for ended session');
         }
         
-        // Enviar notificación de parada
+        // Solo terminar Live Activity si la app está en segundo plano
+        if (Platform.OS === 'ios') {
+          try {
+            const { NativeModules } = require('react-native');
+            if (NativeModules.LiveActivityModule) {
+              await NativeModules.LiveActivityModule.endAllLiveActivities();
+              console.log('📱 Live Activity terminated (app in background)');
+            }
+          } catch (error) {
+            console.log('Live Activity could not be stopped - app might be closed');
+          }
+          
+          // Notificación simple para el usuario
+          const Notifications = require('expo-notifications');
+          await Notifications.scheduleNotificationAsync({
+            identifier: 'timer_stopped_' + Date.now(),
+            content: {
+              title: '⏹️ Timer Detenido',
+              body: `Timer detenido para "${job.name}"`,
+              sound: 'default',
+            },
+            trigger: null,
+          });
+        }
+        
+        // Enviar notificación normal
         await this.notificationService.sendNotification('timer_stopped', job.name);
         
         console.log(`✅ Auto-stopped timer for ${job.name}: ${elapsedHours}h recorded`);
@@ -596,10 +636,9 @@ class AutoTimerService {
    * Update Live Activity with current elapsed time
    */
   private updateLiveActivityTime(): void {
-    if (this.currentState === 'active' && this.autoTimerStartTime) {
-      const elapsedSeconds = Math.floor((Date.now() - this.autoTimerStartTime.getTime()) / 1000);
-      this.liveActivityService.updateLiveActivity(elapsedSeconds);
-    }
+    // Ya no necesitamos actualizar el Live Activity
+    // Solo muestra la hora de inicio
+    return;
   }
 
   /**
@@ -712,6 +751,9 @@ class AutoTimerService {
         
         await JobService.addWorkDay(workDay);
         await JobService.clearActiveSession();
+        
+        // Sync calendar data with widget
+        await WidgetCalendarService.syncCalendarData();
         
         result = { saved: true, hours: elapsedHours };
         console.log(`💾 Force stopped and saved: ${elapsedHours}h`);

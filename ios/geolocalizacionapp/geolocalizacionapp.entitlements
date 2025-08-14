@@ -6,7 +6,7 @@
 	<string>development</string>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.tuusuario.geolocalizacionapp</string>
+		<string>group.com.roberto.worktrack</string>
 	</array>
 </dict>
 </plist>

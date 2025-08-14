@@ -18,6 +18,9 @@ class LiveActivityService {
   private activityId: string | null = null;
   private updateInterval: NodeJS.Timeout | null = null;
   private isSupported: boolean = false;
+  private isCreatingActivity: boolean = false; // Prevent duplicate creation
+  private lastJobName: string | null = null;
+  private lastLocation: string | null = null;
 
   private constructor() {
     this.checkSupport();
@@ -76,6 +79,8 @@ class LiveActivityService {
     }
 
     try {
+      // NO enviar notificaciones complejas - solo funciona con app en segundo plano
+      
       const LiveActivityModule = NativeModules.LiveActivityModule;
       if (!LiveActivityModule || !LiveActivityModule.endAllLiveActivities) {
         return;
@@ -99,39 +104,70 @@ class LiveActivityService {
       return false;
     }
 
+    // Prevent duplicate simultaneous creation attempts
+    if (this.isCreatingActivity) {
+      console.log('⏳ Already creating a Live Activity, skipping duplicate request');
+      return false;
+    }
+
     try {
+      this.isCreatingActivity = true;
       console.log('🏃 Starting Live Activity for:', jobName);
 
       // Verificar si el módulo nativo está disponible
       const LiveActivityModule = NativeModules.LiveActivityModule;
       if (!LiveActivityModule || !LiveActivityModule.startLiveActivity) {
         console.log('⚠️ LiveActivityModule not available yet');
+        this.isCreatingActivity = false;
         return false;
       }
 
-      // El módulo nativo ahora maneja la verificación de duplicados
+      // First, end all existing activities to ensure clean state
+      try {
+        if (LiveActivityModule.endAllLiveActivities) {
+          console.log('🧹 Cleaning up any existing Live Activities first');
+          await LiveActivityModule.endAllLiveActivities();
+          // Small delay to let iOS process the cleanup
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      } catch (cleanupError) {
+        console.log('⚠️ Could not cleanup existing activities:', cleanupError);
+      }
+
+      // Store job info for comparison
+      this.lastJobName = jobName;
+      this.lastLocation = location || '';
+      
+      // El módulo nativo ahora maneja la verificación de duplicados y devuelve un objeto
       // Iniciar el Live Activity
-      this.activityId = await LiveActivityModule.startLiveActivity(jobName, location || '');
+      const result = await LiveActivityModule.startLiveActivity(jobName, location || '');
+      
+      // Manejar tanto string (ID) como objeto con ID y pushToken
+      if (typeof result === 'string') {
+        this.activityId = result;
+      } else if (result && result.id) {
+        this.activityId = result.id;
+        if (result.reused) {
+          console.log('♻️ Live Activity reused existing widget');
+        }
+        if (result.pushToken) {
+          console.log('📨 Live Activity has push token support');
+        }
+      }
       
       if (this.activityId) {
-        console.log('✅ Live Activity started/reused with ID:', this.activityId);
-        
-        // Solo iniciar el timer si no está ya corriendo
-        if (!this.updateInterval) {
-          // Iniciar actualizaciones periódicas del tiempo transcurrido
-          // Si hay un tiempo de inicio existente, usarlo para calcular el tiempo transcurrido
-          this.startUpdateTimer(existingStartTime);
-        } else {
-          console.log('⏱️ Update timer already running, skipping');
-        }
-        
+        console.log('✅ Live Activity started with ID:', this.activityId);
+        console.log('🕰️ Live Activity showing time:', existingStartTime || new Date());
+        this.isCreatingActivity = false;
         return true;
       } else {
         console.log('❌ Failed to start Live Activity');
+        this.isCreatingActivity = false;
         return false;
       }
     } catch (error) {
       console.error('Error starting Live Activity:', error);
+      this.isCreatingActivity = false;
       return false;
     }
   }
@@ -140,48 +176,41 @@ class LiveActivityService {
    * Actualiza el Live Activity existente
    */
   async updateLiveActivity(elapsedSeconds: number): Promise<void> {
-    if (!this.isSupported || !this.activityId) {
-      return;
-    }
-
-    try {
-      const LiveActivityModule = NativeModules.LiveActivityModule;
-      if (!LiveActivityModule || !LiveActivityModule.updateLiveActivity) {
-        return;
-      }
-
-      await LiveActivityModule.updateLiveActivity(elapsedSeconds);
-      console.log('📊 Live Activity updated - elapsed:', elapsedSeconds);
-    } catch (error) {
-      console.error('Error updating Live Activity:', error);
-    }
+    // Ya no necesitamos actualizar el Live Activity constantemente
+    // Solo mostrará la hora de inicio
+    return;
   }
 
   /**
    * Detiene el Live Activity
    */
   async endLiveActivity(finalElapsedSeconds?: number): Promise<void> {
-    if (!this.isSupported || !this.activityId) {
+    if (!this.isSupported) {
       return;
     }
 
     try {
-      console.log('🛑 Ending Live Activity');
-
-      // Detener el timer de actualizaciones
-      this.stopUpdateTimer();
+      console.log('🛑 Ending Live Activity with stopped state');
 
       const LiveActivityModule = NativeModules.LiveActivityModule;
       if (!LiveActivityModule || !LiveActivityModule.endLiveActivity) {
         return;
       }
 
+      // The native module will show "Stopped at" state before ending
       await LiveActivityModule.endLiveActivity(finalElapsedSeconds || 0);
       
       this.activityId = null;
-      console.log('✅ Live Activity ended');
+      this.isCreatingActivity = false; // Reset flag
+      this.lastJobName = null;
+      this.lastLocation = null;
+      console.log('✅ Live Activity ended with stopped state shown');
     } catch (error) {
       console.error('Error ending Live Activity:', error);
+      this.activityId = null;
+      this.isCreatingActivity = false;
+      this.lastJobName = null;
+      this.lastLocation = null;
     }
   }
 
@@ -189,34 +218,19 @@ class LiveActivityService {
    * Inicia el timer de actualizaciones periódicas
    */
   private startUpdateTimer(existingStartTime?: Date): void {
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
-
-    // Usar el tiempo de inicio existente o el actual
-    const startTime = existingStartTime ? existingStartTime.getTime() : Date.now();
-
-    // Actualizar cada segundo para mostrar el tiempo en tiempo real
-    this.updateInterval = setInterval(() => {
-      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-      this.updateLiveActivity(elapsedSeconds);
-    }, 1000); // Actualizar cada segundo
-
-    // Actualizar inmediatamente con el tiempo ya transcurrido
-    const initialElapsed = existingStartTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
-    this.updateLiveActivity(initialElapsed);
-
-    console.log('⏱️ Update timer started with 1s interval, initial elapsed:', initialElapsed);
+    // Ya no necesitamos actualizar el timer constantemente
+    // El widget mostrará solo la hora de inicio
+    console.log('🕰️ Live Activity mostrará hora de inicio:', existingStartTime || new Date());
   }
 
   /**
    * Detiene el timer de actualizaciones
    */
   private stopUpdateTimer(): void {
+    // Ya no usamos timer de actualizaciones
     if (this.updateInterval) {
       clearInterval(this.updateInterval);
       this.updateInterval = null;
-      console.log('⏱️ Update timer stopped');
     }
   }
 
@@ -239,6 +253,8 @@ class LiveActivityService {
    */
   cleanup(): void {
     this.stopUpdateTimer();
+    this.lastJobName = null;
+    this.lastLocation = null;
     if (this.activityId) {
       this.endLiveActivity();
     }

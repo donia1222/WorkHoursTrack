@@ -10,12 +10,10 @@ import Foundation
 
 public struct WorkTrackWidgetAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
-        public var elapsedSeconds: Int
-        public var isRunning: Bool
+        public var isStopped: Bool
         
-        public init(elapsedSeconds: Int, isRunning: Bool) {
-            self.elapsedSeconds = elapsedSeconds
-            self.isRunning = isRunning
+        public init(isStopped: Bool = false) {
+            self.isStopped = isStopped
         }
     }
     

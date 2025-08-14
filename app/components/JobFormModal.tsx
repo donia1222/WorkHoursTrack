@@ -2365,7 +2365,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 }
               }}
               trackColor={{ false: colors.separator, true: colors.primary }}
-              thumbColor="#FFFFFF"
+              thumbColor="#06004bff"
             />
           </View>
         </View>
@@ -2970,7 +2970,41 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   const activeSession = await JobService.getActiveSession();
                   if (activeSession && activeSession.jobId === editingJob.id) {
                     console.log('🛑 JobFormModal: Stopping active timer because AutoTimer was disabled');
+                    
+                    // Calcular el tiempo transcurrido
+                    const sessionStart = new Date(activeSession.startTime);
+                    const now = new Date();
+                    const elapsedMs = now.getTime() - sessionStart.getTime();
+                    const elapsedHours = Math.max(0.01, parseFloat(((elapsedMs / (1000 * 60 * 60))).toFixed(2)));
+                    
+                    // Guardar el día de trabajo antes de limpiar la sesión
+                    const today = new Date().toISOString().split('T')[0];
+                    const workDay = {
+                      date: today,
+                      jobId: editingJob.id,
+                      hours: elapsedHours,
+                      notes: activeSession.notes || 'Auto-stopped (AutoTimer disabled)',
+                      overtime: elapsedHours > 8,
+                      type: 'work' as const,
+                    };
+                    await JobService.addWorkDay(workDay);
+                    
+                    // Limpiar la sesión activa
                     await JobService.clearActiveSession();
+                    
+                    // IMPORTANTE: Enviar notificación que terminará el Live Activity
+                    const NotificationService = require('../services/NotificationService').default;
+                    const notificationService = NotificationService.getInstance();
+                    await notificationService.sendNotification('timer_stopped', editingJob.name, {
+                      hours: elapsedHours.toFixed(2),
+                      reason: 'AutoTimer was disabled'
+                    });
+                    console.log('📱 Notification sent to stop Live Activity');
+                    
+                    // También intentar terminar directamente (por si la notificación no funciona)
+                    const LiveActivityService = require('../services/LiveActivityService').default;
+                    const liveActivityService = LiveActivityService.getInstance();
+                    await liveActivityService.endLiveActivity(Math.floor(elapsedHours * 3600));
                   }
                   
                   // También cancelar cualquier AutoTimer activo para este trabajo

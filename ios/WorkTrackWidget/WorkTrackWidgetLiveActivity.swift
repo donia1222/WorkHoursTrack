@@ -63,23 +63,27 @@ struct WorkTrackWidgetLiveActivity: Widget {
                     
                     Spacer()
                     
-                    // Mostrar timer actualizado
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("Time")
+                    // Mostrar hora de inicio o parada
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("AutoTimer")
                             .font(.system(size: 10, weight: .medium))
                             .foregroundColor(.gray)
-                        Text(formatTime(context.state.elapsedSeconds))
-                            .font(.system(size: 20, weight: .bold, design: .monospaced))
-                            .foregroundColor(.blue)
-                        
-                        HStack(spacing: 4) {
-                            Circle()
-                                .fill(context.state.isRunning ? Color.green : Color.orange)
-                                .frame(width: 6, height: 6)
-                            Text(context.state.isRunning ? "Active" : "Paused")
+                        HStack(spacing: 2) {
+                            Text(context.state.isStopped ? "Stopped at" : "Started at")
                                 .font(.system(size: 10, weight: .medium))
-                                .foregroundColor(context.state.isRunning ? .green : .orange)
+                                .foregroundColor(context.state.isStopped ? .red : .gray)
+                            // Add a visual indicator when stopped
+                            if context.state.isStopped {
+                                Image(systemName: "stop.circle.fill")
+                                    .font(.system(size: 8))
+                                    .foregroundColor(.red)
+                            }
                         }
+                        // Mostrar la hora
+                        Text(context.attributes.startTime, style: .time)
+                            .multilineTextAlignment(.trailing)
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(context.state.isStopped ? .red : .blue)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -87,6 +91,8 @@ struct WorkTrackWidgetLiveActivity: Widget {
             }
             .activityBackgroundTint(Color(UIColor.systemBackground))
             .activitySystemActionForegroundColor(Color.blue)
+            // Add opacity animation when stopped to help with visibility
+            .opacity(context.state.isStopped ? 0.8 : 1.0)
 
         } dynamicIsland: { context in
             DynamicIsland {
@@ -107,79 +113,37 @@ struct WorkTrackWidgetLiveActivity: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    VStack(alignment: .trailing, spacing: 8) {
-                        Text(formatTime(context.state.elapsedSeconds))
-                            .font(.system(.title2, design: .monospaced))
-                            .foregroundColor(.blue)
-                        
-                        // Botones de control
-                        HStack(spacing: 12) {
-                            Button(intent: TogglePauseIntent()) {
-                                Image(systemName: context.state.isRunning ? "pause.circle.fill" : "play.circle.fill")
-                                    .font(.system(size: 28))
-                                    .foregroundColor(context.state.isRunning ? .orange : .green)
-                            }
-                            .buttonStyle(.plain)
-                            
-                            Button(intent: StopTimerIntent()) {
-                                Image(systemName: "stop.circle.fill")
-                                    .font(.system(size: 28))
-                                    .foregroundColor(.red)
-                            }
-                            .buttonStyle(.plain)
-                        }
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text(context.state.isStopped ? "AutoTimer stopped at" : "AutoTimer started at")
+                            .font(.caption)
+                            .foregroundColor(context.state.isStopped ? .red : .gray)
+                        Text(context.attributes.startTime, style: .time)
+                            .font(.system(.title2, weight: .bold))
+                            .foregroundColor(context.state.isStopped ? .red : .blue)
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    HStack {
-                        Label("Iniciado", systemImage: "clock")
-                            .font(.caption)
-                        Spacer()
-                        Text(context.attributes.startTime, style: .time)
-                            .font(.caption)
-                    }
+                    // Vacío - ya mostramos la info arriba
+                    EmptyView()
                 }
             } compactLeading: {
                 HStack(spacing: 2) {
-                    Image(systemName: "timer")
+                    Image(systemName: context.state.isStopped ? "stop.circle" : "timer")
                         .font(.system(size: 11))
-                        .foregroundColor(.blue)
-                    Text("v2")
-                        .font(.system(size: 8))
-                        .foregroundColor(.red)
+                        .foregroundColor(context.state.isStopped ? .red : .blue)
                 }
             } compactTrailing: {
-                Text(formatTimeCompact(context.state.elapsedSeconds))
-                    .font(.system(size: 13, weight: .medium, design: .monospaced))
-                    .foregroundColor(.blue)
+                // Mostrar hora de inicio con indicador de estado
+                Text(context.attributes.startTime, style: .time)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(context.state.isStopped ? .red : .blue)
             } minimal: {
                 Image(systemName: "timer.circle.fill")
                     .font(.system(size: 10))
                     .foregroundColor(.blue)
             }
             .widgetURL(URL(string: "worktrack://timer"))
-            .keylineTint(Color.blue)
-        }
-    }
-    
-    private func formatTime(_ seconds: Int) -> String {
-        let hours = seconds / 3600
-        let minutes = (seconds % 3600) / 60
-        let secs = seconds % 60
-        return String(format: "%02d:%02d:%02d", hours, minutes, secs)
-    }
-    
-    private func formatTimeCompact(_ seconds: Int) -> String {
-        let hours = seconds / 3600
-        let minutes = (seconds % 3600) / 60
-        let secs = seconds % 60
-        
-        if hours > 0 {
-            return String(format: "%d:%02d:%02d", hours, minutes, secs)
-        } else if minutes > 0 {
-            return String(format: "%d:%02d", minutes, secs)
-        } else {
-            return String(format: "0:%02d", secs)
+            .keylineTint(context.state.isStopped ? Color.red : Color.blue)
         }
     }
 }
@@ -197,17 +161,11 @@ extension WorkTrackWidgetAttributes {
 
 extension WorkTrackWidgetAttributes.ContentState {
     static var running: WorkTrackWidgetAttributes.ContentState {
-        WorkTrackWidgetAttributes.ContentState(
-            elapsedSeconds: 3661,
-            isRunning: true
-        )
+        WorkTrackWidgetAttributes.ContentState(isStopped: false)
     }
-     
-    static var paused: WorkTrackWidgetAttributes.ContentState {
-        WorkTrackWidgetAttributes.ContentState(
-            elapsedSeconds: 7200,
-            isRunning: false
-        )
+    
+    static var stopped: WorkTrackWidgetAttributes.ContentState {
+        WorkTrackWidgetAttributes.ContentState(isStopped: true)
     }
 }
 
@@ -215,5 +173,5 @@ extension WorkTrackWidgetAttributes.ContentState {
    WorkTrackWidgetLiveActivity()
 } contentStates: {
     WorkTrackWidgetAttributes.ContentState.running
-    WorkTrackWidgetAttributes.ContentState.paused
+    WorkTrackWidgetAttributes.ContentState.stopped
 }

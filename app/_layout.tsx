@@ -14,6 +14,10 @@ import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { AutoBackupService } from './services/AutoBackupService';
+import WidgetCalendarService from './services/WidgetCalendarService';
+import WidgetSyncService from './services/WidgetSyncService';
+import { forceWidgetSync } from './services/ManualWidgetSync';
+import { verifyLiveActivityModule } from './services/VerifyNativeModule';
 // Importar BackgroundGeofenceTask para registrar la tarea
 import './services/BackgroundGeofenceTask';
 
@@ -57,6 +61,8 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
+      // Verify native module on app start
+      verifyLiveActivityModule();
     }
   }, [loaded]);
 
@@ -71,8 +77,21 @@ export default function RootLayout() {
       }
     };
 
+    // Sync widget data on app start
+    const syncWidgetData = async () => {
+      try {
+        await WidgetCalendarService.syncCalendarData();
+        await WidgetSyncService.syncAllToWidget();
+        // Force sync with sample data if needed
+        await forceWidgetSync();
+      } catch (error) {
+        console.error('Error syncing widget data on app start:', error);
+      }
+    };
+
     if (loaded) {
       checkAutoBackup();
+      syncWidgetData();
     }
 
     // Listen for app state changes
@@ -80,8 +99,12 @@ export default function RootLayout() {
       if (nextAppState === 'active') {
         try {
           await AutoBackupService.checkAndCreateBackupIfNeeded();
+          await WidgetCalendarService.syncCalendarData();
+          // Always sync widget when app becomes active to catch any changes
+          await WidgetSyncService.syncAllToWidget();
+          console.log('📱 Widget synced on app resume');
         } catch (error) {
-          console.error('Error checking auto backup on app resume:', error);
+          console.error('Error checking auto backup/widget sync on app resume:', error);
         }
       }
     };

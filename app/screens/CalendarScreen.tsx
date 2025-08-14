@@ -24,6 +24,7 @@ import { CalendarSyncService } from '../services/CalendarSyncService';
 import { useNotifications } from '../contexts/NotificationContext';
 import NotificationService from '../services/NotificationService';
 import { ChatDataParser, ParsedWorkData } from '../services/ChatDataParser';
+import WidgetSyncService from '../services/WidgetSyncService';
 
 // Custom Day Component
 const CustomDay = ({ date, state, marking, onPress }: any) => {
@@ -837,6 +838,11 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
       console.log('📚 Fresh data loaded:');
       console.log('   Jobs:', updatedJobs.length);
       console.log('   Work days:', updatedWorkDays.length);
+      
+      // Sync with widget after saving
+      console.log('🔄 Syncing calendar with widget...');
+      await WidgetSyncService.syncCalendarToWidget();
+      console.log('✅ Widget sync completed');
       if (updatedWorkDays.length > 0) {
         const latestWorkDay = updatedWorkDays[updatedWorkDays.length - 1];
         console.log('   Latest work day:', latestWorkDay.date, latestWorkDay.startTime);
@@ -866,6 +872,11 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         ]);
         setJobs(updatedJobs);
         setWorkDays(updatedWorkDays);
+        
+        // Sync with widget after deleting
+        console.log('🔄 Syncing calendar with widget after delete...');
+        await WidgetSyncService.syncCalendarToWidget();
+        console.log('✅ Widget sync completed');
         
         // Then reschedule reminders with fresh data
         if (notificationSettings.enabled && notificationSettings.workReminders) {
@@ -1166,6 +1177,11 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
 
                 // Refresh work days
                 await loadData();
+                
+                // Sync with widget after clearing month
+                console.log('🔄 Syncing calendar with widget after clearing month...');
+                await WidgetSyncService.syncCalendarToWidget();
+                console.log('✅ Widget sync completed');
 
                 if (deletedCount > 0) {
                   Alert.alert(
