@@ -234,9 +234,28 @@ class MiniCalendarDataManager {
         
         do {
             let decoder = JSONDecoder()
-            // Configure decoder to handle dates properly
-            decoder.dateDecodingStrategy = .iso8601
-            let workDays = try decoder.decode([WorkDayInfo].self, from: data)
+            // Configure decoder to handle dates properly with local timezone
+            let localFormatter = DateFormatter()
+            localFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+            localFormatter.timeZone = TimeZone.current
+            decoder.dateDecodingStrategy = .formatted(localFormatter)
+            var workDays = try decoder.decode([WorkDayInfo].self, from: data)
+            
+            // Fix date offset issue - add 1 day to each date
+            let calendar = Calendar.current
+            workDays = workDays.compactMap { day in
+                guard let adjustedDate = calendar.date(byAdding: .day, value: 1, to: day.date) else {
+                    return day
+                }
+                return WorkDayInfo(
+                    date: adjustedDate,
+                    type: day.type,
+                    jobName: day.jobName,
+                    jobColor: day.jobColor,
+                    hours: day.hours
+                )
+            }
+            
             return workDays
         } catch {
             print("❌ Failed to decode calendar data: \(error)")
