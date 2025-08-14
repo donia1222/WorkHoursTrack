@@ -72,7 +72,7 @@ struct Provider: TimelineProvider {
         return jobs
     }
     
-    func readTimerData() -> (isActive: Bool, jobName: String, location: String?, startTime: Date) {
+    private func readTimerData() -> (isActive: Bool, jobName: String, location: String?, startTime: Date) {
         // Force cache invalidation
         invalidateCache()
         
@@ -136,18 +136,29 @@ struct Provider: TimelineProvider {
         var entries: [WorktrackEntry] = []
         let current = Date()
         
-        // Create a single entry with current state
+        // Always create at least one entry with current data
         entries.append(WorktrackEntry(date: current,
                                      startDate: timerData.isActive ? timerData.startTime : Date(),
                                      title: timerData.isActive ? timerData.jobName : "No active timer",
                                      location: timerData.isActive ? timerData.location : nil,
                                      jobs: jobs))
         
-        // When timer is active, refresh every 5 minutes to check if still active
-        // When inactive, refresh every 2 minutes to detect when timer starts
-        let refreshMinutes = timerData.isActive ? 5 : 2
-        let refreshDate = Calendar.current.date(byAdding: .minute, value: refreshMinutes, to: current)!
+        if timerData.isActive {
+            // Create additional entries for the next hour, updating every minute
+            var nextDate = current
+            for _ in 1..<60 {
+                nextDate = Calendar.current.date(byAdding: .minute, value: 1, to: nextDate)!
+                entries.append(WorktrackEntry(date: nextDate,
+                                             startDate: timerData.startTime,
+                                             title: timerData.jobName,
+                                             location: timerData.location,
+                                             jobs: jobs))
+            }
+        }
         
+        // Use .atEnd policy to force immediate refresh when data changes
+        // Combined with .after for periodic updates
+        let refreshDate = Date().addingTimeInterval(60) // Refresh every minute
         completion(Timeline(entries: entries, policy: .after(refreshDate)))
     }
 }
@@ -259,13 +270,11 @@ struct BackgroundMod: ViewModifier {
 struct WorkTrackSmall: View {
     let entry: WorktrackEntry
     
-    private var timerData: (isActive: Bool, jobName: String, location: String?, startTime: Date) {
-        Provider().readTimerData()
+    var isActive: Bool {
+        return entry.title != "No active timer" && entry.title != "No hay timer activo"
     }
     
     var body: some View {
-        let timer = timerData
-        
         VStack(spacing: 8) {
             // App name header
             HStack {
@@ -284,32 +293,31 @@ struct WorkTrackSmall: View {
             }
             .foregroundColor(.white.opacity(0.95))
             
-            // Show timer if active, otherwise show job and calendar
-            if timer.isActive {
-                Spacer(minLength: 0)
-                CompactTimerView(
-                    jobName: timer.jobName,
-                    startTime: timer.startTime
-                )
-                Spacer(minLength: 0)
+            // DEBUG: Show number of jobs
+            Text("Jobs: \(entry.jobs.count)")
+                .font(.system(size: 10))
+                .foregroundColor(.yellow)
+            
+            // Show first job if exists
+            if let firstJob = entry.jobs.first {
+                Text(firstJob.name)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.white.opacity(0.8))
+                    .lineLimit(1)
             } else {
-                // Show first job if exists
-                if let firstJob = entry.jobs.first {
-                    Text(firstJob.name)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.white.opacity(0.8))
-                        .lineLimit(1)
-                }
-                
-                Spacer(minLength: 0)
-                
-                // Mini Calendar - Show last 3 days
-                MiniCalendarView(
-                    days: MiniCalendarDataManager.readCalendarData(),
-                    isCompact: true,
-                    daysCount: 3
-                )
+                Text("No jobs")
+                    .font(.system(size: 11))
+                    .foregroundColor(.red.opacity(0.8))
             }
+            
+            Spacer(minLength: 0)
+            
+            // Mini Calendar - Show last 3 days
+            MiniCalendarView(
+                days: MiniCalendarDataManager.readCalendarData(),
+                isCompact: true,
+                daysCount: 3
+            )
         }
         .padding(10)
         .widgetURL(URL(string: "worktrack://open/timer"))
@@ -320,13 +328,7 @@ struct WorkTrackSmall: View {
 struct WorkTrackMedium: View {
     let entry: WorktrackEntry
     
-    private var timerData: (isActive: Bool, jobName: String, location: String?, startTime: Date) {
-        Provider().readTimerData()
-    }
-    
     var body: some View {
-        let timer = timerData
-        
         VStack(spacing: 10) {
             // App name header
             HStack {
@@ -371,26 +373,13 @@ struct WorkTrackMedium: View {
             }
             .foregroundColor(.white.opacity(0.85))
             
-            // Show timer if active, otherwise show calendar
-            if timer.isActive {
-                Spacer(minLength: 4)
-                
-                MediumTimerView(
-                    jobName: timer.jobName,
-                    location: timer.location,
-                    startTime: timer.startTime
-                )
-                
-                Spacer(minLength: 4)
-            } else {
-                Spacer(minLength: 0)
-                
-                // Calendar - Show next 7 days
-                MiniCalendarView(
-                    days: MiniCalendarDataManager.readCalendarData(),
-                    isCompact: true
-                )
-            }
+            Spacer(minLength: 0)
+            
+            // Calendar - Show next 7 days
+            MiniCalendarView(
+                days: MiniCalendarDataManager.readCalendarData(),
+                isCompact: true
+            )
         }
         .padding(12)
         .widgetURL(URL(string: "worktrack://open/timer"))
@@ -401,13 +390,7 @@ struct WorkTrackMedium: View {
 struct WorkTrackLarge: View {
     let entry: WorktrackEntry
     
-    private var timerData: (isActive: Bool, jobName: String, location: String?, startTime: Date) {
-        Provider().readTimerData()
-    }
-    
     var body: some View {
-        let timer = timerData
-        
         VStack(spacing: 8) {
             // App name header
             HStack {
@@ -450,27 +433,11 @@ struct WorkTrackLarge: View {
             
             Spacer(minLength: 2)
             
-            // Show timer if active at the top, then smaller calendar
-            if timer.isActive {
-                ActiveTimerView(
-                    jobName: timer.jobName,
-                    location: timer.location,
-                    startTime: timer.startTime,
-                    isCompact: false
-                )
-                
-                // Show smaller calendar with only 7 days
-                MiniCalendarView(
-                    days: MiniCalendarDataManager.readCalendarData(),
-                    isCompact: true
-                )
-            } else {
-                // Calendar - Back to 2 weeks instead of full month
-                MiniCalendarView(
-                    days: MiniCalendarDataManager.readCalendarData(),
-                    isCompact: false
-                )
-            }
+            // Calendar - Back to 2 weeks instead of full month
+            MiniCalendarView(
+                days: MiniCalendarDataManager.readCalendarData(),
+                isCompact: false
+            )
             
             Spacer(minLength: 2)
         }

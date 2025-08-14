@@ -145,11 +145,15 @@ class LiveActivityModule: NSObject {
         
         // Force synchronization
         sharedDefaults.synchronize()
+        CFPreferencesAppSynchronize(LiveActivityModule.appGroupIdentifier as CFString)
         
         print("✅ Timer data saved to shared container: \(jobName) at \(location) [v\(currentVersion + 1)]")
         
-        // Force widget update with delay to ensure data is written
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        // Force immediate widget update
+        WidgetCenter.shared.reloadAllTimelines()
+        
+        // And again with delay to ensure data is written
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             WidgetCenter.shared.reloadAllTimelines()
         }
     }
@@ -177,11 +181,15 @@ class LiveActivityModule: NSObject {
         
         // Force synchronization
         sharedDefaults.synchronize()
+        CFPreferencesAppSynchronize(LiveActivityModule.appGroupIdentifier as CFString)
         
         print("✅ Timer data cleared from shared container [v\(currentVersion + 1)]")
         
-        // Force widget update with delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        // Force immediate widget update
+        WidgetCenter.shared.reloadAllTimelines()
+        
+        // And again with delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             WidgetCenter.shared.reloadAllTimelines()
         }
     }
