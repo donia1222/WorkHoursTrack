@@ -491,6 +491,7 @@
 					"FB_SONARKIT_ENABLED=1",
 				);
 				INFOPLIST_FILE = geolocalizacionapp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = WorkTrack;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -523,6 +524,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = UGPV7KC333;
 				INFOPLIST_FILE = geolocalizacionapp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = WorkTrack;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
