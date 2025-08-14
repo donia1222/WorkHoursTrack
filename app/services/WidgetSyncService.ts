@@ -71,10 +71,10 @@ class WidgetSyncService {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      // Filter and format work days for next 14 days
+      // Filter and format work days for next 35 days (full month + buffer)
       const nextDays: WorkDayForWidget[] = [];
       
-      for (let i = 0; i < 14; i++) {
+      for (let i = 0; i < 35; i++) {
         const checkDate = new Date(today);
         checkDate.setDate(today.getDate() + i);
         const dateStr = checkDate.toISOString().split('T')[0];

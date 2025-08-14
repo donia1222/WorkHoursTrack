@@ -31,6 +31,58 @@ struct MiniCalendarView: View {
     let isCompact: Bool // true for small/medium widget, false for large
     var daysCount: Int? = nil // Optional override for days to show
     
+    private var monthTitle: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        return formatter.string(from: visibleDays.first?.date ?? Date())
+    }
+    
+    private func getCurrentMonthYear() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        formatter.locale = Locale(identifier: "en_US")
+        return formatter.string(from: Date())
+    }
+    
+    // Get weeks grid for month view
+    private func getWeeksGrid() -> [[WorkDayInfo?]] {
+        guard !isCompact, let firstDay = visibleDays.first else {
+            return []
+        }
+        
+        let calendar = Calendar.current
+        let firstDayOfMonth = firstDay.date
+        let weekday = calendar.component(.weekday, from: firstDayOfMonth) - 1 // 0 = Sunday
+        
+        var weeks: [[WorkDayInfo?]] = []
+        var currentWeek: [WorkDayInfo?] = []
+        
+        // Add empty days at the beginning
+        for _ in 0..<weekday {
+            currentWeek.append(nil)
+        }
+        
+        // Add all days of the month
+        for day in visibleDays {
+            currentWeek.append(day)
+            
+            if currentWeek.count == 7 {
+                weeks.append(currentWeek)
+                currentWeek = []
+            }
+        }
+        
+        // Add empty days at the end if needed
+        if !currentWeek.isEmpty {
+            while currentWeek.count < 7 {
+                currentWeek.append(nil)
+            }
+            weeks.append(currentWeek)
+        }
+        
+        return weeks
+    }
+    
     private var daysToShow: Int {
         if let count = daysCount {
             return count
@@ -39,7 +91,6 @@ struct MiniCalendarView: View {
     }
     
     private var visibleDays: [WorkDayInfo] {
-        // Get upcoming days (including today)
         let today = Date()
         let calendar = Calendar.current
         let startOfToday = calendar.startOfDay(for: today)
@@ -85,38 +136,53 @@ struct MiniCalendarView: View {
             )
         } else if isCompact {
             // Medium widget: 7 upcoming days in one row
-            HStack(spacing: 3) {
+            HStack(spacing: 2) {
                 ForEach(visibleDays, id: \.date) { day in
-                    DayView(dayInfo: day, isCompact: isCompact)
+                    DayView(dayInfo: day, isCompact: isCompact, isMediumWidget: true)
                 }
             }
-            .padding(.horizontal, 2)
+            .padding(.horizontal, 3)
             .padding(.vertical, 4)
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color.white.opacity(0.08))
             )
         } else {
-            // Large widget: 14 upcoming days in two rows (7 days each)
-            VStack(spacing: 4) {
-                let halfCount = visibleDays.count / 2
-                let firstWeek = Array(visibleDays.prefix(halfCount))
-                let secondWeek = Array(visibleDays.suffix(halfCount))
-                
-                HStack(spacing: 4) {
-                    ForEach(firstWeek, id: \.date) { day in
-                        DayView(dayInfo: day, isCompact: isCompact)
-                    }
+            // Large widget: 14 days in two rows
+            VStack(spacing: 6) {
+                // Header with month name
+                HStack {
+                    Image(systemName: "calendar")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text(getCurrentMonthYear())
+                        .font(.system(size: 12, weight: .semibold))
+                    Spacer()
+                    Text("Next 2 weeks")
+                        .font(.system(size: 11, weight: .regular))
                 }
+                .foregroundColor(.white.opacity(0.8))
                 
-                HStack(spacing: 4) {
-                    ForEach(secondWeek, id: \.date) { day in
-                        DayView(dayInfo: day, isCompact: isCompact)
+                // Two weeks grid
+                VStack(spacing: 4) {
+                    let halfCount = visibleDays.count / 2
+                    let firstWeek = Array(visibleDays.prefix(halfCount))
+                    let secondWeek = Array(visibleDays.suffix(halfCount))
+                    
+                    HStack(spacing: 3) {
+                        ForEach(firstWeek, id: \.date) { day in
+                            DayView(dayInfo: day, isCompact: false, isLargeWidget: true)
+                        }
+                    }
+                    
+                    HStack(spacing: 3) {
+                        ForEach(secondWeek, id: \.date) { day in
+                            DayView(dayInfo: day, isCompact: false, isLargeWidget: true)
+                        }
                     }
                 }
             }
-            .padding(.horizontal, 4)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color.white.opacity(0.08))
@@ -130,6 +196,8 @@ struct DayView: View {
     let dayInfo: WorkDayInfo
     let isCompact: Bool
     var isSmallWidget: Bool = false
+    var isMediumWidget: Bool = false
+    var isLargeWidget: Bool = false
     
     private var dayColor: Color {
         switch dayInfo.type {
@@ -170,38 +238,58 @@ struct DayView: View {
         VStack(spacing: 2) {
             // Day label (Mon, Tue, etc.)
             Text(dayLabel)
-                .font(.system(size: isSmallWidget ? 10 : (isCompact ? 9 : 10), weight: .medium))
+                .font(.system(size: isSmallWidget ? 10 : (isMediumWidget ? 11 : (isLargeWidget ? 10 : 10)), weight: .medium))
                 .foregroundColor(.white.opacity(0.6))
             
             // Day number with work indicator
             ZStack {
                 Circle()
                     .fill(dayColor)
-                    .frame(width: isSmallWidget ? 32 : (isCompact ? 28 : 32), 
-                           height: isSmallWidget ? 32 : (isCompact ? 28 : 32))
+                    .frame(width: circleSize, height: circleSize)
                 
                 if isToday {
                     Circle()
                         .strokeBorder(Color.white, lineWidth: 2)
-                        .frame(width: isSmallWidget ? 32 : (isCompact ? 28 : 32), 
-                               height: isSmallWidget ? 32 : (isCompact ? 28 : 32))
+                        .frame(width: circleSize, height: circleSize)
                 }
                 
                 Text(dayNumber)
-                    .font(.system(size: isSmallWidget ? 14 : (isCompact ? 13 : 14), weight: .bold))
+                    .font(.system(size: fontSize, weight: .bold))
                     .foregroundColor(dayInfo.type == .free ? .white.opacity(0.4) : .white)
             }
             
             // Hours worked (if applicable)
             if let hours = dayInfo.hours, dayInfo.type == .work {
                 Text("\(String(format: "%.1f", hours))h")
-                    .font(.system(size: isSmallWidget ? 9 : (isCompact ? 8 : 9), weight: .medium))
+                    .font(.system(size: hoursSize, weight: .medium))
                     .foregroundColor(.white.opacity(0.7))
-            } else {
+            } else if !isLargeWidget {
                 Text(" ")
-                    .font(.system(size: isSmallWidget ? 9 : (isCompact ? 8 : 9)))
+                    .font(.system(size: hoursSize))
             }
         }
+        .frame(width: isLargeWidget ? 42 : nil)
+    }
+    
+    private var circleSize: CGFloat {
+        if isSmallWidget { return 32 }
+        if isMediumWidget { return 32 }
+        if isLargeWidget { return 36 }
+        return 30
+    }
+    
+    private var fontSize: CGFloat {
+        if isSmallWidget { return 14 }
+        if isMediumWidget { return 14 }
+        if isLargeWidget { return 15 }
+        return 13
+    }
+    
+    private var hoursSize: CGFloat {
+        if isSmallWidget { return 9 }
+        if isMediumWidget { return 9 }
+        if isLargeWidget { return 9 }
+        return 8
     }
 }
 

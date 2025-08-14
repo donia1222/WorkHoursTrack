@@ -347,11 +347,6 @@ struct WorkTrackMedium: View {
             }
             .foregroundColor(.white.opacity(0.95))
             
-            // DEBUG: Show jobs count
-            Text("Jobs loaded: \(entry.jobs.count)")
-                .font(.system(size: 10))
-                .foregroundColor(.yellow)
-            
             // Jobs list
             VStack(alignment: .leading, spacing: 4) {
                 if entry.jobs.isEmpty {
@@ -396,37 +391,39 @@ struct WorkTrackLarge: View {
     let entry: WorktrackEntry
     
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             // App name header
             HStack {
                 if let ui = UIImage(named: "worktrack_icon") {
                     Image(uiImage: ui)
                         .resizable().scaledToFit()
-                        .frame(width: 24, height: 24)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .frame(width: 20, height: 20)
+                        .clipShape(RoundedRectangle(cornerRadius: 5))
                 } else {
                     Image(systemName: "briefcase.fill")
-                        .font(.system(size: 18))
+                        .font(.system(size: 16))
                 }
                 Text("WorkTrack")
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
                 Spacer()
             }
             .foregroundColor(.white.opacity(0.95))
             
-            // Jobs list
-            VStack(alignment: .leading, spacing: 6) {
-                ForEach(entry.jobs.prefix(3), id: \.self) { job in
-                    HStack(spacing: 6) {
+            // Jobs list - only show 2 jobs to save space
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(entry.jobs.prefix(2), id: \.self) { job in
+                    HStack(spacing: 4) {
                         Circle()
                             .fill(Color(hex: job.color ?? "#059669") ?? Color.green)
-                            .frame(width: 8, height: 8)
+                            .frame(width: 6, height: 6)
                         Text(job.name)
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.system(size: 11, weight: .medium))
+                            .lineLimit(1)
                         if let location = job.location {
                             Text("• \(location)")
-                                .font(.system(size: 11))
+                                .font(.system(size: 10))
                                 .foregroundColor(.white.opacity(0.6))
+                                .lineLimit(1)
                         }
                         Spacer()
                     }
@@ -434,29 +431,17 @@ struct WorkTrackLarge: View {
             }
             .foregroundColor(.white.opacity(0.85))
             
-            Spacer(minLength: 0)
+            Spacer(minLength: 2)
             
-            // Calendar - Show next 14 days
-            VStack(spacing: 6) {
-                HStack(spacing: 6) {
-                    Image(systemName: "calendar")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.8))
-                    Text("Next 2 weeks")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
-                        .foregroundColor(.white.opacity(0.8))
-                    Spacer()
-                }
-                
-                MiniCalendarView(
-                    days: MiniCalendarDataManager.readCalendarData(),
-                    isCompact: false
-                )
-            }
+            // Calendar - Back to 2 weeks instead of full month
+            MiniCalendarView(
+                days: MiniCalendarDataManager.readCalendarData(),
+                isCompact: false
+            )
             
-            Spacer(minLength: 4)
+            Spacer(minLength: 2)
         }
-        .padding(16)
+        .padding(12)
         .widgetURL(URL(string: "worktrack://open/timer"))
         .modifier(BackgroundMod())
     }
