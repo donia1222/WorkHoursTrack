@@ -234,6 +234,8 @@ class MiniCalendarDataManager {
         
         do {
             let decoder = JSONDecoder()
+            // Configure decoder to handle dates properly
+            decoder.dateDecodingStrategy = .iso8601
             let workDays = try decoder.decode([WorkDayInfo].self, from: data)
             return workDays
         } catch {

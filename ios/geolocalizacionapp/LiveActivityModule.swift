@@ -581,6 +581,7 @@ class LiveActivityModule: NSObject {
         var workDayStructs: [TempWorkDay] = []
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0) // Use UTC to avoid timezone issues
         
         for workDay in workDays {
             if let dayDict = workDay as? NSDictionary,
@@ -602,6 +603,7 @@ class LiveActivityModule: NSObject {
         
         // Encode properly with JSONEncoder for widget
         let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
         if let data = try? encoder.encode(workDayStructs) {
             sharedDefaults.set(data, forKey: "WorkTrack.CalendarData")
             
