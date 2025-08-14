@@ -312,7 +312,7 @@ struct WorkTrackSmall: View {
             }
         }
         .padding(10)
-        .widgetURL(URL(string: "worktrack://open/timer"))
+        .widgetURL(URL(string: "worktrack://"))
         .modifier(BackgroundMod())
     }
 }
@@ -393,7 +393,7 @@ struct WorkTrackMedium: View {
             }
         }
         .padding(12)
-        .widgetURL(URL(string: "worktrack://open/timer"))
+        .widgetURL(URL(string: "worktrack://"))
         .modifier(BackgroundMod())
     }
 }
@@ -475,7 +475,7 @@ struct WorkTrackLarge: View {
             Spacer(minLength: 2)
         }
         .padding(12)
-        .widgetURL(URL(string: "worktrack://open/timer"))
+        .widgetURL(URL(string: "worktrack://"))
         .modifier(BackgroundMod())
     }
 }
