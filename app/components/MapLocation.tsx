@@ -2412,7 +2412,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   };
 
   return (
-    <View style={styles.container}>
+
 
 
       <View style={styles.mapWrapper}>
@@ -2421,7 +2421,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
           <LinearGradient
             colors={isDark 
               ? ['transparent', 'transparent', 'transparent', 'transparent']
-              : ['transparent', 'transparent', 'transparent', 'transparent']
+              : ['transparent', 'transparent', 'rgba(147, 197, 253, 0.25)', 'rgba(147, 197, 253, 0.25)']
             }
             style={styles.noLocationBackground}
             locations={[0, 0.3, 0.7, 1]}
@@ -3537,7 +3537,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
         </View>
 
       {/* Capa invisible para interceptar toques problemáticos - REMOVIDA para evitar conflictos */}
-      </View>
+
 
       {/* Simple info overlay */}
       {jobs.length === 0 && !showJobForm && (

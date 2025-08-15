@@ -110,11 +110,11 @@ struct CompactTimerView: View {
         VStack(spacing: 6) {
             HStack {
                 Image(systemName: "timer.circle.fill")
-                    .font(.system(size: 24))
+                    .font(.system(size: 18))
                     .foregroundColor(.green)
                 
                 Text("ACTIVE")
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.system(size: 10, weight: .bold))
                     .foregroundColor(.green)
                 
                 Spacer()
@@ -122,17 +122,17 @@ struct CompactTimerView: View {
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(jobName)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.white)
                     .lineLimit(1)
                 
-                HStack(spacing: 4) {
+                HStack(spacing: 3) {
                     Image(systemName: "clock")
-                        .font(.system(size: 10))
+                        .font(.system(size: 9))
                         .foregroundColor(.white.opacity(0.7))
                     
                     Text("Since \(startTimeString)")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.white.opacity(0.7))
                 }
             }

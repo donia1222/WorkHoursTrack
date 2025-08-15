@@ -16,6 +16,7 @@ declare global {
 }
 
 import Loading from '../components/Loading';
+import SplashLoader from '../components/SplashLoader';
 import MapLocation from '../components/MapLocation';
 import NoLocationMapView from '../components/NoLocationMapView';
 import WelcomeModal from '../components/WelcomeModal';
@@ -58,6 +59,8 @@ const ScreenWrapper = ({ children, screenKey }: { children: React.ReactNode; scr
 };
 
 function AppContent() {
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isExiting, setIsExiting] = useState(false);
   const [location, setLocation] = useState<Location.LocationObjectCoords | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
@@ -100,6 +103,15 @@ function AppContent() {
   };
 
   useEffect(() => {
+    // Set a timer for initial loading with fade out effect
+    const timer = setTimeout(() => {
+      setIsExiting(true);
+      // Wait for fade out animation to complete
+      setTimeout(() => {
+        setInitialLoading(false);
+      }, 400);
+    }, 1600); // Start exit animation at 1.6s, finish at 2s
+
     // Check if privacy/location modal has been shown
     AsyncStorage.getItem('privacyLocationSeen').then((value) => {
       setShowPrivacyLocationModal(value !== 'true'); // true = ya visto
@@ -117,6 +129,8 @@ function AppContent() {
     
     // Load auto backup config
     loadAutoBackupConfig();
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Verificar estado de suscripción al iniciar la app
@@ -577,6 +591,11 @@ function AppContent() {
         );
     }
   };
+
+  // Show initial loading for 2 seconds with fade out
+  if (initialLoading) {
+    return <SplashLoader isExiting={isExiting} />;
+  }
 
   // Show privacy/location modal as the very first thing
   if (showPrivacyLocationModal === null || showOnboarding === null) {

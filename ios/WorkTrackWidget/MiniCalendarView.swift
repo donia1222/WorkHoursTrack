@@ -87,7 +87,7 @@ struct MiniCalendarView: View {
         if let count = daysCount {
             return count
         }
-        return isCompact ? 7 : 21  // 7 days for medium, 21 for large (3 weeks)
+        return isCompact ? 7 : 28  // 7 days for medium, 28 for large (4 weeks/month)
     }
     
     private var visibleDays: [WorkDayInfo] {
@@ -148,7 +148,7 @@ struct MiniCalendarView: View {
                     .fill(Color.white.opacity(0.08))
             )
         } else {
-            // Large widget: 21 days in three rows
+            // Large widget: 28 days in four rows (full month)
             VStack(spacing: 6) {
                 // Header with month name
                 HStack {
@@ -157,17 +157,18 @@ struct MiniCalendarView: View {
                     Text(getCurrentMonthYear())
                         .font(.system(size: 12, weight: .semibold))
                     Spacer()
-                    Text("Next 3 weeks")
+                    Text("Full Month")
                         .font(.system(size: 11, weight: .regular))
                 }
                 .foregroundColor(.white.opacity(0.8))
                 
-                // Three weeks grid
+                // Four weeks grid
                 VStack(spacing: 4) {
                     let weekSize = 7
                     let firstWeek = Array(visibleDays.prefix(weekSize))
                     let secondWeek = Array(visibleDays.dropFirst(weekSize).prefix(weekSize))
-                    let thirdWeek = Array(visibleDays.dropFirst(weekSize * 2))
+                    let thirdWeek = Array(visibleDays.dropFirst(weekSize * 2).prefix(weekSize))
+                    let fourthWeek = Array(visibleDays.dropFirst(weekSize * 3))
                     
                     HStack(spacing: 3) {
                         ForEach(firstWeek, id: \.date) { day in
@@ -183,6 +184,12 @@ struct MiniCalendarView: View {
                     
                     HStack(spacing: 3) {
                         ForEach(thirdWeek, id: \.date) { day in
+                            DayView(dayInfo: day, isCompact: false, isLargeWidget: true)
+                        }
+                    }
+                    
+                    HStack(spacing: 3) {
+                        ForEach(fourthWeek, id: \.date) { day in
                             DayView(dayInfo: day, isCompact: false, isLargeWidget: true)
                         }
                     }
@@ -386,8 +393,8 @@ class MiniCalendarDataManager {
         let today = Date()
         var days: [WorkDayInfo] = []
         
-        // Generate next 21 days - ALL FREE, no fake data
-        for i in 0...20 {
+        // Generate next 28 days - ALL FREE, no fake data
+        for i in 0...27 {
             if let date = calendar.date(byAdding: .day, value: i, to: today) {
                 // All days are free until real data is synced
                 days.append(WorkDayInfo(

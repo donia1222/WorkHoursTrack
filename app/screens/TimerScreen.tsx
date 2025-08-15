@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -10,6 +10,7 @@ import {
   TextInput,
   StatusBar,
   Modal,
+  Animated as RNAnimated,
 } from 'react-native';
 import Animated, { 
   useSharedValue, 
@@ -918,8 +919,29 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   const glowAnimation = useSharedValue(0);
   const buttonPulse = useSharedValue(1);
   
+  // Animation values for entrance
+  const fadeAnim = useRef(new RNAnimated.Value(0)).current;
+  const scaleAnim = useRef(new RNAnimated.Value(0.9)).current;
+  
   const styles = getStyles(colors, isDark);
 
+  // Entrance animation
+  useEffect(() => {
+    RNAnimated.parallel([
+      RNAnimated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      RNAnimated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 7,
+      }),
+    ]).start();
+  }, [fadeAnim, scaleAnim]);
+  
   // Controla las animaciones según el estado del timer
   useEffect(() => {
     if (isRunning || activeSession) {
@@ -1731,7 +1753,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     if (jobs.length <= 3) {
       // Para 2-3 trabajos, mostrar como pestañas
       return (
-        <View style={styles.compactJobSelector}>
+        <RNAnimated.View style={[styles.compactJobSelector, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
           {jobs.length > 1 && (
             <Text style={styles.compactJobSelectorTitle}>{t('calendar.filter_by_job')}</Text>
           )}
@@ -1787,12 +1809,12 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
               </TouchableOpacity>
             ))}
           </View>
-        </View>
+        </RNAnimated.View>
       );
     } else {
       // Para más de 3 trabajos, mostrar como scroll horizontal
       return (
-        <View style={styles.compactJobSelector}>
+        <RNAnimated.View style={[styles.compactJobSelector, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
           {jobs.length > 1 && (
             <Text style={styles.compactJobSelectorTitle}>{t('job_selector.title')}</Text>
           )}
@@ -1862,7 +1884,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
               </TouchableOpacity>
             ))}
           </ScrollView>
-        </View>
+        </RNAnimated.View>
       );
     }
   };
@@ -1904,6 +1926,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
 
  
 
+        <RNAnimated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
         <BlurView 
           intensity={98} 
           tint={isDark ? "dark" : "light"} 
@@ -2037,6 +2060,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
             </View>
           </View>
         </BlurView>
+        </RNAnimated.View>
 
         {/* Mini Map - Show when AutoTimer is active */}
         {autoTimerStatus?.state === 'active' && autoTimerStatus?.jobId && (() => {

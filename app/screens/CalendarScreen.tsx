@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Animated,
 } from 'react-native';
 import { Calendar, DateData, LocaleConfig } from 'react-native-calendars';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -547,11 +548,30 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   const { selectedJob, setSelectedJob, setOnExportToCalendar } = useNavigation();
   const { triggerHaptic } = useHapticFeedback();
   
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  
   const styles = getStyles(colors, isDark);
 
   useEffect(() => {
     loadData();
-  }, []);
+    
+    // Entrance animation
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 7,
+      }),
+    ]).start();
+  }, [fadeAnim, scaleAnim]);
 
   // Configure calendar locale based on user language
   useEffect(() => {
@@ -905,7 +925,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
     if (allOptions.length <= 4) {
       // Para hasta 4 opciones (incluyendo "Todos"), mostrar como pestañas
       return (
-        <View style={styles.compactJobSelector}>
+        <Animated.View style={[styles.compactJobSelector, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
           {jobs.length > 1 && (
             <Text style={styles.compactJobSelectorTitle}>{t('calendar.filter_by_job')}</Text>
           )}
@@ -937,12 +957,12 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
               </TouchableOpacity>
             ))}
           </View>
-        </View>
+        </Animated.View>
       );
     } else {
       // Para más opciones, mostrar como scroll horizontal
       return (
-        <View style={styles.compactJobSelector}>
+        <Animated.View style={[styles.compactJobSelector, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
           {jobs.length > 1 && (
             <Text style={styles.compactJobSelectorTitle}>{t('calendar.filter_by_job')}</Text>
           )}
@@ -984,7 +1004,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
               </TouchableOpacity>
             ))}
           </ScrollView>
-        </View>
+        </Animated.View>
       );
     }
   };
@@ -1216,6 +1236,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         {/* Job selector */}
         {renderCompactJobSelector()}
 
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
         <BlurView 
           intensity={isDark ? 98 : 96} 
           tint={isDark ? "dark" : "light"} 
@@ -1323,6 +1344,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           }}
             />
         </BlurView>
+        </Animated.View>
         
         <TouchableOpacity
           style={styles.actionButton}

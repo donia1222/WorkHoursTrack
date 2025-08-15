@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Modal } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Modal, Animated } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -236,6 +236,13 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
   const { isSubscribed } = useSubscription();
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim1 = useRef(new Animated.Value(0.9)).current;
+  const scaleAnim2 = useRef(new Animated.Value(0.9)).current;
+  const scaleAnim3 = useRef(new Animated.Value(0.9)).current;
+  
   const [showJobsManagement, setShowJobsManagement] = useState(false);
   const [openAddJobModal, setOpenAddJobModal] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
@@ -253,6 +260,35 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
   const [availableBackups, setAvailableBackups] = useState<any[]>([]);
   const [lastBackupDate, setLastBackupDate] = useState<string | null>(null);
   const [showAutoBackupModal, setShowAutoBackupModal] = useState(false);
+  
+  // Entrance animations
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim1, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 7,
+      }),
+      Animated.spring(scaleAnim2, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 7,
+      }),
+      Animated.spring(scaleAnim3, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 7,
+      }),
+    ]).start();
+  }, [fadeAnim, scaleAnim1, scaleAnim2, scaleAnim3]);
 
   // Handle navigation options
   React.useEffect(() => {
@@ -353,6 +389,7 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Jobs Management Section */}
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim1 }] }}>
         <BlurView 
           intensity={98} 
           tint={isDark ? "dark" : "light"} 
@@ -385,10 +422,12 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
             <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
           </TouchableOpacity>
         </BlurView>
+        </Animated.View>
 
 
 
         {/* App Configuration Section */}
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim2 }] }}>
         <BlurView 
           intensity={98} 
           tint={isDark ? "dark" : "light"} 
@@ -461,8 +500,10 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
           </TouchableOpacity>
 
         </BlurView>
+        </Animated.View>
 
         {/* Data Management Section */}
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim3 }] }}>
         <BlurView 
           intensity={98} 
           tint={isDark ? "dark" : "light"} 
@@ -566,6 +607,7 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
             <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
           </TouchableOpacity>
         </BlurView>
+        </Animated.View>
 
         {/* Subscription Section */}
         <BlurView 

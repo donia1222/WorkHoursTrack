@@ -160,7 +160,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
   
   const screenWidth = Dimensions.get('window').width;
 
@@ -171,17 +171,17 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 600,
         useNativeDriver: true,
       }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
+      Animated.spring(scaleAnim, {
+        toValue: 1,
         useNativeDriver: true,
         tension: 50,
-        friction: 8,
+        friction: 7,
       }),
     ]).start();
-  }, [fadeAnim, slideAnim]);
+  }, [fadeAnim, scaleAnim]);
 
 
   useEffect(() => {
@@ -1209,7 +1209,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     if (allOptions.length <= 4) {
       // Para hasta 4 opciones (incluyendo "Todos"), mostrar como pestañas
       return (
-        <View style={styles.compactJobSelector}>
+        <Animated.View style={[styles.compactJobSelector, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
           {jobs.length > 1 && (
             <Text style={styles.compactJobSelectorTitle}>{t('reports.filter_by_job')}</Text>
           )}
@@ -1241,12 +1241,12 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
               </TouchableOpacity>
             ))}
           </View>
-        </View>
+        </Animated.View>
       );
     } else {
       // Para más opciones, mostrar como scroll horizontal
       return (
-        <View style={styles.compactJobSelector}>
+        <Animated.View style={[styles.compactJobSelector, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
           {jobs.length > 1 && (
             <Text style={styles.compactJobSelectorTitle}>{t('reports.filter_by_job')}</Text>
           )}
@@ -1288,7 +1288,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
               </TouchableOpacity>
             ))}
           </ScrollView>
-        </View>
+        </Animated.View>
       );
     }
   };
@@ -1341,7 +1341,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         {renderCompactJobSelector()}
 
         {/* Period selector */}
-        <Animated.View style={[{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+        <Animated.View style={[{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
           {renderCompactPeriodSelector()}
           
           {/* Custom Date Range Picker - SOLO cuando Custom range está seleccionado */}
@@ -1387,7 +1387,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
         {/* Main stats */}
         {periodStats && (
-          <Animated.View style={[{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+          <Animated.View style={[{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
             <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.modernStatsCard}>
               <LinearGradient
                 colors={isDark ? ['rgba(0, 122, 255, 0.15)', 'rgba(0, 122, 255, 0.05)'] : ['rgba(0, 122, 255, 0.1)', 'rgba(0, 122, 255, 0.03)']}

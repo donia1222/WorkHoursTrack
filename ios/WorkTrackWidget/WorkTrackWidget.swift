@@ -385,11 +385,14 @@ struct WorkTrackMedium: View {
             } else {
                 Spacer(minLength: 0)
                 
-                // Calendar - Show next 7 days
-                MiniCalendarView(
-                    days: MiniCalendarDataManager.readCalendarData(),
-                    isCompact: true
-                )
+                // Calendar - Show next 7 days (aligned to left)
+                HStack {
+                    MiniCalendarView(
+                        days: MiniCalendarDataManager.readCalendarData(),
+                        isCompact: true
+                    )
+                    Spacer()
+                }
             }
         }
         .padding(12)
@@ -409,19 +412,19 @@ struct WorkTrackLarge: View {
         let timer = timerData
         
         VStack(spacing: 8) {
-            // App name header
+            // App name header - Larger for big widget
             HStack {
                 if let ui = UIImage(named: "worktrack_icon") {
                     Image(uiImage: ui)
                         .resizable().scaledToFit()
-                        .frame(width: 20, height: 20)
-                        .clipShape(RoundedRectangle(cornerRadius: 5))
+                        .frame(width: 24, height: 24)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
                 } else {
                     Image(systemName: "briefcase.fill")
-                        .font(.system(size: 16))
+                        .font(.system(size: 20))
                 }
                 Text("WorkTrack")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
                 Spacer()
             }
             .foregroundColor(.white.opacity(0.95))

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, ThemeColors } from '@/app/contexts/ThemeContext';
 import { useLanguage } from '@/app/contexts/LanguageContext';
@@ -7,7 +7,7 @@ import { BlurView } from 'expo-blur';
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
-    backgroundColor: isDark ? colors.surface : '#F8F9FF',
+
     borderRadius: 16,
     padding: 20,
     marginVertical: 4,
@@ -188,6 +188,27 @@ export default function WelcomeMessage() {
   const { t } = useLanguage();
   const styles = getStyles(colors, isDark);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  
+  useEffect(() => {
+    // Entrance animation
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 7,
+      }),
+    ]).start();
+  }, [fadeAnim, scaleAnim]);
 
   const messageTime = new Date().toLocaleTimeString([], { 
     hour: '2-digit', 
@@ -196,7 +217,7 @@ export default function WelcomeMessage() {
 
   return (
     <>
-      <View style={styles.container}>
+      <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
 
         
         <View style={styles.header}>
@@ -254,17 +275,18 @@ export default function WelcomeMessage() {
         </View>
       </View>
 
-        <Text style={styles.timestamp}>
-          {messageTime}
-        </Text>
-                <TouchableOpacity
-          style={styles.infoButton}
-          onPress={() => setShowInfoModal(true)}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="information-circle" size={26} color={colors.secondary} />
-        </TouchableOpacity>
-      </View>
+      <Text style={styles.timestamp}>
+        {messageTime}
+      </Text>
+      
+      <TouchableOpacity
+        style={styles.infoButton}
+        onPress={() => setShowInfoModal(true)}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="information-circle" size={26} color={colors.secondary} />
+      </TouchableOpacity>
+      </Animated.View>
 
       <Modal
         visible={showInfoModal}
