@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, Platform, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,6 +23,41 @@ type TabItem = {
   activeIcon: keyof typeof Ionicons.glyphMap;
   label: string;
   color: string;
+};
+
+// Helper function to detect device type
+const getDeviceType = () => {
+  const { width, height } = Dimensions.get('window');
+  const aspectRatio = height / width;
+  
+  if (Platform.OS === 'ios') {
+    // iPad detection
+    if (Platform.isPad) {
+      return 'ipad';
+    }
+    // iPhone SE detection (smaller screens)
+    if (width <= 375 && height <= 667) {
+      return 'iphone-se';
+    }
+    // Regular iPhone
+    return 'iphone';
+  }
+  return 'android';
+};
+
+// Get bottom margin based on device type
+const getBottomMargin = () => {
+  const deviceType = getDeviceType();
+  switch (deviceType) {
+    case 'iphone-se':
+      return -3;  // iPhone SE/8 and older
+    case 'iphone':
+      return -15; // Regular iPhone (X and newer)
+    case 'ipad':
+      return 10;   // iPad
+    default:
+      return -3;  // Android default
+  }
 };
 
 export default function BottomNavigation() {
@@ -147,7 +182,7 @@ export default function BottomNavigation() {
   };
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+    <View style={[styles.container, { bottom: getBottomMargin(), paddingBottom: insets.bottom }]}>
       <BlurView 
         intensity={85} 
         tint={isDark ? "dark" : "light"} 
@@ -216,7 +251,6 @@ export default function BottomNavigation() {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: -3,
     left: 0,
     right: 0,
     zIndex: 1000,
