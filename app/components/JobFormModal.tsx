@@ -1345,7 +1345,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     
     if (visible && currentTab === 'auto') {
       checkActiveTimer();
-      interval = setInterval(checkActiveTimer, 1000);
+      // Reduce frequency to avoid performance issues
+      interval = setInterval(checkActiveTimer, 5000);
     }
     
     return () => {
@@ -1398,7 +1399,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
     if (visible && formData.autoTimer?.enabled && currentTab === 'auto') {
       checkAutoTimerStatus();
-      const interval = setInterval(checkAutoTimerStatus, 2000);
+      // Reduce frequency to avoid performance issues
+      const interval = setInterval(checkAutoTimerStatus, 10000);
       return () => clearInterval(interval);
     }
   }, [visible, formData.autoTimer?.enabled, currentTab, hasShownAutoTimerAlert, userLocation, jobCoordinates, showAutoTimerAlert, formData.autoTimer?.geofenceRadius]);
@@ -3521,7 +3523,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
   return (
     <>
-      <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
+      <Modal visible={visible} animationType="none" transparent={true} onRequestClose={onClose}>
       {isFirstTimeUser && !editingJob ? (
         // Show simplified form for first time users
         renderSimplifiedForm()

@@ -18,6 +18,7 @@ import WidgetCalendarService from './services/WidgetCalendarService';
 import WidgetSyncService from './services/WidgetSyncService';
 import { forceWidgetSync } from './services/ManualWidgetSync';
 import { verifyLiveActivityModule } from './services/VerifyNativeModule';
+import SimpleQuickActionsManager from './services/SimpleQuickActionsManager';
 // Importar BackgroundGeofenceTask para registrar la tarea
 import './services/BackgroundGeofenceTask';
 
@@ -63,6 +64,8 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
       // Verify native module on app start
       verifyLiveActivityModule();
+      // Initialize Quick Actions
+      SimpleQuickActionsManager.initialize();
     }
   }, [loaded]);
 

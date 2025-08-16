@@ -21,7 +21,27 @@
         "NSCameraUsageDescription": "Esta app necesita acceso a la cámara para que puedas tomar fotos y analizarlas con el chatbot IA.",
         "UIBackgroundModes": ["location", "remote-notification"],
         "NSSupportsLiveActivities": true,
-        "NSSupportsLiveActivitiesFrequentUpdates": true
+        "NSSupportsLiveActivitiesFrequentUpdates": true,
+        "UIApplicationShortcutItems": [
+          {
+            "UIApplicationShortcutItemType": "com.worktrack.starttimer",
+            "UIApplicationShortcutItemTitle": "Iniciar Timer",
+            "UIApplicationShortcutItemSubtitle": "Registrar tiempo",
+            "UIApplicationShortcutItemIconType": "UIApplicationShortcutIconTypeTime"
+          },
+          {
+            "UIApplicationShortcutItemType": "com.worktrack.calendar",
+            "UIApplicationShortcutItemTitle": "Calendario",
+            "UIApplicationShortcutItemSubtitle": "Ver días trabajados",
+            "UIApplicationShortcutItemIconType": "UIApplicationShortcutIconTypeDate"
+          },
+          {
+            "UIApplicationShortcutItemType": "com.worktrack.reports",
+            "UIApplicationShortcutItemTitle": "Reportes",
+            "UIApplicationShortcutItemSubtitle": "Ver resumen",
+            "UIApplicationShortcutItemIconType": "UIApplicationShortcutIconTypeCompose"
+          }
+        ]
       },
       "bundleIdentifier": "com.tuusuario.geolocalizacionapp"
     },
@@ -87,7 +107,8 @@
           "photosPermission": "Esta app necesita acceso a tus fotos para que puedas seleccionar imágenes y analizarlas con el chatbot IA.",
           "cameraPermission": "Esta app necesita acceso a la cámara para que puedas tomar fotos y analizarlas con el chatbot IA."
         }
-      ]
+      ],
+      "expo-quick-actions"
     ],
     "experiments": {
       "typedRoutes": true

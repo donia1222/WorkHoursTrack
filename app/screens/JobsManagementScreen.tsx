@@ -692,7 +692,7 @@ function JobCard({ job, onEdit, onDelete, onToggleActive, isInactive }: JobCardP
             <IconSymbol 
               size={24} 
               name={(isInactive ? "eye" : "eye.slash") as IconSymbolName} 
-              color={isInactive ? colors.success : colors.success} 
+              color={isInactive ? colors.success : colors.textSecondary} 
             />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton} onPress={() => { triggerHaptic('warning'); onDelete(); }}>

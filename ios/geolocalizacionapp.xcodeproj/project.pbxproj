@@ -3,10 +3,11 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 70;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		05B229745BDFB4665A77DF2C /* libPods-geolocalizacionapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FBE9178F2D22D2677086F6A /* libPods-geolocalizacionapp.a */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
@@ -18,7 +19,6 @@
 		62FCA2EC2E4B656F009443BD /* WorkTrackWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 62FCA2DD2E4B656D009443BD /* WorkTrackWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		62FCA36F2E4B7B6E009443BD /* LiveActivityModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 62FCA36D2E4B7B6E009443BD /* LiveActivityModule.m */; };
 		62FCA3702E4B7B6E009443BD /* LiveActivityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62FCA36E2E4B7B6E009443BD /* LiveActivityModule.swift */; };
-		932AC3FCD974458BF1C3F4F7 /* libPods-geolocalizacionapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF5C1722F9C3AF6B9A3FF88 /* libPods-geolocalizacionapp.a */; };
 		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 /* End PBXBuildFile section */
@@ -48,7 +48,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		026899F8F45C667A3D50ECD3 /* Pods-geolocalizacionapp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-geolocalizacionapp.debug.xcconfig"; path = "Target Support Files/Pods-geolocalizacionapp/Pods-geolocalizacionapp.debug.xcconfig"; sourceTree = "<group>"; };
 		095AD82A61BC8E2960001237 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = geolocalizacionapp/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* geolocalizacionapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = geolocalizacionapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = geolocalizacionapp/AppDelegate.h; sourceTree = "<group>"; };
@@ -56,7 +55,6 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = geolocalizacionapp/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = geolocalizacionapp/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = geolocalizacionapp/main.m; sourceTree = "<group>"; };
-		1FF5C1722F9C3AF6B9A3FF88 /* libPods-geolocalizacionapp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-geolocalizacionapp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		624CA3EF2E4AB50D003F8385 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		624CA3F12E4AB50D003F8385 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		626331482E508E0C005D3D34 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/SplashScreen.storyboard; sourceTree = "<group>"; };
@@ -65,22 +63,24 @@
 		62FCA36D2E4B7B6E009443BD /* LiveActivityModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = LiveActivityModule.m; path = geolocalizacionapp/LiveActivityModule.m; sourceTree = "<group>"; };
 		62FCA36E2E4B7B6E009443BD /* LiveActivityModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiveActivityModule.swift; path = geolocalizacionapp/LiveActivityModule.swift; sourceTree = "<group>"; };
 		8433610D6F4B4A6E9ED36292 /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "geolocalizacionapp/noop-file.swift"; sourceTree = "<group>"; };
+		8FBE9178F2D22D2677086F6A /* libPods-geolocalizacionapp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-geolocalizacionapp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9CAD3DF76C8B474B9AF967D3 /* geolocalizacionapp-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "geolocalizacionapp-Bridging-Header.h"; path = "geolocalizacionapp/geolocalizacionapp-Bridging-Header.h"; sourceTree = "<group>"; };
-		AB769B637D31BB046646622C /* Pods-geolocalizacionapp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-geolocalizacionapp.release.xcconfig"; path = "Target Support Files/Pods-geolocalizacionapp/Pods-geolocalizacionapp.release.xcconfig"; sourceTree = "<group>"; };
+		AAF09151AC0FE0E29650DE7F /* Pods-geolocalizacionapp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-geolocalizacionapp.debug.xcconfig"; path = "Target Support Files/Pods-geolocalizacionapp/Pods-geolocalizacionapp.debug.xcconfig"; sourceTree = "<group>"; };
+		AF4687C6B5D17C57B980CB0A /* Pods-geolocalizacionapp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-geolocalizacionapp.release.xcconfig"; path = "Target Support Files/Pods-geolocalizacionapp/Pods-geolocalizacionapp.release.xcconfig"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-geolocalizacionapp/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		62FCA2EF2E4B6570009443BD /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		62FCA2EF2E4B6570009443BD /* Exceptions for "WorkTrackWidget" folder in "WorkTrackWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 62FCA2DC2E4B656D009443BD /* WorkTrackWidgetExtension */;
 		};
-		62FCA36C2E4B7B22009443BD /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		62FCA36C2E4B7B22009443BD /* Exceptions for "WorkTrackWidget" folder in "geolocalizacionapp" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				WorkTrackWidgetAttributes.swift,
@@ -90,7 +90,19 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		62FCA2E02E4B656D009443BD /* WorkTrackWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (62FCA36C2E4B7B22009443BD /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 62FCA2EF2E4B6570009443BD /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = WorkTrackWidget; sourceTree = "<group>"; };
+		62FCA2E02E4B656D009443BD /* WorkTrackWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				62FCA36C2E4B7B22009443BD /* Exceptions for "WorkTrackWidget" folder in "geolocalizacionapp" target */,
+				62FCA2EF2E4B6570009443BD /* Exceptions for "WorkTrackWidget" folder in "WorkTrackWidgetExtension" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = WorkTrackWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,7 +110,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				932AC3FCD974458BF1C3F4F7 /* libPods-geolocalizacionapp.a in Frameworks */,
+				05B229745BDFB4665A77DF2C /* libPods-geolocalizacionapp.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,7 +149,7 @@
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				624CA3EF2E4AB50D003F8385 /* WidgetKit.framework */,
 				624CA3F12E4AB50D003F8385 /* SwiftUI.framework */,
-				1FF5C1722F9C3AF6B9A3FF88 /* libPods-geolocalizacionapp.a */,
+				8FBE9178F2D22D2677086F6A /* libPods-geolocalizacionapp.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -197,8 +209,8 @@
 		D65327D7A22EEC0BE12398D9 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				026899F8F45C667A3D50ECD3 /* Pods-geolocalizacionapp.debug.xcconfig */,
-				AB769B637D31BB046646622C /* Pods-geolocalizacionapp.release.xcconfig */,
+				AAF09151AC0FE0E29650DE7F /* Pods-geolocalizacionapp.debug.xcconfig */,
+				AF4687C6B5D17C57B980CB0A /* Pods-geolocalizacionapp.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -218,15 +230,15 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "geolocalizacionapp" */;
 			buildPhases = (
-				25965241661DF08793DFD859 /* [CP] Check Pods Manifest.lock */,
+				C62298674D7234169A16BFB1 /* [CP] Check Pods Manifest.lock */,
 				B7D392BED7DB19B193D02E35 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				624CA4002E4AB50F003F8385 /* Embed Foundation Extensions */,
-				4A3ECC232A13F4D43FA905DE /* [CP] Embed Pods Frameworks */,
-				6D0BEDED5326271A69B4260F /* [CP] Copy Pods Resources */,
+				4BEC5C0CE3677F177CB1A307 /* [CP] Embed Pods Frameworks */,
+				23BA03547920E345F328D1EF /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -331,47 +343,7 @@
 			shellPath = /bin/sh;
 			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# The project root by default is one level up from the ios directory\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export SKIP_BUNDLING=1\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  # Set the entry JS file using the bundler's entry resolution.\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\n\nif [[ -z \"$CLI_PATH\" ]]; then\n  # Use Expo CLI\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  # Default Expo CLI command for bundling\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n# Source .xcode.env.updates if it exists to allow\n# SKIP_BUNDLING to be unset if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.updates\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.updates\"\nfi\n# Source local changes to allow overrides\n# if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n\n";
 		};
-		25965241661DF08793DFD859 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-geolocalizacionapp-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		4A3ECC232A13F4D43FA905DE /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-geolocalizacionapp/Pods-geolocalizacionapp-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-geolocalizacionapp/Pods-geolocalizacionapp-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		6D0BEDED5326271A69B4260F /* [CP] Copy Pods Resources */ = {
+		23BA03547920E345F328D1EF /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -423,6 +395,24 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-geolocalizacionapp/Pods-geolocalizacionapp-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		4BEC5C0CE3677F177CB1A307 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-geolocalizacionapp/Pods-geolocalizacionapp-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-geolocalizacionapp/Pods-geolocalizacionapp-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		B7D392BED7DB19B193D02E35 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -441,6 +431,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-geolocalizacionapp/expo-configure-project.sh\"\n";
+		};
+		C62298674D7234169A16BFB1 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-geolocalizacionapp-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -490,7 +502,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 026899F8F45C667A3D50ECD3 /* Pods-geolocalizacionapp.debug.xcconfig */;
+			baseConfigurationReference = AAF09151AC0FE0E29650DE7F /* Pods-geolocalizacionapp.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -528,7 +540,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AB769B637D31BB046646622C /* Pods-geolocalizacionapp.release.xcconfig */;
+			baseConfigurationReference = AF4687C6B5D17C57B980CB0A /* Pods-geolocalizacionapp.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -703,7 +715,10 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -760,7 +775,10 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;

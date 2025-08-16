@@ -842,7 +842,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     paddingTop: isTablet ? 16 : (isSmallScreen ? 8 : 10),
     paddingBottom: isTablet ? 14 : (isSmallScreen ? 6 : 8),
     paddingHorizontal: isTablet ? 20 : (isSmallScreen ? 8 : 12),
-    backgroundColor: isDark ?  'rgba(104, 82, 166, 0.52)' : 'rgba(135, 107, 211, 0.22)',
+    backgroundColor: isDark ? 'rgba(76, 92, 175, 0.33)' : 'rgba(76, 87, 175, 0.16)',
   },
   miniCalendarHeader: {
     flexDirection: 'row',
@@ -2380,7 +2380,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
           <LinearGradient
             colors={isDark 
               ? ['#000000ff', '#151515ff', '#0f0f0f'] 
-              : ['transparent', '#4b75df1b', '#4b75df27']
+              : ['transparent', 'transparent', 'transparent']
             }
             style={styles.noLocationBackground}
             locations={[0, 0.5, 1]}
@@ -2461,12 +2461,12 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View style={{ flexDirection: isIPadPortrait ? 'row' : 'column', alignItems: isIPadPortrait ? 'center' : 'flex-start', gap: isIPadPortrait ? 12 : 0 }}>
                       <Animated.View style={animatedClockStyle}>
-                        <IconSymbol size={isSmallScreen ? 28 : (isIPadPortrait ? 32 : 34)} name="clock.fill" color={colors.success} />
+                        <IconSymbol size={isSmallScreen ? 28 : (isIPadPortrait ? 28 : 30)} name="clock.fill" color={colors.success} />
                       </Animated.View>
                       <View>
                         <Text style={{
-                          fontSize: isSmallScreen ? 10 : (isIPadPortrait ? 12 : 11),
-                          fontWeight: '700',
+                          fontSize: isSmallScreen ? 10 : (isIPadPortrait ? 18 : 16),
+                          fontWeight: '500',
                           color: autoTimerStatus?.state === 'active' ? colors.success : colors.textSecondary,
                           letterSpacing: 0.2,
                           marginTop: isIPadPortrait ? 2 : 2,
@@ -2479,7 +2479,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           color: colors.textSecondary,
 
                           fontWeight: '600',
-                          marginTop: isIPadPortrait ? 1 : 6,
+                          marginTop: isIPadPortrait ? 4 : 9,
                         }}>{t('maps.auto_timer')}</Text>
                       </View>
                     </View>

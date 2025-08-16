@@ -2,6 +2,7 @@
 
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTLinkingManager.h>
+#import <React/RCTRootView.h>
 
 @implementation AppDelegate
 
@@ -11,7 +12,19 @@
 
   // You can add your custom initial props in the dictionary below.
   // They will be passed down to the ViewController used by React Native.
-  self.initialProps = @{};
+  // Check if app was launched with a quick action
+  UIApplicationShortcutItem *shortcutItem = launchOptions[UIApplicationLaunchOptionsShortcutItemKey];
+  if (shortcutItem) {
+    NSLog(@"🚀 App launched with Quick Action: %@", shortcutItem.type);
+    // Store the shortcut type in initial props for JavaScript to handle
+    self.initialProps = @{@"shortcutType": shortcutItem.type};
+    
+    // Return YES to let the app handle it
+    return [super application:application didFinishLaunchingWithOptions:launchOptions];
+  } else {
+    NSLog(@"📱 App launched normally (no Quick Action)");
+    self.initialProps = @{};
+  }
   
   // Clean up any stale Live Activities on app launch
   if (@available(iOS 16.2, *)) {
@@ -116,6 +129,35 @@
   // Widget refresh is handled by JavaScript side when app resumes
   NSLog(@"📱 App will enter foreground");
   [super applicationWillEnterForeground:application];
+}
+
+// Handle Quick Actions when app is already running
+- (void)application:(UIApplication *)application performActionForShortcutItem:(UIApplicationShortcutItem *)shortcutItem completionHandler:(void (^)(BOOL))completionHandler {
+  NSLog(@"🎯 Quick Action performed: %@", shortcutItem.type);
+  
+  // Send event to JavaScript through the bridge
+  dispatch_async(dispatch_get_main_queue(), ^{
+    // Get the root view controller and send event
+    UIViewController *rootViewController = self.window.rootViewController;
+    if (rootViewController) {
+      // Emit an event that expo-quick-actions can handle
+      NSDictionary *actionData = @{
+        @"id": shortcutItem.type,
+        @"type": shortcutItem.type,
+        @"title": shortcutItem.localizedTitle ?: @"",
+        @"subtitle": shortcutItem.localizedSubtitle ?: @""
+      };
+      
+      // Post notification that JavaScript can listen to
+      [[NSNotificationCenter defaultCenter] postNotificationName:@"QuickActionPerformed" 
+                                                          object:nil 
+                                                        userInfo:actionData];
+      
+      NSLog(@"✅ Quick Action notification sent: %@", actionData);
+    }
+  });
+  
+  completionHandler(YES);
 }
 
 // Explicitly define remote notification delegates to ensure compatibility with some third-party libraries

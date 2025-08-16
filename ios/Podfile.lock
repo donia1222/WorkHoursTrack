@@ -69,6 +69,8 @@ PODS:
     - Yoga
   - ExpoPrint (14.0.3):
     - ExpoModulesCore
+  - ExpoQuickActions (5.0.0):
+    - ExpoModulesCore
   - ExpoSharing (13.0.1):
     - ExpoModulesCore
   - ExpoSplashScreen (0.29.24):
@@ -2017,6 +2019,7 @@ DEPENDENCIES:
   - ExpoLocation (from `../node_modules/expo-location/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoPrint (from `../node_modules/expo-print/ios`)
+  - ExpoQuickActions (from `../node_modules/expo-quick-actions/ios`)
   - ExpoSharing (from `../node_modules/expo-sharing/ios`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
   - ExpoSymbols (from `../node_modules/expo-symbols/ios`)
@@ -2157,6 +2160,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-modules-core"
   ExpoPrint:
     :path: "../node_modules/expo-print/ios"
+  ExpoQuickActions:
+    :path: "../node_modules/expo-quick-actions/ios"
   ExpoSharing:
     :path: "../node_modules/expo-sharing/ios"
   ExpoSplashScreen:
@@ -2342,6 +2347,7 @@ SPEC CHECKSUMS:
   ExpoLocation: ad29273f84077363296657176ea39c3545521720
   ExpoModulesCore: dd965804a882f1dbb6036fceea4d912461aeaa0d
   ExpoPrint: cdbb10ba76557abaf825121b4136ccf5b279fe37
+  ExpoQuickActions: 5f8b794e9c69b19bd85dd51d78a9cfb9f32d61b8
   ExpoSharing: c4540ef2e6615a92e05d2bddf019e1f58f27119e
   ExpoSplashScreen: 0e176e85073dfb9686c100c7f9637975d00608dd
   ExpoSymbols: b9f255ce49868d46a73f30e12859efeb8117bcad

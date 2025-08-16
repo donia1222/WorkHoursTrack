@@ -44,6 +44,7 @@ import AutoTimerService from '../services/AutoTimerService';
 import { AutoBackupService, BackupFrequency } from '../services/AutoBackupService';
 import { JobService } from '../services/JobService';
 import { Job } from '../types/WorkTypes';
+import QuickActionsManager from '../services/QuickActionsManager';
 
 // Componente con animaciones suaves para transiciones
 const ScreenWrapper = ({ children, screenKey }: { children: React.ReactNode; screenKey: string }) => {
@@ -132,6 +133,35 @@ function AppContent() {
 
     return () => clearTimeout(timer);
   }, []);
+  
+  // Manejar Quick Actions con eventos (LA FORMA CORRECTA)
+  useEffect(() => {
+    const handleQuickAction = (screen: string) => {
+      console.log('📱 Quick Action evento recibido - Navegando a:', screen);
+      
+      // El QuickActionsManager ya envía el nombre de la pantalla directamente
+      // Verificamos que sea una pantalla válida
+      const validScreens: ScreenName[] = ['mapa', 'timer', 'reports', 'calendar', 'settings', 'subscription', 'chatbot'];
+      
+      if (validScreens.includes(screen as ScreenName)) {
+        navigateTo(screen as ScreenName);
+      } else {
+        console.warn('⚠️ Pantalla no válida desde Quick Action:', screen);
+      }
+    };
+
+    // Mark navigation as ready once the component is mounted
+    QuickActionsManager.setNavigationReady(true);
+
+    // Subscribe to quick action events
+    QuickActionsManager.on('quickAction', handleQuickAction);
+
+    // Clean up on unmount
+    return () => {
+      QuickActionsManager.off('quickAction', handleQuickAction);
+      QuickActionsManager.setNavigationReady(false);
+    };
+  }, [navigateTo]);
 
   // Verificar estado de suscripción al iniciar la app
   useEffect(() => {
@@ -530,12 +560,13 @@ function AppContent() {
         return (
 
             <View style={{overflow: 'hidden', borderRadius: 10}}>
-              <Image 
-                source={require('../../public/images/app-icon.png')} 
-                style={styles.headerLogo}
-                resizeMode="cover"
-              />
-    
+
+           <Text style={styles.workText}>
+            <Text style={{ color: '#007AFF', fontWeight: '700' }}>Vix</Text>
+            <Text style={{ color: '#5856D6', fontWeight: '700' }}>Time</Text>
+
+
+            </Text>
           </View>
         );
       case 'timer':

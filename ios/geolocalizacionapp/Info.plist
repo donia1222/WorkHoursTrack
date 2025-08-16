@@ -117,5 +117,48 @@
 	<string>Automatic</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.worktrack.timer</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Timer</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Gestionar tiempo</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeTime</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.worktrack.reports</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Reportes</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Ver resumen</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeCompose</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.worktrack.calendar</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Calendario</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Días trabajados</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeDate</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.worktrack.chat</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Chat IA</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Asistente</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeMessage</string>
+		</dict>
+	</array>
 </dict>
 </plist>
