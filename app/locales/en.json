@@ -550,7 +550,7 @@
     "steps": {
       "location": {
         "title": "Your Privacy Matters",
-        "description": "WorkTrack uses your location solely to detect when you arrive and leave work. All data is stored locally on your device. We have no servers, collect no data, and never share your information. You can change this permission anytime in System Settings."
+        "description": "VixTime uses your location solely to detect when you arrive and leave work. All data is stored locally on your device. We have no servers, collect no data, and never share your information. You can change this permission anytime in System Settings."
       },
       "jobs": {
         "title": "Jobs",
@@ -988,8 +988,8 @@
       "schedule": "Support Hours",
       "schedule_hours": "Mon - Fri: 9:00 AM - 6:00 PM",
       "share_app": "Share App",
-      "share_app_desc": "Share WorkTrack with friends",
-      "share_message": "Check out WorkTrack! The best app for tracking your work hours. Download: https://mywork-track.com"
+      "share_app_desc": "Share VixTime with friends",
+      "share_message": "Check out VixTime! The best app for tracking your work hours. Download: https://vixtime.com"
     },
     "legal": {
       "title": "Legal & Privacy",
@@ -1253,7 +1253,7 @@
     "title": "Privacy Policy",
     "subtitle": "Last updated: August 2025",
     "your_privacy_title": "Your Privacy is Our Priority",
-    "your_privacy_text": "At WorkTrack, we take your privacy seriously. This Privacy Policy explains how we collect, use, and protect your information when you use our work time tracking application.",
+    "your_privacy_text": "At VixTime, we take your privacy seriously. This Privacy Policy explains how we collect, use, and protect your information when you use our work time tracking application.",
     "data_storage_title": "Data Storage",
     "local_storage_text": "100% Local Storage: All your work data, including job information, time records, schedules, and settings are stored exclusively on your device. We do not have access to this information.",
     "no_cloud_text": "No Cloud Servers: We don't have any databases or cloud servers that store your personal information. Your data never leaves your device unless you explicitly choose to export or share it.",
@@ -1283,11 +1283,11 @@
     "title": "Terms of Service",
     "subtitle": "Last updated: August 2025",
     "acceptance_title": "Acceptance of Terms",
-    "acceptance_text": "By downloading, installing, or using WorkTrack, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the app.",
+    "acceptance_text": "By downloading, installing, or using VixTime, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the app.",
     "description_title": "App Description",
-    "description_text": "WorkTrack is a work time tracking application that helps you monitor and manage your work hours, create schedules, and generate reports. All data is stored locally on your device.",
+    "description_text": "VixTime is a work time tracking application that helps you monitor and manage your work hours, create schedules, and generate reports. All data is stored locally on your device.",
     "license_title": "License",
-    "license_text": "We grant you a limited, non-exclusive, non-transferable license to use WorkTrack for personal or business purposes in accordance with these terms.",
+    "license_text": "We grant you a limited, non-exclusive, non-transferable license to use VixTime for personal or business purposes in accordance with these terms.",
     "user_responsibilities_title": "User Responsibilities", 
     "user_responsibilities_text": "You are responsible for: (a) maintaining the security of your device and app data, (b) creating regular backups of your data, (c) using the app in compliance with applicable laws.",
     "data_ownership_title": "Data Ownership",

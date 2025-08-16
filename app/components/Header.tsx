@@ -315,14 +315,6 @@ export default function Header({ title, onProfilePress, onBackPress, showBackBut
             ) : (
               title
             )}
-            <View style={styles.titleUnderline}>
-              <LinearGradient
-                colors={['#007AFF', '#0056CC', '#003D99']}
-                style={styles.titleUnderlineGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              />
-            </View>
           </View>
           
           {showCloseButton && onClosePress ? (

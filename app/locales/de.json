@@ -842,8 +842,8 @@
       "schedule": "Support-Zeiten",
       "schedule_hours": "Mo - Fr: 9:00 - 18:00 Uhr",
       "share_app": "App teilen",
-      "share_app_desc": "WorkTrack mit Freunden teilen",
-      "share_message": "Entdecke WorkTrack! Die beste App zur Arbeitszeiterfassung. Download: https://mywork-track.com"
+      "share_app_desc": "VixTime mit Freunden teilen",
+      "share_message": "Entdecke VixTime! Die beste App zur Arbeitszeiterfassung. Download: https://vixtime.com"
     },
     "legal": {
       "title": "Rechtliches & Datenschutz",
@@ -1142,7 +1142,7 @@
     "steps": {
       "location": {
         "title": "Deine Privatsphäre ist Wichtig",
-        "description": "WorkTrack nutzt deinen Standort nur, um zu erkennen, wann du bei der Arbeit ankommst und gehst. Alle Daten werden lokal auf deinem Gerät gespeichert. Wir haben keine Server, sammeln keine Daten und teilen niemals deine Informationen. Du kannst diese Berechtigung jederzeit in den Systemeinstellungen ändern."
+        "description": "VixTime nutzt deinen Standort nur, um zu erkennen, wann du bei der Arbeit ankommst und gehst. Alle Daten werden lokal auf deinem Gerät gespeichert. Wir haben keine Server, sammeln keine Daten und teilen niemals deine Informationen. Du kannst diese Berechtigung jederzeit in den Systemeinstellungen ändern."
       },
       "jobs": {
         "title": "Arbeiten",
@@ -1202,7 +1202,7 @@
     "title": "Datenschutzrichtlinie",
     "subtitle": "Letzte Aktualisierung: August 2025",
     "your_privacy_title": "Ihr Datenschutz ist unsere Priorität",
-    "your_privacy_text": "Bei WorkTrack nehmen wir Ihren Datenschutz ernst. Diese Datenschutzrichtlinie erklärt, wie wir Ihre Informationen sammeln, verwenden und schützen, wenn Sie unsere Arbeitszeiterfassungsanwendung verwenden.",
+    "your_privacy_text": "Bei VixTime nehmen wir Ihren Datenschutz ernst. Diese Datenschutzrichtlinie erklärt, wie wir Ihre Informationen sammeln, verwenden und schützen, wenn Sie unsere Arbeitszeiterfassungsanwendung verwenden.",
     "data_storage_title": "Datenspeicherung",
     "local_storage_text": "100% lokale Speicherung: Alle Ihre Arbeitsdaten, einschließlich Stelleninformationen, Zeitaufzeichnungen, Zeitpläne und Einstellungen werden ausschließlich auf Ihrem Gerät gespeichert. Wir haben keinen Zugriff auf diese Informationen.",
     "no_cloud_text": "Keine Cloud-Server: Wir haben keine Datenbanken oder Cloud-Server, die Ihre persönlichen Informationen speichern. Ihre Daten verlassen Ihr Gerät nie, es sei denn, Sie wählen explizit, sie zu exportieren oder zu teilen.",
@@ -1232,11 +1232,11 @@
     "title": "Nutzungsbedingungen",
     "subtitle": "Letzte Aktualisierung: August 2025",
     "acceptance_title": "Annahme der Bedingungen",
-    "acceptance_text": "Durch das Herunterladen, Installieren oder Verwenden von WorkTrack stimmen Sie zu, an diese Nutzungsbedingungen gebunden zu sein. Wenn Sie diesen Bedingungen nicht zustimmen, verwenden Sie die App bitte nicht.",
+    "acceptance_text": "Durch das Herunterladen, Installieren oder Verwenden von VixTime stimmen Sie zu, an diese Nutzungsbedingungen gebunden zu sein. Wenn Sie diesen Bedingungen nicht zustimmen, verwenden Sie die App bitte nicht.",
     "description_title": "App-Beschreibung",
-    "description_text": "WorkTrack ist eine Arbeitszeiterfassungsanwendung, die Ihnen hilft, Ihre Arbeitszeiten zu überwachen und zu verwalten, Zeitpläne zu erstellen und Berichte zu generieren. Alle Daten werden lokal auf Ihrem Gerät gespeichert.",
+    "description_text": "VixTime ist eine Arbeitszeiterfassungsanwendung, die Ihnen hilft, Ihre Arbeitszeiten zu überwachen und zu verwalten, Zeitpläne zu erstellen und Berichte zu generieren. Alle Daten werden lokal auf Ihrem Gerät gespeichert.",
     "license_title": "Lizenz",
-    "license_text": "Wir gewähren Ihnen eine begrenzte, nicht-exklusive, nicht-übertragbare Lizenz zur Nutzung von WorkTrack für persönliche oder geschäftliche Zwecke in Übereinstimmung mit diesen Bedingungen.",
+    "license_text": "Wir gewähren Ihnen eine begrenzte, nicht-exklusive, nicht-übertragbare Lizenz zur Nutzung von VixTime für persönliche oder geschäftliche Zwecke in Übereinstimmung mit diesen Bedingungen.",
     "user_responsibilities_title": "Benutzerverantwortlichkeiten",
     "user_responsibilities_text": "Sie sind verantwortlich für: (a) die Aufrechterhaltung der Sicherheit Ihres Geräts und der App-Daten, (b) die Erstellung regelmäßiger Backups Ihrer Daten, (c) die Nutzung der App in Übereinstimmung mit geltendem Recht.",
     "data_ownership_title": "Dateneigentum",

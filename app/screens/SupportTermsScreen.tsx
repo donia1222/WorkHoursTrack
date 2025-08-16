@@ -213,7 +213,7 @@ Please describe your issue below:
 `;
     
     // Crear el URL del email con la información
-    const subject = encodeURIComponent('WorkTrack Support Request');
+    const subject = encodeURIComponent('VixTime Support Request');
     const body = encodeURIComponent(emailBody);
     const emailUrl = `mailto:info@lweb.ch?subject=${subject}&body=${body}`;
     
@@ -235,9 +235,9 @@ Please describe your issue below:
   const shareApp = async () => {
     try {
       await Share.share({
-        message: t('help_support.contact.share_message') || 'Check out WorkTrack - The best app for tracking your work hours!',
-        url: 'https://mywork-track.com',
-        title: 'WorkTrack App'
+        message: t('help_support.contact.share_message') || 'Check out VixTime - The best app for tracking your work hours!',
+        url: 'https://vixtime.com',
+        title: 'VixTime App'
       });
     } catch (error) {
       console.error('Error sharing:', error);

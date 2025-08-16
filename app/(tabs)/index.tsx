@@ -528,14 +528,14 @@ function AppContent() {
     switch (currentScreen) {
       case 'mapa':
         return (
-          <View style={styles.workTrackTitle}>
-  
-            <Text style={styles.workText}>
-            <Text style={{ color: '#007AFF', fontWeight: '700' }}>Vix</Text>
-            <Text style={{ color: '#5856D6', fontWeight: '700' }}>Time</Text>
 
-
-            </Text>
+            <View style={{overflow: 'hidden', borderRadius: 10}}>
+              <Image 
+                source={require('../../public/images/app-icon.png')} 
+                style={styles.headerLogo}
+                resizeMode="cover"
+              />
+    
           </View>
         );
       case 'timer':
@@ -582,6 +582,7 @@ function AppContent() {
             <Text style={styles.workText}>
            <Text style={{ color: '#0056CC' }}>Vix</Text>
               <Text style={{ color: '#007AFF' }}>Time</Text>
+
             </Text>
           </View>
         );
@@ -958,17 +959,19 @@ const styles = StyleSheet.create({
   workTrackTitle: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: -6,
     gap: 0,
-
+    flex: 1,
   },
   titleIcon: {
     marginRight: 4,
   },
   headerLogo: {
-    width: 32,
-    height: 32,
-    marginRight: 2,
+    width: 80,
+    height: 30,
+
+    borderRadius: 10,
   },
   workText: {
     fontSize: 23,

@@ -48,13 +48,6 @@ struct ActiveTimerView: View {
                     .font(.system(size: isCompact ? 16 : 20, weight: .semibold))
                     .foregroundColor(.white)
                     .lineLimit(1)
-                
-                if let location = location, !location.isEmpty {
-                    Text(location)
-                        .font(.system(size: isCompact ? 11 : 13))
-                        .foregroundColor(.white.opacity(0.7))
-                        .lineLimit(1)
-                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             

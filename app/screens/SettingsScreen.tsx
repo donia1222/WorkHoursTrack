@@ -19,7 +19,6 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { DataExportService } from '../services/DataExportService';
 import { AutoBackupService, BackupFrequency } from '../services/AutoBackupService';
 import { useSubscription } from '../hooks/useSubscription';
-import { forceCompleteWidgetSync } from '../services/ForceWidgetSync';
 import { Platform, Alert } from 'react-native';
 
 interface SettingsScreenProps {
@@ -663,48 +662,6 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
           </TouchableOpacity>
         </BlurView>
 
-        {/* Debug Section - Only iOS */}
-        {Platform.OS === 'ios' && (
-          <BlurView 
-            intensity={98} 
-            tint={isDark ? "dark" : "light"} 
-            style={styles.sectionCard}
-          >
-            <LinearGradient
-              colors={isDark ? ['rgba(255, 59, 48, 0.15)', 'rgba(255, 59, 48, 0.05)'] : ['rgba(255, 59, 48, 0.1)', 'rgba(255, 59, 48, 0.03)']}
-              style={styles.sectionCardGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            />
-            <View style={{ marginBottom: 8 }}>
-              <Text style={styles.sectionTitle}>Widget Debug</Text>
-              <Text style={styles.sectionDescription}>
-                Force widget data synchronization
-              </Text>
-            </View>
-            
-            <TouchableOpacity 
-              style={styles.settingItem}
-              onPress={async () => {
-                try {
-                  await forceCompleteWidgetSync();
-                  Alert.alert('Success', 'Widget data has been synced. Check your widget now.');
-                } catch (error) {
-                  Alert.alert('Error', 'Failed to sync widget data');
-                }
-              }}
-            >
-              <View style={[styles.settingIcon, { backgroundColor: 'rgba(255, 59, 48, 0.2)' }]}>
-                <IconSymbol size={24} name="arrow.triangle.2.circlepath" color="#FF3B30" />
-              </View>
-              <View style={styles.settingContent}>
-                <Text style={styles.settingTitle}>Force Widget Sync</Text>
-                <Text style={styles.settingDescription}>Manually sync all data to widget</Text>
-              </View>
-              <IconSymbol size={18} name="chevron.right" color={colors.textSecondary} />
-            </TouchableOpacity>
-          </BlurView>
-        )}
 
       </ScrollView>
 

@@ -130,10 +130,6 @@ struct MiniCalendarView: View {
             }
             .padding(.horizontal, 4)
             .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.white.opacity(0.08))
-            )
         } else if isCompact {
             // Medium widget: 7 upcoming days in one row
             HStack(spacing: 4) {
@@ -143,10 +139,6 @@ struct MiniCalendarView: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.white.opacity(0.08))
-            )
         } else {
             // Large widget: 28 days in four rows (full month)
             VStack(spacing: 6) {
@@ -197,10 +189,6 @@ struct MiniCalendarView: View {
             }
             .padding(.horizontal, 6)
             .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.white.opacity(0.08))
-            )
         }
     }
 }
@@ -217,17 +205,18 @@ struct DayView: View {
         switch dayInfo.type {
         case .work:
             if let hexColor = dayInfo.jobColor {
-                return Color(hex: hexColor) ?? .green
+                // Use job color but ensure it's vibrant enough
+                return Color(hex: hexColor) ?? Color(red: 0.3, green: 0.6, blue: 1.0)
             }
-            return .green
+            return Color(red: 0.3, green: 0.6, blue: 1.0) // Default light blue for work days
         case .vacation:
-            return .orange
+            return Color(red: 1.0, green: 0.7, blue: 0.3).opacity(0.9)
         case .sick:
-            return .red
+            return Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.9)
         case .free:
-            return .gray.opacity(0.3)
+            return Color.white.opacity(0.15)
         case .scheduled:
-            return .blue.opacity(0.5)
+            return Color.white.opacity(0.4)
         }
     }
     
@@ -253,7 +242,7 @@ struct DayView: View {
             // Day label (Mon, Tue, etc.)
             Text(dayLabel)
                 .font(.system(size: isSmallWidget ? 10 : (isMediumWidget ? 11 : (isLargeWidget ? 10 : 10)), weight: .medium))
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(.white.opacity(0.8))
             
             // Day number with work indicator
             ZStack {
@@ -263,20 +252,20 @@ struct DayView: View {
                 
                 if isToday {
                     Circle()
-                        .strokeBorder(Color.white, lineWidth: 2)
+                        .strokeBorder(Color.white.opacity(0.95), lineWidth: 2.5)
                         .frame(width: circleSize, height: circleSize)
                 }
                 
                 Text(dayNumber)
                     .font(.system(size: fontSize, weight: .bold))
-                    .foregroundColor(dayInfo.type == .free ? .white.opacity(0.4) : .white)
+                    .foregroundColor(dayInfo.type == .free ? .white.opacity(0.6) : .white)
             }
             
             // Hours worked (if applicable)
             if let hours = dayInfo.hours, dayInfo.type == .work {
                 Text("\(String(format: "%.1f", hours))h")
-                    .font(.system(size: hoursSize, weight: .medium))
-                    .foregroundColor(.white.opacity(0.7))
+                    .font(.system(size: hoursSize, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.85))
             } else if !isLargeWidget {
                 Text(" ")
                     .font(.system(size: hoursSize))

@@ -35,13 +35,6 @@ struct MediumTimerView: View {
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
                     .lineLimit(1)
-                
-                if let location = location, !location.isEmpty {
-                    Text(location)
-                        .font(.system(size: 12))
-                        .foregroundColor(.white.opacity(0.7))
-                        .lineLimit(1)
-                }
             }
             
             Spacer()

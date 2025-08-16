@@ -11,8 +11,8 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		3A741DDAED254A52AA25B004 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8433610D6F4B4A6E9ED36292 /* noop-file.swift */; };
-		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		47FF13A030B6CB4C88BA0123 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 095AD82A61BC8E2960001237 /* PrivacyInfo.xcprivacy */; };
+		6263314A2E508E0C005D3D34 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 626331492E508E0C005D3D34 /* SplashScreen.storyboard */; };
 		62FCA2DE2E4B656D009443BD /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 624CA3EF2E4AB50D003F8385 /* WidgetKit.framework */; };
 		62FCA2DF2E4B656D009443BD /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 624CA3F12E4AB50D003F8385 /* SwiftUI.framework */; };
 		62FCA2EC2E4B656F009443BD /* WorkTrackWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 62FCA2DD2E4B656D009443BD /* WorkTrackWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -59,13 +59,13 @@
 		1FF5C1722F9C3AF6B9A3FF88 /* libPods-geolocalizacionapp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-geolocalizacionapp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		624CA3EF2E4AB50D003F8385 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		624CA3F12E4AB50D003F8385 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		626331482E508E0C005D3D34 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/SplashScreen.storyboard; sourceTree = "<group>"; };
 		62FCA2DD2E4B656D009443BD /* WorkTrackWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WorkTrackWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		62FCA2F32E4B67D7009443BD /* WorkTrackWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WorkTrackWidgetExtension.entitlements; sourceTree = "<group>"; };
 		62FCA36D2E4B7B6E009443BD /* LiveActivityModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = LiveActivityModule.m; path = geolocalizacionapp/LiveActivityModule.m; sourceTree = "<group>"; };
 		62FCA36E2E4B7B6E009443BD /* LiveActivityModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiveActivityModule.swift; path = geolocalizacionapp/LiveActivityModule.swift; sourceTree = "<group>"; };
 		8433610D6F4B4A6E9ED36292 /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "geolocalizacionapp/noop-file.swift"; sourceTree = "<group>"; };
 		9CAD3DF76C8B474B9AF967D3 /* geolocalizacionapp-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "geolocalizacionapp-Bridging-Header.h"; path = "geolocalizacionapp/geolocalizacionapp-Bridging-Header.h"; sourceTree = "<group>"; };
-		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = geolocalizacionapp/SplashScreen.storyboard; sourceTree = "<group>"; };
 		AB769B637D31BB046646622C /* Pods-geolocalizacionapp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-geolocalizacionapp.release.xcconfig"; path = "Target Support Files/Pods-geolocalizacionapp/Pods-geolocalizacionapp.release.xcconfig"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -123,7 +123,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				13B07FB71A68108700A75B9A /* main.m */,
-				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
+				626331492E508E0C005D3D34 /* SplashScreen.storyboard */,
 				8433610D6F4B4A6E9ED36292 /* noop-file.swift */,
 				9CAD3DF76C8B474B9AF967D3 /* geolocalizacionapp-Bridging-Header.h */,
 				095AD82A61BC8E2960001237 /* PrivacyInfo.xcprivacy */,
@@ -301,7 +301,7 @@
 			files = (
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
-				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
+				6263314A2E508E0C005D3D34 /* SplashScreen.storyboard in Resources */,
 				47FF13A030B6CB4C88BA0123 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -475,6 +475,18 @@
 		};
 /* End PBXTargetDependency section */
 
+/* Begin PBXVariantGroup section */
+		626331492E508E0C005D3D34 /* SplashScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				626331482E508E0C005D3D34 /* en */,
+			);
+			name = SplashScreen.storyboard;
+			path = geolocalizacionapp;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -491,7 +503,7 @@
 					"FB_SONARKIT_ENABLED=1",
 				);
 				INFOPLIST_FILE = geolocalizacionapp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = VixTime;
+				INFOPLIST_KEY_CFBundleDisplayName = MyVixtime;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -524,7 +536,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = UGPV7KC333;
 				INFOPLIST_FILE = geolocalizacionapp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = VixTime;
+				INFOPLIST_KEY_CFBundleDisplayName = MyVixtime;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

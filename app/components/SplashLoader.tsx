@@ -198,7 +198,7 @@ export default function SplashLoader({ isExiting = false }: SplashLoaderProps) {
           <Text style={styles.workText}>
             <Text style={{ color: '#007AFF', fontWeight: '800' }}>Vix</Text>
             <Text style={{ color: '#5856D6', fontWeight: '700' }}>Time</Text>
-            <Text style={{ color: '#34C759', fontWeight: '800' }}>App</Text>
+
           </Text>
           <Text style={[styles.tagline, { color: isDark ? '#999' : '#666' }]}>
             Time Management Simplified

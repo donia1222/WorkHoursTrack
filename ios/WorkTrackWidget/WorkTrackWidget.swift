@@ -159,15 +159,15 @@ struct CardBackground: View {
             .fill(
                 LinearGradient(
                     colors: [
-                        Color(red: 0.09, green: 0.12, blue: 0.22),
-                        Color(red: 0.05, green: 0.45, blue: 0.82)
+                        Color(red: 0.6, green: 0.4, blue: 0.9),  // Púrpura
+                        Color(red: 0.4, green: 0.6, blue: 0.95)  // Azul claro
                     ],
                     startPoint: .topLeading, endPoint: .bottomTrailing
                 )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                    .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
             )
     }
 }
@@ -244,8 +244,8 @@ struct BackgroundMod: ViewModifier {
         if #available(iOS 17.0, *) {
             content.containerBackground(
                 LinearGradient(
-                    colors: [Color(red: 0.09, green: 0.12, blue: 0.22),
-                             Color(red: 0.05, green: 0.45, blue: 0.82)],
+                    colors: [Color(red: 0.6, green: 0.4, blue: 0.9),
+                             Color(red: 0.4, green: 0.6, blue: 0.95)],
                     startPoint: .topLeading, endPoint: .bottomTrailing
                 ),
                 for: .widget
@@ -278,8 +278,8 @@ struct WorkTrackSmall: View {
                     Image(systemName: "briefcase.fill")
                         .font(.system(size: 14))
                 }
-                Text("WorkTrack")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                Text("VixTime")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
                 Spacer()
             }
             .foregroundColor(.white.opacity(0.95))
@@ -339,8 +339,8 @@ struct WorkTrackMedium: View {
                     Image(systemName: "briefcase.fill")
                         .font(.system(size: 16))
                 }
-                Text("WorkTrack")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                Text("VixTime")
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
                 Spacer()
             }
             .foregroundColor(.white.opacity(0.95))
@@ -359,11 +359,6 @@ struct WorkTrackMedium: View {
                                 .frame(width: 6, height: 6)
                             Text(job.name)
                                 .font(.system(size: 10, weight: .medium))
-                            if let location = job.location {
-                                Text("• \(location)")
-                                    .font(.system(size: 9))
-                                    .foregroundColor(.white.opacity(0.6))
-                            }
                             Spacer()
                         }
                     }
@@ -423,7 +418,7 @@ struct WorkTrackLarge: View {
                     Image(systemName: "briefcase.fill")
                         .font(.system(size: 20))
                 }
-                Text("WorkTrack")
+                Text("VixTime")
                     .font(.system(size: 18, weight: .bold, design: .rounded))
                 Spacer()
             }
@@ -439,12 +434,6 @@ struct WorkTrackLarge: View {
                         Text(job.name)
                             .font(.system(size: 11, weight: .medium))
                             .lineLimit(1)
-                        if let location = job.location {
-                            Text("• \(location)")
-                                .font(.system(size: 10))
-                                .foregroundColor(.white.opacity(0.6))
-                                .lineLimit(1)
-                        }
                         Spacer()
                     }
                 }
@@ -510,7 +499,7 @@ struct WorkTrackWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             WorkTrackSwitcher(entry: entry)
         }
-        .configurationDisplayName("WorkTrack")
+        .configurationDisplayName("VixTime")
         .description("View your work time at a glance")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
