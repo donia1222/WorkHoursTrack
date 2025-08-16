@@ -526,7 +526,8 @@
       "color": "Colore identificativo",
       "active": "Lavoro attivo",
       "detecting": "Rilevamento...",
-      "auto_fill": "Compilazione automatica"
+      "auto_fill": "Compilazione automatica",
+      "search_address": "Cerca indirizzo"
     },
     "contact": {
       "title": "Contatto",
@@ -1221,5 +1222,12 @@
     "governing_law_text": "Questi termini sono regolati dalle leggi della giurisdizione in cui si trova lo sviluppatore dell'app.",
     "contact_title": "Informazioni di Contatto",
     "contact_text": "Per domande su questi Termini di Servizio, contattaci a support@worktrack-app.com"
+  },
+  "address_search": {
+    "search_placeholder": "Cerca indirizzo...",
+    "searching": "Ricerca indirizzi...",
+    "no_results": "Nessun indirizzo trovato",
+    "no_results_hint": "Prova con un indirizzo più specifico",
+    "min_chars": "Digita almeno 3 caratteri per cercare"
   }
 }

@@ -529,15 +529,12 @@ function AppContent() {
       case 'mapa':
         return (
           <View style={styles.workTrackTitle}>
-            <Image 
-              source={require('../../public/images/app-icon.png')} 
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
+  
             <Text style={styles.workText}>
-              <Text style={{ color: '#007AFF' }}>Work</Text>
-              <Text style={{ color: '#0056CC' }}>Hours</Text>
-              <Text style={{ color: '#003D99' }}>Track</Text>
+            <Text style={{ color: '#007AFF', fontWeight: '700' }}>Vix</Text>
+            <Text style={{ color: '#5856D6', fontWeight: '700' }}>Time</Text>
+
+
             </Text>
           </View>
         );
@@ -583,9 +580,8 @@ function AppContent() {
           <View style={styles.workTrackTitle}>
             <IconSymbol size={22} name="clock.fill" color="#007AFF" />
             <Text style={styles.workText}>
-              <Text style={{ color: '#007AFF' }}>Work</Text>
-              <Text style={{ color: '#0056CC' }}>Hours</Text>
-              <Text style={{ color: '#003D99' }}>Track</Text>
+           <Text style={{ color: '#0056CC' }}>Vix</Text>
+              <Text style={{ color: '#007AFF' }}>Time</Text>
             </Text>
           </View>
         );
@@ -962,6 +958,7 @@ const styles = StyleSheet.create({
   workTrackTitle: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: -6,
     gap: 0,
 
   },
@@ -974,13 +971,13 @@ const styles = StyleSheet.create({
     marginRight: 2,
   },
   workText: {
-    fontSize: 21,
-    fontWeight: '600',
+    fontSize: 23,
+    fontWeight: '500',
     letterSpacing: -0.3,
   
   },
   trackText: {
-    fontSize: 21,
+    fontSize: 23,
     fontWeight: '600',
     letterSpacing: -0.3,
   },

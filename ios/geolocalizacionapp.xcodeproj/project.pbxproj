@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -73,14 +73,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		62FCA2EF2E4B6570009443BD /* Exceptions for "WorkTrackWidget" folder in "WorkTrackWidgetExtension" target */ = {
+		62FCA2EF2E4B6570009443BD /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 62FCA2DC2E4B656D009443BD /* WorkTrackWidgetExtension */;
 		};
-		62FCA36C2E4B7B22009443BD /* Exceptions for "WorkTrackWidget" folder in "geolocalizacionapp" target */ = {
+		62FCA36C2E4B7B22009443BD /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				WorkTrackWidgetAttributes.swift,
@@ -90,19 +90,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		62FCA2E02E4B656D009443BD /* WorkTrackWidget */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				62FCA36C2E4B7B22009443BD /* Exceptions for "WorkTrackWidget" folder in "geolocalizacionapp" target */,
-				62FCA2EF2E4B6570009443BD /* Exceptions for "WorkTrackWidget" folder in "WorkTrackWidgetExtension" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = WorkTrackWidget;
-			sourceTree = "<group>";
-		};
+		62FCA2E02E4B656D009443BD /* WorkTrackWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (62FCA36C2E4B7B22009443BD /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 62FCA2EF2E4B6570009443BD /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = WorkTrackWidget; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -503,7 +491,7 @@
 					"FB_SONARKIT_ENABLED=1",
 				);
 				INFOPLIST_FILE = geolocalizacionapp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = WorkTrack;
+				INFOPLIST_KEY_CFBundleDisplayName = VixTime;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -536,7 +524,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = UGPV7KC333;
 				INFOPLIST_FILE = geolocalizacionapp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = WorkTrack;
+				INFOPLIST_KEY_CFBundleDisplayName = VixTime;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -703,10 +691,7 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -763,10 +748,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;

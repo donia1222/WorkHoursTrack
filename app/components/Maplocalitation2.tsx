@@ -1,3554 +1,3717 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import MapView, { Marker, Circle } from 'react-native-maps';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, Modal, Dimensions, Switch, InteractionManager, useWindowDimensions } from 'react-native';
-import * as Location from 'expo-location';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  SafeAreaView,
+  ScrollView,
+  TextInput,
+  Switch,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Linking,
+  AppState,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming, Easing, runOnJS } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import * as Location from 'expo-location';
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'react-native';
+import MapView, { Marker, Circle, PROVIDER_DEFAULT } from 'react-native-maps';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Job, StoredActiveSession } from '../types/WorkTypes';
-import { JobService } from '../services/JobService';
-import JobFormModal from '../components/JobFormModal';
-import JobStatisticsModal from '../components/JobStatisticsModal';
-import JobSelectorModal from '../components/JobSelectorModal';
-import { useNavigation } from '../context/NavigationContext';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useHapticFeedback } from '../hooks/useHapticFeedback';
-import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
-import { JobCardsSwiper } from './JobCardsSwiper';
-import { useFocusEffect } from '@react-navigation/native';
-import WidgetSyncService from '../services/WidgetSyncService';
+import { useSubscription } from '../hooks/useSubscription';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Job, DEFAULT_COLORS } from '../types/WorkTypes';
+import { JobService } from '../services/JobService';
+import { AutoScheduleService } from '../services/AutoScheduleService';
+import AutoTimerService from '../services/AutoTimerService';
 
-// Dark mode map style
-const darkMapStyle = [
-  {
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#212121"
-      }
-    ]
-  },
-  {
-    "elementType": "labels.icon",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#757575"
-      }
-    ]
-  },
-  {
-    "elementType": "labels.text.stroke",
-    "stylers": [
-      {
-        "color": "#212121"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#757575"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.country",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#9e9e9e"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.land_parcel",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.locality",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#bdbdbd"
-      }
-    ]
-  },
-  {
-    "featureType": "poi",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#757575"
-      }
-    ]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#181818"
-      }
-    ]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#616161"
-      }
-    ]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "labels.text.stroke",
-    "stylers": [
-      {
-        "color": "#1b1b1b"
-      }
-    ]
-  },
-  {
-    "featureType": "road",
-    "elementType": "geometry.fill",
-    "stylers": [
-      {
-        "color": "#2c2c2c"
-      }
-    ]
-  },
-  {
-    "featureType": "road",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#8a8a8a"
-      }
-    ]
-  },
-  {
-    "featureType": "road.arterial",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#373737"
-      }
-    ]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#3c3c3c"
-      }
-    ]
-  },
-  {
-    "featureType": "road.highway.controlled_access",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#4e4e4e"
-      }
-    ]
-  },
-  {
-    "featureType": "road.local",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#616161"
-      }
-    ]
-  },
-  {
-    "featureType": "transit",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#757575"
-      }
-    ]
-  },
-  {
-    "featureType": "water",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#000000"
-      }
-    ]
-  },
-  {
-    "featureType": "water",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#3d3d3d"
-      }
-    ]
-  }
-];
+import { FreeAddressSearch } from './FreeAddressSearch';
+import AddressAutocompleteDropdown from './AddressAutocompleteDropdown';
 
-type Props = {
-  location?: {
-    latitude: number;
-    longitude: number;
-  };
-  onNavigate?: (screen: string) => void;
-};
+interface JobFormModalProps {
+  visible: boolean;
+  onClose: () => void;
+  editingJob?: Job | null;
+  onSave: (jobData: any) => void;
+  initialTab?: 'basic' | 'schedule' | 'financial' | 'billing' | 'auto' | 'delete';
+  onNavigateToCalendar?: () => void; // Optional callback to navigate to calendar
+  onNavigateToSubscription?: () => void; // Callback to navigate to subscription screen
+  isLocationEnabled?: boolean; // Para detectar si hay permisos de ubicación
+}
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean, daySize: number, dayFontSize: number, isTablet: boolean) => StyleSheet.create({
-  mapContainer: {
+const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
+  modalOverlay: {
     flex: 1,
-    overflow: 'hidden',
-    backgroundColor: isDark ? '#0a0a0a' : '#f5f5f5',
-  },
-  mapWrapper: {
-    flex: 1,
-    position: 'relative',
-    marginTop: 35,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
   },
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
-  map: {
+  transparentContainer: {
     flex: 1,
-    marginTop:- 5,
+    backgroundColor: 'transparent',
   },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    pointerEvents: 'box-none',
-  },
-  centeredContent: {
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  mainActionCard: {
-    width: 300,
-    pointerEvents: 'auto',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-  mainActionCardInner: {
-    borderRadius: 28,
-    padding: 32,
-    alignItems: 'center',
-    position: 'relative',
-
-    overflow: 'hidden',
-  },
-  mainActionCardGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 24,
-  },
-  mainActionIcon: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#4C87AF',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-    marginBottom: 24,
-    borderWidth: 2,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
-  },
-  
-  mainActionTitle: {
-    fontSize: 22,
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: 14,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  mainActionDescription: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 24,
-    opacity: 0.9,
-    paddingHorizontal: 10,
-  },
-  mainActionBadge: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    minWidth: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.surface,
-    zIndex: 10,
-    elevation: 4,
-  },
-  mainActionBadgeText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 12,
-  },
-  infoOverlay: {
-    position: 'absolute',
-    top: 60,
-    left: 20,
-    right: 20,
-    pointerEvents: 'none',
-  },
-  infoCard: {
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  infoContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  infoText: {
-    fontSize: 14,
-    color: colors.text,
-    fontWeight: '400',
-  },
-  jobsOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'flex-end',
-  },
-  jobsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    backgroundColor: colors.surface,
-  },
-  jobsTitle: {
-    fontSize: 18,
-    color: colors.text,
-    fontWeight: '600',
-  },
-  closeOverlayButton: {
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: 'rgba(0, 122, 255, 0.15)',
-  },
-  jobsList: {
-    maxHeight: '60%',
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    backgroundColor: colors.surface,
-  },
-  jobMapCard: {
-    marginBottom: 12,
-  },
-  jobMapCardInner: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.separator,
-  },
-  jobMapInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  jobMapActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  jobMapEditButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: 'rgba(0, 122, 255, 0.15)',
-  },
-  jobMapColorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 12,
-  },
-  jobMapDetails: {
-    flex: 1,
-  },
-  jobMapName: {
-    fontSize: 16,
-    color: colors.text,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  jobMapCompany: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 2,
-  },
-  jobMapAddress: {
-    fontSize: 12,
-    color: colors.textTertiary,
-  },
-  actionModal: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    pointerEvents: 'box-none',
-  },
-  actionModalBackdrop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-  },
-  actionModalContent: {
-    borderRadius: 24,
-    margin: 20,
-    padding: 24,
-    minWidth: 300,
-    borderWidth: 2,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.9)',
-    backgroundColor: isDark ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    overflow: 'hidden',
-    pointerEvents: 'auto',
-  },
-  actionModalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  actionModalColorDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  actionModalInfo: {
-    flex: 1,
-  },
-  actionModalTitle: {
-    fontSize: 18,
-    color: colors.text,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  actionModalSubtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  actionModalButtons: {
-    gap: 12,
-    marginBottom: 16,
-  },
-  actionModalButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.6)',
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.8)',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.10,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  actionModalButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginLeft: 12,
-  },
-  actionModalButtonTextContainer: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  autoTimerSwitchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 6,
-  },
-  autoTimerSwitchLabel: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: '400',
-  },
-  autoTimerSwitch: {
-    transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }],
-  },
-  actionModalCancelButton: {
-    padding: 16,
-    alignItems: 'center',
-  },
-  actionModalCancelText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  floatingAddButton: {
-    position: 'absolute',
-    bottom: 32,
-    right: 24,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    elevation: 6,
-    shadowColor: colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-  },
-  floatingAddButtonInner: {
-    flex: 1,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.8)',
-    overflow: 'visible',
-  },
-  fabGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 32,
-  },
-  oldSuccessIconBg: {
-    backgroundColor: 'rgba(52, 199, 89, 0.25)',
-    borderWidth: 2,
-    borderColor: 'rgba(52, 199, 89, 0.3)',
-  },
-  successButtonBg: {
-    backgroundColor: 'rgba(52, 199, 89, 0.18)',
-    borderColor: 'rgba(52, 199, 89, 0.25)',
-  },
-  primaryButtonBg: {
-    backgroundColor: 'rgba(0, 122, 255, 0.18)',
-    borderColor: 'rgba(0, 122, 255, 0.25)',
-  },
-  warningButtonBg: {
-    backgroundColor: 'rgba(255, 149, 0, 0.18)',
-    borderColor: 'rgba(255, 149, 0, 0.25)',
-  },
-  secondaryButtonBg: {
-    backgroundColor: 'rgba(142, 142, 147, 0.15)',
-    borderColor: 'rgba(142, 142, 147, 0.2)',
-  },
-  errorButtonBg: {
-    backgroundColor: 'rgba(255, 59, 48, 0.15)',
-    borderColor: 'rgba(255, 59, 48, 0.25)',
-  },
-  autoTimerStatusOverlay: {
-    position: 'absolute',
-    bottom: 90,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-  },
-  disableButton: {
-    width: 24,
-    height: 24,
-    backgroundColor: '#FF3B30',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  autoTimerStatusCard: {
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: isDark ? 0.15 : 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  autoTimerStatusHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-    paddingBottom: 6,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
-    gap: 8,
+    borderBottomColor: colors.separator,
   },
-  autoTimerStatusTitle: {
-    fontSize: 16,
+  headerTitle: {
+    ...Theme.typography.headline,
     color: colors.text,
     fontWeight: '600',
-    letterSpacing: 0.2,
-  },
-  autoTimerJobRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginBottom: 8,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
-    borderRadius: 12,
-    borderWidth: 0.5,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
-    gap: 8,
     flex: 1,
-    minWidth: 0,
-  },
-  autoTimerJobDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    borderWidth: 1.5,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.9)',
-  },
-  autoTimerJobName: {
-    fontSize: 15,
-    color: colors.text,
-    flex: 1,
-    fontWeight: '400',
-    minWidth: 0,
-    flexShrink: 1,
     textAlign: 'left',
   },
-  autoTimerJobStatus: {
-    ...Theme.typography.caption2,
-    fontSize: 13,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+  closeButton: {
+    padding: Theme.spacing.sm,
   },
-  autoTimerProgressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 4,
-    paddingHorizontal: 4,
-  },
-  autoTimerProgressBar: {
-    flex: 1,
-    height: 4,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  autoTimerProgressFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  autoTimerCountdown: {
-    fontSize: 14,
-    color: colors.text,
-    fontWeight: '700',
-    minWidth: 28,
-    textAlign: 'center',
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-    borderRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    overflow: 'hidden',
-  },
-  activeTimerText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.success,
-    marginTop: 2,
-    backgroundColor: isDark ? 'rgba(52, 199, 89, 0.1)' : 'rgba(52, 199, 89, 0.08)',
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    textAlign: 'center',
-    alignSelf: 'flex-start',
-  },
-  minimizedAutoTimer: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+  closeButtonCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 18,
+    backgroundColor: colors.success,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
-  privacyNoticeContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 999,
-    paddingHorizontal: 16,
-    paddingTop: 60,
-  },
-  privacyNoticeCard: {
-    backgroundColor: isDark ? 'rgba(255, 149, 0, 0.95)' : 'rgba(255, 149, 0, 0.95)',
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'column',
-    alignItems: 'stretch',
-    justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  privacyNoticeContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  privacyNoticeIcon: {
-    marginRight: 12,
-  },
-  privacyNoticeText: {
-    fontSize: 14,
+  saveButtonText: {
+    ...Theme.typography.footnote,
     color: '#FFFFFF',
     fontWeight: '600',
-    flex: 1,
-    lineHeight: 18,
   },
-  privacyNoticeCloseButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.6)',
-    minWidth: 120,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 3,
+  tabsContainer: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.separator,
+    backgroundColor: colors.surface,
   },
-  privacyNoticeButtonText: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    fontWeight: '700',
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  miniCalendarContainer: {
-    marginBottom: isTablet ? 20 : (isSmallScreen ? 8 : 16),
-    marginHorizontal: isTablet ? -6 : (isSmallScreen ? 8 : 0),
-    maxWidth: isTablet ? 600 : undefined,
-    alignSelf: isTablet ? 'center' : undefined,
-    marginTop:60,
-  },
-  miniCalendarCard: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: isDark ? '#000' : '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: isDark ? 0.12 : 0.08,
-    shadowRadius: 6,
-
-  },
-  miniCalendarBlur: {
-    paddingTop: isTablet ? 16 : (isSmallScreen ? 8 : 10),
-    paddingBottom: isTablet ? 14 : (isSmallScreen ? 6 : 8),
-    paddingHorizontal: isTablet ? 20 : (isSmallScreen ? 8 : 12),
-    backgroundColor: isDark ?  'rgba(67, 53, 107, 0.13)' : 'rgba(67, 53, 107, 0.13)',
-  },
-  miniCalendarHeader: {
+  tab: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
-    gap: 6,
-    paddingVertical: 2,
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    marginHorizontal: Theme.spacing.xs,
+    borderRadius: Theme.borderRadius.md,
   },
-  miniCalendarTitle: {
-    fontSize: isTablet ? 20 : (isSmallScreen ? 14 : 16),
-    fontWeight: isTablet ? '600' : '500',
-    color: colors.text,
-    letterSpacing: -0.3,
+  tabActive: {
+    backgroundColor: `${colors.primary}15`,
   },
-  miniCalendarGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-    paddingHorizontal: 1,
-    alignItems: 'flex-start',
+  tabText: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    marginLeft: Theme.spacing.xs,
   },
-  miniCalendarDay: {
-    width: '13.5%',
-    height: daySize,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
-    position: 'relative',
-    marginBottom: 4,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.015)',
-  },
-  miniCalendarDayText: {
-    fontSize: dayFontSize,
+  tabTextActive: {
+    color: colors.primary,
     fontWeight: '600',
-    letterSpacing: -0.2,
   },
-  miniCalendarDot: {
+  autoIndicatorDot: {
     position: 'absolute',
-    bottom: 3,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-  },
-  miniCalendarBadge: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
+    top: 8,
+    right: 8,
     width: 8,
     height: 8,
     borderRadius: 4,
   },
-  miniCalendarBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 8,
-    fontWeight: '700',
+  content: {
+    flex: 1,
   },
-  miniCalendarTitleContainer: {
+  tabContent: {
+    flex: 1,
+    padding: Theme.spacing.md,
+  },
+  section: {
+    marginBottom: Theme.spacing.md,
+    borderRadius: Theme.borderRadius.lg,
+    padding: Theme.spacing.lg,
+    ...Theme.shadows.small,
+  },
+  sectionTitle: {
+    ...Theme.typography.headline,
+    color: colors.text,
+    marginBottom: Theme.spacing.md,
+    fontWeight: '600',
+  },
+  inputGroup: {
+    marginBottom: Theme.spacing.md,
+  },
+  label: {
+    ...Theme.typography.footnote,
+    color: colors.text,
+    marginBottom: Theme.spacing.xs,
+    fontWeight: '600',
+  },
+  input: {
+    ...Theme.typography.body,
+    color: colors.text,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
+    borderRadius: Theme.borderRadius.md,
+    padding: Theme.spacing.md,
+    borderWidth: 1,
+    borderColor: colors.separator,
+  },
+  addressInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: Theme.spacing.sm,
+  },
+  addressInput: {
     flex: 1,
+  },
+  detectLocationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    backgroundColor: `${colors.primary}15`,
+    borderRadius: Theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: `${colors.primary}30`,
+    minWidth: 80,
     justifyContent: 'center',
-    gap: 10,
   },
-  miniCalendarArrow: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+  detectLocationButtonLoading: {
+    backgroundColor: `${colors.textSecondary}15`,
+    borderColor: `${colors.textSecondary}30`,
   },
-  miniCalendarDayLabels: {
+  detectLocationText: {
+    ...Theme.typography.footnote,
+    color: colors.primary,
+    marginLeft: Theme.spacing.xs,
+    fontWeight: '600',
+  },
+  addressHeaderContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 6,
-    paddingHorizontal: 1,
+    alignItems: 'center',
+    marginBottom: Theme.spacing.md,
   },
-  miniCalendarDayLabel: {
-    width: '13.5%',
-    textAlign: 'center',
-    fontSize: isTablet ? 13 : (isSmallScreen ? 8 : 10),
-    fontWeight: '700',
-    color: isDark ? colors.textSecondary : colors.textTertiary,
-    opacity: 1,
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-  },
-  miniCalendarDayToday: {
-    backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.12)',
-    borderWidth: 0,
-  },
-  miniCalendarTimeText: {
-    fontSize: 7,
-    color: colors.text,
-    textAlign: 'center',
-    marginTop: 2,
-    lineHeight: 9,
-    opacity: 0.8,
-    fontWeight: '600',
-    paddingHorizontal: 1,
-    letterSpacing: -0.3,
-  },
-  miniCalendarButton: {
+  autoFillButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     backgroundColor: colors.primary,
     borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    marginTop: 8,
+    gap: 6,
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 4,
+    minWidth: 120,
+    justifyContent: 'center',
   },
-  miniCalendarButtonText: {
-    color: '#FFFFFF',
+  autoFillButtonLoading: {
+    backgroundColor: colors.textSecondary,
+    shadowColor: colors.textSecondary,
+    shadowOpacity: 0.2,
+  },
+  autoFillText: {
     fontSize: 14,
+    color: '#FFFFFF',
     fontWeight: '600',
+    letterSpacing: 0.3,
   },
-  noLocationBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+  addressRow: {
+    flexDirection: 'row',
+    gap: Theme.spacing.md,
+    marginBottom: Theme.spacing.md,
   },
-  noLocationContent: {
+  addressField: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  subLabel: {
+    ...Theme.typography.caption2,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    marginBottom: Theme.spacing.xs,
+  },
+  detectingText: {
+    ...Theme.typography.caption2,
+    color: colors.textSecondary,
+    marginTop: Theme.spacing.xs,
+    fontStyle: 'italic',
+  },
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  row: {
+    flexDirection: 'row',
+    gap: Theme.spacing.md,
+  },
+  switchRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    marginTop: 60,
+    justifyContent: 'space-between',
   },
-  noLocationButtons: {
-    gap: 16,
-    width: '100%',
-    maxWidth: 320,
-    marginTop: -40,
+  colorPicker: {
+    flexDirection: 'row',
+    marginTop: Theme.spacing.xs,
   },
-  noLocationButton: {
+  colorOption: {
+    width: 32,
+    height: 32,
     borderRadius: 16,
-    overflow: 'hidden',
-    elevation: 3,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    borderWidth: 1,
-    borderColor: colors.primary + '30',
-  },
-  noLocationButtonGradient: {
-    padding: 16,
-  },
-  noLocationButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  noLocationButtonText: {
-    flex: 1,
-  },
-  noLocationButtonTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  noLocationButtonSubtitle: {
-    fontSize: 13,
-    fontWeight: '400',
-  },
-  // Modern button styles
-  modernButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    overflow: 'hidden',
-        marginBottom: 4,
-  },
-  modernButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 13,
-
-  },
-  modernIconContainer: {
-    position: 'relative',
-    marginRight: 12,
-  },
-  modernIconBackground: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modernBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: '#FF6B35',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    marginRight: Theme.spacing.sm,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  colorOptionSelected: {
     borderColor: '#FFFFFF',
+    transform: [{ scale: 1.1 }],
   },
-  modernBadgeText: {
+  segmentedControl: {
+    flexDirection: 'row',
+    backgroundColor: colors.separator,
+    borderRadius: Theme.borderRadius.md,
+    padding: 2,
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: Theme.spacing.sm,
+    paddingHorizontal: Theme.spacing.md,
+    borderRadius: Theme.borderRadius.sm,
+    alignItems: 'center',
+  },
+  segmentButtonActive: {
+    backgroundColor: isDark ? colors.surface : '#FFFFFF',
+    ...Theme.shadows.small,
+  },
+  segmentText: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+  },
+  segmentTextActive: {
+    color: colors.text,
+    fontWeight: '600',
+  },
+  workDaysContainer: {
+    flexDirection: 'row',
+    gap: Theme.spacing.xs,
+    marginTop: Theme.spacing.xs,
+  },
+  workDayButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.separator,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  workDayButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  workDayButtonSelected: {
+    backgroundColor: colors.secondary,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  workDayText: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  workDayTextActive: {
     color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '700',
   },
-  modernTextContainer: {
+  helperText: {
+    ...Theme.typography.caption2,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: Theme.spacing.xs,
+    fontStyle: 'italic',
+  },
+  locationSection: {
+    alignItems: 'center',
+    marginBottom: Theme.spacing.md,
+    gap: Theme.spacing.sm,
+  },
+  dayScheduleContainer: {
+    marginTop: Theme.spacing.md,
+    padding: Theme.spacing.md,
+    backgroundColor: colors.separator + '20',
+    borderRadius: Theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  dayScheduleTitle: {
+    ...Theme.typography.headline,
+    color: colors.text,
+    marginBottom: Theme.spacing.md,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Theme.spacing.lg,
+  },
+  switchContent: {
+    flex: 1,
+    marginRight: Theme.spacing.md,
+  },
+  switchLabel: {
+    ...Theme.typography.callout,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  switchDescription: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+  switch: {
+    width: 50,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.separator,
+    padding: 2,
+    justifyContent: 'center',
+  },
+  switchActive: {
+    backgroundColor: colors.primary,
+  },
+  switchThumb: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  switchThumbActive: {
+    transform: [{ translateX: 20 }],
+  },
+  sliderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.sm,
+  },
+  unitLabel: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    minWidth: 60,
+  },
+  counterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Theme.spacing.md,
+  },
+  counterButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.15)' : 'rgba(0, 122, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(0, 122, 255, 0.3)' : 'rgba(0, 122, 255, 0.2)',
+  },
+  counterValue: {
+    alignItems: 'center',
+    minWidth: 60,
+  },
+  counterText: {
+
+    color: colors.text,
+    fontWeight: '600',
+    fontSize: 20,
+  },
+  counterUnit: {
+    ...Theme.typography.caption2,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  previewCard: {
+    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.1)' : 'rgba(0, 122, 255, 0.05)',
+    borderRadius: 12,
+    padding: Theme.spacing.md,
+    marginTop: Theme.spacing.md,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(0, 122, 255, 0.3)' : 'rgba(0, 122, 255, 0.2)',
+  },
+  previewTitle: {
+    ...Theme.typography.headline,
+    color: colors.text,
+    marginBottom: Theme.spacing.xs,
+  },
+  previewText: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+  scrollView: {
     flex: 1,
   },
-  modernButtonTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    marginBottom: 1,
+  sectionSubtitle: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    marginBottom: Theme.spacing.md,
+    lineHeight: 18,
   },
-  modernButtonSubtitle: {
-    fontSize: 11,
-    fontWeight: '400',
-    opacity: 0.7,
+  labelDescription: {
+    ...Theme.typography.caption2,
+    color: colors.textSecondary,
+    marginTop: 2,
+    lineHeight: 16,
   },
-  modernChevron: {
+  // Financial section styles
+  financialCard: {
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(247, 248, 250, 1)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+  },
+  financialCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  financialCardTitle: {
+    ...Theme.typography.callout,
+    fontWeight: '600',
+    color: colors.text,
     marginLeft: 8,
   },
-  // Estilos para las secciones de configuración
-  sectionCard: {
-    marginVertical: 8,
+  currencyInputContainer: {
+    alignItems: 'center',
+  },
+  currencyInput: {
+    ...Theme.typography.title1,
+    fontWeight: '700',
+    color: colors.primary,
+    textAlign: 'center',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 1)',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
     borderRadius: 12,
-    padding: 16,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.95)',
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-    position: 'relative',
+    borderWidth: 2,
+    borderColor: colors.primary,
+    minWidth: 100,
+  },
+  salaryTypeSelector: {
+    flexDirection: 'row',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+    borderRadius: 12,
+    padding: 4,
+  },
+  salaryTypeOption: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  salaryTypeOptionActive: {
+    backgroundColor: colors.primary,
+  },
+  salaryTypeIcon: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  salaryTypeText: {
+    ...Theme.typography.footnote,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
+  },
+  salaryTypeTextActive: {
+    color: '#FFFFFF',
+  },
+  amountInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 1)',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.separator,
     overflow: 'hidden',
   },
-  sectionCardGradient: {
+  currencySymbol: {
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 60,
+  },
+  currencySymbolText: {
+    ...Theme.typography.callout,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  amountInput: {
+    ...Theme.typography.title2,
+    fontWeight: '700',
+    color: colors.text,
+    flex: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    textAlign: 'center',
+  },
+  periodIndicator: {
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 60,
+  },
+  periodIndicatorText: {
+    ...Theme.typography.callout,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  amountHelper: {
+    ...Theme.typography.caption2,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  locationDisabledContainer: {
+    alignItems: 'center',
+    padding: 24,
+    backgroundColor: isDark ? 'rgba(255, 59, 48, 0.08)' : 'rgba(255, 59, 48, 0.05)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 59, 48, 0.2)' : 'rgba(255, 59, 48, 0.15)',
+  },
+  locationDisabledIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: isDark ? 'rgba(255, 59, 48, 0.15)' : 'rgba(255, 59, 48, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  locationDisabledTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  locationDisabledDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  settingsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  settingsButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  // Premium Modal Styles
+  premiumModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  premiumModalContainer: {
+    backgroundColor: colors.surface,
+    borderRadius: 24,
+    width: '100%',
+    maxWidth: 400,
+    overflow: 'hidden',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+  },
+  premiumModalHeader: {
+    padding: 24,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.separator,
+  },
+  premiumIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FFD700',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    elevation: 4,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  premiumModalTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  premiumModalSubtitle: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  premiumModalContent: {
+    padding: 24,
+  },
+  premiumFeaturesList: {
+    marginBottom: 24,
+  },
+  premiumFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  premiumFeatureIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  premiumFeatureText: {
+    fontSize: 16,
+    color: colors.text,
+    flex: 1,
+    fontWeight: '500',
+  },
+  premiumModalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  premiumCancelButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.separator,
+  },
+  premiumCancelButtonText: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  premiumSubscribeButton: {
+    flex: 2,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: '#FFD700',
+    elevation: 2,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  premiumSubscribeButtonText: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000',
+  },
+  simplifiedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingTop: Platform.OS === 'ios' ? 120 : 100,
+  },
+  simplifiedKeyboardView: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  simplifiedCard: {
+    width: '90%',
+    maxWidth: 400,
+    borderRadius: Theme.borderRadius.xl,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
+    backgroundColor: isDark ? 'rgba(0, 0, 0, 0.5)' : 'rgba(57, 131, 229, 0.12)',
+  },
+  simplifiedBlurCard: {
+    padding: Theme.spacing.lg,
+    alignItems: 'center',
+  },
+  simplifiedCloseButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 10,
+  },
+  simplifiedCloseCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(142,142,147,0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  simplifiedWelcomeSection: {
+    alignItems: 'center',
+    marginBottom: Theme.spacing.sm,
+  },
+  simplifiedIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Theme.spacing.sm,
+    overflow: 'hidden',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  simplifiedIconGradient: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 12,
+  simplifiedWelcome: {
+    ...Theme.typography.title2,
     color: colors.text,
-
+    fontWeight: '700',
+    marginBottom: 2,
   },
-  settingItem: {
+  simplifiedCreateFirst: {
+    ...Theme.typography.callout,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  simplifiedSubtitle: {
+    ...Theme.typography.caption1,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: Theme.spacing.md,
+    lineHeight: 16,
+  },
+  simplifiedInputSection: {
+    width: '100%',
+    marginBottom: Theme.spacing.md,
+  },
+  simplifiedLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    marginBottom: 12,
-    backgroundColor: isDark ? 'rgba(76, 92, 175, 0.1)' : 'rgba(76, 87, 175, 0.08)',
-     paddingHorizontal: 12,
-     borderRadius: 12,
+    gap: Theme.spacing.xs,
+    marginBottom: Theme.spacing.sm,
   },
-  settingIcon: {
-    width: 40,
-    height: 40,
+  simplifiedLabel: {
+    ...Theme.typography.callout,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  simplifiedInput: {
+    ...Theme.typography.body,
+    color: colors.text,
+    backgroundColor: isDark ? colors.surface : colors.background,
+    borderRadius: Theme.borderRadius.md,
+    paddingVertical: 10,
+    paddingHorizontal: Theme.spacing.md,
+    borderWidth: 1.5,
+    borderColor: colors.separator,
+    fontSize: 16,
+  },
+  simplifiedSaveButton: {
+    flexDirection: 'row',
+    minHeight: 42,
+    paddingVertical: 4,
+    paddingHorizontal: 32,
+    borderRadius: Theme.borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Theme.spacing.sm,
+    overflow: 'hidden',
+    marginTop: Theme.spacing.sm,
+  },
+  simplifiedButtonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  simplifiedSaveButtonDisabled: {
+    opacity: 0.5,
+  },
+  simplifiedSaveButtonText: {
+    ...Theme.typography.headline,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    fontSize: 17,
+  },
+  // Logo styles
+  logoContainer: {
+    marginTop: 12,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  logoPreview: {
+    width: '100%',
+    height: 80,
+    backgroundColor: colors.background,
+  },
+  logoActions: {
+    flexDirection: 'row',
+    padding: 12,
+    gap: 8,
+  },
+  logoActionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 6,
+  },
+  logoRemoveButton: {
+    borderColor: colors.error + '40',
+    backgroundColor: colors.error + '10',
+  },
+  logoActionText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  logoPickerButton: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    gap: 8,
+  },
+  logoPickerText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  // Map styles
+  mapContainer: {
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  mapTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  mapWrapper: {
+    height: 250,
     borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.separator,
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  mapDescription: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 8,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  markerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  marker: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  successIconBg: {
-    backgroundColor: isDark ? 'rgba(16, 185, 129, 0.2)' : 'rgba(6, 182, 212, 0.15)',
-    borderColor: isDark ? 'rgba(16, 185, 129, 0.3)' : 'rgba(6, 182, 212, 0.25)',
-    borderWidth: 1,
+  userMarker: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(30, 144, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  warningIconBg: {
-    backgroundColor: isDark ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.15)',
-    borderColor: isDark ? 'rgba(245, 158, 11, 0.3)' : 'rgba(245, 158, 11, 0.25)',
-    borderWidth: 1,
-  },
-  primaryIconBg: {
-    backgroundColor: isDark ? 'rgba(147, 51, 234, 0.2)' : 'rgba(99, 102, 241, 0.15)',
-    borderColor: isDark ? 'rgba(147, 51, 234, 0.3)' : 'rgba(99, 102, 241, 0.25)',
-    borderWidth: 1,
-  },
-  settingContent: {
-    flex: 1,
-  },
-  settingTitle: {
-    fontSize: 16,
-    marginBottom: 4,
-    fontWeight: '700',
-    color: colors.text,
-    letterSpacing: 0.3,
-  },
-  settingDescription: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    opacity: 0.9,
-    lineHeight: 18,
-    fontWeight: '500',
+  userMarkerDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#1E90FF',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
 });
 
-
-export default function MapLocation({ location, onNavigate }: Props) {
+export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true }: JobFormModalProps) {
   const { colors, isDark } = useTheme();
-  const { navigateTo } = useNavigation();
   const { t } = useLanguage();
-  const { triggerHaptic } = useHapticFeedback();
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [showJobForm, setShowJobForm] = useState(false);
-  
-  // Responsive dimensions for mini calendar
-  const windowDimensions = useWindowDimensions();
-  const screenWidth = windowDimensions.width;
-  const screenHeight = windowDimensions.height;
-  const isSmallScreen = screenWidth < 380; // iPhone SE and similar
-  const isTablet = screenWidth >= 768; // iPad and tablets
-  const isPortrait = screenHeight > screenWidth; // Detect portrait orientation
-  const isIPadPortrait = isTablet && isPortrait; // Detect iPad in portrait mode
-  const daySize = isTablet ? 60 : (isSmallScreen ? 40 : 48);
-  const dayFontSize = isTablet ? 16 : (isSmallScreen ? 11 : 13);
-  
-  console.log('🔍 Screen detection:', {
-    screenWidth,
-    screenHeight,
-    isTablet,
-    isPortrait,
-    isIPadPortrait
-  });
-  
-  // Animation values for modal
-  const modalScale = useSharedValue(0);
-  const modalOpacity = useSharedValue(0);
-  
-  // Animated style for modal
-  const animatedModalStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: modalScale.value }],
-    opacity: modalOpacity.value,
-  }));
-  
-  const [editingJob, setEditingJob] = useState<Job | null>(null);
-  const [showStatistics, setShowStatistics] = useState(false);
-  const [selectedJobForStats, setSelectedJobForStats] = useState<Job | null>(null);
-  const [jobStatistics, setJobStatistics] = useState<Map<string, { thisMonthHours: number; thisMonthDays: number }>>(new Map());
-  const [activeTimerJobId, setActiveTimerJobId] = useState<string | null>(null);
-  const [autoTimerStatus, setAutoTimerStatus] = useState<AutoTimerStatus | null>(null);
-  const [autoTimerService] = useState(() => AutoTimerService.getInstance());
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [isTimerPaused, setIsTimerPaused] = useState(false);
-  const [isAutoTimerMinimized, setIsAutoTimerMinimized] = useState(false);
-  const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
-  const [hasShownActivationAlert, setHasShownActivationAlert] = useState(false);
-  const [hasInvoicingData, setHasInvoicingData] = useState(false);
-  
-  // Estados para los modales de configuración
-  const [showJobSelector, setShowJobSelector] = useState(false);
-  const [selectedEditType, setSelectedEditType] = useState<'schedule' | 'location' | 'financial' | 'billing' | null>(null);
-  const [currentUserLocation, setCurrentUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
-  const [forceMapUpdate, setForceMapUpdate] = useState(0);
-  const [hasShownPrivacyNotice, setHasShownPrivacyNotice] = useState(false);
-  const [miniCalendarData, setMiniCalendarData] = useState<any[]>([]);
-  const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
-  const [showJobCardsModal, setShowJobCardsModal] = useState(false);
-  const [shouldShowMiniCalendar, setShouldShowMiniCalendar] = useState(true);
-  const [wasJobCardsModalOpen, setWasJobCardsModalOpen] = useState(false);
-  const [shouldReopenJobCardsModal, setShouldReopenJobCardsModal] = useState(false);
-  const [selectedDaySchedule, setSelectedDaySchedule] = useState<number | null>(null);
-  const mapRef = useRef<MapView>(null);
-  
-  // Optimización para prevenir congelamiento durante zoom rápido
-  const onRegionChangeComplete = useCallback((region: any) => {
-    // Solo loguear cuando sea necesario para debugging
-    // console.log('Region changed:', region);
-  }, []);
+  const { isSubscribed } = useSubscription();
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [showAutoTimerAlert, setShowAutoTimerAlert] = useState(false);
+  const [hasShownAutoTimerAlert, setHasShownAutoTimerAlert] = useState(false);
+  const [previousAutoSchedule, setPreviousAutoSchedule] = useState<boolean | undefined>(undefined);
+  const [showAddressSearch, setShowAddressSearch] = useState(false);
+  const [showAddressDropdown, setShowAddressDropdown] = useState(false);
+  const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(isLocationEnabled);
+  const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
+  const [jobCoordinates, setJobCoordinates] = useState<{latitude: number; longitude: number} | null>(null);
+  const [mapRegion, setMapRegion] = useState<{
+    latitude: number;
+    longitude: number;
+    latitudeDelta: number;
+    longitudeDelta: number;
+  } | null>(null);
 
-  // Prevenir congelamiento por eventos táctiles múltiples
-  const [isProcessingGesture, setIsProcessingGesture] = useState(false);
-  const gestureTimeoutRef = useRef<NodeJS.Timeout>();
-  const lastGestureTime = useRef<number>(0);
-  const gestureDebounceDelay = 50; // ms entre gestos para evitar sobrecarga
-  
-  const handleMapRegionChange = useCallback((region: any) => {
-    const now = Date.now();
-    
-    // Throttle para evitar demasiados eventos en poco tiempo
-    if (now - lastGestureTime.current < gestureDebounceDelay) {
-      return;
-    }
-    
-    lastGestureTime.current = now;
-    
-    // Usar InteractionManager para manejar las interacciones de manera segura
-    InteractionManager.runAfterInteractions(() => {
-      // El código aquí se ejecutará después de que terminen las animaciones
-    });
-  }, []);
-  
-  const handleMapRegionChangeComplete = useCallback((region: any) => {
-    // Pequeño delay para asegurar que todos los gestos terminaron
-    setTimeout(() => {
-      setIsProcessingGesture(false);
-      if (gestureTimeoutRef.current) {
-        clearTimeout(gestureTimeoutRef.current);
-        gestureTimeoutRef.current = undefined;
-      }
-    }, 100);
-  }, []);
 
-  // AutoTimer position - fixed, no dragging
-  
-  // Animaciones para minimizar/maximizar
-  const scaleValue = useSharedValue(1);
-  const pulseAnimation = useSharedValue(1);
-  const clockPulse = useSharedValue(1);
-  
-  // Animaciones para mini calendario
-  const miniCalendarOpacity = useSharedValue(0);
-  const miniCalendarTranslateY = useSharedValue(-30);
-  const miniCalendarScale = useSharedValue(0.95);
-  
-  // Animaciones para notificación de privacidad
-  const privacyNoticeOpacity = useSharedValue(0);
-  const privacyNoticeTranslateY = useSharedValue(-20);
-  
-  // Animaciones para botones de no location
-  const noLocationButtonsOpacity = useSharedValue(1);
-  const noLocationButtonsTranslateY = useSharedValue(0);
-  
-  const styles = getStyles(colors, isDark, isSmallScreen, daySize, dayFontSize, isTablet);
+  const [formData, setFormData] = useState<Partial<Job>>({
+    name: '',
+    company: '',
+    address: '',
+    street: '',
+    city: '',
+    postalCode: '',
+    hourlyRate: 0,
+    currency: 'EUR',
+    color: DEFAULT_COLORS[0],
+    defaultHours: 8,
+    isActive: true,
+    description: '',
+    contactPerson: '',
+    contactEmail: '',
+    contactPhone: '',
+    salary: {
+      type: 'hourly',
+      amount: 0,
+      currency: 'EUR',
+    },
+    schedule: {
+      enabled: false, // Schedule disabled by default
+      weeklySchedule: {
+        0: null, // Domingo
+        1: null, // Lunes
+        2: null, // Martes
+        3: null, // Miércoles
+        4: null, // Jueves
+        5: null, // Viernes
+        6: null, // Sábado
+      },
+      autoSchedule: false,
+    },
+    billing: {
+      enabled: false,
+      invoicePrefix: 'INV',
+      taxRate: 21,
+      notes: '',
+      userData: {
+        name: '',
+        address: '',
+        phone: '',
+        email: '',
+        isCompany: false,
+        companyName: '',
+        taxId: '',
+        bankAccount: '',
+        bankName: '',
+        swiftCode: '',
+        website: '',
+        logoUrl: '',
+      },
+    },
+    location: {
+      address: '',
+      radius: 100,
+    },
 
-  // Gestión del arrastre para AutoTimer (funciona para ambos estados)
-  // Removed panGesture - AutoTimer is now fixed
-
-  const animatedAutoTimerStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { scale: scaleValue.value * pulseAnimation.value },
-      ],
-    };
   });
 
-  const animatedClockStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: clockPulse.value }],
-    };
-  });
-
-  const animatedMiniCalendarStyle = useAnimatedStyle(() => {
-    return {
-      opacity: miniCalendarOpacity.value,
-      transform: [
-        { translateY: miniCalendarTranslateY.value },
-        { scale: miniCalendarScale.value },
-      ],
-    };
-  });
-
-  const animatedPrivacyNoticeStyle = useAnimatedStyle(() => {
-    return {
-      opacity: privacyNoticeOpacity.value,
-      transform: [
-        { translateY: privacyNoticeTranslateY.value },
-      ],
-    };
-  });
-
-  const animatedNoLocationButtonsStyle = useAnimatedStyle(() => {
-    return {
-      opacity: noLocationButtonsOpacity.value,
-      transform: [
-        { translateY: noLocationButtonsTranslateY.value },
-      ],
-    };
-  });
-
-  // Efecto para la animación de pulso cuando está minimizado
-  useEffect(() => {
-    if (isAutoTimerMinimized) {
-      // AutoTimer is now fixed in footer - no positioning needed
-      
-      // Iniciar animación de pulso
-      pulseAnimation.value = withRepeat(
-        withTiming(1.2, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
-        -1,
-        true
-      );
-      
-      // Escalar a tamaño pequeño
-      scaleValue.value = withSpring(0.4);
-    } else {
-      // Detener animación de pulso
-      pulseAnimation.value = withTiming(1, { duration: 300 });
-      scaleValue.value = withSpring(1);
-    }
-  }, [isAutoTimerMinimized]);
+  const [currentTab, setCurrentTab] = useState<'basic' | 'schedule' | 'financial' | 'billing' | 'auto' | 'delete'>(initialTab || 'basic');
+  const [confirmationName, setConfirmationName] = useState('');
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+  const [hasCheckedFirstTime, setHasCheckedFirstTime] = useState(false);
+  const [activeTimerElapsed, setActiveTimerElapsed] = useState<number>(0);
+  
+  const styles = getStyles(colors, isDark);
 
   useEffect(() => {
-    // Initialize current week start to today's week
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() + mondayOffset);
-    setCurrentWeekStart(weekStart);
-    
-    loadJobs();
-    checkActiveTimer();
-    
-    // Check for invoicing data
-    AsyncStorage.getItem('invoicing_data').then(data => {
-      setHasInvoicingData(data !== null);
-    }).catch(() => setHasInvoicingData(false));
-    loadPrivacyNoticeState();
-    loadMiniCalendarData(weekStart, isIPadPortrait);
-    
-    // Initial animation for mini calendar - delayed and smoother
-    setTimeout(() => {
-      miniCalendarOpacity.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.ease) });
-      miniCalendarTranslateY.value = withTiming(0, { duration: 400, easing: Easing.out(Easing.ease) });
-      miniCalendarScale.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.ease) });
-    }, 500); // Increased delay
-    
-    // Check active timer every 30 seconds
-    const interval = setInterval(checkActiveTimer, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    if (visible) {
+      setCurrentTab(initialTab);
+    }
+  }, [visible, initialTab]);
 
-  // Animar botones cuando se abre/cierra el modal de trabajos
+
+  // Check if it's the first time user opens the form
   useEffect(() => {
-    if (showJobCardsModal) {
-      // Ocultar botones cuando se abre el modal
-      noLocationButtonsOpacity.value = withTiming(0, { duration: 300 });
-      noLocationButtonsTranslateY.value = withTiming(20, { duration: 300 });
-    } else {
-      // Mostrar botones cuando se cierra el modal
-      noLocationButtonsOpacity.value = withTiming(1, { duration: 400 });
-      noLocationButtonsTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
-    }
-  }, [showJobCardsModal]);
-
-  // Helper function to get month name from date
-  const getMonthName = (date: Date) => {
-    const months = [
-      'january', 'february', 'march', 'april', 'may', 'june',
-      'july', 'august', 'september', 'october', 'november', 'december'
-    ];
-    return t(`chatbot.months.${months[date.getMonth()]}`);
-  };
-
-  const loadMiniCalendarData = async (weekStart?: Date, forceIPadPortrait?: boolean) => {
-    try {
-      const today = new Date();
-      const baseDate = weekStart || currentWeekStart;
-      
-      // Usar el valor pasado o el calculado en el componente
-      const shouldShow14Days = forceIPadPortrait !== undefined ? forceIPadPortrait : isIPadPortrait;
-      
-      // Crear array de días (7 para normal, 14 para iPad vertical)
-      const daysToShow = shouldShow14Days ? 14 : 7;
-      
-      console.log('📅 Calendar days to show:', daysToShow, 'isIPadPortrait:', shouldShow14Days);
-      const startOfWeek = new Date(baseDate);
-      const dayOfWeek = startOfWeek.getDay();
-      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Empezar en lunes
-      startOfWeek.setDate(startOfWeek.getDate() + mondayOffset);
-      
-      // Obtener días de trabajo de todos los meses que aparecen en el período
-      const monthsToLoad = new Set<string>();
-      for (let i = 0; i < daysToShow; i++) {
-        const dayDate = new Date(startOfWeek);
-        dayDate.setDate(startOfWeek.getDate() + i);
-        const monthKey = `${dayDate.getFullYear()}-${dayDate.getMonth() + 1}`;
-        monthsToLoad.add(monthKey);
-      }
-      
-      // Cargar días de trabajo de todos los meses necesarios
-      let allWorkDays: any[] = [];
-      for (const monthKey of monthsToLoad) {
-        const [year, month] = monthKey.split('-').map(Number);
-        const workDays = await JobService.getWorkDaysForMonth(year, month);
-        allWorkDays = [...allWorkDays, ...workDays];
-      }
-      
-      console.log('📅 Mini Calendar MapLocation: Loaded', allWorkDays.length, 'work days');
-      
-      const calendarDays = [];
-      for (let i = 0; i < daysToShow; i++) {
-        const dayDate = new Date(startOfWeek);
-        dayDate.setDate(startOfWeek.getDate() + i);
-        
-        const dayNum = dayDate.getDate();
-        const dayMonth = dayDate.getMonth() + 1;
-        const dayYear = dayDate.getFullYear();
-        const dateStr = `${dayYear}-${dayMonth.toString().padStart(2, '0')}-${dayNum.toString().padStart(2, '0')}`;
-        
-        // Buscar si hay trabajo este día
-        const workDay = allWorkDays.find(wd => wd.date === dateStr);
-        const job = workDay ? jobs.find(j => j.id === workDay.jobId) : null;
-        
-        calendarDays.push({
-          day: dayNum,
-          dayOfWeek: i, // 0 = lunes, 6 = domingo
-          isToday: dayYear === today.getFullYear() && dayMonth === (today.getMonth() + 1) && dayNum === today.getDate(),
-          workDay,
-          job,
-          isCurrentMonth: dayMonth === (today.getMonth() + 1) && dayYear === today.getFullYear(),
-          date: dayDate
-        });
-      }
-      
-      setMiniCalendarData(calendarDays);
-    } catch (error) {
-      console.error('Error loading mini calendar data:', error);
-    }
-  };
-
-  const navigateWeek = (direction: 'prev' | 'next' | number) => {
-    const directionValue = typeof direction === 'string' 
-      ? (direction === 'prev' ? -1 : 1) 
-      : direction;
-    const newWeekStart = new Date(currentWeekStart);
-    newWeekStart.setDate(newWeekStart.getDate() + (directionValue * 7));
-    setCurrentWeekStart(newWeekStart);
-    loadMiniCalendarData(newWeekStart, isIPadPortrait);
-  };
-
-  // Gesture handler for calendar swipe
-  const calendarPanGesture = Gesture.Pan()
-    .onEnd((event) => {
-      const threshold = 50; // Minimum distance to trigger navigation
-      
-      if (Math.abs(event.translationX) > threshold) {
-        if (event.translationX > 0) {
-          // Swipe right - go to previous week
-          runOnJS(navigateWeek)(-1);
-        } else {
-          // Swipe left - go to next week
-          runOnJS(navigateWeek)(1);
+    const checkFirstTimeUser = async () => {
+      if (visible && !hasCheckedFirstTime && !editingJob) {
+        try {
+          const hasSeenFullForm = await AsyncStorage.getItem('hasSeenFullJobForm');
+          setIsFirstTimeUser(hasSeenFullForm !== 'true');
+          setHasCheckedFirstTime(true);
+        } catch (error) {
+          console.error('Error checking first time user:', error);
+          setIsFirstTimeUser(false);
         }
       }
-    });
-
-  // Load privacy notice dismissal state
-  const loadPrivacyNoticeState = async () => {
-    try {
-      const dismissed = await AsyncStorage.getItem('auto_timer_privacy_notice_shown');
-      setHasShownPrivacyNotice(dismissed === 'true');
-    } catch (error) {
-      console.error('Error loading privacy notice state:', error);
-    }
-  };
-
-  // Handle privacy notice dismissal
-  const handleDismissPrivacyNotice = async () => {
-    console.log('🔔 MapLocation: Dismissing privacy notice');
-    triggerHaptic('medium');
-    
-    // Animate privacy notice out
-    privacyNoticeOpacity.value = withTiming(0, { duration: 300 });
-    privacyNoticeTranslateY.value = withTiming(-20, { duration: 300 });
-    
-    try {
-      await AsyncStorage.setItem('auto_timer_privacy_notice_shown', 'true');
-      setHasShownPrivacyNotice(true);
-      
-      // Hide after animation completes
-      setTimeout(() => {
-        setShowPrivacyNotice(false);
-      }, 300);
-      
-      console.log('🔔 MapLocation: Privacy notice dismissed and saved');
-    } catch (error) {
-      console.error('Error saving privacy notice state:', error);
-      setHasShownPrivacyNotice(true);
-      
-      // Hide after animation completes
-      setTimeout(() => {
-        setShowPrivacyNotice(false);
-      }, 300);
-      
-      console.log('🔔 MapLocation: Privacy notice dismissed (save failed but still hidden)');
-    }
-  };
-
-  // Update selectedJob when jobs change to keep it in sync
-  useEffect(() => {
-    if (selectedJob && jobs.length > 0) {
-      const updatedJob = jobs.find(job => job.id === selectedJob.id);
-      if (updatedJob) {
-        setSelectedJob(updatedJob);
-      }
-    }
-  }, [jobs]);
-
-  // AutoTimer service initialization - runs only once
-  useEffect(() => {
-    const handleAutoTimerStatusChange = (status: AutoTimerStatus) => {
-      console.log('🔄 MapLocation received AutoTimer status change:', {
-        state: status.state,
-        jobId: status.jobId,
-        jobName: status.jobName,
-        remainingTime: status.remainingTime
-      });
-      setAutoTimerStatus(status);
     };
 
-    const handleAutoTimerAlert = (showAlert: boolean) => {
-      if (showAlert && !hasShownActivationAlert) {
-        console.log('🔔 AutoTimer alert is now handled in JobFormModal');
-        setHasShownActivationAlert(true);
-        
-        // Alert is now shown in JobFormModal.tsx as a visual component
-        // The alert will appear when user opens the Auto tab in JobFormModal
-        // Alert.alert(
-        //   t('timer.auto_timer.activation_title'),
-        //   t('timer.auto_timer.activation_alert'),
-        //   [{ 
-        //     text: t('timer.auto_timer.dismiss_notice'), 
-        //     style: 'default',
-        //     onPress: () => {
-        //       console.log('🔔 AutoTimer alert dismissed');
-        //       // Reset flag after a delay to allow showing again later
-        //       setTimeout(() => {
-        //         setHasShownActivationAlert(false);
-        //       }, 5000);
-        //     }
-        //   }]
-        // );
-        
-        // Reset flag after a delay to allow showing again later
-        setTimeout(() => {
-          setHasShownActivationAlert(false);
-        }, 60000); // Reset after 1 minute
+    checkFirstTimeUser();
+  }, [visible, hasCheckedFirstTime, editingJob]);
+
+  // Verificar permisos de ubicación cuando se abre el modal
+  useEffect(() => {
+    const checkLocationPermission = async () => {
+      if (visible) {
+        try {
+          const { status } = await Location.getForegroundPermissionsAsync();
+          setHasLocationPermission(status === 'granted');
+        } catch (error) {
+          console.error('Error checking location permission:', error);
+          setHasLocationPermission(false);
+        }
       }
     };
 
-    // Add listeners
-    autoTimerService.addStatusListener(handleAutoTimerStatusChange);
-    autoTimerService.addAlertListener(handleAutoTimerAlert);
-    
-    // Get current status immediately to sync with any ongoing countdown
-    const currentStatus = autoTimerService.getStatus();
-    setAutoTimerStatus(currentStatus);
-    console.log('🔄 MapLocation: Synced with current AutoTimer status:', currentStatus.state, currentStatus.remainingTime);
+    checkLocationPermission();
+  }, [visible]);
 
-    // Cleanup on unmount
+  // Listener para detectar cuando la app vuelve a estar activa y re-verificar permisos
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: string) => {
+      if (nextAppState === 'active' && visible) {
+        try {
+          const { status } = await Location.getForegroundPermissionsAsync();
+          setHasLocationPermission(status === 'granted');
+        } catch (error) {
+          console.error('Error checking location permission on app focus:', error);
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    
     return () => {
-      autoTimerService.removeStatusListener(handleAutoTimerStatusChange);
-      autoTimerService.removeAlertListener(handleAutoTimerAlert);
+      subscription?.remove();
     };
-  }, []); // Empty dependency array - runs only once
+  }, [visible]);
 
-  // Force update AutoTimer status when screen gains focus
-  useFocusEffect(
-    useCallback(() => {
-      console.log('🔄 MapLocation: Screen focused, updating AutoTimer status');
-      // Immediate update
-      const currentStatus = autoTimerService.getStatus();
-      setAutoTimerStatus(currentStatus);
-      console.log('🔄 MapLocation: Updated status on focus:', currentStatus.state);
-      
-      // Reset mini calendar animations to prevent header issues
-      miniCalendarOpacity.value = 0;
-      miniCalendarTranslateY.value = -30;
-      miniCalendarScale.value = 0.95;
-      
-      // Delayed update to catch any async state changes
-      const timeoutId = setTimeout(() => {
-        const delayedStatus = autoTimerService.getStatus();
-        setAutoTimerStatus(delayedStatus);
-        console.log('🔄 MapLocation: Delayed status update:', delayedStatus.state);
-        
-        // Re-animate mini calendar if needed
-        if ((!delayedStatus || delayedStatus.state === 'inactive') && !showPrivacyNotice) {
-          miniCalendarOpacity.value = withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) });
-          miniCalendarTranslateY.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.ease) });
-          miniCalendarScale.value = withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) });
-        }
-      }, 150);
-      
-      return () => clearTimeout(timeoutId);
-    }, [autoTimerService, showPrivacyNotice])
-  );
-
-  // Update jobs in AutoTimer service when jobs change
   useEffect(() => {
-    const updateAutoTimerJobs = async () => {
-      if (jobs.length > 0) {
-        console.log('🔄 MapLocation: Updating AutoTimer with jobs:', jobs.length);
-        
-        // If service is not enabled, start it; otherwise just update jobs
-        if (!autoTimerService.isServiceEnabled()) {
-          console.log('🚀 MapLocation: Starting AutoTimer service');
-          autoTimerService.start(jobs);
-        } else {
-          console.log('🔄 MapLocation: Service already running, just updating jobs');
-          await autoTimerService.updateJobs(jobs);
+    let scheduleToUse;
+    
+    if (editingJob) {
+      scheduleToUse = {
+        enabled: editingJob.schedule?.enabled || false,
+        weeklySchedule: editingJob.schedule?.weeklySchedule || {
+          0: null,
+          1: null,
+          2: null,
+          3: null,
+          4: null,
+          5: null,
+          6: null,
+        },
+        autoSchedule: editingJob.schedule?.autoSchedule || false,
+      };
+      
+      setFormData({
+        ...editingJob,
+        street: editingJob.street || '',
+        city: editingJob.city || '',
+        postalCode: editingJob.postalCode || '',
+        salary: editingJob.salary || {
+          type: 'hourly',
+          amount: editingJob.hourlyRate || 0,
+          currency: editingJob.currency || 'EUR',
+        },
+        schedule: scheduleToUse,
+        billing: editingJob.billing || {
+          enabled: false,
+          invoicePrefix: 'INV',
+          taxRate: 21,
+          notes: '',
+          userData: {
+            name: '',
+            address: '',
+            phone: '',
+            email: '',
+            isCompany: false,
+            companyName: '',
+            taxId: '',
+            bankAccount: '',
+            bankName: '',
+            swiftCode: '',
+            website: '',
+            logoUrl: '',
+          },
+        },
+        location: editingJob.location || {
+          address: editingJob.address || '',
+          radius: 100,
+        },
+        autoTimer: editingJob.autoTimer || {
+          enabled: false,
+          geofenceRadius: 50,
+          delayStart: 1,
+          delayStop: 1,
+          notifications: true,
+        },
+      });
+    } else {
+      setFormData({
+        name: '',
+        company: '',
+        address: '',
+        street: '',
+        city: '',
+        postalCode: '',
+        hourlyRate: 0,
+        currency: 'EUR',
+        color: DEFAULT_COLORS[0],
+        defaultHours: 8,
+        isActive: true,
+        description: '',
+        contactPerson: '',
+        contactEmail: '',
+        contactPhone: '',
+        salary: {
+          type: 'hourly',
+          amount: 0,
+          currency: 'EUR',
+        },
+        schedule: scheduleToUse,
+        billing: {
+          enabled: false,
+          invoicePrefix: 'INV',
+          taxRate: 21,
+          notes: '',
+          userData: {
+            name: '',
+            address: '',
+            phone: '',
+            email: '',
+            isCompany: false,
+            companyName: '',
+            taxId: '',
+            bankAccount: '',
+            bankName: '',
+            swiftCode: '',
+            website: '',
+            logoUrl: '',
+          },
+        },
+        location: {
+          address: '',
+          radius: 100,
+        },
+        autoTimer: {
+          enabled: false,
+          geofenceRadius: 50,
+          delayStart: 1,
+          delayStop: 1,
+          notifications: true,
+        },
+      });
+    }
+    
+    // Initialize previous autoSchedule value
+    setPreviousAutoSchedule(scheduleToUse?.autoSchedule || false);
+  }, [editingJob, visible]);
+
+  // Get user location when auto-timer is enabled
+  useEffect(() => {
+    const getUserLocation = async () => {
+      if (formData.autoTimer?.enabled && hasLocationPermission) {
+        try {
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.High,
+          });
+          setUserLocation({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
+        } catch (error) {
+          console.log('Error getting user location:', error);
         }
       }
     };
-    
-    updateAutoTimerJobs();
-  }, [jobs]);
 
-  // Calculate elapsed time for active AutoTimer
+    getUserLocation();
+  }, [formData.autoTimer?.enabled, hasLocationPermission]);
+
+  // Check active timer status for this job
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
-    console.log('🔄 MapLocation elapsed time effect triggered, autoTimerStatus:', autoTimerStatus?.state, 'jobId:', autoTimerStatus?.jobId);
-    
-    if (autoTimerStatus?.state === 'active' && autoTimerStatus?.jobId) {
-      // Start clock pulse animation
-      clockPulse.value = withRepeat(
-        withTiming(1.15, { duration: 1000 }),
-        -1,
-        true
-      );
-      const updateElapsedTime = async () => {
-        // Check if timer is paused
-        const activeSession = await JobService.getActiveSession();
-        if (activeSession) {
-          const isPaused = (activeSession as any).isPaused || false;
-          setIsTimerPaused(isPaused);
-          
-          // Use AutoTimerService's getElapsedTime method directly
-          const elapsed = await autoTimerService.getElapsedTime();
-          console.log('⏱️ MapLocation updating elapsed time:', elapsed, 'seconds for job:', autoTimerStatus.jobId, 'isPaused:', isPaused);
-          setElapsedTime(elapsed);
-        }
-      };
-
-      // Update immediately and then every second
-      updateElapsedTime();
-      interval = setInterval(updateElapsedTime, 1000);
-    } else {
-      console.log('🔄 MapLocation: AutoTimer not active or no jobId, resetting elapsed time to 0');
-      setElapsedTime(0);
-      // Stop clock pulse animation
-      clockPulse.value = withTiming(1, { duration: 300 });
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [autoTimerStatus?.state, autoTimerStatus?.jobId]);
-
-  // Show privacy notice when auto timer activates for the first time
-  useEffect(() => {
-    console.log('🔔 MapLocation: Privacy notice effect - checking conditions:', {
-      hasAutoTimerStatus: !!autoTimerStatus,
-      autoTimerState: autoTimerStatus?.state,
-      hasEnabledAutoTimer: jobs.some(job => job.autoTimer?.enabled),
-      hasShownPrivacyNotice,
-      showPrivacyNotice
-    });
-    
-    if (autoTimerStatus && 
-        autoTimerStatus.state !== 'inactive' && 
-        jobs.some(job => job.autoTimer?.enabled) && 
-        !hasShownPrivacyNotice && 
-        !showPrivacyNotice) {
-      console.log('🔔 MapLocation: Showing privacy notice');
-      setShowPrivacyNotice(true);
-      // Animate privacy notice in
-      privacyNoticeOpacity.value = withTiming(1, { duration: 400 });
-      privacyNoticeTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
-    }
-  }, [autoTimerStatus, jobs, hasShownPrivacyNotice, showPrivacyNotice]);
-
-  // Effect to animate mini calendar appearance/disappearance
-  useEffect(() => {
-    // Always show mini calendar unless on small screen
-    const shouldShow = !isSmallScreen;
-    
-    console.log('📅 MapLocation: Mini calendar visibility check:', {
-      shouldShow,
-      currentlyShowing: shouldShowMiniCalendar,
-      autoTimerActive: autoTimerStatus?.state !== 'inactive',
-      hasEnabledAutoTimer: jobs.some(job => job.autoTimer?.enabled),
-      showPrivacyNotice
-    });
-
-    if (shouldShow !== shouldShowMiniCalendar) {
-      if (shouldShow) {
-        // Show animation: fade in and slide down
-        console.log('📅 MapLocation: Animating mini calendar IN');
-        setShouldShowMiniCalendar(true);
-        miniCalendarOpacity.value = withTiming(1, { duration: 400 });
-        miniCalendarTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
-        miniCalendarScale.value = withSpring(1, { damping: 15, stiffness: 150 });
-      } else {
-        // Hide animation: fade out and slide up
-        console.log('📅 MapLocation: Animating mini calendar OUT');
-        miniCalendarOpacity.value = withTiming(0, { duration: 300 });
-        miniCalendarTranslateY.value = withTiming(-30, { duration: 300 });
-        miniCalendarScale.value = withTiming(0.95, { duration: 300, easing: Easing.inOut(Easing.ease) });
-        
-        // Hide after animation completes
-        setTimeout(() => {
-          setShouldShowMiniCalendar(false);
-        }, 300);
-      }
-    }
-  }, [autoTimerStatus, jobs, showPrivacyNotice, shouldShowMiniCalendar, isSmallScreen]);
-
-  // Location tracking every 30 seconds when AutoTimer is active
-  useEffect(() => {
-    let locationInterval: NodeJS.Timeout;
-    
-    const isAutoTimerActive = autoTimerStatus?.state === 'active';
-    
-    if (isAutoTimerActive) {
-      console.log('📍 MapLocation: Starting location tracking every 30s (AutoTimer active)');
-      
-      const updateLocation = async () => {
+    const checkActiveTimer = async () => {
+      if (editingJob && formData.autoTimer?.enabled && currentTab === 'auto') {
         try {
-          const { status } = await Location.getForegroundPermissionsAsync();
-          if (status === 'granted') {
-            const locationResult = await Location.getCurrentPositionAsync({
-              accuracy: Location.Accuracy.High,
-            });
-            setCurrentUserLocation({
-              latitude: locationResult.coords.latitude,
-              longitude: locationResult.coords.longitude,
-            });
-            console.log('📍 MapLocation: Location updated for AutoTimer tracking');
+          const activeSession = await JobService.getActiveSession();
+          if (activeSession && activeSession.jobId === editingJob.id) {
+            const startTime = new Date(activeSession.startTime);
+            const now = new Date();
+            const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+            setActiveTimerElapsed(elapsedSeconds);
+          } else {
+            setActiveTimerElapsed(0);
           }
         } catch (error) {
-          console.error('Error updating location for AutoTimer:', error);
+          console.error('Error checking active timer:', error);
         }
-      };
-      
-      // Update immediately, then every 30 seconds
-      updateLocation();
-      locationInterval = setInterval(updateLocation, 30000);
-    } else {
-      console.log('📍 MapLocation: Stopping location tracking (AutoTimer inactive)');
-      setCurrentUserLocation(null);
+      }
+    };
+    
+    if (visible && currentTab === 'auto') {
+      checkActiveTimer();
+      interval = setInterval(checkActiveTimer, 1000);
     }
     
     return () => {
-      if (locationInterval) {
-        clearInterval(locationInterval);
+      if (interval) clearInterval(interval);
+    };
+  }, [visible, currentTab, editingJob, formData.autoTimer?.enabled]);
+
+  // Monitor AutoTimer status and show alert when needed
+  useEffect(() => {
+    const checkAutoTimerStatus = () => {
+      // Calculate if user is inside the work radius
+      if (userLocation && jobCoordinates && formData.autoTimer?.enabled) {
+        const distance = calculateDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          jobCoordinates.latitude,
+          jobCoordinates.longitude
+        );
+        
+        const radius = formData.autoTimer?.geofenceRadius || 100;
+        const isInsideRadius = distance <= radius;
+        
+        // Show alert only if outside radius and haven't shown it yet
+        if (!isInsideRadius && !hasShownAutoTimerAlert && currentTab === 'auto') {
+          setShowAutoTimerAlert(true);
+          setHasShownAutoTimerAlert(true);
+        }
+        // Hide alert if user enters the radius
+        else if (isInsideRadius && showAutoTimerAlert) {
+          setShowAutoTimerAlert(false);
+        }
       }
     };
-  }, [autoTimerStatus?.state, jobs]);
 
-  const calculateJobStatistics = async (job: Job): Promise<{ thisMonthHours: number; thisMonthDays: number }> => {
-    try {
-      const workDays = await JobService.getWorkDaysForJob(job.id);
-      const now = new Date();
-      const currentMonth = now.getMonth() + 1;
-      const currentYear = now.getFullYear();
-      
-      let thisMonthHours = 0;
-      let thisMonthDays = 0;
-      
-      workDays.forEach((day: any) => {
-        const dayDate = new Date(day.date);
+    // Helper function to calculate distance between two coordinates
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+      const R = 6371e3; // Earth radius in meters
+      const φ1 = lat1 * Math.PI/180;
+      const φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2-lat1) * Math.PI/180;
+      const Δλ = (lon2-lon1) * Math.PI/180;
+
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+      return R * c; // Distance in meters
+    };
+
+    if (visible && formData.autoTimer?.enabled && currentTab === 'auto') {
+      checkAutoTimerStatus();
+      const interval = setInterval(checkAutoTimerStatus, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [visible, formData.autoTimer?.enabled, currentTab, hasShownAutoTimerAlert, userLocation, jobCoordinates, showAutoTimerAlert, formData.autoTimer?.geofenceRadius]);
+
+  // Geocode job address when it changes and auto-timer is enabled
+  useEffect(() => {
+    const geocodeAddress = async () => {
+      if (formData.autoTimer?.enabled && (formData.address || formData.street || formData.city)) {
+        const fullAddress = `${formData.street || ''} ${formData.city || ''} ${formData.postalCode || ''} ${formData.address || ''}`.trim();
         
-        // This month statistics
-        if (dayDate.getMonth() + 1 === currentMonth && dayDate.getFullYear() === currentYear) {
-          if (day.type === 'work') {
-            thisMonthHours += day.hours;
-            thisMonthDays++;
+        if (fullAddress) {
+          try {
+            const geocoded = await Location.geocodeAsync(fullAddress);
+            if (geocoded && geocoded.length > 0) {
+              const coords = {
+                latitude: geocoded[0].latitude,
+                longitude: geocoded[0].longitude,
+              };
+              setJobCoordinates(coords);
+              
+              // Set map region centered on job location with more zoom
+              setMapRegion({
+                ...coords,
+                latitudeDelta: 0.002,  // Más zoom (más cerca)
+                longitudeDelta: 0.002,  // Más zoom (más cerca)
+              });
+            }
+          } catch (error) {
+            console.log('Error geocoding address:', error);
           }
         }
-      });
-      
-      return {
-        thisMonthHours,
-        thisMonthDays
-      };
-    } catch (error) {
-      console.error('Error calculating job statistics:', error);
-      return {
-        thisMonthHours: 0,
-        thisMonthDays: 0
-      };
-    }
-  };
-
-  const loadJobs = async () => {
-    try {
-      const loadedJobs = await JobService.getJobs();
-      console.log('📊 Jobs loaded with data:', loadedJobs.map(j => ({
-        name: j.name,
-        hourlyRate: j.hourlyRate,
-        defaultHours: j.defaultHours,
-        schedule: j.schedule,
-        salary: j.salary,
-        billing: j.billing
-      })));
-      const activeJobs = loadedJobs.filter(job => job.isActive);
-      setJobs(activeJobs);
-      
-      // Load statistics for all jobs
-      const statsMap = new Map();
-      for (const job of activeJobs) {
-        const stats = await calculateJobStatistics(job);
-        statsMap.set(job.id, stats);
       }
-      setJobStatistics(statsMap);
-      
-      // Reload calendar data when jobs change
-      loadMiniCalendarData(undefined, isIPadPortrait);
-    } catch (error) {
-      console.error('Error loading jobs:', error);
-    }
-  };
-
-  const checkActiveTimer = async () => {
-    try {
-      const activeSession = await JobService.getActiveSession();
-      setActiveTimerJobId(activeSession?.jobId || null);
-    } catch (error) {
-      console.error('Error checking active timer:', error);
-    }
-  };
-
-  const isJobCurrentlyActive = (job: Job): boolean => {
-    return activeTimerJobId === job.id;
-  };
-
-  const getJobScheduleStatus = (job: Job): string | null => {
-    if (!job.schedule || !job.schedule.workDays?.length) return null;
-
-    const now = new Date();
-    const currentDay = now.getDay();
-    const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
-    const workDays = job.schedule.workDays;
-    const startTime = job.schedule.startTime;
-    const endTime = job.schedule.endTime;
-    const secondStartTime = job.schedule.secondStartTime;
-    const secondEndTime = job.schedule.secondEndTime;
-
-    // Check if currently in work hours (don't show next shift if currently working)
-    if (workDays.includes(currentDay)) {
-      if (startTime && endTime && isTimeInRange(currentTime, startTime, endTime)) {
-        return null; // Currently should be working
-      }
-      if (job.schedule.hasSplitShift && secondStartTime && secondEndTime && 
-          isTimeInRange(currentTime, secondStartTime, secondEndTime)) {
-        return null; // Currently should be working (second shift)
-      }
-    }
-
-    // Find the next work shift (could be today or future days)
-    const nextShift = findNextWorkShift(workDays, startTime, secondStartTime, job.schedule.hasSplitShift);
-    
-    if (nextShift) {
-      if (nextShift.isToday) {
-        return `${t('maps.next_shift')} ${nextShift.time}`;
-      } else {
-        return `${t('maps.next_shift')} ${getDayName(nextShift.day)} ${nextShift.time}`;
-      }
-    }
-
-    return null;
-  };
-
-  const isTimeInRange = (currentTime: string, startTime: string, endTime: string): boolean => {
-    return currentTime >= startTime && currentTime <= endTime;
-  };
-
-  const findNextWorkShift = (workDays: number[], startTime?: string, secondStartTime?: string, hasSplitShift?: boolean): {
-    day: number;
-    time: string;
-    isToday: boolean;
-  } | null => {
-    const now = new Date();
-    const today = now.getDay();
-    const currentTime = now.toTimeString().slice(0, 5);
-    
-    // First, check if there are upcoming shifts TODAY
-    if (workDays.includes(today)) {
-      // Check main shift
-      if (startTime && currentTime < startTime) {
-        return {
-          day: today,
-          time: startTime,
-          isToday: true
-        };
-      }
-      
-      // Check second shift (if split shift is enabled)
-      if (hasSplitShift && secondStartTime && currentTime < secondStartTime) {
-        return {
-          day: today,
-          time: secondStartTime,
-          isToday: true
-        };
-      }
-    }
-    
-    // Find next work day (tomorrow onwards)
-    for (let i = 1; i <= 7; i++) {
-      const nextDay = (today + i) % 7;
-      if (workDays.includes(nextDay)) {
-        // Return the main start time for the next work day
-        const nextTime = startTime || '09:00';
-        return {
-          day: nextDay,
-          time: nextTime,
-          isToday: false
-        };
-      }
-    }
-    
-    return null;
-  };
-
-  const findNextWorkDay = (workDays: number[]): number | null => {
-    const today = new Date().getDay();
-    
-    // Find next work day in the same week
-    for (let i = 1; i <= 7; i++) {
-      const nextDay = (today + i) % 7;
-      if (workDays.includes(nextDay)) {
-        return nextDay;
-      }
-    }
-    return null;
-  };
-
-  const getDayName = (dayNumber: number): string => {
-    const days = t('maps.days') as unknown as string[];
-    return days[dayNumber] || '';
-  };
-
-  // Calculate distance between two coordinates using Haversine formula
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371e3; // Earth's radius in meters
-    const φ1 = lat1 * Math.PI/180;
-    const φ2 = lat2 * Math.PI/180;
-    const Δφ = (lat2-lat1) * Math.PI/180;
-    const Δλ = (lon2-lon1) * Math.PI/180;
-
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-    return R * c; // Distance in meters
-  };
-
-  // Convertir coordenadas geográficas a píxeles en la pantalla
-  const getScreenPositionFromCoords = (lat: number, lng: number) => {
-    if (!mapRef.current) return { x: 0, y: 0 };
-    
-    // Obtener el centro actual del mapa y el zoom
-    const mapCenter = {
-      latitude: location?.latitude || 0,
-      longitude: location?.longitude || 0,
     };
-    
-    // Calcular la diferencia en grados
-    const deltaLat = lat - mapCenter.latitude;
-    const deltaLng = lng - mapCenter.longitude;
-    
-    // Convertir a píxeles (aproximación)
-    // En latitud: 1 grado ≈ 111320 metros
-    // En longitud: 1 grado ≈ 111320 * cos(lat) metros
-    const latToPixels = (deltaLat * 111320) / 10; // Factor de escala aproximado
-    const lngToPixels = (deltaLng * 111320 * Math.cos(mapCenter.latitude * Math.PI / 180)) / 10;
-    
-    return {
-      x: lngToPixels,
-      y: -latToPixels // Negativo porque las coordenadas Y van hacia abajo en pantalla
-    };
-  };
 
-  // Calcular posición inicial dentro del círculo del trabajo activo
-  const getPositionInsideJobCircle = () => {
-    if (!autoTimerStatus?.jobId) return { x: -screenWidth/2 + 120, y: -screenHeight/2 + 300 };
+    geocodeAddress();
+  }, [formData.autoTimer?.enabled, formData.address, formData.street, formData.city, formData.postalCode]);
+
+  // Track changes in autoSchedule to clean up when disabled
+  useEffect(() => {
+    const currentAutoSchedule = formData.schedule?.autoSchedule;
     
-    // Encontrar el trabajo activo
-    const activeJob = jobs.find(job => job.id === autoTimerStatus.jobId);
-    if (!activeJob?.location?.latitude || !activeJob?.location?.longitude || !activeJob?.autoTimer?.enabled) {
-      return { x: -screenWidth/2 + 120, y: -screenHeight/2 + 300 };
-    }
-    
-    // Obtener la posición del trabajo en pantalla
-    const jobScreenPos = getScreenPositionFromCoords(
-      activeJob.location.latitude,
-      activeJob.location.longitude
-    );
-    
-    // Generar una posición aleatoria dentro del círculo del geofence
-    const radius = activeJob.autoTimer.geofenceRadius || 100;
-    const angle = Math.random() * 2 * Math.PI; // Ángulo aleatorio
-    const distance = Math.random() * (radius * 0.6); // Dentro del 60% del radio para que se vea bien
-    
-    const offsetX = Math.cos(angle) * distance / 10; // Factor de escala
-    const offsetY = Math.sin(angle) * distance / 10;
-    
-    return {
-      x: jobScreenPos.x + offsetX,
-      y: jobScreenPos.y + offsetY
-    };
-  };
-
-  // Format time in HH:MM:SS format
-  const formatTime = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Get formatted AutoTimer message with translations
-  const getAutoTimerMessage = (status: AutoTimerStatus): string => {
-    const messageParts = status.message.split(':');
-    const messageType = messageParts[0];
-    const minutes = messageParts[1];
-
-    switch (messageType) {
-      case 'inactive':
-        return t('timer.auto_timer.inactive');
-      case 'pre-start':
-        const seconds = Math.ceil(parseFloat(minutes));
-        return t('timer.auto_timer.starting_in', { seconds });
-      case 'entering':
-        return t('timer.auto_timer.will_start', { minutes });
-      case 'active':
-        const timeDisplay = formatTime(elapsedTime);
-        return isTimerPaused 
-          ? `${t('timer.paused')} - ${timeDisplay}` 
-          : `${t('timer.auto_timer.started_auto')} - ${timeDisplay}`;
-      case 'leaving':
-        return t('timer.auto_timer.will_stop', { minutes });
-      case 'manual':
-        return t('timer.auto_timer.manual_override');
-      case 'cancelled':
-        return t('timer.auto_timer.cancelled');
-      default:
-        return status.message;
-    }
-  };
-
-
-  const handleAddJob = () => {
-    triggerHaptic('light');
-    setEditingJob(null);
-    setShowJobForm(true);
-  };
-
-  const handleEditJob = (job: Job) => {
-    console.log('🟡 MapLocation: handleEditJob called for job:', job.name);
-    console.log('🟡 MapLocation: showJobCardsModal was:', showJobCardsModal);
-    console.log('🟡 MapLocation: shouldReopenJobCardsModal:', shouldReopenJobCardsModal);
-    
-    setEditingJob(job);
-    setShowJobForm(true);
-    // Remember if job cards modal was open and close it
-    setWasJobCardsModalOpen(showJobCardsModal);
-    setShowJobCardsModal(false);
-    setSelectedJob(null);
-    
-    console.log('🟡 MapLocation: States after handleEditJob - showJobForm: true, showJobCardsModal: false');
-  };
-
-  const handleJobAction = (job: Job, action: 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map' | 'edit-auto') => {
-    if (action === 'statistics') {
-      navigateTo('reports', job);
-      closeModal();
-      return;
-    }
-
-    if (action === 'map') {
-      // Navigate to job location without opening modal
-      if (job.location?.latitude && job.location?.longitude && mapRef.current) {
-        mapRef.current.animateToRegion({
-          latitude: job.location.latitude,
-          longitude: job.location.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }, 1000);
-      }
-      return;
-    }
-
-    if (action === 'edit') {
-      // Set selectedEditType to null to use 'basic' as default
-      setSelectedEditType(null);
-      handleEditJob(job);
-      closeModal();
-      return;
-    }
-    if (action === 'delete') {
-      if (!job) {
-        Alert.alert(t('maps.error'), t('maps.no_job_selected'));
-        return;
-      }
+    // If we have an editing job and autoSchedule was enabled but now disabled
+    if (editingJob && 
+        previousAutoSchedule === true && 
+        currentAutoSchedule === false) {
       
+      // Show confirmation dialog before clearing
       Alert.alert(
-        t('maps.delete_confirm_title'),
-        t('maps.delete_confirm_message', { jobName: job.name }),
+        t('job_form.auto_schedule.disable_title'),
+        t('job_form.auto_schedule.disable_message'),
         [
-          { text: t('maps.cancel'), style: 'cancel' },
-          {
-            text: t('maps.delete_confirm_button'),
+          { 
+            text: t('job_form.auto_schedule.disable_cancel'), 
+            style: 'cancel',
+            onPress: () => {
+              // Revert the autoSchedule back to true
+              updateNestedData('schedule', 'autoSchedule', true);
+            }
+          },
+          { 
+            text: t('job_form.auto_schedule.disable_confirm'),
             style: 'destructive',
             onPress: async () => {
               try {
-                await JobService.deleteJob(job.id);
-                await loadJobs();
-                closeModal();
-                Alert.alert(t('maps.success'), t('maps.delete_success'));
+                await AutoScheduleService.clearAutoSchedule(editingJob.id);
+                Alert.alert(
+                  t('job_form.auto_schedule.cleared_title'),
+                  t('job_form.auto_schedule.cleared_message')
+                );
               } catch (error) {
-                console.error('Error deleting job:', error);
-                Alert.alert('Error', t('maps.delete_error'));
+                console.error('Error clearing auto schedule:', error);
+                Alert.alert(
+                  t('job_form.auto_schedule.error_title'),
+                  t('job_form.auto_schedule.clear_error')
+                );
+                // Revert on error too
+                updateNestedData('schedule', 'autoSchedule', true);
               }
-            },
-          },
+            }
+          }
         ]
       );
+    }
+    
+    // Update previous value
+    setPreviousAutoSchedule(currentAutoSchedule);
+  }, [formData.schedule?.autoSchedule, editingJob, t, previousAutoSchedule]);
+
+  const geocodeAddress = async (address: string) => {
+    try {
+      const geocodedLocations = await Location.geocodeAsync(address);
+      if (geocodedLocations.length > 0) {
+        return {
+          latitude: geocodedLocations[0].latitude,
+          longitude: geocodedLocations[0].longitude,
+        };
+      }
+    } catch (error) {
+      console.warn('Error geocoding address:', error);
+    }
+    return null;
+  };
+
+  const handleTabPress = (tabKey: 'basic' | 'schedule' | 'financial' | 'billing' | 'auto' | 'delete') => {
+    const premiumTabs = ['schedule', 'financial', 'billing', 'auto'];
+    
+    if (premiumTabs.includes(tabKey) && !isSubscribed) {
+      setCurrentTab(tabKey);
+    } else {
+      setCurrentTab(tabKey);
+    }
+  };
+
+  const handleClose = async () => {
+    // If there's a name, save the job
+    if (formData.name?.trim()) {
+      await handleSave();
+    } else {
+      // If no name, just close without saving
+      onClose();
+    }
+  };
+
+  const handleSave = async () => {
+    // Only save if there's a name, otherwise just close
+    if (!formData.name?.trim()) {
+      onClose();
       return;
     }
-    
-    switch (action) {
-      case 'timer':
-        closeModal();
-        navigateTo('timer', job);
-        break;
-      case 'calendar':
-        navigateTo('calendar', job);
-        closeModal();
-        break;
-      case 'edit-auto':
-        closeModal();
-        setSelectedEditType('location');
-        handleEditJob(job);
-        break;
-    }
-  };
 
-  const handleJobFormSave = async () => {
-    try {
-      console.log('💾 MapLocation: Saving job data');
-      console.log('💾 MapLocation: Is editing?', !!editingJob);
-      
-      const wasEditing = !!editingJob;
-      
-      await loadJobs();
-      
-      // Sync jobs with widget after saving
-      console.log('🔄 MapLocation: Syncing jobs with widget...');
-      await WidgetSyncService.syncJobsToWidget();
-      console.log('✅ MapLocation: Widget sync completed');
-      
-      setShowJobForm(false);
-      setEditingJob(null);
-      
-      // If we were editing a job and the modal was open, reopen it (but not if coming from settings button)
-      if (wasEditing && wasJobCardsModalOpen && shouldReopenJobCardsModal) {
-        setTimeout(() => {
-          setShowJobCardsModal(true);
-          setWasJobCardsModalOpen(false);
-          setShouldReopenJobCardsModal(false);
-        }, 100);
-      } else {
-        // Reset flags
-        setWasJobCardsModalOpen(false);
-        setShouldReopenJobCardsModal(false);
+    // Mark that user has seen the full form after first save
+    if (isFirstTimeUser) {
+      try {
+        await AsyncStorage.setItem('hasSeenFullJobForm', 'true');
+      } catch (error) {
+        console.error('Error saving first time status:', error);
       }
-    } catch (error) {
-      console.error('Error saving job:', error);
     }
-  };
 
-  // Función para manejar la selección de categoría de edición
-  const handleEditCategory = (category: 'schedule' | 'location' | 'financial' | 'billing') => {
-    setSelectedEditType(category);
-    
-    // Si solo hay 1 trabajo, ir directo a JobFormModal
-    if (jobs.length === 1) {
-      setEditingJob(jobs[0]);
-      setShowJobForm(true);
-    } else {
-      // Si hay más de 1 trabajo, mostrar el selector
-      setShowJobSelector(true);
-    }
-  };
-
-  // Función para manejar la selección de trabajo
-  const handleJobSelect = (job: Job) => {
-    setEditingJob(job);
-    setShowJobForm(true);
-    setShowJobSelector(false);
-  };
-
-  // Función para obtener información de edición
-  const getEditInfo = (type: string) => {
-    switch (type) {
-      case 'schedule':
-        return {
-          title: t('edit.schedule.title'),
-          subtitle: t('edit.schedule.subtitle'),
-          tab: 'schedule' as const,
-        };
-      case 'location':
-        return {
-          title: t('edit.autotimer.title'),
-          subtitle: t('edit.autotimer.subtitle'),
-          tab: 'auto' as const,
-        };
-      case 'financial':
-        return {
-          title:  t('edit.financial.title'),
-          subtitle: t('edit.financial.subtitle'),
-          tab: 'financial' as const,
-        };
-      case 'billing':
-        return {
-          title: t('edit.billing.title'),
-          subtitle: t('edit.billing.subtitle'),
-          tab: 'billing' as const,
-        };
-      default:
-        return {
-          title: t('edit.schedule.title'),
-          subtitle: t('edit.schedule.subtitle'),
-          tab: 'schedule' as const,
-        };
-    }
-  };
-
-  const hasJobAddress = (job: Job) => {
-    return !!(job.address?.trim() || 
-              job.street?.trim() || 
-              job.city?.trim() || 
-              job.postalCode?.trim());
-  };
-
-  const handleAutoTimerToggle = async (job: Job, value: boolean) => {
     try {
-      const updatedJob = {
-        ...job,
-        autoTimer: {
-          ...job.autoTimer,
-          enabled: value,
-          geofenceRadius: job.autoTimer?.geofenceRadius || 100,
-          delayStart: job.autoTimer?.delayStart || 2,
-          delayStop: job.autoTimer?.delayStop || 2,
-          notifications: job.autoTimer?.notifications !== false,
+      // Combine address fields into full address
+      const addressParts = [];
+      if (formData.street?.trim()) addressParts.push(formData.street.trim());
+      if (formData.city?.trim()) addressParts.push(formData.city.trim());
+      if (formData.postalCode?.trim()) addressParts.push(formData.postalCode.trim());
+      const fullAddress = addressParts.join(', ');
+
+      // Geocode the address if we have one and don't already have coordinates
+      let locationData = formData.location;
+      if (fullAddress && (!locationData?.latitude || !locationData?.longitude)) {
+        const coords = await geocodeAddress(fullAddress);
+        if (coords) {
+          locationData = {
+            ...locationData,
+            address: fullAddress,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+          };
         }
+      }
+
+      const jobData: Omit<Job, 'id' | 'createdAt'> = {
+        name: formData.name.trim(),
+        company: formData.company?.trim() || '',
+        address: fullAddress || formData.address?.trim() || '',
+        street: formData.street?.trim() || '',
+        city: formData.city?.trim() || '',
+        postalCode: formData.postalCode?.trim() || '',
+        hourlyRate: Number(formData.hourlyRate) || 0,
+        currency: formData.currency || 'EUR',
+        color: formData.color || DEFAULT_COLORS[0],
+        defaultHours: Number(formData.defaultHours) || 8,
+        isActive: formData.isActive ?? true,
+        description: formData.description?.trim() || '',
+        contactPerson: formData.contactPerson?.trim() || '',
+        contactEmail: formData.contactEmail?.trim() || '',
+        contactPhone: formData.contactPhone?.trim() || '',
+        salary: formData.salary,
+        schedule: formData.schedule,
+        billing: formData.billing,
+        location: locationData,
+        autoTimer: formData.autoTimer,
       };
 
-      await JobService.updateJob(job.id, updatedJob);
-      await loadJobs();
-      
-      // Restart AutoTimer service with updated jobs
-      const updatedJobs = await JobService.getJobs();
-      if (autoTimerService.isServiceEnabled()) {
-        console.log('🔄 Restarting AutoTimer service with updated jobs after toggle');
-        await autoTimerService.stop();
-        await autoTimerService.start(updatedJobs);
-      } else if (value) {
-        console.log('🚀 Starting AutoTimer service after enabling AutoTimer');
-        await autoTimerService.start(updatedJobs);
+      let savedJob: Job;
+      if (editingJob) {
+        await JobService.updateJob(editingJob.id, jobData);
+        savedJob = { ...editingJob, ...jobData };
+      } else {
+        savedJob = await JobService.addJob(jobData);
       }
-      
-      if (value) {
-        // Auto-navegar al lugar del trabajo cuando se habilita auto timer
-        if (job.location?.latitude && job.location?.longitude && mapRef.current) {
-          mapRef.current.animateToRegion({
-            latitude: job.location.latitude,
-            longitude: job.location.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }, 1000);
+
+      // Handle auto scheduling if enabled
+      if (formData.schedule?.autoSchedule && savedJob) {
+        try {
+          const result = await AutoScheduleService.applyAutoSchedule(savedJob);
+          
+          // Validate result exists and has expected structure
+          if (!result) {
+            console.warn('AutoScheduleService returned no result');
+            onSave(savedJob);
+            onClose();
+            return;
+          }
+          
+          // Show confirmation with conflicts if any
+          if (result.conflicts && result.conflicts.length > 0) {
+            Alert.alert(
+              t('job_form.auto_schedule.applied_title'),
+              t('job_form.auto_schedule.applied_conflicts', {
+                workDays: (result.generatedDays?.length || 0).toString(),
+                freeDays: (result.freeDays?.length || 0).toString(),
+                conflicts: (result.conflicts?.length || 0).toString()
+              }),
+              [
+                { 
+                  text: 'OK', 
+                  style: 'cancel',
+                  onPress: () => {
+                    onSave(savedJob);
+                    onClose();
+                  }
+                },
+                { 
+                  text: t('job_form.auto_schedule.view_calendar'), 
+                  onPress: () => {
+                    onSave(savedJob);
+                    onClose();
+                    setTimeout(() => {
+                      onNavigateToCalendar?.();
+                    }, 300);
+                  }
+                }
+              ]
+            );
+          } else {
+            Alert.alert(
+              t('job_form.auto_schedule.applied_title'),
+              t('job_form.auto_schedule.applied_success', {
+                workDays: (result.generatedDays?.length || 0).toString(),
+                freeDays: (result.freeDays?.length || 0).toString()
+              }),
+              [
+                { 
+                  text: 'OK', 
+                  style: 'cancel',
+                  onPress: () => {
+                    onSave(savedJob);
+                    onClose();
+                  }
+                },
+                { 
+                  text: t('job_form.auto_schedule.view_calendar'), 
+                  onPress: () => {
+                    onSave(savedJob);
+                    onClose();
+                    setTimeout(() => {
+                      onNavigateToCalendar?.();
+                    }, 300);
+                  }
+                }
+              ]
+            );
+            return; // Exit early when showing alert with calendar navigation
+          }
+        } catch (error) {
+          console.error('Error applying auto schedule:', error);
+          Alert.alert(
+            t('job_form.auto_schedule.error_title'),
+            t('job_form.auto_schedule.error_message')
+          );
         }
       }
+
+      onSave(savedJob);
+      onClose();
     } catch (error) {
-      console.error('Error updating auto-timer:', error);
+      console.error('Error saving job:', error);
+      Alert.alert(t('job_form.errors.error_title'), t('job_form.errors.save_error'));
+    }
+  };
+
+  const updateFormData = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const updateNestedData = (section: string, field: string, value: any) => {
+    setFormData(prev => {
+      const sectionData = prev[section as keyof typeof prev] || {};
+      return {
+        ...prev,
+        [section]: {
+          ...(typeof sectionData === 'object' ? sectionData : {}),
+          [field]: value,
+        },
+      };
+    });
+  };
+
+  const pickCompanyLogo = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permisos necesarios',
+          'Se necesitan permisos para acceder a la galería de fotos'
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+        base64: false,
+      });
+
+      if (!result.canceled && result.assets?.[0]) {
+        updateNestedData('billing', 'userData', {
+          ...formData.billing?.userData,
+          logoUrl: result.assets[0].uri
+        });
+      }
+    } catch (error) {
+      console.error('Error picking logo:', error);
+      Alert.alert('Error', 'Error al seleccionar la imagen');
+    }
+  };
+
+  const detectCurrentLocation = async () => {
+    setIsDetectingLocation(true);
+    
+    try {
+      // Request location permission
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          t('job_form.location_detection.permission_title'),
+          t('job_form.location_detection.permission_message')
+        );
+        setIsDetectingLocation(false);
+        return;
+      }
+
+      // Get current location
+      const currentLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      // Reverse geocode to get address
+      const [addressData] = await Location.reverseGeocodeAsync({
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+      });
+
+      if (addressData) {
+        // Build full address string
+        const addressParts = [];
+        if (addressData.name) addressParts.push(addressData.name);
+        if (addressData.street) addressParts.push(addressData.street);
+        if (addressData.streetNumber) addressParts.push(addressData.streetNumber);
+        if (addressData.city) addressParts.push(addressData.city);
+        if (addressData.region) addressParts.push(addressData.region);
+        if (addressData.country) addressParts.push(addressData.country);
+
+        const detectedAddress = addressParts.join(', ');
+
+        // Build street address (street + number)
+        const streetParts = [];
+        if (addressData.street) streetParts.push(addressData.street);
+        if (addressData.streetNumber) streetParts.push(addressData.streetNumber);
+        const streetAddress = streetParts.join(' ');
+
+        // Update form data with separated fields
+        updateFormData('address', detectedAddress);
+        updateFormData('street', streetAddress);
+        updateFormData('city', addressData.city || '');
+        updateFormData('postalCode', addressData.postalCode || '');
+        
+        updateNestedData('location', 'address', detectedAddress);
+        updateNestedData('location', 'latitude', currentLocation.coords.latitude);
+        updateNestedData('location', 'longitude', currentLocation.coords.longitude);
+
+        Alert.alert(
+          t('job_form.location_detection.detected_title'),
+          t('job_form.location_detection.detected_message', { address: detectedAddress })
+        );
+      } else {
+        Alert.alert(
+          t('job_form.location_detection.error_title'),
+          t('job_form.location_detection.error_address')
+        );
+      }
+    } catch (error) {
+      console.error('Error detecting location:', error);
       Alert.alert(
-        t('maps.error'),
-        t('maps.auto_timer_error')
+        t('job_form.location_detection.error_title'),
+        t('job_form.location_detection.error_location')
       );
+    } finally {
+      setIsDetectingLocation(false);
     }
   };
 
-  const getJobStatistics = (job: Job): { thisMonthHours: number; thisMonthDays: number } | null => {
-    return jobStatistics.get(job.id) || null;
+  const updateDaySchedule = (day: number, scheduleData: any) => {
+    const currentWeeklySchedule = formData.schedule?.weeklySchedule || {};
+    const newWeeklySchedule = {
+      ...currentWeeklySchedule,
+      [day]: scheduleData,
+    };
+    updateNestedData('schedule', 'weeklySchedule', newWeeklySchedule);
   };
 
-  const handleJobPress = (job: Job) => {
-    // Navigate to job location if it has coordinates
-    if (job.location?.latitude && job.location?.longitude && mapRef.current) {
-      mapRef.current.animateToRegion({
-        latitude: job.location.latitude,
-        longitude: job.location.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      }, 1000);
+  const getDaySchedule = (day: number) => {
+    return formData.schedule?.weeklySchedule?.[day] || null;
+  };
+
+  const getDefaultDaySchedule = () => ({
+    startTime: '09:00',
+    endTime: '17:00',
+    hasSplitShift: false,
+    secondStartTime: '15:00',
+    secondEndTime: '19:00',
+    breakTime: 60,
+  });
+
+  const hasDaySchedule = (day: number) => {
+    const daySchedule = getDaySchedule(day);
+    return daySchedule !== null;
+  };
+
+  const removeDaySchedule = (day: number) => {
+    updateDaySchedule(day, null);
+    if (selectedDay === day) {
+      setSelectedDay(null);
     }
-    
-    // Open action modal with animation
-    setSelectedJob(job);
-    
-    // Animate modal appearance
-    modalScale.value = withSpring(1, {
-      damping: 15,
-      stiffness: 300,
-      mass: 1,
-    });
-    modalOpacity.value = withTiming(1, {
-      duration: 200,
-      easing: Easing.out(Easing.quad),
-    });
   };
 
-  const closeModal = () => {
-    // Animate modal disappearance
-    modalScale.value = withTiming(0, {
-      duration: 150,
-      easing: Easing.in(Easing.quad),
-    });
-    modalOpacity.value = withTiming(0, {
-      duration: 150,
-      easing: Easing.in(Easing.quad),
-    });
-    
-    // Clear selected job after animation
-    setTimeout(() => {
-      setSelectedJob(null);
-    }, 150);
-  };
-
-  return (
-    <View style={styles.container}>
-
-
-      <View style={styles.mapWrapper}>
-
-        <View style={styles.map}>
-          <LinearGradient
-            colors={isDark 
-              ? ['#000000', '#0a0a0a', '#1a1a1a', '#000000'] 
-              : ['#f0f4ff', '#e6f0ff', '#dae8ff', '#f8faff']
-            }
-            style={styles.noLocationBackground}
-            locations={[0, 0.3, 0.7, 1]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-   
-            
-            {/* 6 WIDGET CARDS - MODERN GRADIENT STYLE */}
-            {jobs.length > 0 && (
-              <View style={{
-                position: 'absolute',
-                top: 50,
-                left: 12,
-                right: 12,
-                bottom: 90,
-                flexDirection: 'column',
-                gap: 15,
-                paddingHorizontal: 4,
-              }}>
-                {/* TOP ROW - 2 WIDGETS */}
-                <View style={{
-                  flexDirection: 'row',
-                  gap: 15,
-                  height: 145,
-                }}>
-                  {/* JOBS WIDGET */}
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      borderRadius: 22,
-                      padding: 18,
-                      shadowColor: '#3b82f6',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.25,
-                      shadowRadius: 12,
-                      elevation: 8,
-                      overflow: 'hidden',
-                    }}
-                    onPress={() => setShowJobCardsModal(true)}
-                    activeOpacity={0.9}
-                  >
-                    <LinearGradient
-                      colors={isDark ? ['#60a5fa41', '#3b83f669', '#2564eb71'] : ['#60a5fa', '#3b82f6']}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        borderRadius: 22,
-                      }}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    />
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                      <Text style={{
-                        fontSize: 14,
-                        fontWeight: '600',
-                        color: 'white',
-                        opacity: 0.9,
-                      }}>{t('maps.active_jobs')}</Text>
-                      <IconSymbol size={20} name="briefcase.fill" color="white" />
-                    </View>
-                    <Text style={{
-                      fontSize: 42,
-                      fontWeight: '400',
-                      color: 'white',
-                      marginTop: 12,
-                    }}>{jobs.length}</Text>
-                    <Text style={{
-                      fontSize: 12,
-                      color: 'white',
-                      opacity: 0.7,
-                    }}>{jobs.length > 0 ? jobs[0].name : ''}</Text>
-                  </TouchableOpacity>
-                  
-                  {/* TIMER WIDGET */}
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      borderRadius: 22,
-                      padding: 18,
-                      shadowColor: '#10b981',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.25,
-                      shadowRadius: 12,
-                      elevation: 8,
-                      overflow: 'hidden',
-                    }}
-                    onPress={() => handleEditCategory('location')}
-                    activeOpacity={0.9}
-                  >
-                    <LinearGradient
-                      colors={isDark ? ['#34d39955', '#10b98163', '#05966862'] : ['#34d399', '#10b981']}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        borderRadius: 22,
-                      }}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    />
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                      <Text style={{
-                        fontSize: 14,
-                        fontWeight: '600',
-                        color: 'white',
-                        opacity: 0.9,
-                      }}>{t('maps.auto_timer')}</Text>
-                      <Animated.View style={animatedClockStyle}>
-                        <IconSymbol size={20} name="clock.fill" color="white" />
-                      </Animated.View>
-                    </View>
-                    <Text style={{
-                      fontSize: 28,
-                      fontWeight: '500',
-                      color: 'white',
-                      marginTop: 16,
-                      letterSpacing: 1,
-                    }}>
-                      {formatTime(elapsedTime)}
-                    </Text>
-                    <Text style={{
-                      fontSize: 12,
-                      color: 'white',
-                      marginTop: 8,
-                      opacity: 0.7,
-                    }}>
-                      {autoTimerStatus?.state === 'active' ? t('maps.auto_timer_active') : t('maps.auto_timer_inactive')}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* MIDDLE ROW - CALENDAR + SCHEDULES */}
-                <View style={{
-                  flexDirection: 'row',
-                  gap: 10,
-                  height: 150,
-                }}>
-                  {/* CALENDAR WIDGET */}
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.9)' : 'white',
-                      borderRadius: 20,
-                      padding: 16,
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 8,
-                      elevation: 4,
-                    }}
-                    onPress={() => onNavigate?.('calendar')}
-                    activeOpacity={0.8}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <Text style={{
-                        fontSize: 14,
-                        fontWeight: '600',
-                        color: isDark ? '#374151' : '#6b7280',
-                        opacity: 0.9,
-                      }}>{t('calendar.title')}</Text>
-                      <IconSymbol size={20} name="calendar" color={isDark ? '#374151' : '#6b7280'} />
-                    </View>
-                    
-                    {/* Show next 3 days */}
-                    <View style={{ flex: 1, justifyContent: 'center' }}>
-                      <View style={{ 
-                        flexDirection: 'row', 
-                        gap: 10,
-                        justifyContent: 'space-around',
-                      }}>
-                        {(() => {
-                          const today = new Date();
-                          const todayIndex = miniCalendarData.findIndex(d => d.isToday);
-                          const nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + 3) : [];
-                          
-                          // Si no hay días, crear días por defecto
-                          if (nextDays.length === 0) {
-                            for (let i = 0; i < 3; i++) {
-                              const date = new Date();
-                              date.setDate(date.getDate() + i);
-                              nextDays.push({
-                                day: date.getDate().toString(),
-                                isToday: i === 0,
-                                workDay: null
-                              });
-                            }
-                          }
-                          
-                          return nextDays.map((dayData, i) => {
-                            let badgeColor = null;
-                            if (dayData.workDay) {
-                              switch (dayData.workDay.type) {
-                                case 'work':
-                                  badgeColor = '#10b981';
-                                  break;
-                                case 'free':
-                                  badgeColor = '#f59e0b';
-                                  break;
-                                case 'vacation':
-                                  badgeColor = '#8b5cf6';
-                                  break;
-                                case 'sick':
-                                  badgeColor = '#ef4444';
-                                  break;
-                              }
-                            }
-                            
-                            return (
-                              <View
-                                key={i}
-                                style={{
-                                  flex: 1,
-                                  height: 60,
-                                  maxWidth: 50,
-                                  backgroundColor: i === 0
-                                    ? (isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(96, 165, 250, 0.15)')
-                                    : (badgeColor ? `${badgeColor}20` : 'transparent'),
-                                  borderWidth: i === 0 ? 2 : (badgeColor ? 1.5 : 1),
-                                  borderColor: i === 0 ? '#60a5fa' : (badgeColor || '#e5e7eb'),
-                                  borderRadius: 12,
-                                  justifyContent: 'center',
-                                  alignItems: 'center',
-                                }}
-                              >
-                                <View style={{ alignItems: 'center' }}>
-                                  <Text style={{
-                                    fontSize: 10,
-                                    color: i === 0 ? '#3b82f6' : (isDark ? '#6b7280' : '#9ca3af'),
-                                    fontWeight: '600',
-                                    marginBottom: 2,
-                                    textTransform: 'uppercase',
-                                  }}>
-                                    {(() => {
-                                      const date = new Date();
-                                      date.setDate(date.getDate() + i);
-                                      const dayName = t(`calendar.days_short.${['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()]}`);
-                                      return dayName.slice(0, 3);
-                                    })()}
-                                  </Text>
-                                  <Text style={{
-                                    fontSize: 20,
-                                    color: i === 0 ? '#3b82f6' : (isDark ? '#1f2937' : 'black'),
-                                    fontWeight: i === 0 ? '700' : '600',
-                                  }}>
-                                    {dayData.day}
-                                  </Text>
-                                </View>
-                              </View>
-                            );
-                          });
-                        })()}
-                      </View>
-                      {/* Work indicators below days */}
-                      <View style={{ 
-                        flexDirection: 'row', 
-                        gap: 10,
-                        justifyContent: 'space-around',
-                        marginTop: 8,
-                      }}>
-                        {(() => {
-                          const today = new Date();
-                          const todayIndex = miniCalendarData.findIndex(d => d.isToday);
-                          const nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + 3) : [];
-                          
-                          if (nextDays.length === 0) {
-                            for (let i = 0; i < 3; i++) {
-                              const date = new Date();
-                              date.setDate(date.getDate() + i);
-                              nextDays.push({
-                                day: date.getDate().toString(),
-                                isToday: i === 0,
-                                workDay: null
-                              });
-                            }
-                          }
-                          
-                          return nextDays.map((dayData, i) => {
-                            const isWork = dayData.workDay?.type === 'work';
-                            return (
-                              <View key={i} style={{ flex: 1, alignItems: 'center' }}>
-                                {isWork && (
-                                  <IconSymbol 
-                                    size={16} 
-                                    name="briefcase.fill" 
-                                    color={isDark ? '#10b981' : '#059669'}
-                                  />
-                                )}
-                              </View>
-                            );
-                          });
-                        })()}
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-
-                  {/* SCHEDULES WIDGET */}
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      backgroundColor: isDark ? 'rgba(169, 85, 247, 0.96)' : '#8b5cf6',
-                      borderRadius: 20,
-                      padding: 16,
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 8,
-                      elevation: 4,
-                    }}
-                    onPress={() => handleEditCategory('schedule')}
-                    activeOpacity={0.8}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                      <Text style={{
-                        fontSize: 14,
-                        fontWeight: '600',
-                        color: 'white',
-                        opacity: 0.9,
-                      }}>{t('settings.work_config.schedules')}</Text>
-                      <IconSymbol size={20} name="clock.fill" color="white" />
-                    </View>
-                    <View style={{ flex: 1, justifyContent: 'center' }}>
-                      {(() => {
-                        const job = jobs[0];
-                        if (!job) {
-                          return (
-                            <Text style={{
-                              fontSize: 14,
-                              fontWeight: '500',
-                              color: 'white',
-                              marginTop: 12,
-                              opacity: 0.9,
-                            }}>{t('maps.configure_schedule')}</Text>
-                          );
-                        }
-                        
-                        // Check for weekly schedule first
-                        if (job.schedule?.weeklySchedule) {
-                          const schedules = Object.values(job.schedule.weeklySchedule).filter(s => s !== null);
-                          if (schedules.length > 0) {
-                            const firstSchedule = schedules[0];
-                            return (
-                              <>
-                                <Text style={{
-                                  fontSize: 16,
-                                  fontWeight: '600',
-                                  color: 'white',
-                                  marginTop: 8,
-                                }}>
-                                  {firstSchedule.startTime} - {firstSchedule.endTime}
-                                </Text>
-                                <Text style={{
-                                  fontSize: 12,
-                                  color: 'white',
-                                  marginTop: 4,
-                                  opacity: 0.7,
-                                }}>
-                                  {schedules.length} {t('calendar.days_per_week')}
-                                </Text>
-                              </>
-                            );
-                          }
-                        }
-                        
-                        // Check for simple schedule
-                        if (job.schedule?.startTime && job.schedule?.endTime) {
-                          return (
-                            <>
-                              <Text style={{
-                                fontSize: 16,
-                                fontWeight: '600',
-                                color: 'white',
-                                marginTop: 8,
-                              }}>
-                                {job.schedule.startTime} - {job.schedule.endTime}
-                              </Text>
-                              <Text style={{
-                                fontSize: 12,
-                                color: 'white',
-                                marginTop: 4,
-                                opacity: 0.7,
-                              }}>
-                                {job.schedule.workDays?.length || 5} {t('calendar.days_per_week')}
-                              </Text>
-                            </>
-                          );
-                        }
-                        
-                        // Check for default hours
-                        if (job.defaultHours > 0) {
-                          return (
-                            <>
-                              <Text style={{
-                                fontSize: 20,
-                                fontWeight: '600',
-                                color: 'white',
-                                marginTop: 8,
-                              }}>
-                                {job.defaultHours}h
-                              </Text>
-                              <Text style={{
-                                fontSize: 12,
-                                color: 'white',
-                                marginTop: 4,
-                                opacity: 0.7,
-                              }}>
-                                {t('calendar.per_day')}
-                              </Text>
-                            </>
-                          );
-                        }
-                        
-                        return (
-                          <Text style={{
-                            fontSize: 14,
-                            fontWeight: '500',
-                            color: 'white',
-                            marginTop: 12,
-                            opacity: 0.9,
-                          }}>{t('maps.configure_schedule')}</Text>
-                        );
-                      })()}
-                    </View>
-                  </TouchableOpacity>
-                </View>
-
-                {/* BOTTOM ROW - 2 CONFIG WIDGETS */}
-                <View style={{
-                  flexDirection: 'row',
-                  gap: 15,
-                  height: 145,
-                }}>
-                  {/* RATES WIDGET */}
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      borderRadius: 22,
-                      padding: 18,
-                      shadowColor: '#f59e0b',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.25,
-                      shadowRadius: 12,
-                      elevation: 8,
-                      overflow: 'hidden',
-                    }}
-                    onPress={() => handleEditCategory('financial')}
-                    activeOpacity={0.9}
-                  >
-                    <LinearGradient
-                      colors={isDark ? ['#fbbe2432', '#f59f0b5c', '#d977062c'] : ['#fbbe2494', '#f59f0bbe']}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        borderRadius: 22,
-                      }}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    />
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                      <Text style={{
-                        fontSize: 14,
-                        fontWeight: '600',
-                        color: 'white',
-                        opacity: 0.9,
-                      }}>{t('settings.financial_config.rates')}</Text>
-                      <IconSymbol size={20} name="dollarsign.circle.fill" color="white" />
-                    </View>
-                    <View style={{ flex: 1, justifyContent: 'center' }}>
-                      {(() => {
-                        const job = jobs[0];
-                        if (!job) {
-                          return (
-                            <Text style={{
-                              fontSize: 14,
-                              fontWeight: '500',
-                              color: 'white',
-                              marginTop: 12,
-                              opacity: 0.9,
-                            }}>{t('maps.configure_rates')}</Text>
-                          );
-                        }
-                        
-                        // Check for hourly rate
-                        if (job.hourlyRate && job.hourlyRate > 0) {
-                          const currency = job.currency || '€';
-                          return (
-                            <>
-                              <Text style={{
-                                fontSize: 28,
-                                fontWeight: '500',
-                                color: 'white',
-                              }}>
-                                {currency} {job.hourlyRate}
-                              </Text>
-                              <Text style={{
-                                fontSize: 12,
-                                color: 'white',
-                                marginTop: 4,
-                                opacity: 0.7,
-                              }}>{t('maps.per_hour')}</Text>
-                            </>
-                          );
-                        }
-                        
-                        // Check for salary
-                        if (job.salary?.enabled && job.salary?.amount > 0) {
-                          const currency = job.salary.currency || '€';
-                          let period = '';
-                          switch(job.salary.type) {
-                            case 'monthly':
-                              period = t('calendar.monthly');
-                              break;
-                            case 'annual':
-                              period = t('calendar.annual');
-                              break;
-                            default:
-                              period = t('maps.per_hour');
-                          }
-                          return (
-                            <>
-                              <Text style={{
-                                fontSize: 22,
-                                fontWeight: '500',
-                                color: 'white',
-                              }}>
-                                {currency} {job.salary.amount}
-                              </Text>
-                              <Text style={{
-                                fontSize: 12,
-                                color: 'white',
-                                marginTop: 4,
-                                opacity: 0.7,
-                              }}>{period}</Text>
-                            </>
-                          );
-                        }
-                        
-                        return (
-                          <Text style={{
-                            fontSize: 14,
-                            fontWeight: '500',
-                            color: 'white',
-                            marginTop: 12,
-                            opacity: 0.9,
-                          }}>{t('maps.configure_rates')}</Text>
-                        );
-                      })()}
-                    </View>
-                  </TouchableOpacity>
-
-                  {/* BILLING WIDGET */}
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      borderRadius: 22,
-                      padding: 18,
-                      shadowColor: '#ef4444',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.25,
-                      shadowRadius: 12,
-                      elevation: 8,
-                      overflow: 'hidden',
-                    }}
-                    onPress={() => handleEditCategory('billing')}
-                    activeOpacity={0.9}
-                  >
-                    <LinearGradient
-                      colors={isDark ? ['#f87171', '#ef4444', '#dc2626'] : ['#f87171', '#ef4444']}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        borderRadius: 22,
-                      }}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    />
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                      <Text style={{
-                        fontSize: 14,
-                        fontWeight: '600',
-                        color: 'white',
-                        opacity: 0.9,
-                      }}>{t('settings.financial_config.billing')}</Text>
-                      <IconSymbol size={20} name="chart.bar.fill" color="white" />
-                    </View>
-                    <View style={{ flex: 1, justifyContent: 'center' }}>
-                      {(() => {
-                        const job = jobs[0];
-                        
-                        // Check if job has billing data configured
-                        if (job?.billing?.enabled && job?.billing?.userData?.name) {
-                          return (
-                            <>
-                              <Text style={{
-                                fontSize: 14,
-                                fontWeight: '500',
-                                color: 'white',
-                                marginTop: 8,
-                              }}>{job.billing.userData.companyName || job.billing.userData.name}</Text>
-                              <Text style={{
-                                fontSize: 12,
-                                color: 'white',
-                                marginTop: 4,
-                                opacity: 0.7,
-                              }}>{t('maps.ready_to_invoice')}</Text>
-                            </>
-                          );
-                        }
-                        
-                        // Check AsyncStorage for invoicing data
-                        if (hasInvoicingData) {
-                          return (
-                        <>
-                          <Text style={{
-                            fontSize: 14,
-                            fontWeight: '500',
-                            color: 'white',
-                            marginTop: 8,
-                          }}>{t('maps.company_configured')}</Text>
-                          <Text style={{
-                            fontSize: 12,
-                            color: 'white',
-                            marginTop: 4,
-                            opacity: 0.7,
-                          }}>{t('maps.ready_to_invoice')}</Text>
-                        </>
-                          );
-                        }
-                        
-                        // No data configured
-                        return (
-                        <Text style={{
-                          fontSize: 14,
-                          fontWeight: '500',
-                          color: 'white',
-                          marginTop: 12,
-                          opacity: 0.9,
-                        }}>{t('maps.configure_company')}</Text>
-                        );
-                      })()}
-                    </View>
-                  </TouchableOpacity>
-                </View>
+  const renderSimplifiedForm = () => (
+    <TouchableOpacity 
+      style={styles.simplifiedOverlay} 
+      activeOpacity={1}
+      onPress={onClose}
+    >
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.simplifiedKeyboardView}
+      >
+        <TouchableOpacity 
+          activeOpacity={1}
+          onPress={() => {}}
+          style={styles.simplifiedCard}
+        >
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.simplifiedBlurCard}>
+            {/* Close button */}
+            <TouchableOpacity 
+              onPress={onClose} 
+              style={styles.simplifiedCloseButton}
+            >
+              <View style={styles.simplifiedCloseCircle}>
+                <IconSymbol size={20} name="xmark" color={isDark ? '#FFFFFF' : '#3C3C43'} />
               </View>
-            )}
+            </TouchableOpacity>
 
-            {/* Hide old calendar and buttons */}
-            {false && (
-            
-            <View style={[styles.noLocationContent, { 
-              marginTop: isIPadPortrait ? -40 : (isTablet && !isPortrait ? 100 : 0) 
-            }]}>
-              {/* Botón Ver Trabajos - solo si hay trabajos */}
-              {!showJobForm && jobs.length > 0 && (
-              <Animated.View style={[styles.noLocationButtons, animatedNoLocationButtonsStyle]}>
-  
-
-         
-            {/* Mini Calendar - Conditional render */}
-            {shouldShowMiniCalendar && miniCalendarData.length > 0 && !isSmallScreen && (
-              <GestureDetector gesture={Gesture.Pan()
-                .onEnd((event) => {
-                  const { velocityX } = event;
-                  if (Math.abs(velocityX) > 500) {
-                    if (velocityX > 0) {
-                      runOnJS(navigateWeek)('prev');
-                    } else {
-                      runOnJS(navigateWeek)('next');
-                    }
-                  }
-                })}>
-                <View style={[styles.miniCalendarContainer, animatedMiniCalendarStyle]}>
-                  <View style={[
-                    styles.miniCalendarCard,
-                    {
-                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.25)',
-                      borderWidth: 1.5,
-                      borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)',
-                      shadowColor: isDark ? '#000' : '#6366f1',
-                      shadowOffset: { width: 0, height: 12 },
-                      shadowOpacity: isDark ? 0.3 : 0.1,
-                      shadowRadius: 20,
-                      elevation: 12,
-                    }
-                  ]}>
-                    <BlurView intensity={isDark ? 80 : 120} tint={isDark ? "dark" : "light"} style={styles.miniCalendarBlur}>
-                  <View style={styles.miniCalendarHeader}>
-          
-                    <View style={styles.miniCalendarTitleContainer}>
-                      <View style={{
-                        backgroundColor: isDark ? 'rgba(147, 51, 234, 0.2)' : 'rgba(99, 102, 241, 0.15)',
-                        borderRadius: 12,
-                        padding: 8,
-                        borderWidth: 1,
-                        borderColor: isDark ? 'rgba(147, 51, 234, 0.3)' : 'rgba(99, 102, 241, 0.2)',
-                      }}>
-                        <IconSymbol size={24} name="calendar" color={isDark ? '#a855f7' : '#6366f1'} />
-                      </View>
-                      <Text style={[
-                        styles.miniCalendarTitle,
-                        {
-                          fontSize: 18,
-                          fontWeight: '700',
-                          color: isDark ? '#f3f4f6' : '#1f2937',
-                          letterSpacing: 0.5,
-                        }
-                      ]}>{getMonthName(currentWeekStart)}</Text>
-                    </View>
-             
-                  </View>
-                  
-                  {/* Day labels */}
-                  <View style={styles.miniCalendarDayLabels}>
-                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day, index) => (
-                      <Text key={index} style={styles.miniCalendarDayLabel}>
-                        {t(`calendar.days_short.${day}`)}
-                      </Text>
-                    ))}
-                  </View>
-                  
-                  <View style={styles.miniCalendarGrid}>
-                    {miniCalendarData.map((dayData, i) => {
-                      // Determinar color del badge basado en el tipo de día de trabajo
-                      let badgeColor = null;
-                      let badgeText = '';
-                      let timeText = '';
-                      
-                      if (dayData.workDay) {
-                        console.log('📅 Badge rendering for day', dayData.day, 'type:', dayData.workDay.type);
-                        switch (dayData.workDay.type) {
-                          case 'work':
-                            badgeColor = isDark ? '#10b981' : '#059669'; // Verde vibrante
-                            badgeText = 'checkmark-circle';
-                            // Mostrar horario si existe
-                            if (dayData.workDay.startTime && dayData.workDay.endTime) {
-                              // Formatear horas sin el cero inicial si es necesario
-                              const formatTime = (time: string) => {
-                                const [hours, minutes] = time.split(':');
-                                return `${parseInt(hours)}:${minutes}`;
-                              };
-                              
-                              // Si hay turno partido, mostrar ambos bloques
-                              if (dayData.workDay.secondStartTime && dayData.workDay.secondEndTime) {
-                                timeText = `${formatTime(dayData.workDay.startTime)}-${formatTime(dayData.workDay.endTime)}\n${formatTime(dayData.workDay.secondStartTime)}-${formatTime(dayData.workDay.secondEndTime)}`;
-                              } else {
-                                // Horario simple
-                                timeText = `${formatTime(dayData.workDay.startTime)}\n${formatTime(dayData.workDay.endTime)}`;
-                              }
-                            }
-                            break;
-                          case 'free':
-                            badgeColor = isDark ? '#f59e0b' : '#f59e0b'; // Amarillo vibrante
-                            badgeText = 'sunny';
-                            break;
-                          case 'vacation':
-                            badgeColor = isDark ? '#8b5cf6' : '#7c3aed'; // Púrpura para vacaciones
-                            badgeText = 'airplane';
-                            break;
-                          case 'sick':
-                            badgeColor = isDark ? '#ef4444' : '#dc2626'; // Rojo vibrante
-                            badgeText = 'medkit';
-                            break;
-                          default:
-                            console.log('⚠️ Unknown workDay type:', dayData.workDay.type);
-                            break;
-                        }
-                      }
-                      
-                      return (
-                        <TouchableOpacity 
-                          key={i} 
-                          style={[
-                            styles.miniCalendarDay,
-                            {
-                              backgroundColor: dayData.isToday 
-                                ? (isDark ? 'rgba(147, 51, 234, 0.25)' : 'rgba(99, 102, 241, 0.15)')
-                                : (badgeColor ? 'rgba(255, 255, 255, 0.05)' : 'transparent'),
-                              borderWidth: dayData.isToday ? 2 : (badgeColor ? 1 : 0),
-                              borderColor: dayData.isToday 
-                                ? (isDark ? '#a855f7' : '#6366f1')
-                                : (badgeColor ? `${badgeColor}40` : 'transparent'),
-                              borderRadius: 12,
-                              shadowColor: dayData.isToday ? (isDark ? '#9333ea' : '#6366f1') : 'transparent',
-                              shadowOffset: { width: 0, height: 4 },
-                              shadowOpacity: dayData.isToday ? 0.3 : 0,
-                              shadowRadius: 8,
-                              elevation: dayData.isToday ? 4 : 0,
-                            }
-                          ]}
-                          onPress={() => {
-                            if (dayData.workDay && dayData.workDay.type === 'work' && dayData.workDay.startTime) {
-                              setSelectedDaySchedule(selectedDaySchedule === i ? null : i);
-                            } else {
-                              onNavigate?.('calendar');
-                            }
-                          }}
-                          activeOpacity={0.7}
-                          onLongPress={() => onNavigate?.('calendar')}
-                        >
-                          <Text style={[
-                            styles.miniCalendarDayText, 
-                            { 
-                              color: dayData.isToday ? colors.primary : (isDark ? colors.text : colors.textSecondary),
-                              fontWeight: dayData.isToday ? '700' : '600'
-                            }
-                          ]}>
-                            {dayData.day}
-                          </Text>
-                          {badgeColor && (
-                            <View style={[
-                              styles.miniCalendarBadge, 
-                              { 
-                                backgroundColor: badgeColor,
-                                shadowColor: badgeColor,
-                                shadowOffset: { width: 0, height: 2 },
-                                shadowOpacity: 0.4,
-                                shadowRadius: 4,
-                                elevation: 3,
-                              }
-                            ]} />
-                          )}
-                          {dayData.isToday && !badgeColor && (
-                            <View style={[
-                              styles.miniCalendarDot, 
-                              { 
-                                backgroundColor: isDark ? '#a855f7' : '#6366f1',
-                                shadowColor: isDark ? '#a855f7' : '#6366f1',
-                                shadowOffset: { width: 0, height: 2 },
-                                shadowOpacity: 0.5,
-                                shadowRadius: 3,
-                                elevation: 2,
-                              }
-                            ]} />
-                          )}
-                          {/* Mostrar horario si está seleccionado */}
-                          {selectedDaySchedule === i && dayData.workDay && dayData.workDay.type === 'work' && timeText && (
-                            <View style={{
-                              position: 'absolute',
-                              zIndex: 1000,
-                              bottom: -18,
-                              left: -20,
-                              right: -20,
-                              backgroundColor: isDark ? 'rgba(0, 0, 0, 0.95)' : 'rgba(255, 255, 255, 0.98)',
-                              borderRadius: 6,
-                              padding: 2,
-                  
-                              shadowColor: '#000',
-                              shadowOffset: { width: 0, height: 2 },
-                              shadowOpacity: 0.2,
-                              shadowRadius: 4,
-                              elevation: 5,
-                              borderWidth: 1,
-                              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                            }}>
-                              <Text style={{
-                                fontSize: 9,
-                                color: colors.text,
-                                textAlign: 'center',
-                                fontWeight: '600',
-                                lineHeight: 11,
-                              }}>
-                                {timeText}
-                              </Text>
-                            </View>
-                          )}
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-     
-                    </BlurView>
-                  </View>
+            {/* Welcome section */}
+            <View style={styles.simplifiedWelcomeSection}>
+              <View style={styles.simplifiedIconContainer}>
+                <LinearGradient
+                  colors={[colors.primary, colors.primary + '80']}
+                  style={styles.simplifiedIconGradient}
+                />
+                <IconSymbol size={32} name="briefcase.fill" color="#FFFFFF" />
               </View>
-              </GestureDetector>
-            )}
-
-                  <TouchableOpacity 
-                    style={styles.settingItem}
-                    onPress={() => handleEditCategory('schedule')}
-                  >
-                    <View style={[styles.settingIcon, styles.successIconBg]}>
-                      <IconSymbol size={20} name="clock.fill" color={colors.success} />
-                    </View>
-                    <View style={styles.settingContent}>
-                      <Text style={styles.settingTitle}>{t('settings.work_config.schedules')}</Text>
-                      <Text style={styles.settingDescription}>{t('settings.work_config.schedules_desc')}</Text>
-                    </View>
-                    <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
-                  </TouchableOpacity>
-                  
-  
-
-                                    <TouchableOpacity 
-                    style={styles.settingItem}
-                    onPress={() => handleEditCategory('financial')}
-                  >
-                    <View style={[styles.settingIcon, styles.successIconBg]}>
-                      <IconSymbol size={20} name="dollarsign.circle.fill" color={colors.secondary} />
-                    </View>
-                    <View style={styles.settingContent}>
-                      <Text style={styles.settingTitle}>{t('settings.financial_config.rates')}</Text>
-                      <Text style={styles.settingDescription}>{t('settings.financial_config.rates_desc')}</Text>
-                    </View>
-                    <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
-                  </TouchableOpacity>
-
-                                    <TouchableOpacity 
-                    style={styles.settingItem}
-                    onPress={() => handleEditCategory('billing')}
-                  >
-                    <View style={[styles.settingIcon, styles.primaryIconBg]}>
-                      <IconSymbol size={20} name="chart.bar.fill" color={colors.primary} />
-                    </View>
-                    <View style={styles.settingContent}>
-                      <Text style={styles.settingTitle}>{t('settings.financial_config.billing')}</Text>
-                      <Text style={styles.settingDescription}>{t('settings.financial_config.billing_desc')}</Text>
-                    </View>
-                    <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
-                  </TouchableOpacity>
-                  
-
-               
-              </Animated.View>
-              )}
+              
+              <Text style={styles.simplifiedWelcome}>
+                {t('job_form.simplified_welcome')}
+              </Text>
+              <Text style={styles.simplifiedCreateFirst}>
+                {t('job_form.simplified_create_first')}
+              </Text>
+              <Text style={styles.simplifiedSubtitle}>
+                {t('job_form.simplified_subtitle')}
+              </Text>
             </View>
-            )}
-          </LinearGradient>
+            
+            {/* Form section */}
+            <View style={styles.simplifiedInputSection}>
+              <View style={styles.simplifiedLabelRow}>
+                <IconSymbol size={18} name="pencil" color={colors.primary} />
+                <Text style={styles.simplifiedLabel}>
+                  {t('job_form.basic.name')}
+                </Text>
+              </View>
+              <TextInput
+                style={styles.simplifiedInput}
+                value={formData.name}
+                onChangeText={(value) => updateFormData('name', value)}
+                placeholder={t('job_form.basic.name_placeholder')}
+                placeholderTextColor={colors.textTertiary}
+                autoFocus={true}
+                returnKeyType="done"
+                onSubmitEditing={formData.name?.trim() ? handleSave : undefined}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.simplifiedSaveButton, 
+                !formData.name?.trim() && styles.simplifiedSaveButtonDisabled
+              ]}
+              onPress={handleSave}
+              disabled={!formData.name?.trim()}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={formData.name?.trim() 
+                  ? [colors.primary, colors.primary + 'DD']
+                  : [colors.separator, colors.separator]
+                }
+                style={styles.simplifiedButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              />
+              <IconSymbol size={18} name="checkmark.circle.fill" color="#FFFFFF" />
+              <Text style={styles.simplifiedSaveButtonText}>
+                {t('job_form.save')}
+              </Text>
+            </TouchableOpacity>
+          </BlurView>
+        </TouchableOpacity>
+      </KeyboardAvoidingView>
+    </TouchableOpacity>
+  );
+
+  const renderBasicTab = () => (
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+      <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('job_form.basic.title')}</Text>
+        
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>{t('job_form.basic.name')} {t('job_form.basic.name_required')}</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.name}
+            onChangeText={(value) => updateFormData('name', value)}
+            placeholder={t('job_form.basic.name_placeholder')}
+            placeholderTextColor={colors.textTertiary}
+          />
         </View>
 
-      {/* Capa invisible para interceptar toques problemáticos - REMOVIDA para evitar conflictos */}
-      </View>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>{t('job_form.basic.company')}</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.company}
+            onChangeText={(value) => updateFormData('company', value)}
+            placeholder={t('job_form.basic.company_placeholder')}
+            placeholderTextColor={colors.textTertiary}
+          />
+        </View>
 
-      {/* Simple info overlay */}
-      {jobs.length === 0 && !showJobForm && (
-        <View style={styles.overlay}>
-          <View style={[styles.centeredContent, { marginBottom: 80 }]}>
-            <TouchableOpacity
-              style={styles.mainActionCard}
-              onPress={handleAddJob}
-              activeOpacity={0.95}
-            >
-              <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={[styles.mainActionCardInner, {
-                backgroundColor: isDark ? 'rgba(76, 135, 175, 0.3)' : 'rgba(76, 135, 175, 0.2)',
-              }]}>
-                <LinearGradient
-                  colors={isDark 
-                    ? ['rgba(76, 135, 175, 0.4)', 'rgba(76, 135, 175, 0.1)']
-                    : ['rgba(76, 135, 175, 0.3)', 'rgba(76, 135, 175, 0.05)']
-                  }
-                  style={StyleSheet.absoluteFillObject}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>{t('job_form.basic.address')}</Text>
+          
+          <View style={styles.locationSection}>
+            <Text style={styles.helperText}>
+              {t('job_form.basic.location_helper')}
+            </Text>
+            
+            <View style={{ flexDirection: 'row', gap: Theme.spacing.sm }}>
+              <TouchableOpacity
+                style={[
+                  styles.autoFillButton,
+                  { flex: 1 }
+                ]}
+                onPress={() => {
+                  setShowAddressDropdown(!showAddressDropdown);
+                }}
+                activeOpacity={0.7}
+              >
+                <IconSymbol
+                  size={18}
+                  name="magnifyingglass"
+                  color="#FFFFFF"
                 />
-                <View style={[styles.mainActionIcon, {
-                  backgroundColor: colors.primary,
-                }]}>
-                  <IconSymbol size={40} name="plus" color="white" weight="bold" />
-                </View>
-                <Text style={styles.mainActionTitle}>{t('maps.add_job')}</Text>
-                <Text style={styles.mainActionDescription}>
-                  {t('maps.add_job_desc')}
+                <Text style={styles.autoFillText}>
+                  {t('job_form.basic.search_address')}
                 </Text>
-              </BlurView>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.autoFillButton,
+                  isDetectingLocation && styles.autoFillButtonLoading,
+                  { flex: 1 }
+                ]}
+                onPress={detectCurrentLocation}
+                disabled={isDetectingLocation}
+              >
+                <IconSymbol 
+                  size={18} 
+                  name={isDetectingLocation ? "gear" : "location.fill"} 
+                  color="#FFFFFF"
+                />
+                <Text style={styles.autoFillText}>
+                  {isDetectingLocation ? t('job_form.basic.detecting') : t('job_form.basic.auto_fill')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            
+            <AddressAutocompleteDropdown
+              isOpen={showAddressDropdown}
+              onClose={() => setShowAddressDropdown(false)}
+              onSelectAddress={(addressData) => {
+                updateFormData('address', addressData.fullAddress);
+                updateFormData('street', addressData.street);
+                updateFormData('city', addressData.city);
+                updateFormData('postalCode', addressData.postalCode);
+                
+                if (addressData.latitude && addressData.longitude) {
+                  updateNestedData('location', 'address', addressData.fullAddress);
+                  updateNestedData('location', 'latitude', addressData.latitude);
+                  updateNestedData('location', 'longitude', addressData.longitude);
+                  
+                  setJobCoordinates({
+                    latitude: addressData.latitude,
+                    longitude: addressData.longitude,
+                  });
+                }
+                setShowAddressDropdown(false);
+              }}
+              currentAddress={formData.street || formData.address}
+            />
+          </View>
+          
+          <View style={styles.addressRow}>
+            <View style={[styles.addressField, { flex: 2 }]}>
+              <Text style={styles.subLabel}>{t('job_form.basic.street')}</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.street}
+                onChangeText={(value) => updateFormData('street', value)}
+                placeholder={t('job_form.basic.street_placeholder')}
+                placeholderTextColor={colors.textTertiary}
+              />
+            </View>
+            <View style={[styles.addressField, { flex: 1 }]}>
+              <Text style={styles.subLabel}>{t('job_form.basic.postal_code')}</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.postalCode}
+                onChangeText={(value) => updateFormData('postalCode', value)}
+                placeholder={t('job_form.basic.postal_code_placeholder')}
+                placeholderTextColor={colors.textTertiary}
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+          
+          <View style={styles.addressField}>
+            <Text style={styles.subLabel}>{t('job_form.basic.city')}</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.city}
+              onChangeText={(value) => updateFormData('city', value)}
+              placeholder={t('job_form.basic.city_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+            />
+          </View>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>{t('job_form.basic.description')}</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            value={formData.description}
+            onChangeText={(value) => updateFormData('description', value)}
+            placeholder={t('job_form.basic.description_placeholder')}
+            placeholderTextColor={colors.textTertiary}
+            multiline
+            numberOfLines={3}
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>{t('job_form.basic.color')}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorPicker}>
+            {DEFAULT_COLORS.map((color, index) => (
+              <TouchableOpacity
+                key={`color-${index}`}
+                style={[
+                  styles.colorOption,
+                  { backgroundColor: color },
+                  formData.color === color && styles.colorOptionSelected,
+                ]}
+                onPress={() => updateFormData('color', color)}
+              >
+                {formData.color === color && (
+                  <IconSymbol size={16} name="checkmark" color="#FFFFFF" />
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <View style={styles.switchRow}>
+            <Text style={styles.label}>{t('job_form.basic.active')}</Text>
+            <Switch
+              value={formData.isActive}
+              onValueChange={(value) => updateFormData('isActive', value)}
+              trackColor={{ false: colors.separator, true: colors.primary }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+        </View>
+      </BlurView>
+
+      <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('job_form.contact.title')}</Text>
+        
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>{t('job_form.contact.person')}</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.contactPerson}
+            onChangeText={(value) => updateFormData('contactPerson', value)}
+            placeholder={t('job_form.contact.person_placeholder')}
+            placeholderTextColor={colors.textTertiary}
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>{t('job_form.contact.email')}</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.contactEmail}
+            onChangeText={(value) => updateFormData('contactEmail', value)}
+            placeholder={t('job_form.contact.email_placeholder')}
+            placeholderTextColor={colors.textTertiary}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>{t('job_form.contact.phone')}</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.contactPhone}
+            onChangeText={(value) => updateFormData('contactPhone', value)}
+            placeholder={t('job_form.contact.phone_placeholder')}
+            placeholderTextColor={colors.textTertiary}
+            keyboardType="phone-pad"
+          />
+        </View>
+      </BlurView>
+    </ScrollView>
+  );
+
+  const renderScheduleTab = () => (
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+      <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('job_form.schedule.title')}</Text>
+        
+        {/* Schedule Enable/Disable Switch */}
+        <View style={styles.switchContainer}>
+          <View style={styles.switchContent}>
+            <Text style={styles.switchLabel}>{t('job_form.schedule.enable_schedule')}</Text>
+            <Text style={styles.switchDescription}>{t('job_form.schedule.enable_schedule_desc')}</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.switch, formData.schedule?.enabled && styles.switchActive]}
+            onPress={() => {
+              const newEnabled = !formData.schedule?.enabled;
+              if (newEnabled && !isSubscribed) {
+                setShowPremiumModal(true);
+              } else {
+                updateNestedData('schedule', 'enabled', newEnabled);
+                // If disabling schedule, also disable auto schedule
+                if (!newEnabled) {
+                  updateNestedData('schedule', 'autoSchedule', false);
+                  setSelectedDay(null);
+                }
+              }
+            }}
+          >
+            <View style={[styles.switchThumb, formData.schedule?.enabled && styles.switchThumbActive]} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Only show schedule fields if schedule is enabled */}
+        {formData.schedule?.enabled && (
+        <>
+          {/* Days of the week selector */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>{t('job_form.schedule.select_day')}</Text>
+            <View style={styles.workDaysContainer}>
+              {(t('job_form.schedule.days') as unknown as string[]).map((day: string, index: number) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.workDayButton,
+                    hasDaySchedule(index) && styles.workDayButtonActive,
+                  ]}
+                  onPress={() => {
+                    if (hasDaySchedule(index)) {
+                      // Si está marcado (azul), lo desmarca directamente
+                      removeDaySchedule(index);
+                      if (selectedDay === index) {
+                        setSelectedDay(null);
+                      }
+                    } else {
+                      // Si no está marcado, lo marca y lo selecciona para configurar
+                      updateDaySchedule(index, getDefaultDaySchedule());
+                      setSelectedDay(index);
+                    }
+                  }}
+                  onLongPress={() => {
+                    // Long press para editar un día que ya está marcado
+                    if (hasDaySchedule(index)) {
+                      setSelectedDay(index);
+                    }
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.workDayText,
+                      hasDaySchedule(index) && styles.workDayTextActive,
+                    ]}
+                  >
+                    {day}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.helperText}>
+              Tap: Check/Uncheck day. Tap and hold: Edit schedule
+            </Text>
+          </View>
+
+          {/* Schedule details for selected day */}
+          {selectedDay !== null && (
+            <View style={styles.dayScheduleContainer}>
+              <Text style={styles.dayScheduleTitle}>
+                {t('job_form.schedule.schedule_for')} {(t('job_form.schedule.days') as unknown as string[])[selectedDay]}
+              </Text>
+
+              <View style={styles.row}>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>{t('job_form.schedule.start_time')}</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={getDaySchedule(selectedDay)?.startTime || ''}
+                    onChangeText={(value) => {
+                      const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
+                      updateDaySchedule(selectedDay, { ...currentSchedule, startTime: value });
+                    }}
+                    placeholder={t('job_form.schedule.start_time_placeholder')}
+                    placeholderTextColor={colors.textTertiary}
+                  />
+                </View>
+                
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>{t('job_form.schedule.end_time')}</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={getDaySchedule(selectedDay)?.endTime || ''}
+                    onChangeText={(value) => {
+                      const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
+                      updateDaySchedule(selectedDay, { ...currentSchedule, endTime: value });
+                    }}
+                    placeholder={t('job_form.schedule.end_time_placeholder')}
+                    placeholderTextColor={colors.textTertiary}
+                  />
+                </View>
+              </View>
+
+              {/* Split Shift Section */}
+              <View style={styles.switchContainer}>
+                <View style={styles.switchContent}>
+                  <Text style={styles.switchLabel}>{t('job_form.schedule.split_shift')}</Text>
+                  <Text style={styles.switchDescription}>{t('job_form.schedule.split_shift_desc')}</Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.switch, getDaySchedule(selectedDay)?.hasSplitShift && styles.switchActive]}
+                  onPress={() => {
+                    const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
+                    updateDaySchedule(selectedDay, { 
+                      ...currentSchedule, 
+                      hasSplitShift: !currentSchedule.hasSplitShift 
+                    });
+                  }}
+                >
+                  <View style={[styles.switchThumb, getDaySchedule(selectedDay)?.hasSplitShift && styles.switchThumbActive]} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Second shift times - only show if split shift is enabled */}
+              {getDaySchedule(selectedDay)?.hasSplitShift && (
+                <View style={styles.row}>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>{t('job_form.schedule.second_start_time')}</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={getDaySchedule(selectedDay)?.secondStartTime || ''}
+                      onChangeText={(value) => {
+                        const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
+                        updateDaySchedule(selectedDay, { ...currentSchedule, secondStartTime: value });
+                      }}
+                      placeholder={t('job_form.schedule.second_start_time_placeholder')}
+                      placeholderTextColor={colors.textTertiary}
+                    />
+                  </View>
+                  
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>{t('job_form.schedule.second_end_time')}</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={getDaySchedule(selectedDay)?.secondEndTime || ''}
+                      onChangeText={(value) => {
+                        const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
+                        updateDaySchedule(selectedDay, { ...currentSchedule, secondEndTime: value });
+                      }}
+                      placeholder={t('job_form.schedule.second_end_time_placeholder')}
+                      placeholderTextColor={colors.textTertiary}
+                    />
+                  </View>
+                </View>
+              )}
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('job_form.schedule.break_time')}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={String(getDaySchedule(selectedDay)?.breakTime || 0)}
+                  onChangeText={(value) => {
+                    const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
+                    updateDaySchedule(selectedDay, { ...currentSchedule, breakTime: Number(value) || 0 });
+                  }}
+                  placeholder={t('job_form.schedule.break_time_placeholder')}
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                />
+              </View>
+            </View>
+          )}
+
+          {/* Auto Schedule Section */}
+          <View style={styles.switchContainer}>
+            <View style={styles.switchContent}>
+              <Text style={styles.switchLabel}>{t('job_form.schedule.auto_schedule')}</Text>
+              <Text style={styles.switchDescription}>{t('job_form.schedule.auto_schedule_desc')}</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.switch, formData.schedule?.autoSchedule && styles.switchActive]}
+              onPress={() => {
+                const newValue = !formData.schedule?.autoSchedule;
+                if (newValue && !isSubscribed) {
+                  setShowPremiumModal(true);
+                } else {
+                  updateNestedData('schedule', 'autoSchedule', newValue);
+                }
+              }}
+            >
+              <View style={[styles.switchThumb, formData.schedule?.autoSchedule && styles.switchThumbActive]} />
             </TouchableOpacity>
           </View>
+        </>
+        )}
+      </BlurView>
+    </ScrollView>
+  );
+
+  const renderFinancialTab = () => (
+    <ScrollView 
+      style={styles.tabContent} 
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets={true}
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={{ paddingBottom: 100 }}
+    >
+      <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('job_form.financial.title')}</Text>
+        
+        <View style={styles.inputGroup}>
+          <View style={styles.switchRow}>
+            <Text style={styles.label}>{t('job_form.financial.enabled')}</Text>
+            <Switch
+              value={formData.salary?.enabled}
+              onValueChange={(value) => {
+                if (value && !isSubscribed) {
+                  setShowPremiumModal(true);
+                } else {
+                  updateNestedData('salary', 'enabled', value)
+                }
+              }}
+              trackColor={{ false: colors.separator, true: colors.primary }}
+              thumbColor="#ffffffff"
+            />
+          </View>
+        </View>
+
+        {formData.salary?.enabled && (
+          <>
+            {/* Currency Section */}
+            <View style={styles.financialCard}>
+              <View style={styles.financialCardHeader}>
+                <IconSymbol size={20} name="dollarsign.circle.fill" color={colors.primary} />
+                <Text style={styles.financialCardTitle}>{t('job_form.financial.currency_label')}</Text>
+              </View>
+              <View style={styles.currencyInputContainer}>
+                <TextInput
+                  style={styles.currencyInput}
+                  value={formData.salary?.currency || ''}
+                  onChangeText={(value) => updateNestedData('salary', 'currency', value)}
+                  placeholder="EUR"
+                  placeholderTextColor={colors.textTertiary}
+                  maxLength={3}
+                />
+              </View>
+            </View>
+
+            {/* Salary Type Section */}
+            <View style={styles.financialCard}>
+              <View style={styles.financialCardHeader}>
+                <IconSymbol size={20} name="clock.fill" color={colors.primary} />
+                <Text style={styles.financialCardTitle}>{t('job_form.financial.payment_type')}</Text>
+              </View>
+              <View style={styles.salaryTypeSelector}>
+                {[
+                  { key: 'hourly', label: t('job_form.financial.per_hour'), icon: '⏰' },
+                  { key: 'monthly', label: t('job_form.financial.per_month'), icon: '📅' },
+                  { key: 'annual', label: t('job_form.financial.per_year'), icon: '📊' },
+                ].map((option) => (
+                  <TouchableOpacity
+                    key={option.key}
+                    style={[
+                      styles.salaryTypeOption,
+                      formData.salary?.type === option.key && styles.salaryTypeOptionActive,
+                    ]}
+                    onPress={() => updateNestedData('salary', 'type', option.key)}
+                  >
+                    <Text style={styles.salaryTypeIcon}>{option.icon}</Text>
+                    <Text
+                      style={[
+                        styles.salaryTypeText,
+                        formData.salary?.type === option.key && styles.salaryTypeTextActive,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Amount Section */}
+            <View style={styles.financialCard}>
+              <View style={styles.financialCardHeader}>
+                <IconSymbol size={20} name="banknote.fill" color={colors.primary} />
+                <Text style={styles.financialCardTitle}>
+                  {formData.salary?.type === 'hourly' ? t('job_form.financial.amount_per_hour') :
+                   formData.salary?.type === 'monthly' ? t('job_form.financial.amount_per_month') : t('job_form.financial.amount_per_year')}
+                </Text>
+              </View>
+              <View style={styles.amountInputContainer}>
+                <View style={styles.currencySymbol}>
+                  <Text style={styles.currencySymbolText}>{formData.salary?.currency || 'EUR'}</Text>
+                </View>
+                <TextInput
+                  style={styles.amountInput}
+                  value={formData.salary?.amount ? String(formData.salary.amount) : ''}
+                  onChangeText={(value) => updateNestedData('salary', 'amount', Number(value) || 0)}
+                  placeholder={
+                    formData.salary?.type === 'hourly' ? '15' :
+                    formData.salary?.type === 'monthly' ? '1800' : '35000'
+                  }
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="numeric"
+                />
+                <View style={styles.periodIndicator}>
+                  <Text style={styles.periodIndicatorText}>
+                    /{formData.salary?.type === 'hourly' ? t('job_form.financial.period_hour') :
+                      formData.salary?.type === 'monthly' ? t('job_form.financial.period_month') : 
+                      t('job_form.financial.period_year')}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.amountHelper}>
+                {formData.salary?.type === 'hourly' ? t('job_form.financial.amount_helper_hourly') :
+                 formData.salary?.type === 'monthly' ? t('job_form.financial.amount_helper_monthly') : 
+                 t('job_form.financial.amount_helper_annual')}
+              </Text>
+            </View>
+
+          </>
+        )}
+      </BlurView>
+    </ScrollView>
+  );
+
+  const renderBillingTab = () => (
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+      <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('job_form.billing.title')}</Text>
+        
+        <View style={styles.inputGroup}>
+          <View style={styles.switchRow}>
+            <Text style={styles.label}>{t('job_form.billing.enabled')}</Text>
+            <Switch
+              value={formData.billing?.enabled}
+              onValueChange={(value) => {
+                if (value && !isSubscribed) {
+                  setShowPremiumModal(true);
+                } else {
+                  updateNestedData('billing', 'enabled', value)
+                }
+              }}
+              trackColor={{ false: colors.separator, true: colors.primary }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+        </View>
+
+        {formData.billing?.enabled && (
+          <>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.billing.invoice_prefix')}</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.billing?.invoicePrefix}
+                onChangeText={(value) => updateNestedData('billing', 'invoicePrefix', value)}
+                placeholder={t('job_form.billing.invoice_prefix_placeholder')}
+                placeholderTextColor={colors.textTertiary}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.billing.tax_rate')}</Text>
+              <TextInput
+                style={styles.input}
+                value={String(formData.billing?.taxRate || 0)}
+                onChangeText={(value) => updateNestedData('billing', 'taxRate', Number(value) || 0)}
+                placeholder={t('job_form.billing.tax_rate_placeholder')}
+                placeholderTextColor={colors.textTertiary}
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.billing.notes')}</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={formData.billing?.notes}
+                onChangeText={(value) => updateNestedData('billing', 'notes', value)}
+                placeholder={t('job_form.billing.notes_placeholder')}
+                placeholderTextColor={colors.textTertiary}
+                multiline
+                numberOfLines={3}
+              />
+            </View>
+          </>
+        )}
+      </BlurView>
+
+      {formData.billing?.enabled && (
+        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('job_form.billing.user_data.title')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('job_form.billing.user_data.subtitle')}</Text>
+          
+          <View style={styles.inputGroup}>
+            <View style={styles.switchRow}>
+              <View style={styles.switchContent}>
+                <Text style={styles.label}>{t('job_form.billing.user_data.is_company')}</Text>
+                <Text style={styles.labelDescription}>{t('job_form.billing.user_data.is_company_desc')}</Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.switch, formData.billing?.userData?.isCompany && styles.switchActive]}
+                onPress={() => {
+                  const newValue = !formData.billing?.userData?.isCompany;
+                  updateNestedData('billing', 'userData', {
+                    ...formData.billing?.userData,
+                    isCompany: newValue
+                  });
+                }}
+              >
+                <View style={[styles.switchThumb, formData.billing?.userData?.isCompany && styles.switchThumbActive]} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {formData.billing?.userData?.isCompany ? (
+            <>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>
+                  <IconSymbol size={16} name="building.2" color={colors.primary} /> {t('job_form.billing.user_data.company_name')}
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.billing?.userData?.companyName}
+                  onChangeText={(value) => updateNestedData('billing', 'userData', {
+                    ...formData.billing?.userData,
+                    companyName: value
+                  })}
+                  placeholder={t('job_form.billing.user_data.company_name_placeholder')}
+                  placeholderTextColor={colors.textTertiary}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('job_form.billing.user_data.tax_id')}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.billing?.userData?.taxId}
+                  onChangeText={(value) => updateNestedData('billing', 'userData', {
+                    ...formData.billing?.userData,
+                    taxId: value
+                  })}
+                  placeholder={t('job_form.billing.user_data.tax_id_placeholder')}
+                  placeholderTextColor={colors.textTertiary}
+                />
+              </View>
+
+              {/* Company Logo Section */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>
+                  <IconSymbol size={16} name="photo" color={colors.primary} /> Logo de empresa (opcional)
+                </Text>
+                <Text style={styles.labelDescription}>Añadir logo para incluir en reportes PDF</Text>
+                
+                {formData.billing?.userData?.logoUrl ? (
+                  <View style={styles.logoContainer}>
+                    <Image
+                      source={{ uri: formData.billing.userData.logoUrl }}
+                      style={styles.logoPreview}
+                      resizeMode="contain"
+                    />
+                    <View style={styles.logoActions}>
+                      <TouchableOpacity
+                        style={styles.logoActionButton}
+                        onPress={pickCompanyLogo}
+                      >
+                        <IconSymbol size={16} name="pencil" color={colors.primary} />
+                        <Text style={styles.logoActionText}>Cambiar</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.logoActionButton, styles.logoRemoveButton]}
+                        onPress={() => updateNestedData('billing', 'userData', {
+                          ...formData.billing?.userData,
+                          logoUrl: ''
+                        })}
+                      >
+                        <IconSymbol size={16} name="trash" color={colors.error} />
+                        <Text style={[styles.logoActionText, { color: colors.error }]}>Quitar</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.logoPickerButton}
+                    onPress={pickCompanyLogo}
+                  >
+                    <IconSymbol size={24} name="photo.badge.plus" color={colors.textSecondary} />
+                    <Text style={styles.logoPickerText}>Seleccionar logo</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </>
+          ) : (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                <IconSymbol size={16} name="person" color={colors.primary} /> {t('job_form.billing.user_data.full_name')}
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={formData.billing?.userData?.name}
+                onChangeText={(value) => updateNestedData('billing', 'userData', {
+                  ...formData.billing?.userData,
+                  name: value
+                })}
+                placeholder={t('job_form.billing.user_data.full_name_placeholder')}
+                placeholderTextColor={colors.textTertiary}
+              />
+            </View>
+          )}
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              <IconSymbol size={16} name="location" color={colors.primary} /> {t('job_form.billing.user_data.address')}
+            </Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={formData.billing?.userData?.address}
+              onChangeText={(value) => updateNestedData('billing', 'userData', {
+                ...formData.billing?.userData,
+                address: value
+              })}
+              placeholder={t('job_form.billing.user_data.address_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+              multiline
+              numberOfLines={2}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              <IconSymbol size={16} name="phone" color={colors.primary} /> {t('job_form.billing.user_data.phone')}
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={formData.billing?.userData?.phone}
+              onChangeText={(value) => updateNestedData('billing', 'userData', {
+                ...formData.billing?.userData,
+                phone: value
+              })}
+              placeholder={t('job_form.billing.user_data.phone_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+              keyboardType="phone-pad"
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              <IconSymbol size={16} name="envelope" color={colors.primary} /> {t('job_form.billing.user_data.email')}
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={formData.billing?.userData?.email}
+              onChangeText={(value) => updateNestedData('billing', 'userData', {
+                ...formData.billing?.userData,
+                email: value
+              })}
+              placeholder={t('job_form.billing.user_data.email_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+
+          {/* Professional Information Section */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              <IconSymbol size={16} name="globe" color={colors.primary} /> {t('job_form.billing.user_data.website')}
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={formData.billing?.userData?.website}
+              onChangeText={(value) => updateNestedData('billing', 'userData', {
+                ...formData.billing?.userData,
+                website: value
+              })}
+              placeholder={t('job_form.billing.user_data.website_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+              keyboardType="url"
+              autoCapitalize="none"
+            />
+          </View>
+
+          {/* Banking Information Section */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.sectionTitle, { fontSize: 16, marginBottom: 12, marginTop: 8 }]}>
+              🏦 {t('job_form.billing.user_data.banking_info')}
+            </Text>
+            <Text style={styles.labelDescription}>
+              {t('job_form.billing.user_data.banking_desc')}
+            </Text>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              <IconSymbol size={16} name="creditcard" color={colors.primary} /> {t('job_form.billing.user_data.bank_account')}
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={formData.billing?.userData?.bankAccount}
+              onChangeText={(value) => updateNestedData('billing', 'userData', {
+                ...formData.billing?.userData,
+                bankAccount: value
+              })}
+              placeholder={t('job_form.billing.user_data.bank_account_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              <IconSymbol size={16} name="building.2" color={colors.primary} /> {t('job_form.billing.user_data.bank_name')}
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={formData.billing?.userData?.bankName}
+              onChangeText={(value) => updateNestedData('billing', 'userData', {
+                ...formData.billing?.userData,
+                bankName: value
+              })}
+              placeholder={t('job_form.billing.user_data.bank_name_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              <IconSymbol size={16} name="network" color={colors.primary} /> {t('job_form.billing.user_data.swift_code')}
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={formData.billing?.userData?.swiftCode}
+              onChangeText={(value) => updateNestedData('billing', 'userData', {
+                ...formData.billing?.userData,
+                swiftCode: value
+              })}
+              placeholder={t('job_form.billing.user_data.swift_code_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+              autoCapitalize="characters"
+            />
+          </View>
+
+          <View style={styles.previewCard}>
+            <Text style={styles.previewTitle}>
+              <IconSymbol size={18} name="doc.text" color={colors.primary} /> {t('job_form.billing.user_data.preview_title')}
+            </Text>
+            <Text style={styles.previewText}>
+              {formData.billing?.userData?.isCompany ? (
+                `🏢 ${formData.billing?.userData?.companyName || t('job_form.billing.user_data.preview_company_name')}\n` +
+                `CIF: ${formData.billing?.userData?.taxId || t('job_form.billing.user_data.preview_tax_id')}`
+              ) : (
+                `👤 ${formData.billing?.userData?.name || t('job_form.billing.user_data.preview_user_name')}`
+              )}
+              {'\n'}📍 {formData.billing?.userData?.address || t('job_form.billing.user_data.preview_address')}
+              {'\n'}📞 {formData.billing?.userData?.phone || t('job_form.billing.user_data.preview_phone')}
+              {'\n'}✉️ {formData.billing?.userData?.email || t('job_form.billing.user_data.preview_email')}
+              {formData.billing?.userData?.website ? `\n🌐 ${formData.billing.userData.website}` : ''}
+              {formData.billing?.userData?.bankAccount ? `\n\n💳 ${formData.billing.userData.bankAccount}` : ''}
+              {formData.billing?.userData?.bankName ? `\n🏦 ${formData.billing.userData.bankName}` : ''}
+              {formData.billing?.userData?.swiftCode ? `\n🔗 SWIFT: ${formData.billing.userData.swiftCode}` : ''}
+              {'\n\n'}{t('job_form.billing.user_data.preview_prefix')}: {formData.billing?.invoicePrefix || 'INV'}
+              {'\n'}{t('job_form.billing.user_data.preview_taxes')}: {formData.billing?.taxRate || 0}%
+            </Text>
+          </View>
+        </BlurView>
+      )}
+    </ScrollView>
+  );
+
+  const renderAutoTab = () => {
+    const hasAddress = () => {
+      return !!(formData.address?.trim() || 
+                formData.street?.trim() || 
+                formData.city?.trim() || 
+                formData.postalCode?.trim());
+    };
+
+    const formatTime = (seconds: number): string => {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      
+      if (hours > 0) {
+        return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
+      }
+      return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    // Helper function to calculate distance between two coordinates
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+      const R = 6371e3; // Earth radius in meters
+      const φ1 = lat1 * Math.PI/180;
+      const φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2-lat1) * Math.PI/180;
+      const Δλ = (lon2-lon1) * Math.PI/180;
+
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+      return R * c; // Distance in meters
+    };
+
+    const handleAutoTimerToggle = async (value: boolean) => {
+      if (!hasLocationPermission) {
+        // No hacer nada si no hay permisos de ubicación
+        return;
+      }
+      if (value && !hasAddress()) {
+        Alert.alert(
+          t('job_form.auto_timer.address_required_title'),
+          t('job_form.auto_timer.address_required_message'),
+          [{ text: 'OK', style: 'default' }]
+        );
+        return;
+      }
+      
+      // Si se está ACTIVANDO el AutoTimer, mostrar mensaje si está fuera del radio
+      if (value) {
+        // Actualizar el estado primero para activar el AutoTimer
+        updateNestedData('autoTimer', 'enabled', true);
+        
+        // Verificar si el usuario está fuera del radio del trabajo
+        if (userLocation && jobCoordinates) {
+          const distance = calculateDistance(
+            userLocation.latitude,
+            userLocation.longitude,
+            jobCoordinates.latitude,
+            jobCoordinates.longitude
+          );
+          
+          const radius = formData.autoTimer?.geofenceRadius || 100;
+          const isInsideRadius = distance <= radius;
+          
+          // Mostrar alerta si está fuera del radio
+          if (!isInsideRadius) {
+            setShowAutoTimerAlert(true);
+            setHasShownAutoTimerAlert(true);
+          }
+        }
+      } else {
+        // Si se está desactivando, actualizar el estado
+        updateNestedData('autoTimer', 'enabled', false);
+      }
+      
+      // Si se está ACTIVANDO el AutoTimer, verificar si otro trabajo ya lo tiene activado
+      if (value && editingJob) {
+        try {
+          const allJobs = await JobService.getJobs();
+          const jobWithAutoTimer = allJobs.find(job => 
+            job.id !== editingJob.id && job.autoTimer?.enabled
+          );
+          
+          if (jobWithAutoTimer) {
+            Alert.alert(
+              t('job_form.auto_timer.only_one_active'),
+              t('job_form.auto_timer.only_one_active_message', { jobName: jobWithAutoTimer.name }),
+              [
+                { text: t('common.cancel'), style: 'cancel' },
+                { 
+                  text: t('job_form.auto_timer.deactivate_other'), 
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      // Primero, parar cualquier timer activo del otro trabajo
+                      const activeSession = await JobService.getActiveSession();
+                      if (activeSession && activeSession.jobId === jobWithAutoTimer.id) {
+                        console.log('🛑 JobFormModal: Stopping active timer for other job because AutoTimer is being switched');
+                        await JobService.clearActiveSession();
+                      }
+                      
+                      // También cancelar cualquier AutoTimer activo para el otro trabajo
+                      const autoTimerService = AutoTimerService.getInstance();
+                      await autoTimerService.cancelPendingAction();
+                      
+                      // Detener el servicio AutoTimer
+                      autoTimerService.stop();
+                      
+                      // Poner el sistema en modo manual
+                      await autoTimerService.setManualMode();
+                      
+                      // Desactivar el AutoTimer del otro trabajo
+                      const updatedOtherJob = {
+                        ...jobWithAutoTimer,
+                        autoTimer: {
+                          enabled: false,
+                          geofenceRadius: jobWithAutoTimer.autoTimer?.geofenceRadius || 100,
+                          delayStart: jobWithAutoTimer.autoTimer?.delayStart || 2,
+                          delayStop: jobWithAutoTimer.autoTimer?.delayStop || 2,
+                          notifications: jobWithAutoTimer.autoTimer?.notifications !== false
+                        }
+                      };
+                      await JobService.updateJob(jobWithAutoTimer.id, updatedOtherJob);
+                      console.log(`🔄 AutoTimer desactivado para: ${jobWithAutoTimer.name}`);
+                      
+                      // Activar el AutoTimer para el trabajo actual
+                      updateNestedData('autoTimer', 'enabled', true);
+                    } catch (error) {
+                      console.error('Error switching AutoTimer between jobs:', error);
+                    }
+                  }
+                }
+              ]
+            );
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking for other jobs with AutoTimer:', error);
+        }
+      }
+      
+      // Si se está desactivando el AutoTimer, mostrar confirmación
+      if (!value && editingJob) {
+        Alert.alert(
+          t('timer.auto_timer.manual_override'),
+          t('timer.auto_timer.manual_override_message'),
+          [
+            { text: t('common.cancel'), style: 'cancel' },
+            { 
+              text: t('timer.stop'), 
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  const activeSession = await JobService.getActiveSession();
+                  if (activeSession && activeSession.jobId === editingJob.id) {
+                    console.log('🛑 JobFormModal: Stopping active timer because AutoTimer was disabled');
+                    
+                    // Calcular el tiempo transcurrido
+                    const sessionStart = new Date(activeSession.startTime);
+                    const now = new Date();
+                    const elapsedMs = now.getTime() - sessionStart.getTime();
+                    const elapsedHours = Math.max(0.01, parseFloat(((elapsedMs / (1000 * 60 * 60))).toFixed(2)));
+                    
+                    // Guardar el día de trabajo antes de limpiar la sesión
+                    const today = new Date().toISOString().split('T')[0];
+                    const workDay = {
+                      date: today,
+                      jobId: editingJob.id,
+                      hours: elapsedHours,
+                      notes: activeSession.notes || 'Auto-stopped (AutoTimer disabled)',
+                      overtime: elapsedHours > 8,
+                      type: 'work' as const,
+                    };
+                    await JobService.addWorkDay(workDay);
+                    
+                    // Limpiar la sesión activa
+                    await JobService.clearActiveSession();
+                    
+                    // IMPORTANTE: Enviar notificación que terminará el Live Activity
+                    const NotificationService = require('../services/NotificationService').default;
+                    const notificationService = NotificationService.getInstance();
+                    await notificationService.sendNotification('timer_stopped', editingJob.name, {
+                      hours: elapsedHours.toFixed(2),
+                      reason: 'AutoTimer was disabled'
+                    });
+                    console.log('📱 Notification sent to stop Live Activity');
+                    
+                    // También intentar terminar directamente (por si la notificación no funciona)
+                    const LiveActivityService = require('../services/LiveActivityService').default;
+                    const liveActivityService = LiveActivityService.getInstance();
+                    await liveActivityService.endLiveActivity(Math.floor(elapsedHours * 3600));
+                  }
+                  
+                  // También cancelar cualquier AutoTimer activo para este trabajo
+                  const autoTimerService = AutoTimerService.getInstance();
+                  await autoTimerService.cancelPendingAction();
+                  
+                  // Detener el servicio AutoTimer
+                  autoTimerService.stop();
+                  
+                  // Poner el sistema en modo manual
+                  await autoTimerService.setManualMode();
+                  
+                  // Desactivar completamente el AutoTimer
+                  updateNestedData('autoTimer', 'enabled', false);
+                } catch (error) {
+                  console.error('Error stopping timer when disabling AutoTimer:', error);
+                }
+              }
+            }
+          ]
+        );
+        return;
+      }
+      
+      updateNestedData('autoTimer', 'enabled', value);
+    };
+
+    const openSettings = () => {
+      Linking.openSettings();
+    };
+
+    const handleAutoTimerToggleWithPermissionCheck = async (value: boolean) => {
+      if (!hasLocationPermission && value) {
+        Alert.alert(
+          t('maps.auto_timer_location_required_title'),
+          t('maps.auto_timer_location_required_message'),
+          [
+            { text: t('common.cancel'), style: 'cancel' },
+            { 
+              text: t('maps.auto_timer_open_settings'), 
+              onPress: () => {
+                openSettings();
+                // Los permisos se verificarán automáticamente cuando la app vuelva a estar activa
+              }
+            }
+          ]
+        );
+        return;
+      }
+      
+      // Verificar suscripción premium antes de activar
+      if (value && !isSubscribed) {
+        setShowPremiumModal(true);
+      } else {
+        handleAutoTimerToggle(value);
+      }
+    };
+
+    return (
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* AutoTimer Alert */}
+        {showAutoTimerAlert && formData.autoTimer?.enabled && (
+          <View style={{
+            marginHorizontal: 16,
+            marginTop: 16,
+            marginBottom: 8,
+            backgroundColor: isDark ? 'rgba(255, 149, 0, 0.95)' : 'rgba(255, 149, 0, 0.95)',
+            borderRadius: 16,
+            padding: 16,
+            flexDirection: 'column',
+            alignItems: 'stretch',
+            justifyContent: 'space-between',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.15,
+            shadowRadius: 6,
+            elevation: 4,
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+          }}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: 16,
+            }}>
+              <IconSymbol size={24} name="clock.badge.exclamationmark" color="#FFFFFF" />
+              <Text style={{
+                fontSize: 14,
+                color: '#FFFFFF',
+                fontWeight: '600',
+                flex: 1,
+                lineHeight: 18,
+                marginLeft: 12,
+              }}>
+                {t('timer.auto_timer.activation_alert')}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={{
+                paddingHorizontal: 20,
+                paddingVertical: 12,
+                borderRadius: 12,
+                backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3,
+              }}
+              onPress={() => {
+                setShowAutoTimerAlert(false);
+                // Reset after some time to show again if needed
+                setTimeout(() => {
+                  setHasShownAutoTimerAlert(false);
+                }, 60000); // Reset after 1 minute
+              }}
+            >
+              <Text style={{
+                fontSize: 14,
+                color: '#FFFFFF',
+                fontWeight: '700',
+              }}>
+                {t('timer.auto_timer.dismiss_notice')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('job_form.auto_timer.title')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('job_form.auto_timer.subtitle')}</Text>
+
+          {!hasLocationPermission ? (
+            <View style={styles.locationDisabledContainer}>
+              <View style={styles.locationDisabledIcon}>
+                <IconSymbol size={32} name="location.slash" color={colors.error} />
+              </View>
+              <Text style={styles.locationDisabledTitle}>
+                {t('maps.auto_timer_location_required_title')}
+              </Text>
+              <Text style={styles.locationDisabledDescription}>
+                {t('maps.auto_timer_location_required_message')}
+              </Text>
+              <TouchableOpacity 
+                style={styles.settingsButton}
+                onPress={openSettings}
+              >
+                <IconSymbol size={18} name="gear" color="#FFFFFF" />
+                <Text style={styles.settingsButtonText}>
+                  {t('maps.auto_timer_open_settings')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <View style={styles.inputGroup}>
+                <View style={styles.switchRow}>
+                  <View style={styles.switchContent}>
+                    <Text style={styles.label}>{t('job_form.auto_timer.enabled')}</Text>
+                    <Text style={styles.labelDescription}>{t('job_form.auto_timer.enabled_desc')}</Text>
+                  </View>
+                  <Switch
+                    value={formData.autoTimer?.enabled || false}
+                    onValueChange={handleAutoTimerToggleWithPermissionCheck}
+                    trackColor={{ false: colors.separator, true: colors.primary + '40' }}
+                    thumbColor={formData.autoTimer?.enabled ? colors.primary : colors.textTertiary}
+                  />
+                </View>
+              </View>
+              
+          
+            </>
+          )}
+
+
+
+        {formData.autoTimer?.enabled && (
+          <>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.auto_timer.geofence_radius')}</Text>
+              <Text style={styles.labelDescription}>{t('job_form.auto_timer.geofence_radius_desc')}</Text>
+              <View style={styles.counterContainer}>
+                <TouchableOpacity 
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.geofenceRadius || 50;
+                    const newValue = Math.max(5, currentValue - 5);
+                    updateNestedData('autoTimer', 'geofenceRadius', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="minus" color={colors.primary} />
+                </TouchableOpacity>
+                <View style={styles.counterValue}>
+                  <Text style={styles.counterText}>{formData.autoTimer?.geofenceRadius || 50}</Text>
+                  <Text style={styles.counterUnit}>{t('common.meters')}</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.geofenceRadius || 50;
+                    const newValue = Math.min(200, currentValue + 5);
+                    updateNestedData('autoTimer', 'geofenceRadius', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="plus" color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Map showing job location and geofence radius */}
+            {mapRegion && jobCoordinates && (
+              <View style={styles.mapContainer}>
+                <Text style={styles.mapTitle}>{t('job_form.auto_timer.map_title')}</Text>
+                <View style={styles.mapWrapper}>
+                  {activeTimerElapsed > 0 && (
+                    <View style={{
+                      position: 'absolute',
+                      top: 10,
+                      right: 10,
+                      zIndex: 1000,
+                      backgroundColor: 'rgba(76, 217, 100, 0.95)',
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      borderRadius: 10,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 5,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.15,
+                      shadowRadius: 3,
+                      elevation: 3,
+                    }}>
+                      <IconSymbol size={12} name="clock.fill" color="#FFFFFF" />
+                      <Text style={{
+                        fontSize: 12,
+                        fontWeight: '700',
+                        color: '#FFFFFF',
+                        letterSpacing: 0.2,
+                      }}>
+                        {formatTime(activeTimerElapsed)}
+                      </Text>
+                    </View>
+                  )}
+                  <MapView
+                    style={styles.map}
+                    region={mapRegion}
+                    provider={PROVIDER_DEFAULT}
+                    showsUserLocation={true}
+                    showsMyLocationButton={true}
+                  >
+                    {/* Job location marker */}
+                    <Marker
+                      coordinate={jobCoordinates}
+                      title={formData.name || 'Trabajo'}
+                      description={`${formData.street || ''} ${formData.city || ''}`}
+                    >
+                      <View style={styles.markerContainer}>
+                        <View style={[styles.marker, { backgroundColor: formData.color || colors.primary }]}>
+                          <IconSymbol size={20} name="briefcase.fill" color="#FFFFFF" />
+                        </View>
+                      </View>
+                    </Marker>
+
+                    {/* Geofence radius circle */}
+                    <Circle
+                      center={jobCoordinates}
+                      radius={formData.autoTimer?.geofenceRadius || 50}
+                      fillColor={`${formData.color || colors.primary}20`}
+                      strokeColor={formData.color || colors.primary}
+                      strokeWidth={2}
+                    />
+
+                    {/* User location marker (if available) */}
+                    {userLocation && (
+                      <Marker
+                        coordinate={userLocation}
+                        title="Mi ubicación"
+                        anchor={{ x: 0.5, y: 0.5 }}
+                      >
+                        <View style={styles.userMarker}>
+                          <View style={styles.userMarkerDot} />
+                        </View>
+                      </Marker>
+                    )}
+                  </MapView>
+                </View>
+                <Text style={styles.mapDescription}>
+                  {t('job_form.auto_timer.map_description', { radius: formData.autoTimer?.geofenceRadius || 50 })}
+                </Text>
+              </View>
+            )}
+
+            
+            <View style={styles.inputGroup}>
+              <View style={styles.switchRow}>
+                <View style={styles.switchContent}>
+                  <Text style={styles.label}>{t('job_form.auto_timer.notifications')}</Text>
+                  <Text style={styles.labelDescription}>{t('job_form.auto_timer.notifications_desc')}</Text>
+                </View>
+                <Switch
+                  value={formData.autoTimer?.notifications !== false}
+                  onValueChange={(value) => updateNestedData('autoTimer', 'notifications', value)}
+                  trackColor={{ false: colors.separator, true: colors.primary + '40' }}
+                  thumbColor={formData.autoTimer?.notifications !== false ? colors.primary : colors.textTertiary}
+                />
+              </View>
+            </View>
+   <View style={styles.previewCard}>
+   
+              <Text style={styles.previewText}>
+                           <Text style={styles.previewTitle}>📍</Text>
+                {t('job_form.auto_timer.preview', {
+                  delayStart: formData.autoTimer?.delayStart || 2,
+                  delayStop: formData.autoTimer?.delayStop || 2
+                })}
+              </Text>
+            </View>
+          </>
+        )}
+      </BlurView>
+    </ScrollView>
+    );
+  };
+
+  const renderDeleteTab = () => {
+    const handleDeleteJob = async () => {
+      if (!editingJob) return;
+      
+      if (confirmationName.trim() !== editingJob.name.trim()) {
+        Alert.alert(
+          t('job_form.delete.error_title'),
+          t('job_form.delete.name_mismatch', { jobName: editingJob.name })
+        );
+        return;
+      }
+      
+      try {
+        await JobService.deleteJob(editingJob.id);
+        Alert.alert(
+          t('job_form.delete.success_title'),
+          t('job_form.delete.success_message', { jobName: editingJob.name }),
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                onSave(null); // Signal that job was deleted
+                onClose();
+              }
+            }
+          ]
+        );
+      } catch (error) {
+        console.error('Error deleting job:', error);
+        Alert.alert(
+          t('job_form.delete.error_title'),
+          t('job_form.delete.error_message')
+        );
+      }
+    };
+
+    return (
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('job_form.delete.title')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('job_form.delete.subtitle')}</Text>
+
+          {/* Warning Section */}
+          <View style={[styles.inputGroup, { backgroundColor: isDark ? 'rgba(255, 149, 0, 0.1)' : 'rgba(255, 149, 0, 0.05)', borderRadius: 16, padding: 20 }]}>
+            <Text style={[styles.label, { color: colors.warning, fontSize: 18, marginBottom: 12 }]}>
+              {t('job_form.delete.warning_title')}
+            </Text>
+            <Text style={[styles.labelDescription, { marginBottom: 16 }]}>
+              {t('job_form.delete.warning_message')}
+            </Text>
+            
+            {(t('job_form.delete.warning_items') as unknown as string[]).map((item: string, index: number) => (
+              <Text key={index} style={[styles.labelDescription, { marginBottom: 8, fontSize: 14 }]}>
+                {item}
+              </Text>
+            ))}
+          </View>
+
+          {/* Confirmation Section */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.error, fontSize: 16, marginBottom: 8 }]}>
+              {t('job_form.delete.confirmation_title')}
+            </Text>
+            <Text style={[styles.labelDescription, { marginBottom: 16 }]}>
+              {t('job_form.delete.confirmation_message')}
+            </Text>
+            
+            <Text style={[styles.labelDescription, { fontWeight: '600', marginBottom: 8, color: colors.text }]}>
+              "{editingJob?.name}"
+            </Text>
+            
+            <TextInput
+              style={[styles.input, { 
+                borderColor: confirmationName.trim() === editingJob?.name.trim() ? colors.success : colors.error,
+                borderWidth: 2
+              }]}
+              value={confirmationName}
+              onChangeText={setConfirmationName}
+              placeholder={t('job_form.delete.job_name_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+            />
+          </View>
+
+          {/* Delete Button */}
+          <View style={styles.inputGroup}>
+            <TouchableOpacity
+              style={[
+                styles.detectLocationButton,
+                { 
+                  backgroundColor: confirmationName.trim() === editingJob?.name.trim() 
+                    ? 'rgba(255, 59, 48, 0.15)' 
+                    : 'rgba(142, 142, 147, 0.1)',
+                  borderRadius: 16,
+                  padding: 20,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 12
+                }
+              ]}
+              onPress={handleDeleteJob}
+              disabled={confirmationName.trim() !== editingJob?.name.trim()}
+            >
+              <IconSymbol size={24} name="trash.fill" color={colors.error} />
+              <Text style={[styles.detectLocationText, { color: colors.error }]}>
+                {t('job_form.delete.delete_button')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <TouchableOpacity
+              style={[
+                styles.detectLocationButton,
+                { 
+                  backgroundColor: colors.surface, 
+                  borderRadius: 16, 
+                  padding: 20,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 12
+                }
+              ]}
+              onPress={onClose}
+            >
+              <IconSymbol size={24} name="xmark" color={colors.textSecondary} />
+              <Text style={[styles.detectLocationText, { color: colors.textSecondary }]}>
+                {t('job_form.delete.cancel_button')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </BlurView>
+      </ScrollView>
+    );
+  };
+
+  const baseTabs = [
+    { key: 'basic', label: t('job_form.tabs.basic'), icon: 'gear' },
+    { key: 'auto', label: t('job_form.tabs.auto'), icon: 'location.fill' },
+    { key: 'schedule', label: t('job_form.tabs.schedule'), icon: 'clock.fill' },
+    { key: 'financial', label: t('job_form.tabs.financial'), icon: 'dollarsign.circle.fill' },
+    { key: 'billing', label: t('job_form.tabs.billing'), icon: 'chart.bar.fill' },
+  ];
+
+  // Add delete tab only when editing existing job
+  const tabs = editingJob 
+    ? [...baseTabs, { key: 'delete', label: t('job_form.tabs.delete'), icon: 'trash.fill' }]
+    : baseTabs;
+
+  return (
+    <>
+      <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
+      {isFirstTimeUser && !editingJob ? (
+        // Show simplified form for first time users
+        renderSimplifiedForm()
+      ) : (
+        <View style={styles.modalOverlay}>
+          <SafeAreaView style={styles.container}>
+            {/* Show full form */}
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>
+                {editingJob ? t('job_form.title_edit') : t('job_form.title_new')}
+              </Text>
+              <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+                <View style={styles.closeButtonCircle}>
+                  <IconSymbol size={20} name={formData.name?.trim() ? "checkmark" : "xmark"} color="#FFFFFF" />
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.tabsContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {tabs.map((tab) => {
+              const isAutoTab = tab.key === 'auto';
+              const isAutoTimerEnabled = formData.autoTimer?.enabled || false;
+              const isActive = currentTab === tab.key;
+              
+              return (
+                <TouchableOpacity
+                  key={tab.key}
+                  style={[
+                    styles.tab,
+                    isActive && styles.tabActive,
+                  ]}
+                  onPress={() => handleTabPress(tab.key as 'basic' | 'schedule' | 'financial' | 'billing' | 'auto' | 'delete')}
+                >
+                  <IconSymbol
+                    size={20}
+                    name={tab.icon as any}
+                    color={
+                      isActive 
+                        ? colors.primary 
+                        : colors.textSecondary
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.tabText,
+                      isActive && styles.tabTextActive,
+                    ]}
+                  >
+                    {tab.label}
+                  </Text>
+                  {isAutoTab && isAutoTimerEnabled && (
+                    <View style={[styles.autoIndicatorDot, { backgroundColor: colors.success }]} />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        <KeyboardAvoidingView 
+          style={styles.content}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+        >
+          {currentTab === 'basic' && renderBasicTab()}
+          {currentTab === 'schedule' && renderScheduleTab()}
+          {currentTab === 'financial' && renderFinancialTab()}
+          {currentTab === 'billing' && renderBillingTab()}
+          {currentTab === 'auto' && renderAutoTab()}
+          {currentTab === 'delete' && renderDeleteTab()}
+        </KeyboardAvoidingView>
+          </SafeAreaView>
         </View>
       )}
 
-      
-      {/* Job cards modal swiper */}
-      <JobCardsSwiper
-        visible={showJobCardsModal}
-        onClose={() => setShowJobCardsModal(false)}
-        jobs={jobs}
-        isJobCurrentlyActive={isJobCurrentlyActive}
-        getJobScheduleStatus={getJobScheduleStatus}
-        getJobStatistics={getJobStatistics}
-        onAction={(action, job) => {
-          console.log('🔴 MapLocation: onAction called with:', { action, jobName: job.name });
-          if (action === 'edit') {
-            // When coming from settings button, don't reopen the modal automatically
-            setShouldReopenJobCardsModal(false);
-            handleJobAction(job, action as 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map' | 'edit-auto');
-          } else {
-            handleJobAction(job, action as 'timer' | 'calendar' | 'edit' | 'statistics' | 'delete' | 'map' | 'edit-auto');
-          }
-        }}
-        showAutoTimer={true}
-        autoTimerEnabled={false}
-        onAutoTimerToggle={handleAutoTimerToggle}
-        onNavigateToSubscription={() => navigateTo('subscription')}
-        t={t}
-      />
-
-      {/* Job action modal */}
+      {/* Premium Modal */}
       <Modal
-        visible={selectedJob !== null}
+        visible={showPremiumModal}
         transparent={true}
         animationType="fade"
-        onRequestClose={closeModal}
+        onRequestClose={() => setShowPremiumModal(false)}
       >
-        <View style={styles.actionModal}>
-          <TouchableOpacity 
-            style={styles.actionModalBackdrop}
-            onPress={closeModal}
-          />
-          <Animated.View style={animatedModalStyle}>
-            <BlurView intensity={100} tint={isDark ? "dark" : "light"} style={styles.actionModalContent}>
-            {selectedJob && (
-              <>
-                <View style={styles.actionModalHeader}>
-                  <View style={[styles.actionModalColorDot, { backgroundColor: selectedJob.color }]} />
-                  <View style={styles.actionModalInfo}>
-                    <Text style={styles.actionModalTitle}>{selectedJob.name}</Text>
-                    {selectedJob.company && (
-                      <Text style={styles.actionModalSubtitle}>{selectedJob.company}</Text>
-                    )}
-                  </View>
-                </View>
-
-            <View style={styles.actionModalButtons}>
-              <TouchableOpacity
-                style={[styles.actionModalButton, styles.secondaryButtonBg]}
-                onPress={() => handleJobAction(selectedJob, 'edit')}
-              >
-                <IconSymbol size={24} name="gear" color={colors.textSecondary} />
-                <Text style={styles.actionModalButtonText}>
-                  {t('maps.edit_job')}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionModalButton, styles.successButtonBg]}
-                onPress={() => handleJobAction(selectedJob, 'timer')}
-              >
-                <IconSymbol size={24} name="clock.fill" color={colors.success} />
-                <Text style={styles.actionModalButtonText}>
-                  {t('maps.start_timer')}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionModalButton, styles.primaryButtonBg]}
-                onPress={() => handleJobAction(selectedJob, 'calendar')}
-              >
-                <IconSymbol size={24} name="calendar" color={colors.primary} />
-                <Text style={styles.actionModalButtonText}>
-                  {t('maps.view_calendar')}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionModalButton, styles.warningButtonBg]}
-                onPress={() => handleJobAction(selectedJob, 'statistics')}
-              >
-                <IconSymbol size={24} name="chart.bar.fill" color={colors.warning} />
-                <Text style={styles.actionModalButtonText}>
-                  {t('maps.view_statistics')}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionModalButton, styles.errorButtonBg]}
-                onPress={() => handleJobAction(selectedJob, 'delete')}
-              >
-                <IconSymbol size={24} name="trash.fill" color={colors.error} />
-                <Text style={styles.actionModalButtonText}>
-                  {t('maps.delete_job')}
-                </Text>
-              </TouchableOpacity>
+        <View style={styles.premiumModalOverlay}>
+          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.premiumModalContainer}>
+            <View style={styles.premiumModalHeader}>
+              <View style={styles.premiumIcon}>
+                <IconSymbol size={40} name="crown.fill" color="#000" />
+              </View>
+              <Text style={styles.premiumModalTitle}>
+                {t('job_form.premium.title')}
+              </Text>
+              <Text style={styles.premiumModalSubtitle}>
+                {t('job_form.premium.message')}
+              </Text>
             </View>
 
-                <TouchableOpacity
-                  style={styles.actionModalCancelButton}
-                  onPress={closeModal}
+            <View style={styles.premiumModalContent}>
+              <View style={styles.premiumFeaturesList}>
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="clock.fill" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {t('job_form.premium.features.schedule')}
+                  </Text>
+                </View>
+                
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="dollarsign.circle.fill" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {t('job_form.premium.features.financial')}
+                  </Text>
+                </View>
+
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="chart.bar.fill" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {t('job_form.premium.features.billing')}
+                  </Text>
+                </View>
+
+                <View style={styles.premiumFeatureItem}>
+                  <View style={styles.premiumFeatureIcon}>
+                    <IconSymbol size={18} name="timer" color={colors.primary} />
+                  </View>
+                  <Text style={styles.premiumFeatureText}>
+                    {t('job_form.premium.features.auto')}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.premiumModalActions}>
+                <TouchableOpacity 
+                  style={styles.premiumCancelButton}
+                  onPress={() => setShowPremiumModal(false)}
                 >
-                  <Text style={styles.actionModalCancelText}>{t('maps.cancel')}</Text>
+                  <Text style={styles.premiumCancelButtonText}>
+                    {t('job_form.premium.cancel')}
+                  </Text>
                 </TouchableOpacity>
-              </>
-            )}
-            </BlurView>
-          </Animated.View>
+
+                <TouchableOpacity 
+                  style={styles.premiumSubscribeButton}
+                  onPress={() => {
+                    setShowPremiumModal(false);
+                    onClose();
+                    if (onNavigateToSubscription) {
+                      onNavigateToSubscription();
+                    }
+                  }}
+                >
+                  <Text style={styles.premiumSubscribeButtonText}>
+                    {t('job_form.premium.subscribe')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </BlurView>
         </View>
       </Modal>
-
-
-      {/* Job Selector Modal */}
-      <JobSelectorModal
-        visible={showJobSelector}
-        onClose={() => setShowJobSelector(false)}
-        onJobSelect={handleJobSelect}
-        title={selectedEditType ? getEditInfo(selectedEditType).title : t('job_selector.title')}
-        subtitle={selectedEditType ? getEditInfo(selectedEditType).subtitle : t('job_selector.subtitle')}
-        showAutoTimerHeader={selectedEditType === 'location'}
-        onNavigateToTimer={() => navigateTo('timer')}
-      />
-
-      {/* Job Form Modal */}
-      <JobFormModal
-        visible={showJobForm}
-        editingJob={editingJob}
-        initialTab={editingJob && selectedEditType ? getEditInfo(selectedEditType).tab : 'basic'}
-        onClose={() => {
-          console.log('🟡 MapLocation: JobFormModal closing');
-          setShowJobForm(false);
-          setEditingJob(null);
-          // If the modal was open before editing, reopen it (but not if coming from settings button)
-          if (wasJobCardsModalOpen && shouldReopenJobCardsModal) {
-            setTimeout(() => {
-              setShowJobCardsModal(true);
-              setWasJobCardsModalOpen(false);
-              setShouldReopenJobCardsModal(false);
-            }, 100);
-          } else {
-            // Reset flags
-            setWasJobCardsModalOpen(false);
-            setShouldReopenJobCardsModal(false);
-          }
-        }}
-        onSave={handleJobFormSave}
-        onNavigateToCalendar={() => onNavigate?.('calendar')}
-        onNavigateToSubscription={() => onNavigate?.('subscription')}
-      />
-      
-      {/* Job Statistics Modal */}
-      <JobStatisticsModal
-        visible={showStatistics}
-        onClose={() => {
-          setShowStatistics(false);
-          setSelectedJobForStats(null);
-        }}
-        job={selectedJobForStats}
-      />
-    </View>
+    </Modal>
+    
+    {/* Usar la versión gratuita por defecto */}
+    <FreeAddressSearch
+      visible={showAddressSearch}
+      onClose={() => setShowAddressSearch(false)}
+      onSelectAddress={(addressData) => {
+        updateFormData('address', addressData.fullAddress);
+        updateFormData('street', addressData.street);
+        updateFormData('city', addressData.city);
+        updateFormData('postalCode', addressData.postalCode);
+        
+        if (addressData.latitude && addressData.longitude) {
+          updateNestedData('location', 'address', addressData.fullAddress);
+          updateNestedData('location', 'latitude', addressData.latitude);
+          updateNestedData('location', 'longitude', addressData.longitude);
+          
+          setJobCoordinates({
+            latitude: addressData.latitude,
+            longitude: addressData.longitude,
+          });
+        }
+      }}
+      currentAddress={formData.street || formData.address}
+    />
+    </>
   );
 }
+

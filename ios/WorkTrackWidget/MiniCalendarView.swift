@@ -96,8 +96,8 @@ struct MiniCalendarView: View {
         let startOfToday = calendar.startOfDay(for: today)
         
         // Filter days from today onwards and sort by date ascending
-        let upcomingDays = days.filter { 
-            calendar.startOfDay(for: $0.date) >= startOfToday 
+        let upcomingDays = days.filter {
+            calendar.startOfDay(for: $0.date) >= startOfToday
         }.sorted { $0.date < $1.date }
         
         // If not enough upcoming days, generate placeholder days

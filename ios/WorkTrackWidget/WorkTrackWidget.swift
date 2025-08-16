@@ -57,9 +57,9 @@ struct Provider: TimelineProvider {
         print("✅ Widget: Found \(jobsData.count) jobs in shared storage")
         
         let jobs = jobsData.compactMap { jobDict -> JobInfo? in
-            guard let name = jobDict["name"] as? String else { 
+            guard let name = jobDict["name"] as? String else {
                 print("⚠️ Widget: Job without name: \(jobDict)")
-                return nil 
+                return nil
             }
             let location = jobDict["location"] as? String
             let color = jobDict["color"] as? String

@@ -703,6 +703,8 @@
       "active": "Trabajo activo",
       "detecting": "Detectando...",
       "auto_fill": "Autorrellenar",
+      "search_address": "Buscar dirección",
+      "search_placeholder": "Buscar dirección...",
       "location_helper": "Usa esto cuando estés en tu trabajo"
     },
     "contact": {
@@ -1297,5 +1299,12 @@
     "governing_law_text": "Estos términos se rigen por las leyes de la jurisdicción donde se encuentra ubicado el desarrollador de la app.",
     "contact_title": "Información de Contacto",
     "contact_text": "Para preguntas sobre estos Términos de Servicio, contáctanos en support@worktrack-app.com"
+  },
+  "address_search": {
+    "search_placeholder": "Buscar dirección...",
+    "searching": "Buscando direcciones...",
+    "no_results": "No se encontraron direcciones",
+    "no_results_hint": "Intenta con una dirección más específica",
+    "min_chars": "Escribe al menos 3 caracteres para buscar"
   }
 }

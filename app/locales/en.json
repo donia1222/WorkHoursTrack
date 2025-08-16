@@ -677,7 +677,9 @@
       "color": "Identification color",
       "active": "Active job",
       "detecting": "Detecting...",
-      "auto_fill": "Auto-fill"
+      "auto_fill": "Auto-fill",
+      "search_address": "Search address",
+      "search_placeholder": "Search address..."
     },
     "contact": {
       "title": "Contact",
@@ -1308,5 +1310,12 @@
     "governing_law_text": "These terms are governed by the laws of the jurisdiction where the app developer is located.",
     "contact_title": "Contact Information",
     "contact_text": "For questions about these Terms of Service, contact us at support@worktrack-app.com"
+  },
+  "address_search": {
+    "search_placeholder": "Search address...",
+    "searching": "Searching addresses...",
+    "no_results": "No addresses found",
+    "no_results_hint": "Try a more specific address",
+    "min_chars": "Type at least 3 characters to search"
   }
 }

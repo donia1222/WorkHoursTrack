@@ -15,13 +15,6 @@ import {
   Linking,
   AppState,
 } from 'react-native';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withSpring, 
-  withTiming,
-  Easing
-} from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
@@ -38,6 +31,8 @@ import { Job, DEFAULT_COLORS } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import { AutoScheduleService } from '../services/AutoScheduleService';
 import AutoTimerService from '../services/AutoTimerService';
+import { FreeAddressSearch } from './FreeAddressSearch';
+import AddressAutocompleteDropdown from './AddressAutocompleteDropdown';
 
 interface JobFormModalProps {
   visible: boolean;
@@ -1038,6 +1033,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [showAutoTimerAlert, setShowAutoTimerAlert] = useState(false);
   const [hasShownAutoTimerAlert, setHasShownAutoTimerAlert] = useState(false);
   const [previousAutoSchedule, setPreviousAutoSchedule] = useState<boolean | undefined>(undefined);
+  const [showAddressSearch, setShowAddressSearch] = useState(false);
+  const [showAddressDropdown, setShowAddressDropdown] = useState(false);
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(isLocationEnabled);
   const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
   const [jobCoordinates, setJobCoordinates] = useState<{latitude: number; longitude: number} | null>(null);
@@ -1048,17 +1045,6 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     longitudeDelta: number;
   } | null>(null);
 
-  // Animation values
-  const modalScale = useSharedValue(0);
-  const modalOpacity = useSharedValue(0);
-
-  // Animated style
-  const animatedModalStyle = useAnimatedStyle(() => {
-    return {
-      opacity: modalOpacity.value,
-      transform: [{ scale: modalScale.value }],
-    };
-  });
 
   const [formData, setFormData] = useState<Partial<Job>>({
     name: '',
@@ -1135,6 +1121,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       setCurrentTab(initialTab);
     }
   }, [visible, initialTab]);
+
 
   // Check if it's the first time user opens the form
   useEffect(() => {
@@ -1949,6 +1936,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   );
 
   const renderBasicTab = () => (
+    <>
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
         <Text style={styles.sectionTitle}>{t('job_form.basic.title')}</Text>
@@ -1982,23 +1970,47 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             <Text style={styles.helperText}>
               {t('job_form.basic.location_helper')}
             </Text>
-            <TouchableOpacity
-              style={[
-                styles.autoFillButton,
-                isDetectingLocation && styles.autoFillButtonLoading
-              ]}
-              onPress={detectCurrentLocation}
-              disabled={isDetectingLocation}
-            >
-              <IconSymbol 
-                size={18} 
-                name={isDetectingLocation ? "gear" : "location.fill"} 
-                color="#FFFFFF"
-              />
-              <Text style={styles.autoFillText}>
-                {isDetectingLocation ? t('job_form.basic.detecting') : t('job_form.basic.auto_fill')}
-              </Text>
-            </TouchableOpacity>
+            
+            <View style={{ flexDirection: 'row', gap: Theme.spacing.sm }}>
+              <TouchableOpacity
+                style={[
+                  styles.autoFillButton,
+                  { flex: 1 }
+                ]}
+                onPress={() => {
+                  setShowAddressDropdown(!showAddressDropdown);
+                }}
+                activeOpacity={0.7}
+              >
+                <IconSymbol
+                  size={18}
+                  name="magnifyingglass"
+                  color="#FFFFFF"
+                />
+                <Text style={styles.autoFillText}>
+                  {t('job_form.basic.search_address')}
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.autoFillButton,
+                  isDetectingLocation && styles.autoFillButtonLoading,
+                  { flex: 1 }
+                ]}
+                onPress={detectCurrentLocation}
+                disabled={isDetectingLocation}
+              >
+                <IconSymbol 
+                  size={18} 
+                  name={isDetectingLocation ? "gear" : "location.fill"} 
+                  color="#FFFFFF"
+                />
+                <Text style={styles.autoFillText}>
+                  {isDetectingLocation ? t('job_form.basic.detecting') : t('job_form.basic.auto_fill')}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
           
           <View style={styles.addressRow}>
@@ -2124,6 +2136,31 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         </View>
       </BlurView>
     </ScrollView>
+    
+    <AddressAutocompleteDropdown
+      isOpen={showAddressDropdown}
+      onClose={() => setShowAddressDropdown(false)}
+      onSelectAddress={(addressData) => {
+        updateFormData('address', addressData.fullAddress);
+        updateFormData('street', addressData.street);
+        updateFormData('city', addressData.city);
+        updateFormData('postalCode', addressData.postalCode);
+        
+        if (addressData.latitude && addressData.longitude) {
+          updateNestedData('location', 'address', addressData.fullAddress);
+          updateNestedData('location', 'latitude', addressData.latitude);
+          updateNestedData('location', 'longitude', addressData.longitude);
+          
+          setJobCoordinates({
+            latitude: addressData.latitude,
+            longitude: addressData.longitude,
+          });
+        }
+        setShowAddressDropdown(false);
+      }}
+      currentAddress={formData.street || formData.address}
+    />
+    </>
   );
 
   const renderScheduleTab = () => (
@@ -3483,15 +3520,15 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     : baseTabs;
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
+    <>
+      <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
       {isFirstTimeUser && !editingJob ? (
         // Show simplified form for first time users
         renderSimplifiedForm()
       ) : (
         <View style={styles.modalOverlay}>
           <SafeAreaView style={styles.container}>
-          // Show full form
-          <>
+            {/* Show full form */}
             <View style={styles.header}>
               <Text style={styles.headerTitle}>
                 {editingJob ? t('job_form.title_edit') : t('job_form.title_new')}
@@ -3557,7 +3594,6 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           {currentTab === 'auto' && renderAutoTab()}
           {currentTab === 'delete' && renderDeleteTab()}
         </KeyboardAvoidingView>
-          </>
           </SafeAreaView>
         </View>
       )}
@@ -3652,6 +3688,31 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         </View>
       </Modal>
     </Modal>
+    
+    {/* Usar la versión gratuita por defecto */}
+    <FreeAddressSearch
+      visible={showAddressSearch}
+      onClose={() => setShowAddressSearch(false)}
+      onSelectAddress={(addressData) => {
+        updateFormData('address', addressData.fullAddress);
+        updateFormData('street', addressData.street);
+        updateFormData('city', addressData.city);
+        updateFormData('postalCode', addressData.postalCode);
+        
+        if (addressData.latitude && addressData.longitude) {
+          updateNestedData('location', 'address', addressData.fullAddress);
+          updateNestedData('location', 'latitude', addressData.latitude);
+          updateNestedData('location', 'longitude', addressData.longitude);
+          
+          setJobCoordinates({
+            latitude: addressData.latitude,
+            longitude: addressData.longitude,
+          });
+        }
+      }}
+      currentAddress={formData.street || formData.address}
+    />
+    </>
   );
 }
 
