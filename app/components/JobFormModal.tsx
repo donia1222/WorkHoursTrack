@@ -49,8 +49,7 @@ interface JobFormModalProps {
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -3521,7 +3520,12 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
   return (
     <>
-      <Modal visible={visible} animationType="none" transparent={true} onRequestClose={onClose}>
+      <Modal 
+        visible={visible} 
+        animationType="slide" 
+        presentationStyle="formSheet"
+        onRequestClose={onClose}
+      >
       {isFirstTimeUser && !editingJob ? (
         // Show simplified form for first time users
         renderSimplifiedForm()

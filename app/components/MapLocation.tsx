@@ -837,7 +837,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     shadowOpacity: 0.15,
     shadowRadius: 12,
     borderWidth: 1,
-    borderColor: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)',
+    borderColor: isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(147, 51, 234, 0.15)',
   },
   miniCalendarBlur: {
     paddingTop: isTablet ? 16 : (isSmallScreen ? 8 : 12),
@@ -1117,8 +1117,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     paddingVertical: 12,
     marginBottom: 12,
     backgroundColor: isDark ? 'rgba(76, 92, 175, 0.1)' : 'rgba(76, 87, 175, 0.08)',
-     paddingHorizontal: 12,
-     borderRadius: 12,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(76, 92, 175, 0.25)' : 'rgba(76, 87, 175, 0.15)',
   },
   settingIcon: {
     width: 40,
@@ -2409,7 +2411,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     borderRadius: isSmallScreen ? 12 : 14,
                     padding: isSmallScreen ? 12 : (isIPadPortrait ? 14 : 16),
                     borderWidth: 1,
-                    borderColor: isDark ? 'rgba(255, 255, 255, 0)' : 'rgba(0, 0, 0, 0)',
+                    borderColor: isDark ? 'rgba(73, 129, 240, 0.25)' : 'rgba(60, 144, 246, 0.2)',
                     shadowColor: isDark ? '#000' : '#000',
                     shadowOffset: { width: 0, height: 1 },
                     shadowOpacity: isDark ? 0.12 : 0.08,
@@ -2450,7 +2452,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     borderRadius: isSmallScreen ? 12 : 14,
                     padding: isSmallScreen ? 12 : (isIPadPortrait ? 14 : 16),
                     borderWidth: 1,
-                    borderColor: isDark ? 'rgba(255, 255, 255, 0)' : 'rgba(0, 0, 0, 0)',
+                    borderColor: isDark ? 'rgba(52, 211, 153, 0.25)' : 'rgba(52, 211, 153, 0.2)',
                     shadowColor: isDark ? '#000' : '#000',
                     shadowOffset: { width: 0, height: 1 },
                     shadowOpacity: isDark ? 0.12 : 0.08,
@@ -2748,7 +2750,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   <IconSymbol size={40} name="plus" color="white" weight="bold" />
                 </LinearGradient>
                 <Text style={[styles.mainActionTitle, { color: '#7C3AED' }]}>{t('maps.add_job')}</Text>
-                <Text style={[styles.mainActionDescription, { color: '#8B5CF6' }]}>
+                <Text style={[styles.mainActionDescription, { color: colors.textSecondary }]}>
                   {t('maps.add_job_desc')}
                 </Text>
               </BlurView>
