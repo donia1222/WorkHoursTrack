@@ -33,6 +33,7 @@ import { AutoScheduleService } from '../services/AutoScheduleService';
 import AutoTimerService from '../services/AutoTimerService';
 import { FreeAddressSearch } from './FreeAddressSearch';
 import AddressAutocompleteDropdown from './AddressAutocompleteDropdown';
+import * as Updates from 'expo-updates';
 
 interface JobFormModalProps {
   visible: boolean;
@@ -1112,12 +1113,14 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [hasCheckedFirstTime, setHasCheckedFirstTime] = useState(false);
   const [activeTimerElapsed, setActiveTimerElapsed] = useState<number>(0);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   const styles = getStyles(colors, isDark);
 
   useEffect(() => {
     if (visible) {
       setCurrentTab(initialTab);
+      setHasUnsavedChanges(false); // Reset changes flag when opening modal
     }
   }, [visible, initialTab]);
 
@@ -1676,6 +1679,16 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
       onSave(savedJob);
       onClose();
+      
+      // Only reload the app if there were actual changes
+      if (hasUnsavedChanges) {
+        try {
+          await Updates.reloadAsync();
+        } catch (error) {
+          console.log('Could not reload app:', error);
+          // Silently fail if reload is not available (e.g., in development)
+        }
+      }
     } catch (error) {
       console.error('Error saving job:', error);
       Alert.alert(t('job_form.errors.error_title'), t('job_form.errors.save_error'));
@@ -1684,6 +1697,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
   const updateFormData = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    setHasUnsavedChanges(true);
   };
 
   const updateNestedData = (section: string, field: string, value: any) => {
@@ -1697,6 +1711,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         },
       };
     });
+    setHasUnsavedChanges(true);
   };
 
   const pickCompanyLogo = async () => {

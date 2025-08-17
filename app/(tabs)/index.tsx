@@ -67,6 +67,7 @@ function AppContent() {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [isReload, setIsReload] = useState(false);
   // const [showMenu, setShowMenu] = useState(false); // Removed - using BottomNavigation
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
@@ -104,6 +105,32 @@ function AppContent() {
   };
 
   useEffect(() => {
+    // Check if this is a reload (app was already used recently)
+    const checkReloadStatus = async () => {
+      try {
+        const lastOpenTime = await AsyncStorage.getItem('lastAppOpenTime');
+        const currentTime = Date.now();
+        
+        if (lastOpenTime) {
+          const timeDiff = currentTime - parseInt(lastOpenTime);
+          // If app was opened less than 5 minutes ago, consider it a reload
+          if (timeDiff < 5 * 60 * 1000) {
+            setIsReload(true);
+          }
+        }
+        
+        // Save current time
+        await AsyncStorage.setItem('lastAppOpenTime', currentTime.toString());
+      } catch (error) {
+        console.log('Error checking reload status:', error);
+      }
+    };
+    
+    checkReloadStatus();
+    
+    // Use different timing for reload vs first load
+    const loadingDuration = isReload ? 400 : 1600; // 0.4s for reload, 1.6s for first load
+    
     // Set a timer for initial loading with fade out effect
     const timer = setTimeout(() => {
       setIsExiting(true);
@@ -111,7 +138,7 @@ function AppContent() {
       setTimeout(() => {
         setInitialLoading(false);
       }, 400);
-    }, 1600); // Start exit animation at 1.6s, finish at 2s
+    }, loadingDuration); // Dynamic duration based on reload status
 
     // Check if privacy/location modal has been shown
     AsyncStorage.getItem('privacyLocationSeen').then((value) => {
@@ -132,7 +159,7 @@ function AppContent() {
     loadAutoBackupConfig();
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [isReload]);
   
   // Manejar Quick Actions con eventos (LA FORMA CORRECTA)
   useEffect(() => {
