@@ -6,6 +6,14 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>es</string>
+		<string>en</string>
+		<string>de</string>
+		<string>fr</string>
+		<string>it</string>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>MyVixtime</string>
 	<key>CFBundleExecutable</key>
@@ -123,9 +131,9 @@
 			<key>UIApplicationShortcutItemType</key>
 			<string>com.worktrack.timer</string>
 			<key>UIApplicationShortcutItemTitle</key>
-			<string>Timer</string>
+			<string>QUICK_ACTION_TIMER_TITLE</string>
 			<key>UIApplicationShortcutItemSubtitle</key>
-			<string>Gestionar tiempo</string>
+			<string>QUICK_ACTION_TIMER_SUBTITLE</string>
 			<key>UIApplicationShortcutItemIconType</key>
 			<string>UIApplicationShortcutIconTypeTime</string>
 		</dict>
@@ -133,9 +141,9 @@
 			<key>UIApplicationShortcutItemType</key>
 			<string>com.worktrack.reports</string>
 			<key>UIApplicationShortcutItemTitle</key>
-			<string>Reportes</string>
+			<string>QUICK_ACTION_REPORTS_TITLE</string>
 			<key>UIApplicationShortcutItemSubtitle</key>
-			<string>Ver resumen</string>
+			<string>QUICK_ACTION_REPORTS_SUBTITLE</string>
 			<key>UIApplicationShortcutItemIconType</key>
 			<string>UIApplicationShortcutIconTypeCompose</string>
 		</dict>
@@ -143,9 +151,9 @@
 			<key>UIApplicationShortcutItemType</key>
 			<string>com.worktrack.calendar</string>
 			<key>UIApplicationShortcutItemTitle</key>
-			<string>Calendario</string>
+			<string>QUICK_ACTION_CALENDAR_TITLE</string>
 			<key>UIApplicationShortcutItemSubtitle</key>
-			<string>Días trabajados</string>
+			<string>QUICK_ACTION_CALENDAR_SUBTITLE</string>
 			<key>UIApplicationShortcutItemIconType</key>
 			<string>UIApplicationShortcutIconTypeDate</string>
 		</dict>
@@ -153,9 +161,9 @@
 			<key>UIApplicationShortcutItemType</key>
 			<string>com.worktrack.chat</string>
 			<key>UIApplicationShortcutItemTitle</key>
-			<string>Chat IA</string>
+			<string>QUICK_ACTION_CHAT_TITLE</string>
 			<key>UIApplicationShortcutItemSubtitle</key>
-			<string>Asistente</string>
+			<string>QUICK_ACTION_CHAT_SUBTITLE</string>
 			<key>UIApplicationShortcutItemIconType</key>
 			<string>UIApplicationShortcutIconTypeMessage</string>
 		</dict>

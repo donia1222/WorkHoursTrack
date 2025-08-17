@@ -50,14 +50,14 @@
       "open_settings": "Ouvrir les Paramètres",
       "auto_timer": "Minuteur Automatique",
       "auto_timer_desc": "Notifications quand le minuteur automatique démarre ou se met en pause",
-      "timer_started_title": "⏰ Minuteur Démarré",
-      "timer_started_body": "Minuteur automatique démarré pour \"{{jobName}}\"",
-      "timer_stopped_title": "⏹️ Minuteur Arrêté",
-      "timer_stopped_body": "Minuteur automatique arrêté pour \"{{jobName}}\"",
-      "timer_will_start_title": "🚀 Le Minuteur Va Démarrer",
-      "timer_will_start_body": "Le minuteur démarrera dans {{minutes}} minutes pour \"{{jobName}}\"",
-      "timer_will_stop_title": "⏸️ Le Minuteur Va S'arrêter",
-      "timer_will_stop_body": "Le minuteur s'arrêtera dans {{minutes}} minutes pour \"{{jobName}}\"",
+      "timer_started_title": "✅ AutoTimer Activé",
+      "timer_started_body": "AutoTimer activé pour \"{{jobName}}\"",
+      "timer_stopped_title": "❌ AutoTimer Désactivé",
+      "timer_stopped_body": "AutoTimer désactivé pour \"{{jobName}}\"",
+      "timer_will_start_title": "🚀 AutoTimer Va S'Activer",
+      "timer_will_start_body": "AutoTimer s'activera dans {{minutes}} minutes pour \"{{jobName}}\"",
+      "timer_will_stop_title": "⏹ AutoTimer Va Se Désactiver",
+      "timer_will_stop_body": "AutoTimer se désactivera dans {{minutes}} minutes pour \"{{jobName}}\"",
       "default_notification_title": "📱 Notification",
       "default_notification_body": "Événement pour \"{{jobName}}\"",
       "reminder_time": "Heure de Rappel",
@@ -207,6 +207,24 @@
     "auto_timer_status": "Minuteur automatique: {{status}}",
     "view_options": "Toucher pour options"
   },
+  "quickActions": {
+    "timer": {
+      "title": "Chronomètre",
+      "subtitle": "Gérer le temps"
+    },
+    "reports": {
+      "title": "Rapports",
+      "subtitle": "Voir le résumé"
+    },
+    "calendar": {
+      "title": "Calendrier",
+      "subtitle": "Jours travaillés"
+    },
+    "chat": {
+      "title": "Chat IA",
+      "subtitle": "Assistant"
+    }
+  },
   "timer": {
     "title": "Chronomètre",
     "active_session": "Session active",
@@ -244,12 +262,12 @@
     "load_jobs_error": "Impossible de charger les emplois",
     "auto_timer": {
       "entering": "Arrivée au travail...",
-      "will_start": "Le minuteur démarrera dans {{minutes}} minutes",
+      "will_start": "AutoTimer s'activera dans {{minutes}} minutes",
       "starting_in": "Démarre dans {{seconds}}s",
       "countdown_entering": "Le minuteur automatique commencera à la fin du décompte",
       "started_auto": "Minuteur démarré automatiquement",
       "leaving": "Quitter le travail...",
-      "will_stop": "Le minuteur s'arrêtera dans {{minutes}} minutes",
+      "will_stop": "AutoTimer se désactivera dans {{minutes}} minutes",
       "countdown_leaving": "Le minuteur s'arrêtera automatiquement à la fin du décompte",
       "stopped_auto": "Minuteur arrêté automatiquement - {{hours}}h enregistrées",
       "cancelled_start": "Démarrage automatique annulé",

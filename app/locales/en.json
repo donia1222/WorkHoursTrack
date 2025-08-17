@@ -50,14 +50,14 @@
       "open_settings": "Open Settings",
       "auto_timer": "Auto Timer",
       "auto_timer_desc": "Notifications when auto timer starts or pauses",
-      "timer_started_title": "⏰ Timer Started",
-      "timer_started_body": "Automatic timer started for \"{{jobName}}\"",
-      "timer_stopped_title": "⏹️ Timer Stopped",
-      "timer_stopped_body": "Automatic timer stopped for \"{{jobName}}\"",
-      "timer_will_start_title": "🚀 Timer Will Start",
-      "timer_will_start_body": "Timer will start in {{minutes}} minutes for \"{{jobName}}\"",
-      "timer_will_stop_title": "⏸️ Timer Will Stop",
-      "timer_will_stop_body": "Timer will stop in {{minutes}} minutes for \"{{jobName}}\"",
+      "timer_started_title": "✅ AutoTimer Activated",
+      "timer_started_body": "AutoTimer activated for \"{{jobName}}\"",
+      "timer_stopped_title": "❌ AutoTimer Deactivated",
+      "timer_stopped_body": "AutoTimer deactivated for \"{{jobName}}\"",
+      "timer_will_start_title": "🚀 AutoTimer Will Activate",
+      "timer_will_start_body": "AutoTimer will activate in {{minutes}} minutes for \"{{jobName}}\"",
+      "timer_will_stop_title": "⏹ AutoTimer Will Deactivate",
+      "timer_will_stop_body": "AutoTimer will deactivate in {{minutes}} minutes for \"{{jobName}}\"",
       "default_notification_title": "📱 Notification",
       "default_notification_body": "Event for \"{{jobName}}\"",
       "reminder_time": "Reminder Time",
@@ -213,6 +213,24 @@
     "swipe_or_tap": "Swipe or tap",
     "tap_to_open": "Tap to open",
     "view_options": "Tap for options"
+  },
+  "quickActions": {
+    "timer": {
+      "title": "Timer",
+      "subtitle": "Manage time"
+    },
+    "reports": {
+      "title": "Reports",
+      "subtitle": "View summary"
+    },
+    "calendar": {
+      "title": "Calendar",
+      "subtitle": "Days worked"
+    },
+    "chat": {
+      "title": "AI Chat",
+      "subtitle": "Assistant"
+    }
   },
   "timer": {
     "title": "Timer",

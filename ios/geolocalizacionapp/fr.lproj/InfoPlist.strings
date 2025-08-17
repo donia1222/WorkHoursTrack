@@ -1,0 +1,9 @@
+/* Quick Actions Localization - French */
+"QUICK_ACTION_TIMER_TITLE" = "Chronomètre";
+"QUICK_ACTION_TIMER_SUBTITLE" = "Gérer le temps";
+"QUICK_ACTION_REPORTS_TITLE" = "Rapports";
+"QUICK_ACTION_REPORTS_SUBTITLE" = "Voir le résumé";
+"QUICK_ACTION_CALENDAR_TITLE" = "Calendrier";
+"QUICK_ACTION_CALENDAR_SUBTITLE" = "Jours travaillés";
+"QUICK_ACTION_CHAT_TITLE" = "Chat IA";
+"QUICK_ACTION_CHAT_SUBTITLE" = "Assistant";

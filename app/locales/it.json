@@ -50,14 +50,14 @@
       "open_settings": "Apri Impostazioni",
       "auto_timer": "Timer Automatico",
       "auto_timer_desc": "Notifiche quando il timer automatico si avvia o si mette in pausa",
-      "timer_started_title": "⏰ Timer Avviato",
-      "timer_started_body": "Timer automatico avviato per \"{{jobName}}\"",
-      "timer_stopped_title": "⏹️ Timer Fermato",
-      "timer_stopped_body": "Timer automatico fermato per \"{{jobName}}\"",
-      "timer_will_start_title": "🚀 Il Timer Si Avvierà",
-      "timer_will_start_body": "Il timer si avvierà tra {{minutes}} minuti per \"{{jobName}}\"",
-      "timer_will_stop_title": "⏸️ Il Timer Si Fermerà",
-      "timer_will_stop_body": "Il timer si fermerà tra {{minutes}} minuti per \"{{jobName}}\"",
+      "timer_started_title": "✅ AutoTimer Attivato",
+      "timer_started_body": "AutoTimer attivato per \"{{jobName}}\"",
+      "timer_stopped_title": "❌ AutoTimer Disattivato",
+      "timer_stopped_body": "AutoTimer disattivato per \"{{jobName}}\"",
+      "timer_will_start_title": "🚀 AutoTimer Si Attiverà",
+      "timer_will_start_body": "AutoTimer si attiverà tra {{minutes}} minuti per \"{{jobName}}\"",
+      "timer_will_stop_title": "⏹ AutoTimer Si Disattiverà",
+      "timer_will_stop_body": "AutoTimer si disattiverà tra {{minutes}} minuti per \"{{jobName}}\"",
       "default_notification_title": "📱 Notifica",
       "default_notification_body": "Evento per \"{{jobName}}\"",
       "reminder_time": "Orario Promemoria",
@@ -207,6 +207,24 @@
     "auto_timer_status": "Timer automatico: {{status}}",
     "view_options": "Toccare per opzioni"
   },
+  "quickActions": {
+    "timer": {
+      "title": "Timer",
+      "subtitle": "Gestire il tempo"
+    },
+    "reports": {
+      "title": "Rapporti",
+      "subtitle": "Vedere il riepilogo"
+    },
+    "calendar": {
+      "title": "Calendario",
+      "subtitle": "Giorni lavorati"
+    },
+    "chat": {
+      "title": "Chat IA",
+      "subtitle": "Assistente"
+    }
+  },
   "timer": {
     "title": "Timer",
     "active_session": "Sessione attiva",
@@ -249,7 +267,7 @@
       "countdown_entering": "Il timer automatico inizierà al termine del conto alla rovescia",
       "started_auto": "Timer avviato automaticamente",
       "leaving": "Uscita dal lavoro...",
-      "will_stop": "Il timer si fermerà tra {{minutes}} minuti",
+      "will_stop": "AutoTimer si disattiverà tra {{minutes}} minuti",
       "countdown_leaving": "Il timer si fermerà automaticamente al termine del conto alla rovescia",
       "stopped_auto": "Timer fermato automaticamente - {{hours}}h registrate",
       "cancelled_start": "Avvio automatico annullato",

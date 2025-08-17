@@ -1,0 +1,9 @@
+/* Quick Actions Localization - German */
+"QUICK_ACTION_TIMER_TITLE" = "Timer";
+"QUICK_ACTION_TIMER_SUBTITLE" = "Zeit verwalten";
+"QUICK_ACTION_REPORTS_TITLE" = "Berichte";
+"QUICK_ACTION_REPORTS_SUBTITLE" = "Zusammenfassung anzeigen";
+"QUICK_ACTION_CALENDAR_TITLE" = "Kalender";
+"QUICK_ACTION_CALENDAR_SUBTITLE" = "Arbeitstage";
+"QUICK_ACTION_CHAT_TITLE" = "KI-Chat";
+"QUICK_ACTION_CHAT_SUBTITLE" = "Assistent";

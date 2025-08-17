@@ -50,14 +50,14 @@
       "open_settings": "Abrir Configuración",
       "auto_timer": "Timer Automático",
       "auto_timer_desc": "Notificaciones cuando el timer automático se inicie o pause",
-      "timer_started_title": "⏰ Timer Iniciado",
-      "timer_started_body": "Timer automático iniciado para \"{{jobName}}\"",
-      "timer_stopped_title": "⏹️ Timer Pausado",
-      "timer_stopped_body": "Timer automático pausado para \"{{jobName}}\"",
-      "timer_will_start_title": "🚀 Timer se Iniciará",
-      "timer_will_start_body": "Timer se iniciará en {{minutes}} minutos para \"{{jobName}}\"",
-      "timer_will_stop_title": "⏸️ Timer se Pausará",
-      "timer_will_stop_body": "Timer se pausará en {{minutes}} minutos para \"{{jobName}}\"",
+      "timer_started_title": "✅ AutoTimer Activado",
+      "timer_started_body": "AutoTimer activado para \"{{jobName}}\"",
+      "timer_stopped_title": "❌ AutoTimer Desactivado",
+      "timer_stopped_body": "AutoTimer desactivado para \"{{jobName}}\"",
+      "timer_will_start_title": "🚀 AutoTimer se Activará",
+      "timer_will_start_body": "AutoTimer se activará en {{minutes}} minutos para \"{{jobName}}\"",
+      "timer_will_stop_title": "⏹ AutoTimer se Desactivará",
+      "timer_will_stop_body": "AutoTimer se desactivará en {{minutes}} minutos para \"{{jobName}}\"",
       "default_notification_title": "📱 Notificación",
       "default_notification_body": "Evento para \"{{jobName}}\"",
       "reminder_time": "Tiempo de aviso",
@@ -217,6 +217,24 @@
     "swipe_or_tap": "Desliza o toca",
     "tap_to_open": "Toca para abrir",
     "view_options": "Tocar para opciones"
+  },
+  "quickActions": {
+    "timer": {
+      "title": "Timer",
+      "subtitle": "Gestionar tiempo"
+    },
+    "reports": {
+      "title": "Reportes",
+      "subtitle": "Ver resumen"
+    },
+    "calendar": {
+      "title": "Calendario",
+      "subtitle": "Días trabajados"
+    },
+    "chat": {
+      "title": "Chat IA",
+      "subtitle": "Asistente"
+    }
   },
   "timer": {
     "title": "Timer",

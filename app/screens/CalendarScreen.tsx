@@ -910,10 +910,12 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   };
 
   const renderCompactJobSelector = () => {
-    // Don't show selector if there are no jobs or only one job
-    if (jobs.length <= 1) {
-      // Auto-select the single job if exists
-      if (jobs.length === 1 && selectedJobId === 'all') {
+    if (jobs.length === 0) return null;
+    
+    // No mostrar el selector cuando solo hay un trabajo
+    if (jobs.length === 1) {
+      // Auto-seleccionar el único trabajo
+      if (selectedJobId === 'all') {
         setSelectedJobId(jobs[0].id);
       }
       return null;
@@ -961,9 +963,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
       // Para más opciones, mostrar como scroll horizontal
       return (
         <Animated.View style={[styles.compactJobSelector, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
-          {jobs.length > 1 && (
-            <Text style={styles.compactJobSelectorTitle}>{t('calendar.filter_by_job')}</Text>
-          )}
+          <Text style={styles.compactJobSelectorTitle}>{t('calendar.filter_by_job')}</Text>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
@@ -1367,7 +1367,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
             <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.sick.color }]} />
             <Text style={styles.legendText}>{t('calendar.sick_day')}</Text>
           </View>
-     
+    
         
           </BlurView>
         <TouchableOpacity

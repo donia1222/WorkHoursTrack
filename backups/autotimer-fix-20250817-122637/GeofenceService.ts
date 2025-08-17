@@ -88,8 +88,8 @@ class GeofenceService {
       this.locationSubscription = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
-          timeInterval: 1000, // Update every 1 second for better AutoTimer responsiveness
-          distanceInterval: 1, // Update when user moves 1 meter (maximum sensitivity)
+          timeInterval: 2000, // Update every 2 seconds for better AutoTimer responsiveness
+          distanceInterval: 5, // Update when user moves 5 meters (more sensitive)
         },
         (location) => {
           this.processLocationUpdate(location, jobsToMonitor);

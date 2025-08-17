@@ -116,7 +116,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginHorizontal: 12,
     borderRadius: 28,
     padding: 20,
-    marginTop: -4,
+    marginTop: 10,
     shadowColor: isDark ? colors.primary : '#000',
     shadowOffset: {
       width: 0,

@@ -1,6 +1,15 @@
 import * as QuickActions from 'expo-quick-actions';
 import { Platform, Linking, NativeModules } from 'react-native';
 import { EventEmitter } from 'events';
+import * as Localization from 'expo-localization';
+import { I18n } from 'i18n-js';
+
+// Import translation files directly to avoid conflicts with main app i18n
+import es from '../locales/es.json';
+import en from '../locales/en.json';
+import de from '../locales/de.json';
+import fr from '../locales/fr.json';
+import it from '../locales/it.json';
 
 // Types for Quick Actions
 type QuickActionType = 'com.worktrack.timer' | 'com.worktrack.reports' | 'com.worktrack.calendar' | 'com.worktrack.chat';
@@ -19,9 +28,23 @@ class SimpleQuickActionsManager extends EventEmitter {
   private isInitialized = false;
   private pendingAction: QuickActionType | null = null;
   private navigationReady = false;
+  private currentLanguage: string = 'en';
+  private i18n: I18n;
 
   private constructor() {
     super();
+    
+    // Initialize local i18n instance for Quick Actions
+    this.i18n = new I18n({
+      es,
+      en,
+      de,
+      fr,
+      it,
+    });
+    
+    this.i18n.enableFallback = true;
+    this.i18n.defaultLocale = 'en';
   }
 
   static getInstance(): SimpleQuickActionsManager {
@@ -32,8 +55,9 @@ class SimpleQuickActionsManager extends EventEmitter {
   }
 
   async initialize(initialProps?: any) {
-    if (this.isInitialized || Platform.OS !== 'ios') return;
-
+    if (Platform.OS !== 'ios') return;
+    
+    // Force update even if already initialized to refresh translations
     try {
       console.log('🚀 Initializing Simple Quick Actions Manager');
       
@@ -79,37 +103,56 @@ class SimpleQuickActionsManager extends EventEmitter {
 
   private async setupQuickActions() {
     try {
+      // Initialize i18n with device locale
+      const deviceLocale = Localization.locale.split('-')[0]; // Get language code (e.g., 'es' from 'es-ES')
+      const supportedLanguages = ['es', 'en', 'de', 'fr', 'it'];
+      const language = supportedLanguages.includes(deviceLocale) ? deviceLocale : 'en';
+      
+      // Save current language
+      this.currentLanguage = language;
+      
+      // Configure i18n locale
+      this.i18n.locale = language;
+      console.log('📱 Device locale:', deviceLocale, '→ Using language:', language);
+      
+      // FORCE CLEAR FIRST to ensure iOS updates the cache
+      await QuickActions.setItems([]);
+      
+      // Small delay to ensure iOS processes the clear
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Now set the new items with translations
       await QuickActions.setItems([
         {
           id: 'com.worktrack.timer',
-          title: 'Timer',
-          subtitle: 'Gestionar tiempo',
+          title: this.i18n.t('quickActions.timer.title'),
+          subtitle: this.i18n.t('quickActions.timer.subtitle'),
           icon: 'symbol:clock',
           params: { screen: 'timer' },
         },
         {
           id: 'com.worktrack.reports',
-          title: 'Reportes',
-          subtitle: 'Ver resumen',
+          title: this.i18n.t('quickActions.reports.title'),
+          subtitle: this.i18n.t('quickActions.reports.subtitle'),
           icon: 'symbol:doc.text',
           params: { screen: 'reports' },
         },
         {
           id: 'com.worktrack.calendar',
-          title: 'Calendario',
-          subtitle: 'Días trabajados',
+          title: this.i18n.t('quickActions.calendar.title'),
+          subtitle: this.i18n.t('quickActions.calendar.subtitle'),
           icon: 'symbol:calendar',
           params: { screen: 'calendar' },
         },
         {
           id: 'com.worktrack.chat',
-          title: 'Chat IA',
-          subtitle: 'Asistente',
+          title: this.i18n.t('quickActions.chat.title'),
+          subtitle: this.i18n.t('quickActions.chat.subtitle'),
           icon: 'symbol:message',
           params: { screen: 'chatbot' },
         },
       ]);
-      console.log('✅ Quick Actions configured');
+      console.log('✅ Quick Actions configured with locale:', language);
     } catch (error) {
       console.error('❌ Error setting up quick actions:', error);
     }
@@ -202,6 +245,80 @@ class SimpleQuickActionsManager extends EventEmitter {
         }, 500); // Increased delay to ensure navigation is ready
       }
       this.pendingAction = null;
+    }
+  }
+
+  // Update Quick Actions language
+  async updateLanguage(language: string) {
+    if (Platform.OS !== 'ios') return;
+    
+    const supportedLanguages = ['es', 'en', 'de', 'fr', 'it'];
+    const languageToUse = supportedLanguages.includes(language) ? language : 'en';
+    
+    if (this.currentLanguage === languageToUse) {
+      console.log('📱 Quick Actions already in language:', languageToUse);
+      return;
+    }
+    
+    console.log('🔄 Updating Quick Actions language from', this.currentLanguage, 'to', languageToUse);
+    await this.setupQuickActions(languageToUse);
+  }
+
+  // Force refresh Quick Actions (useful for debugging caching issues)
+  async refreshQuickActions(language?: string) {
+    if (Platform.OS !== 'ios') return;
+    
+    try {
+      console.log('🔄 Force refreshing Quick Actions...');
+      
+      // Clear first to force iOS to refresh
+      await QuickActions.setItems([]);
+      
+      // Small delay to ensure iOS processes the clear
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Re-setup with current or provided language
+      const languageToUse = language || this.currentLanguage;
+      await this.setupQuickActions(languageToUse);
+      
+      console.log('✅ Quick Actions force refreshed');
+    } catch (error) {
+      console.error('❌ Error force refreshing quick actions:', error);
+    }
+  }
+
+  // Get current language
+  getCurrentLanguage(): string {
+    return this.currentLanguage;
+  }
+
+  // Update quick actions with specific language
+  async updateLanguage(language: string) {
+    if (Platform.OS !== 'ios') return;
+    
+    try {
+      const supportedLanguages = ['es', 'en', 'de', 'fr', 'it'];
+      const languageToUse = supportedLanguages.includes(language) ? language : 'en';
+      
+      this.currentLanguage = languageToUse;
+      this.i18n.locale = languageToUse;
+      
+      console.log('🔄 Updating Quick Actions to language:', languageToUse);
+      await this.setupQuickActions();
+    } catch (error) {
+      console.error('❌ Error updating quick actions language:', error);
+    }
+  }
+  
+  // Update quick actions with current language
+  async updateQuickActions() {
+    if (Platform.OS !== 'ios') return;
+    
+    try {
+      console.log('🔄 Updating Quick Actions with current language');
+      await this.setupQuickActions();
+    } catch (error) {
+      console.error('❌ Error updating quick actions:', error);
     }
   }
 

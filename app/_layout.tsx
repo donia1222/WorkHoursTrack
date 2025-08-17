@@ -64,7 +64,7 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
       // Verify native module on app start
       verifyLiveActivityModule();
-      // Initialize Quick Actions
+      // Initialize Quick Actions (language will be set by LanguageContext)
       SimpleQuickActionsManager.initialize();
     }
   }, [loaded]);
@@ -106,8 +106,18 @@ export default function RootLayout() {
           // Always sync widget when app becomes active to catch any changes
           await WidgetSyncService.syncAllToWidget();
           console.log('📱 Widget synced on app resume');
+          // Update Quick Actions when app becomes active (in case language changed)
+          await SimpleQuickActionsManager.updateQuickActions();
         } catch (error) {
           console.error('Error checking auto backup/widget sync on app resume:', error);
+        }
+      } else if (nextAppState === 'background') {
+        // Update Quick Actions when app goes to background to ensure they're ready
+        try {
+          await SimpleQuickActionsManager.updateQuickActions();
+          console.log('📱 Quick Actions updated on app background');
+        } catch (error) {
+          console.error('Error updating Quick Actions on background:', error);
         }
       }
     };

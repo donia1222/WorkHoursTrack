@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
 import { I18n } from 'i18n-js';
 import NotificationService from '../services/NotificationService';
+import SimpleQuickActionsManager from '../services/SimpleQuickActionsManager';
 
 import es from '../locales/es.json';
 import en from '../locales/en.json';
@@ -77,13 +78,13 @@ const updateNotificationTranslations = (locale: SupportedLanguage) => {
   const translationsByLocale = {
     es: {
       timer_started_title: notifications.timer_started_title || '⏰ Timer Iniciado',
-      timer_started_body: 'Timer automático iniciado para',
+      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Timer automático iniciado para',
       timer_stopped_title: notifications.timer_stopped_title || '⏹️ Timer Pausado',
-      timer_stopped_body: 'Timer automático pausado para',
+      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Timer automático pausado para',
       timer_will_start_title: notifications.timer_will_start_title || '🚀 Timer se Iniciará',
-      timer_will_start_body: 'Timer se iniciará en',
+      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/minutos? para "{{jobName}}"/, '').trim() || 'Timer se iniciará en',
       timer_will_stop_title: notifications.timer_will_stop_title || '⏸️ Timer se Pausará',
-      timer_will_stop_body: 'Timer se pausará en',
+      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/minutos? para "{{jobName}}"/, '').trim() || 'Timer se pausará en',
       default_title: notifications.default_notification_title || '📱 Notificación',
       default_body: 'Evento para',
       minute: 'minuto',
@@ -91,13 +92,13 @@ const updateNotificationTranslations = (locale: SupportedLanguage) => {
     },
     en: {
       timer_started_title: notifications.timer_started_title || '⏰ Timer Started',
-      timer_started_body: 'Automatic timer started for',
+      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Automatic timer started for',
       timer_stopped_title: notifications.timer_stopped_title || '⏹️ Timer Stopped',
-      timer_stopped_body: 'Automatic timer stopped for',
+      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Automatic timer stopped for',
       timer_will_start_title: notifications.timer_will_start_title || '🚀 Timer Will Start',
-      timer_will_start_body: 'Timer will start in',
+      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/minutes? for "{{jobName}}"/, '').trim() || 'Timer will start in',
       timer_will_stop_title: notifications.timer_will_stop_title || '⏸️ Timer Will Stop',
-      timer_will_stop_body: 'Timer will stop in',
+      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/minutes? for "{{jobName}}"/, '').trim() || 'Timer will stop in',
       default_title: notifications.default_notification_title || '📱 Notification',
       default_body: 'Event for',
       minute: 'minute',
@@ -105,13 +106,13 @@ const updateNotificationTranslations = (locale: SupportedLanguage) => {
     },
     de: {
       timer_started_title: notifications.timer_started_title || '⏰ Timer Gestartet',
-      timer_started_body: 'Automatischer Timer gestartet für',
+      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Automatischer Timer gestartet für',
       timer_stopped_title: notifications.timer_stopped_title || '⏹️ Timer Pausiert',
-      timer_stopped_body: 'Automatischer Timer pausiert für',
+      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Automatischer Timer pausiert für',
       timer_will_start_title: notifications.timer_will_start_title || '🚀 Timer Wird Starten',
-      timer_will_start_body: 'Timer startet in',
+      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/Minuten? für "{{jobName}}"/, '').trim() || 'Timer startet in',
       timer_will_stop_title: notifications.timer_will_stop_title || '⏸️ Timer Wird Pausieren',
-      timer_will_stop_body: 'Timer pausiert in',
+      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/Minuten? für "{{jobName}}"/, '').trim() || 'Timer pausiert in',
       default_title: notifications.default_notification_title || '📱 Benachrichtigung',
       default_body: 'Ereignis für',
       minute: 'Minute',
@@ -119,13 +120,13 @@ const updateNotificationTranslations = (locale: SupportedLanguage) => {
     },
     fr: {
       timer_started_title: notifications.timer_started_title || '⏰ Minuteur Démarré',
-      timer_started_body: 'Minuteur automatique démarré pour',
+      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Minuteur automatique démarré pour',
       timer_stopped_title: notifications.timer_stopped_title || '⏹️ Minuteur Arrêté',
-      timer_stopped_body: 'Minuteur automatique arrêté pour',
+      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Minuteur automatique arrêté pour',
       timer_will_start_title: notifications.timer_will_start_title || '🚀 Le Minuteur Va Démarrer',
-      timer_will_start_body: 'Le minuteur démarrera dans',
+      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/minutes? pour "{{jobName}}"/, '').trim() || 'Le minuteur démarrera dans',
       timer_will_stop_title: notifications.timer_will_stop_title || "⏸️ Le Minuteur Va S'arrêter",
-      timer_will_stop_body: "Le minuteur s'arrêtera dans",
+      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/minutes? pour "{{jobName}}"/, '').trim() || "Le minuteur s'arrêtera dans",
       default_title: notifications.default_notification_title || '📱 Notification',
       default_body: 'Événement pour',
       minute: 'minute',
@@ -133,13 +134,13 @@ const updateNotificationTranslations = (locale: SupportedLanguage) => {
     },
     it: {
       timer_started_title: notifications.timer_started_title || '⏰ Timer Avviato',
-      timer_started_body: 'Timer automatico avviato per',
+      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Timer automatico avviato per',
       timer_stopped_title: notifications.timer_stopped_title || '⏹️ Timer Fermato',
-      timer_stopped_body: 'Timer automatico fermato per',
+      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Timer automatico fermato per',
       timer_will_start_title: notifications.timer_will_start_title || '🚀 Il Timer Si Avvierà',
-      timer_will_start_body: 'Il timer si avvierà tra',
+      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/minuti? per "{{jobName}}"/, '').trim() || 'Il timer si avvierà tra',
       timer_will_stop_title: notifications.timer_will_stop_title || '⏸️ Il Timer Si Fermerà',
-      timer_will_stop_body: 'Il timer si fermerà tra',
+      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/minuti? per "{{jobName}}"/, '').trim() || 'Il timer si fermerà tra',
       default_title: notifications.default_notification_title || '📱 Notifica',
       default_body: 'Evento per',
       minute: 'minuto',
@@ -181,12 +182,26 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       setCurrentLanguage(languageToUse);
       i18n.locale = languageToUse;
       updateNotificationTranslations(languageToUse);
+      
+      // Update Quick Actions with detected language
+      try {
+        await SimpleQuickActionsManager.updateLanguage(languageToUse);
+      } catch (error) {
+        console.error('Error updating Quick Actions language:', error);
+      }
     } catch (error) {
       console.error('Error loading language:', error);
       const deviceLanguage = getDeviceLanguage();
       setCurrentLanguage(deviceLanguage);
       i18n.locale = deviceLanguage;
       updateNotificationTranslations(deviceLanguage);
+      
+      // Update Quick Actions with fallback language
+      try {
+        await SimpleQuickActionsManager.updateLanguage(deviceLanguage);
+      } catch (error) {
+        console.error('Error updating Quick Actions fallback language:', error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -198,6 +213,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       setCurrentLanguage(newLanguage);
       i18n.locale = newLanguage;
       updateNotificationTranslations(newLanguage);
+      
+      // Update Quick Actions when user manually changes language
+      try {
+        await SimpleQuickActionsManager.updateLanguage(newLanguage);
+        console.log('Quick Actions language updated to:', newLanguage);
+      } catch (error) {
+        console.error('Error updating Quick Actions language:', error);
+      }
     } catch (error) {
       console.error('Error saving language:', error);
     }
@@ -235,4 +258,21 @@ export const languageConfig = {
   de: { name: 'Deutsch', flag: '🇩🇪', nativeName: 'Deutsch' },
   fr: { name: 'Français', flag: '🇫🇷', nativeName: 'Français' },
   it: { name: 'Italiano', flag: '🇮🇹', nativeName: 'Italiano' },
+};
+
+// Helper function to debug Quick Actions language (for development)
+export const debugQuickActionsLanguage = async () => {
+  const currentQALanguage = SimpleQuickActionsManager.getCurrentLanguage();
+  console.log('=== Quick Actions Language Debug ===');
+  console.log('Current Quick Actions language:', currentQALanguage);
+  console.log('Device locale:', Localization.locale);
+  console.log('Device language code:', Localization.locale.split('-')[0]);
+  
+  // Force refresh with current language
+  try {
+    await SimpleQuickActionsManager.refreshQuickActions();
+    console.log('Quick Actions refreshed successfully');
+  } catch (error) {
+    console.error('Error refreshing Quick Actions:', error);
+  }
 };

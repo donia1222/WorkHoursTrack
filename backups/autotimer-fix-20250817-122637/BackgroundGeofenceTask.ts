@@ -270,7 +270,7 @@ export async function startBackgroundGeofencing(jobs: any[]): Promise<boolean> {
       identifier: job.id,
       latitude: job.location.latitude,
       longitude: job.location.longitude,
-      radius: job.autoTimer?.geofenceRadius || 50, // Usar el radio configurado por el usuario
+      radius: Math.max(job.autoTimer?.geofenceRadius || 100, 50), // Mínimo 50m para asegurar detección
       notifyOnEnter: true,
       notifyOnExit: true,
     }));

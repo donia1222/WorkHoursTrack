@@ -14,6 +14,7 @@
 		3A741DDAED254A52AA25B004 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8433610D6F4B4A6E9ED36292 /* noop-file.swift */; };
 		47FF13A030B6CB4C88BA0123 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 095AD82A61BC8E2960001237 /* PrivacyInfo.xcprivacy */; };
 		6263314A2E508E0C005D3D34 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 626331492E508E0C005D3D34 /* SplashScreen.storyboard */; };
+		62A7B1F12E55A1A000123456 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 62A7B1F02E55A1A000123456 /* InfoPlist.strings */; };
 		62FCA2DE2E4B656D009443BD /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 624CA3EF2E4AB50D003F8385 /* WidgetKit.framework */; };
 		62FCA2DF2E4B656D009443BD /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 624CA3F12E4AB50D003F8385 /* SwiftUI.framework */; };
 		62FCA2EC2E4B656F009443BD /* WorkTrackWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 62FCA2DD2E4B656D009443BD /* WorkTrackWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -58,6 +59,12 @@
 		624CA3EF2E4AB50D003F8385 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		624CA3F12E4AB50D003F8385 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		626331482E508E0C005D3D34 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/SplashScreen.storyboard; sourceTree = "<group>"; };
+		62A7B1E12E55A1A000123456 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		62A7B1E22E55A1A000123456 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		62A7B1E32E55A1A000123456 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		62A7B1E42E55A1A000123456 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		62A7B1E52E55A1A000123456 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		62A7B1E62E55A1A000123456 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		62FCA2DD2E4B656D009443BD /* WorkTrackWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WorkTrackWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		62FCA2F32E4B67D7009443BD /* WorkTrackWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WorkTrackWidgetExtension.entitlements; sourceTree = "<group>"; };
 		62FCA36D2E4B7B6E009443BD /* LiveActivityModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = LiveActivityModule.m; path = geolocalizacionapp/LiveActivityModule.m; sourceTree = "<group>"; };
@@ -136,6 +143,7 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				626331492E508E0C005D3D34 /* SplashScreen.storyboard */,
+				62A7B1F02E55A1A000123456 /* InfoPlist.strings */,
 				8433610D6F4B4A6E9ED36292 /* noop-file.swift */,
 				9CAD3DF76C8B474B9AF967D3 /* geolocalizacionapp-Bridging-Header.h */,
 				095AD82A61BC8E2960001237 /* PrivacyInfo.xcprivacy */,
@@ -293,7 +301,12 @@
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				Base,
 				en,
+				es,
+				de,
+				fr,
+				it,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
@@ -315,6 +328,7 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				6263314A2E508E0C005D3D34 /* SplashScreen.storyboard in Resources */,
 				47FF13A030B6CB4C88BA0123 /* PrivacyInfo.xcprivacy in Resources */,
+				62A7B1F12E55A1A000123456 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -494,6 +508,20 @@
 				626331482E508E0C005D3D34 /* en */,
 			);
 			name = SplashScreen.storyboard;
+			path = geolocalizacionapp;
+			sourceTree = "<group>";
+		};
+		62A7B1F02E55A1A000123456 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				62A7B1E12E55A1A000123456 /* Base */,
+				62A7B1E22E55A1A000123456 /* en */,
+				62A7B1E32E55A1A000123456 /* es */,
+				62A7B1E42E55A1A000123456 /* de */,
+				62A7B1E52E55A1A000123456 /* fr */,
+				62A7B1E62E55A1A000123456 /* it */,
+			);
+			name = InfoPlist.strings;
 			path = geolocalizacionapp;
 			sourceTree = "<group>";
 		};

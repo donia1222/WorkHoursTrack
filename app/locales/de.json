@@ -50,14 +50,14 @@
       "open_settings": "Einstellungen Öffnen",
       "auto_timer": "Auto-Timer",
       "auto_timer_desc": "Benachrichtigungen wenn Auto-Timer startet oder pausiert",
-      "timer_started_title": "⏰ Timer Gestartet",
-      "timer_started_body": "Automatischer Timer gestartet für \"{{jobName}}\"",
-      "timer_stopped_title": "⏹️ Timer Pausiert",
-      "timer_stopped_body": "Automatischer Timer pausiert für \"{{jobName}}\"",
-      "timer_will_start_title": "🚀 Timer Wird Starten",
-      "timer_will_start_body": "Timer startet in {{minutes}} Minuten für \"{{jobName}}\"",
-      "timer_will_stop_title": "⏸️ Timer Wird Pausieren",
-      "timer_will_stop_body": "Timer pausiert in {{minutes}} Minuten für \"{{jobName}}\"",
+      "timer_started_title": "✅ AutoTimer Aktiviert",
+      "timer_started_body": "AutoTimer aktiviert für \"{{jobName}}\"",
+      "timer_stopped_title": "❌ AutoTimer Deaktiviert",
+      "timer_stopped_body": "AutoTimer deaktiviert für \"{{jobName}}\"",
+      "timer_will_start_title": "🚀 AutoTimer Wird Aktiviert",
+      "timer_will_start_body": "AutoTimer wird in {{minutes}} Minuten für \"{{jobName}}\"",
+      "timer_will_stop_title": "⏹ AutoTimer Wird Deaktiviert",
+      "timer_will_stop_body": "AutoTimer wird in {{minutes}} Minuten für \"{{jobName}}\"",
       "default_notification_title": "📱 Benachrichtigung",
       "default_notification_body": "Ereignis für \"{{jobName}}\"",
       "reminder_time": "Erinnerungszeit",
@@ -213,6 +213,24 @@
     "auto_timer_status": "Automatischer Timer: {{status}}",
     "view_options": "Tippen für Optionen"
   },
+  "quickActions": {
+    "timer": {
+      "title": "Timer",
+      "subtitle": "Zeit verwalten"
+    },
+    "reports": {
+      "title": "Berichte",
+      "subtitle": "Zusammenfassung anzeigen"
+    },
+    "calendar": {
+      "title": "Kalender",
+      "subtitle": "Arbeitstage"
+    },
+    "chat": {
+      "title": "KI-Chat",
+      "subtitle": "Assistent"
+    }
+  },
   "timer": {
     "title": "Timer",
     "active_session": "Aktive Sitzung",
@@ -251,7 +269,7 @@
     "load_jobs_error": "Arbeiten konnten nicht geladen werden",
     "auto_timer": {
       "entering": "Ankunft am Arbeitsplatz...",
-      "will_start": "Timer startet in {{minutes}} Minuten",
+      "will_start": "AutoTimer wird in {{minutes}} Minuten",
       "starting_in": "Startet in {{seconds}}s",
       "countdown_entering": "Der automatische Timer startet, wenn der Countdown endet",
       "started_auto": "Timer automatisch gestartet",
