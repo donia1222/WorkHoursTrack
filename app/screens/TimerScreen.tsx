@@ -54,8 +54,6 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-
-    marginTop: 10,
   },
   header: {
     borderBottomWidth: 1,
@@ -118,6 +116,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginHorizontal: 12,
     borderRadius: 28,
     padding: 20,
+    marginTop: -4,
     shadowColor: isDark ? colors.primary : '#000',
     shadowOffset: {
       width: 0,
@@ -1730,24 +1729,15 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
 
   const renderCompactJobSelector = () => {
     console.log('🔄 renderCompactJobSelector called with jobs:', jobs.length, 'isRunning:', isRunning, 'activeSession:', !!activeSession);
-    if (jobs.length === 0) return null;
     
-    if (jobs.length === 1) {
-      // Para 1 trabajo, mostrar como seleccionado
-      const job = jobs[0];
-      return (
-        <View style={styles.compactJobSelector}>
-          <View style={styles.compactJobTabs}>
-            <View style={[styles.compactJobTab, styles.compactJobTabActive]}>
-              <View style={[styles.compactJobTabDot, { backgroundColor: job.color }]} />
-              <Text style={[styles.compactJobTabText, styles.compactJobTabTextActive]} numberOfLines={1}>
-                {job.name}
-              </Text>
-              
-            </View>
-          </View>
-        </View>
-      );
+    // Don't show selector if there are no jobs or only one job
+    if (jobs.length <= 1) {
+      // Auto-select the single job if exists
+      if (jobs.length === 1 && showAllJobs) {
+        setSelectedJobId(jobs[0].id);
+        setShowAllJobs(false);
+      }
+      return null;
     }
     
     if (jobs.length <= 3) {

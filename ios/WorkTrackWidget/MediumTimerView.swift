@@ -17,22 +17,22 @@ struct MediumTimerView: View {
     }
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             // Left side - Timer indicator
-            VStack(spacing: 4) {
+            VStack(spacing: 2) {
                 Image(systemName: "timer.circle.fill")
-                    .font(.system(size: 36))
+                    .font(.system(size: 32))
                     .foregroundColor(.green)
                 
                 Text("ACTIVE")
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.system(size: 9, weight: .bold))
                     .foregroundColor(.green)
             }
             
             // Middle - Job info
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(jobName)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.white)
                     .lineLimit(1)
             }
@@ -40,18 +40,18 @@ struct MediumTimerView: View {
             Spacer()
             
             // Right side - Start time
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: 1) {
                 Text("Started")
-                    .font(.system(size: 10))
+                    .font(.system(size: 9))
                     .foregroundColor(.white.opacity(0.6))
                 
                 Text(startTimeString)
-                    .font(.system(size: 22, weight: .bold, design: .monospaced))
+                    .font(.system(size: 20, weight: .bold, design: .monospaced))
                     .foregroundColor(.white)
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color.green.opacity(0.15))

@@ -87,7 +87,7 @@ struct MiniCalendarView: View {
         if let count = daysCount {
             return count
         }
-        return isCompact ? 7 : 28  // 7 days for medium, 28 for large (4 weeks/month)
+        return isCompact ? 7 : 28  // Default: 7 days for medium, 28 for large (4 weeks/month)
     }
     
     private var visibleDays: [WorkDayInfo] {
@@ -131,13 +131,13 @@ struct MiniCalendarView: View {
             .padding(.horizontal, 4)
             .padding(.vertical, 6)
         } else if isCompact {
-            // Medium widget: 7 upcoming days in one row
-            HStack(spacing: 4) {
+            // Medium widget: 7-9 upcoming days in one row
+            HStack(spacing: daysToShow > 7 ? 3 : 4) {
                 ForEach(visibleDays, id: \.date) { day in
                     DayView(dayInfo: day, isCompact: isCompact, isMediumWidget: true)
                 }
             }
-            .padding(.horizontal, 8)
+            .padding(.horizontal, daysToShow > 7 ? 4 : 8)
             .padding(.vertical, 4)
         } else {
             // Large widget: 28 days in four rows (full month)

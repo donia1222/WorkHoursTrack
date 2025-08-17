@@ -44,7 +44,7 @@ import AutoTimerService from '../services/AutoTimerService';
 import { AutoBackupService, BackupFrequency } from '../services/AutoBackupService';
 import { JobService } from '../services/JobService';
 import { Job } from '../types/WorkTypes';
-import QuickActionsManager from '../services/QuickActionsManager';
+import SimpleQuickActionsManager from '../services/SimpleQuickActionsManager';
 
 // Componente con animaciones suaves para transiciones
 const ScreenWrapper = ({ children, screenKey }: { children: React.ReactNode; screenKey: string }) => {
@@ -136,32 +136,43 @@ function AppContent() {
   
   // Manejar Quick Actions con eventos (LA FORMA CORRECTA)
   useEffect(() => {
+    console.log('🎯 Setting up Quick Actions listener in index.tsx');
+    
     const handleQuickAction = (screen: string) => {
       console.log('📱 Quick Action evento recibido - Navegando a:', screen);
+      console.log('📱 Current screen:', currentScreen);
       
-      // El QuickActionsManager ya envía el nombre de la pantalla directamente
-      // Verificamos que sea una pantalla válida
-      const validScreens: ScreenName[] = ['mapa', 'timer', 'reports', 'calendar', 'settings', 'subscription', 'chatbot'];
+      // SimpleQuickActionsManager envía el nombre de la pantalla directamente
+      // Las pantallas válidas de Quick Actions son: timer, reports, calendar, chatbot
+      const quickActionScreens = ['timer', 'reports', 'calendar', 'chatbot'];
       
-      if (validScreens.includes(screen as ScreenName)) {
-        navigateTo(screen as ScreenName);
+      if (quickActionScreens.includes(screen)) {
+        // Pequeño delay para asegurar que la navegación esté lista
+        setTimeout(() => {
+          console.log('✅ Ejecutando navegación a:', screen);
+          navigateTo(screen as ScreenName);
+          console.log('✅ Navegación completada a:', screen);
+        }, 100);
       } else {
         console.warn('⚠️ Pantalla no válida desde Quick Action:', screen);
       }
     };
 
     // Mark navigation as ready once the component is mounted
-    QuickActionsManager.setNavigationReady(true);
+    console.log('🎯 Marking navigation as ready');
+    SimpleQuickActionsManager.setNavigationReady(true);
 
     // Subscribe to quick action events
-    QuickActionsManager.on('quickAction', handleQuickAction);
+    console.log('🎯 Subscribing to quick action events');
+    SimpleQuickActionsManager.on('quickAction', handleQuickAction);
 
     // Clean up on unmount
     return () => {
-      QuickActionsManager.off('quickAction', handleQuickAction);
-      QuickActionsManager.setNavigationReady(false);
+      console.log('🎯 Cleaning up Quick Actions listener');
+      SimpleQuickActionsManager.off('quickAction', handleQuickAction);
+      SimpleQuickActionsManager.setNavigationReady(false);
     };
-  }, [navigateTo]);
+  }, [navigateTo, currentScreen]);
 
   // Verificar estado de suscripción al iniciar la app
   useEffect(() => {

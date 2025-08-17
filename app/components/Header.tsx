@@ -31,17 +31,18 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     backgroundColor: colors.background,
   },
   blurContainer: {
-    elevation: 8,
-    shadowColor: '#000',
+    elevation: 10,
+    shadowColor: '#6366F1',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 6,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
     overflow: 'hidden',
-    backgroundColor: isDark ? '#000000' : 'transparent',
+    backgroundColor: 'transparent',
+    borderBottomWidth: 1,
+    borderBottomColor: isDark ? 'rgba(139, 92, 246, 0.1)' : 'rgba(99, 102, 241, 0.08)',
   },
   blurGradient: {
     position: 'absolute',
@@ -65,21 +66,22 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginRight: 16,
   },
   backButtonInner: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.warning,
+    backgroundColor: isDark ? 'rgba(139, 92, 246, 0.1)' : 'rgba(99, 102, 241, 0.08)',
+    shadowColor: '#6366F1',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
     borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.8)',
+    borderColor: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(99, 102, 241, 0.15)',
     overflow: 'hidden',
   },
   backButtonGradient: {
@@ -103,27 +105,27 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginTop: 10,
   },
   title: {
-    fontSize: 19,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     color: colors.text,
-    letterSpacing: -0.3,
-    textShadowColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    letterSpacing: -0.5,
+    textShadowColor: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(99, 102, 241, 0.15)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 3,
     textAlign: 'center',
   },
   titleUnderline: {
-    width: 65,
+    width: 70,
     height: 3,
     borderRadius: 2,
     marginTop: 8,
     marginLeft: 7,
     alignSelf: 'flex-start',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 3,
     overflow: 'hidden',
   },
   titleUnderlineGradient: {
@@ -282,11 +284,11 @@ export default function Header({ title, onProfilePress, onBackPress, showBackBut
   
   return (
     <SafeAreaView style={styles.safeArea}>
-      <BlurView intensity={isDark ? 0 : 90} tint={isDark ? "dark" : "light"} style={styles.blurContainer}>
+      <BlurView intensity={isDark ? 98 : 96} tint={isDark ? "dark" : "light"} style={styles.blurContainer}>
         <LinearGradient
           colors={isDark 
-            ? ['#000000ff', '#000000', '#000000'] 
-            : ['rgba(0, 123, 255, 0)', 'rgba(0, 123, 255, 0)', 'transparent']
+            ? ['rgba(139, 92, 246, 0.05)', 'rgba(59, 130, 246, 0.05)'] 
+            : ['rgba(147, 51, 234, 0.03)', 'rgba(79, 70, 229, 0.03)']
           }
           style={styles.blurGradient}
           start={{ x: 0, y: 0 }}

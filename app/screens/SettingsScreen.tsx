@@ -91,7 +91,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 8,
+
   },
   sectionCard: {
     marginVertical: 12,

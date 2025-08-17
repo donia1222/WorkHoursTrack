@@ -444,6 +444,25 @@ export default function WorkDayModal({
         </BlurView>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                 {/* Preselected job display - when job is preselected from calendar filter */}
+          {dayType === 'work' && preselectedJobId && (
+            <View style={styles.section}>
+              <BlurView intensity={95} tint="light" style={styles.singleJobDisplay}>
+                <View style={styles.singleJobContent}>
+                  {(() => {
+                    const preselectedJob = jobs.find(job => job.id === preselectedJobId);
+                    return preselectedJob ? (
+                      <>
+                        <View style={[styles.jobTabDot, { backgroundColor: preselectedJob.color }]} />
+                        <Text style={styles.singleJobText}>{preselectedJob.name}</Text>
+                        <IconSymbol size={16} name="checkmark.circle.fill" color={colors.success} />
+                      </>
+                    ) : null;
+                  })()}
+                </View>
+              </BlurView>
+            </View>
+          )}
           {/* Day type selector */}
           <View style={styles.section}>
             <BlurView intensity={95} tint="light" style={styles.dayTypeContainer}>
@@ -480,6 +499,9 @@ export default function WorkDayModal({
             </BlurView>
           </View>
 
+
+   
+
           {/* Compact job selector - only for work days and when no job is preselected */}
           {dayType === 'work' && jobs.length > 1 && !preselectedJobId && (
             <View style={styles.section}>
@@ -513,25 +535,7 @@ export default function WorkDayModal({
             </View>
           )}
 
-          {/* Preselected job display - when job is preselected from calendar filter */}
-          {dayType === 'work' && preselectedJobId && (
-            <View style={styles.section}>
-              <BlurView intensity={95} tint="light" style={styles.singleJobDisplay}>
-                <View style={styles.singleJobContent}>
-                  {(() => {
-                    const preselectedJob = jobs.find(job => job.id === preselectedJobId);
-                    return preselectedJob ? (
-                      <>
-                        <View style={[styles.jobTabDot, { backgroundColor: preselectedJob.color }]} />
-                        <Text style={styles.singleJobText}>{preselectedJob.name}</Text>
-                        <IconSymbol size={16} name="checkmark.circle.fill" color={colors.success} />
-                      </>
-                    ) : null;
-                  })()}
-                </View>
-              </BlurView>
-            </View>
-          )}
+
           
           {/* Single job display - when only one job exists and no job is preselected */}
           {dayType === 'work' && jobs.length === 1 && !preselectedJobId && (
@@ -968,10 +972,8 @@ const styles = StyleSheet.create({
   saveButton: {
     padding: 8,
     marginRight: 16,
-    backgroundColor: Theme.colors.primary,
+    backgroundColor: Theme.colors.success,
     borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

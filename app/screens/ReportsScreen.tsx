@@ -1194,25 +1194,23 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   };
 
   const renderCompactJobSelector = () => {
-    if (jobs.length === 0) return null;
+    // Don't show selector if there are no jobs or only one job
+    if (jobs.length <= 1) {
+      // Auto-select the single job if exists
+      if (jobs.length === 1 && selectedJobId === 'all') {
+        setSelectedJobId(jobs[0].id);
+      }
+      return null;
+    }
     
     // Only show "All" option when there are multiple jobs
-    const allOptions = jobs.length > 1 
-      ? [{ id: 'all', name: t('reports.all_jobs'), color: colors.primary }].concat(jobs)
-      : jobs;
-    
-    // When there's only one job, auto-select it
-    if (jobs.length === 1 && selectedJobId === 'all') {
-      setSelectedJobId(jobs[0].id);
-    }
+    const allOptions = [{ id: 'all', name: t('reports.all_jobs'), color: colors.primary }].concat(jobs);
     
     if (allOptions.length <= 4) {
       // Para hasta 4 opciones (incluyendo "Todos"), mostrar como pestañas
       return (
         <Animated.View style={[styles.compactJobSelector, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
-          {jobs.length > 1 && (
-            <Text style={styles.compactJobSelectorTitle}>{t('reports.filter_by_job')}</Text>
-          )}
+          <Text style={styles.compactJobSelectorTitle}>{t('reports.filter_by_job')}</Text>
           <View style={styles.compactJobTabs}>
             {allOptions.map((option) => (
               <TouchableOpacity

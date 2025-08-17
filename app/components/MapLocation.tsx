@@ -829,20 +829,21 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     marginTop:60,
   },
   miniCalendarCard: {
-    borderRadius: 14,
+    borderRadius: 20,
     overflow: 'hidden',
-    elevation: 2,
-    shadowColor: isDark ? '#000' : '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: isDark ? 0.12 : 0.08,
-    shadowRadius: 6,
-
+    elevation: 8,
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)',
   },
   miniCalendarBlur: {
-    paddingTop: isTablet ? 16 : (isSmallScreen ? 8 : 10),
-    paddingBottom: isTablet ? 14 : (isSmallScreen ? 6 : 8),
-    paddingHorizontal: isTablet ? 20 : (isSmallScreen ? 8 : 12),
-    backgroundColor: isDark ? 'rgba(76, 92, 175, 0.33)' : 'rgba(76, 87, 175, 0.16)',
+    paddingTop: isTablet ? 16 : (isSmallScreen ? 8 : 12),
+    paddingBottom: isTablet ? 14 : (isSmallScreen ? 6 : 10),
+    paddingHorizontal: isTablet ? 20 : (isSmallScreen ? 8 : 14),
+    backgroundColor: 'transparent',
   },
   miniCalendarHeader: {
     flexDirection: 'row',
@@ -852,10 +853,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     paddingVertical: 2,
   },
   miniCalendarTitle: {
-    fontSize: isTablet ? 20 : (isSmallScreen ? 14 : 16),
-    fontWeight: isTablet ? '600' : '500',
+    fontSize: isTablet ? 20 : (isSmallScreen ? 14 : 17),
+    fontWeight: '700',
     color: colors.text,
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
   },
   miniCalendarGrid: {
     flexDirection: 'row',
@@ -909,8 +910,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
   },
   miniCalendarArrow: {
     padding: 8,
-    borderRadius: 8,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 12,
+    backgroundColor: isDark ? 'rgba(139, 92, 246, 0.15)' : 'rgba(99, 102, 241, 0.08)',
   },
   miniCalendarDayLabels: {
     flexDirection: 'row',
@@ -929,8 +930,9 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     textTransform: 'uppercase',
   },
   miniCalendarDayToday: {
-    backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.12)',
-    borderWidth: 0,
+    backgroundColor: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(99, 102, 241, 0.15)',
+    borderWidth: 1.5,
+    borderColor: isDark ? 'rgba(139, 92, 246, 0.5)' : 'rgba(99, 102, 241, 0.3)',
   },
   miniCalendarTimeText: {
     fontSize: 7,
@@ -944,17 +946,17 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     letterSpacing: -0.3,
   },
   miniCalendarButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
+    borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 16,
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
+    overflow: 'hidden',
   },
   miniCalendarButtonText: {
     color: '#FFFFFF',
@@ -2514,7 +2516,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
                 })}>
                 <View style={[styles.miniCalendarContainer, animatedMiniCalendarStyle]}>
                   <View style={styles.miniCalendarCard}>
-                    <BlurView intensity={100} tint={isDark ? "dark" : "light"} style={styles.miniCalendarBlur}>
+                    <LinearGradient
+                      colors={isDark ? ['rgba(139, 92, 246, 0.15)', 'rgba(59, 130, 246, 0.15)'] : ['rgba(147, 51, 234, 0.08)', 'rgba(79, 70, 229, 0.08)']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 20 }}
+                    />
+                    <BlurView intensity={isDark ? 95 : 98} tint={isDark ? "dark" : "light"} style={styles.miniCalendarBlur}>
                   <View style={styles.miniCalendarHeader}>
           
                     <View style={styles.miniCalendarTitleContainer}>

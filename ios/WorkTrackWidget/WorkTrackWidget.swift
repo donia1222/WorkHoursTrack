@@ -390,7 +390,8 @@ struct WorkTrackMedium: View {
                 }
             }
         }
-        .padding(12)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .widgetURL(URL(string: "worktrack://"))
         .modifier(BackgroundMod())
     }

@@ -169,6 +169,8 @@ class SimpleQuickActionsManager extends EventEmitter {
     }
 
     console.log('🎯 Mapped to screen:', screen);
+    console.log('🎯 Navigation ready status:', this.navigationReady);
+    console.log('🎯 Current listeners count:', this.listenerCount('quickAction'));
 
     if (this.navigationReady) {
       // Navigation is ready, emit the event immediately
@@ -182,6 +184,10 @@ class SimpleQuickActionsManager extends EventEmitter {
   }
 
   setNavigationReady(ready: boolean) {
+    console.log('🔄 Setting navigation ready:', ready);
+    console.log('🔄 Pending action:', this.pendingAction);
+    console.log('🔄 Listeners count:', this.listenerCount('quickAction'));
+    
     this.navigationReady = ready;
     
     if (ready && this.pendingAction) {
@@ -191,8 +197,9 @@ class SimpleQuickActionsManager extends EventEmitter {
         console.log('✅ Processing pending quick action:', screen);
         // Small delay to ensure navigation is fully ready
         setTimeout(() => {
+          console.log('🚀 Emitting pending quick action now:', screen);
           this.emit('quickAction', screen);
-        }, 100);
+        }, 500); // Increased delay to ensure navigation is ready
       }
       this.pendingAction = null;
     }

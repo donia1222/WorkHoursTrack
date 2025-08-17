@@ -40,7 +40,7 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
     let timeText = '';
     
     if (workDay.type === 'work' && job) {
-      badgeColor = job.color || '#10B981'; // Use job color or default green
+      badgeColor = '#30D158'; // Always use green for work days
       badgeText = t('calendar.badge_work');
       timeText = workDay.startTime || '';
       if (workDay.endTime) {
@@ -910,25 +910,23 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   };
 
   const renderCompactJobSelector = () => {
-    if (jobs.length === 0) return null;
+    // Don't show selector if there are no jobs or only one job
+    if (jobs.length <= 1) {
+      // Auto-select the single job if exists
+      if (jobs.length === 1 && selectedJobId === 'all') {
+        setSelectedJobId(jobs[0].id);
+      }
+      return null;
+    }
     
     // Only show "All" option when there are multiple jobs
-    const allOptions = jobs.length > 1 
-      ? [{ id: 'all', name: t('calendar.all_jobs'), color: colors.primary }].concat(jobs)
-      : jobs;
-    
-    // When there's only one job, auto-select it
-    if (jobs.length === 1 && selectedJobId === 'all') {
-      setSelectedJobId(jobs[0].id);
-    }
+    const allOptions = [{ id: 'all', name: t('calendar.all_jobs'), color: colors.primary }].concat(jobs);
     
     if (allOptions.length <= 4) {
       // Para hasta 4 opciones (incluyendo "Todos"), mostrar como pestañas
       return (
         <Animated.View style={[styles.compactJobSelector, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
-          {jobs.length > 1 && (
-            <Text style={styles.compactJobSelectorTitle}>{t('calendar.filter_by_job')}</Text>
-          )}
+          <Text style={styles.compactJobSelectorTitle}>{t('calendar.filter_by_job')}</Text>
           <View style={styles.compactJobTabs}>
             {allOptions.map((option) => (
               <TouchableOpacity
@@ -1345,7 +1343,33 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
             />
         </BlurView>
         </Animated.View>
+                            <BlurView intensity={isDark ? 95 : 92} tint={isDark ? "dark" : "light"} style={{ padding: 24, borderRadius: 20 }}>
+            <LinearGradient
+              colors={isDark ? ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.02)'] : ['rgba(142, 142, 147, 0.05)', 'rgba(142, 142, 147, 0.01)']}
+              style={[styles.legendCardGradient, { borderRadius: 20 }]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
+          <Text style={styles.legendTitle}>{t('calendar.day_types')}</Text>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.work.color }]} />
+            <Text style={styles.legendText}>{t('calendar.work_day')}</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.free.color }]} />
+            <Text style={styles.legendText}>{t('calendar.free_day')}</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.vacation.color }]} />
+            <Text style={styles.legendText}>{t('calendar.vacation_day')}</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.sick.color }]} />
+            <Text style={styles.legendText}>{t('calendar.sick_day')}</Text>
+          </View>
+     
         
+          </BlurView>
         <TouchableOpacity
           style={styles.actionButton}
           onPress={handleSyncCalendar}
@@ -1398,7 +1422,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
               <Text style={styles.statLabel}>{t('calendar.overtime_days')}</Text>
             </View>
           </View>
-          
+
           {/* Day type breakdown */}
           {(stats.freeDays > 0 || stats.vacationDays > 0 || stats.sickDays > 0) && (
             <View style={styles.dayTypeBreakdown}>
@@ -1432,38 +1456,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         </View>
 
         <View style={styles.legendCard}>
-          <BlurView intensity={isDark ? 95 : 92} tint={isDark ? "dark" : "light"} style={{ padding: 24, borderRadius: 20 }}>
-            <LinearGradient
-              colors={isDark ? ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.02)'] : ['rgba(142, 142, 147, 0.05)', 'rgba(142, 142, 147, 0.01)']}
-              style={[styles.legendCardGradient, { borderRadius: 20 }]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            />
-          <Text style={styles.legendTitle}>{t('calendar.day_types')}</Text>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.work.color }]} />
-            <Text style={styles.legendText}>{t('calendar.work_day')}</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.free.color }]} />
-            <Text style={styles.legendText}>{t('calendar.free_day')}</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.vacation.color }]} />
-            <Text style={styles.legendText}>{t('calendar.vacation_day')}</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.sick.color }]} />
-            <Text style={styles.legendText}>{t('calendar.sick_day')}</Text>
-          </View>
-          
-          <View style={styles.legendSeparator} />
-          
-          <View style={styles.legendItem}>
-            <IconSymbol size={16} name="plus" color={colors.primary} />
-            <Text style={styles.legendText}>{t('calendar.tap_to_register')}</Text>
-          </View>
-          </BlurView>
+
         </View>
 
 

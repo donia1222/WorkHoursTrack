@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Platform, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
@@ -183,15 +184,21 @@ export default function BottomNavigation() {
 
   return (
     <View style={[styles.container, { bottom: getBottomMargin(), paddingBottom: insets.bottom }]}>
+      <LinearGradient
+        colors={isDark ? ['rgba(139, 92, 246, 0.03)', 'rgba(59, 130, 246, 0.03)'] : ['rgba(147, 51, 234, 0.02)', 'rgba(79, 70, 229, 0.02)']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.gradientBackground}
+      />
       <BlurView 
-        intensity={85} 
+        intensity={isDark ? 98 : 96} 
         tint={isDark ? "dark" : "light"} 
         style={[
           styles.blurContainer,
-          { borderTopColor: isDark ? 'rgba(255, 255, 255, 0)' : 'rgba(26, 23, 23, 0)' }
+          { borderTopColor: isDark ? 'rgba(139, 92, 246, 0.15)' : 'rgba(99, 102, 241, 0.1)' }
         ]}
       >
-        <View style={[styles.tabsContainer, { backgroundColor: isDark ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.1)' }]}>
+        <View style={[styles.tabsContainer, { backgroundColor: 'transparent' }]}>
           {tabs.map((tab) => {
             const isActive = currentScreen === tab.id;
             return (
@@ -205,15 +212,15 @@ export default function BottomNavigation() {
                   styles.iconContainer,
                   isActive && styles.activeIconContainer,
                   isActive && { 
-                    backgroundColor: tab.color + '15',
-                    borderWidth: 2,
-                    borderColor: tab.color + '40'
+                    backgroundColor: isDark ? 'rgba(139, 92, 246, 0.15)' : 'rgba(99, 102, 241, 0.12)',
+                    borderWidth: 1.5,
+                    borderColor: isDark ? 'rgba(139, 92, 246, 0.4)' : 'rgba(99, 102, 241, 0.3)'
                   }
                 ]}>
                   <Ionicons
                     name={isActive ? tab.activeIcon : tab.icon}
-                    size={23}
-                    color={isActive ? tab.color : colors.textSecondary}
+                    size={isActive ? 24 : 22}
+                    color={isActive ? (isDark ? '#A78BFA' : '#6366F1') : colors.textSecondary}
                   />
                   {/* Animated red dot for timer when AutoTimer is active */}
                   {tab.id === 'timer' && autoTimerStatus?.state === 'active' && (
@@ -255,14 +262,21 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 1000,
   },
+  gradientBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   blurContainer: {
     backgroundColor: 'transparent',
     borderTopWidth: 1,
   },
   tabsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 3,
-    paddingVertical: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 10,
   },
   tab: {
     flex: 1,
@@ -272,15 +286,20 @@ const styles = StyleSheet.create({
     minWidth: 50,
   },
   iconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 42,
+    height: 42,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 2,
   },
   activeIconContainer: {
-    transform: [{ scale: 1.1 }],
+    transform: [{ scale: 1.05 }],
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   label: {
     fontSize: 10,
