@@ -27,7 +27,15 @@ export default function ProfileModal({ visible, onClose }: ProfileModalProps) {
         presentationStyle="pageSheet"
         onRequestClose={onClose}
       >
-        <JobsManagementScreen onClose={() => setShowJobsManagement(false)} />
+        <JobsManagementScreen 
+          onClose={() => setShowJobsManagement(false)} 
+          onNavigate={(screen) => {
+            if (screen === 'subscription') {
+              setShowJobsManagement(false);
+              onClose();
+            }
+          }}
+        />
       </Modal>
     );
   }

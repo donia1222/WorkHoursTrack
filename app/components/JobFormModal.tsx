@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -332,6 +332,25 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   workDayTextActive: {
     color: '#FFFFFF',
+  },
+  monthButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: colors.separator,
+    marginHorizontal: 4,
+  },
+  monthButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  monthButtonText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  monthButtonTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   helperText: {
     ...Theme.typography.caption2,
@@ -1149,6 +1168,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState(false);
   const [showNameError, setShowNameError] = useState(false);
+  const [selectedSyncMonths, setSelectedSyncMonths] = useState<number[]>([new Date().getMonth()]); // Current month as default
+  const monthScrollViewRef = useRef<ScrollView>(null);
   
   const styles = getStyles(colors, isDark);
 
@@ -2392,6 +2413,77 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             </TouchableOpacity>
           </View>
 
+          {/* Month Selector for Calendar Sync */}
+          {formData.schedule?.autoSchedule && (
+            <>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>
+                  <IconSymbol size={16} name="calendar" color={colors.primary} /> 
+                  {t('job_form.schedule.sync_month')} 
+                  {selectedSyncMonths.length > 1 && `(${selectedSyncMonths.length})`}
+                </Text>
+                <ScrollView 
+                  ref={monthScrollViewRef}
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={{ marginHorizontal: -4 }}
+                  onLayout={() => {
+                    // Auto-scroll to current month when the ScrollView is ready
+                    setTimeout(() => {
+                      // Each month button is approximately 80px wide (padding + text)
+                      const monthButtonWidth = 80;
+                      const currentMonth = new Date().getMonth();
+                      // Scroll to show current month centered
+                      const scrollPosition = Math.max(0, (currentMonth * monthButtonWidth) - 100);
+                      monthScrollViewRef.current?.scrollTo({ x: scrollPosition, animated: true });
+                    }, 100);
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 4 }}>
+                    {[
+                      t('chatbot.months.january'), t('chatbot.months.february'), t('chatbot.months.march'),
+                      t('chatbot.months.april'), t('chatbot.months.may'), t('chatbot.months.june'),
+                      t('chatbot.months.july'), t('chatbot.months.august'), t('chatbot.months.september'),
+                      t('chatbot.months.october'), t('chatbot.months.november'), t('chatbot.months.december')
+                    ].map((month, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={[
+                          styles.monthButton,
+                          selectedSyncMonths.includes(index) && styles.monthButtonActive
+                        ]}
+                        onPress={() => {
+                          if (selectedSyncMonths.includes(index)) {
+                            // Deselect month (but keep at least one selected)
+                            if (selectedSyncMonths.length > 1) {
+                              setSelectedSyncMonths(selectedSyncMonths.filter(m => m !== index));
+                            }
+                          } else {
+                            // Select month
+                            setSelectedSyncMonths([...selectedSyncMonths, index].sort((a, b) => a - b));
+                          }
+                        }}
+                      >
+                        <Text style={[
+                          styles.monthButtonText,
+                          selectedSyncMonths.includes(index) && styles.monthButtonTextActive
+                        ]}>
+                          {month}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </ScrollView>
+                <Text style={styles.helperText}>
+                  {selectedSyncMonths.length === 1 
+                    ? t('job_form.schedule.sync_month_helper')
+                    : t('job_form.schedule.sync_months_selected', { count: selectedSyncMonths.length })
+                  }
+                </Text>
+              </View>
+            </>
+          )}
+
           {/* Sync with Calendar Button */}
           {formData.schedule?.autoSchedule && (
             <TouchableOpacity
@@ -2405,8 +2497,23 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 
                 setIsSyncing(true);
                 
-                // Simulate calendar sync
-                setTimeout(() => {
+                // Generate schedule for selected month
+                try {
+                  // Save current job first if there are changes
+                  if (editingJob) {
+                    await handleSave();
+                  }
+                  
+                  // Generate schedule for selected months
+                  const currentYear = new Date().getFullYear();
+                  for (const month of selectedSyncMonths) {
+                    await AutoScheduleService.generateScheduleForMonth(
+                      editingJob || formData as Job,
+                      month,
+                      currentYear
+                    );
+                  }
+                  
                   setIsSyncing(false);
                   setSyncSuccess(true);
                   
@@ -2421,7 +2528,14 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                       }, 300);
                     }
                   }, 2000);
-                }, 1500);
+                } catch (error) {
+                  console.error('Error syncing calendar:', error);
+                  setIsSyncing(false);
+                  Alert.alert(
+                    t('job_form.errors.error_title'),
+                    t('job_form.schedule.sync_error')
+                  );
+                }
               }}
               disabled={isSyncing || syncSuccess}
             >

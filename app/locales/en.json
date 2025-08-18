@@ -734,7 +734,11 @@
       "sync_success": "Synced!",
       "auto_schedule_desc": "Automatically add work days to calendar",
       "select_day": "Select day",
-      "schedule_for": "Schedule for"
+      "schedule_for": "Schedule for",
+      "sync_month": "Month to sync",
+      "sync_month_helper": "Select the month you want to sync with your calendar",
+      "sync_months_selected": "{{count}} months selected - Tap to select/deselect",
+      "sync_error": "Error syncing calendar"
     },
     "financial": {
       "title": "Salary Configuration",

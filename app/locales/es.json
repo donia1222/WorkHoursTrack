@@ -762,7 +762,11 @@
       "select_day": "Seleccionar día",
       "day_helper": "Toca un día para configurar horario. Mantén presionado para eliminar.",
       "day_helper_updated": "Azul = con horario configurado. Toca para editar. Mantén presionado para eliminar.",
-      "schedule_for": "Horario para"
+      "schedule_for": "Horario para",
+      "sync_month": "Mes a sincronizar",
+      "sync_month_helper": "Selecciona el mes que deseas sincronizar con tu calendario",
+      "sync_months_selected": "{{count}} meses seleccionados - Toca para seleccionar/deseleccionar",
+      "sync_error": "Error al sincronizar el calendario"
     },
     "financial": {
       "title": "Configuración Salarial",

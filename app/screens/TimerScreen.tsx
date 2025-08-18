@@ -2186,36 +2186,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                 </View>
               </TouchableOpacity>
               
-              <TouchableOpacity 
-                style={styles.statsQuickButton}
-                onPress={() => {
-                  triggerHaptic('light');
-                  onNavigate('reports');
-                }}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={isDark ? 
-                    ['rgba(34, 197, 94, 0.2)', 'rgba(34, 197, 94, 0.05)'] : 
-                    ['rgba(34, 197, 94, 0.15)', 'rgba(34, 197, 94, 0.03)']
-                  }
-                  style={styles.autoTimerQuickButtonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                />
-                <View style={styles.autoTimerQuickButtonContent}>
-                  <View style={[styles.autoTimerQuickButtonIcon, { backgroundColor: '#22C55E' + '20' }]}>
-                    <IconSymbol size={16} name="chart.bar.fill" color="#22C55E" />
-                  </View>
-                  <Text style={[styles.autoTimerQuickButtonText, { color: '#22C55E' }]}>
-                    ESTADÍSTICAS
-                  </Text>
-                </View>
-              </TouchableOpacity>
             </View>
-            <Text style={[styles.quickActionText, { textAlign: 'center', marginTop: 6, fontSize: 10, lineHeight: 12, opacity: 0.7 }]}>
-              {t('timer.auto_timer.privacy_notice_short')}
-            </Text>
+       
           </View>
         )}
 

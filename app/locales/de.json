@@ -603,7 +603,11 @@
       "sync_success": "Synchronisiert!",
       "auto_schedule_desc": "Arbeitstage automatisch zum Kalender hinzufügen",
       "select_day": "Tag auswählen",
-      "schedule_for": "Zeitplan für"
+      "schedule_for": "Zeitplan für",
+      "sync_month": "Monat zum Synchronisieren",
+      "sync_month_helper": "Wählen Sie den Monat, den Sie mit Ihrem Kalender synchronisieren möchten",
+      "sync_months_selected": "{{count}} Monate ausgewählt - Tippen zum Auswählen/Abwählen",
+      "sync_error": "Fehler beim Synchronisieren des Kalenders"
     },
     "financial": {
       "title": "Gehaltskonfiguration",

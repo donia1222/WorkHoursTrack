@@ -51,13 +51,13 @@ const getBottomMargin = () => {
   const deviceType = getDeviceType();
   switch (deviceType) {
     case 'iphone-se':
-      return -3;  // iPhone SE/8 and older
+      return -5;  // iPhone SE/8 and older
     case 'iphone':
-      return -15; // Regular iPhone (X and newer)
+      return -25; // Regular iPhone (X and newer)
     case 'ipad':
       return 10;   // iPad
     default:
-      return -3;  // Android default
+      return -5;  // Android default
   }
 };
 

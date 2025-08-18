@@ -582,7 +582,11 @@
       "sync_success": "Sincronizzato!",
       "auto_schedule_desc": "Aggiungere automaticamente i giorni lavorativi al calendario",
       "select_day": "Seleziona giorno",
-      "schedule_for": "Orario per"
+      "schedule_for": "Orario per",
+      "sync_month": "Mese da sincronizzare",
+      "sync_month_helper": "Seleziona il mese che desideri sincronizzare con il tuo calendario",
+      "sync_months_selected": "{{count}} mesi selezionati - Tocca per selezionare/deselezionare",
+      "sync_error": "Errore durante la sincronizzazione del calendario"
     },
     "financial": {
       "title": "Configurazione stipendio",

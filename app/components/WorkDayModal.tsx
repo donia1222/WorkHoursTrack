@@ -929,7 +929,8 @@ export default function WorkDayModal({
               >
                 <BlurView intensity={90} tint="light" style={styles.syncButtonInner}>
                   <IconSymbol size={20} name="calendar.badge.plus" color={Theme.colors.success} />
-                  <Text style={styles.syncButtonText}>{t('calendar.sync_to_calendar')}</Text>
+                  <Text style={styles.syncButtonText}>{t('calendar.sync_to_phone')}</Text>
+                  
                 </BlurView>
               </TouchableOpacity>
             </View>
@@ -1004,8 +1005,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    width: 40,
-    height: 40,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },

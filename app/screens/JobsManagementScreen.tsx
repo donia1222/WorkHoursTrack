@@ -634,8 +634,11 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
                 <TouchableOpacity 
                   style={styles.premiumSubscribeButton}
                   onPress={() => {
+                    triggerHaptic('medium');
                     setShowPremiumModal(false);
-                    onNavigate?.('subscription');
+                    setTimeout(() => {
+                      onNavigate?.('subscription');
+                    }, 100);
                   }}
                 >
                   <Text style={styles.premiumSubscribeButtonText}>

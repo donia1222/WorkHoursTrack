@@ -770,6 +770,16 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
             setShowJobsManagement(false);
             setOpenAddJobModal(false);
           }} 
+          onNavigate={(screen) => {
+            if (screen === 'subscription') {
+              setShowJobsManagement(false);
+              setOpenAddJobModal(false);
+              // Delay to ensure modal closes before navigation
+              setTimeout(() => {
+                onNavigate('subscription');
+              }, 100);
+            }
+          }}
           openAddModal={openAddJobModal}
           editJob={navigationOptions?.editJob}
           initialTab={navigationOptions?.initialTab}

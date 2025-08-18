@@ -350,10 +350,7 @@ export default function Header({ title, onProfilePress, onBackPress, showBackBut
               style={styles.notesButton}
             >
               <View style={styles.notesButtonInner}>
-                <IconSymbol size={18} name="note.text" color={colors.success} />
-                <View style={styles.plusBadge}>
-                  <IconSymbol size={10} name="plus" color="white" />
-                </View>
+                <IconSymbol size={18} name="pencil" color={colors.success} />
               </View>
             </TouchableOpacity>
           ) : currentScreen === 'chatbot' ? (

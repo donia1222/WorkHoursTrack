@@ -218,6 +218,29 @@ export class AutoScheduleService {
   }
 
   /**
+   * Generate schedule for a specific month
+   */
+  static async generateScheduleForMonth(job: Job, month: number, year?: number): Promise<AutoScheduleResult> {
+    if (!job.schedule?.autoSchedule) {
+      throw new Error('Auto schedule is not enabled for this job');
+    }
+
+    const currentYear = year || new Date().getFullYear();
+    const startDate = new Date(currentYear, month, 1);
+    const endDate = new Date(currentYear, month + 1, 0); // Last day of the month
+
+    const result = await this.generateWorkDays(job, startDate, endDate);
+
+    // Save generated work days
+    for (const workDay of result.generatedDays) {
+      const { id, createdAt, updatedAt, ...workDayData } = workDay;
+      await JobService.addWorkDay(workDayData);
+    }
+
+    return result;
+  }
+
+  /**
    * Apply auto-generated schedule to calendar
    */
   static async applyAutoSchedule(job: Job): Promise<AutoScheduleResult> {
@@ -225,10 +248,10 @@ export class AutoScheduleService {
       throw new Error('Auto schedule is not enabled for this job');
     }
 
-    // Generate for next 60 days
+    // Generate for next 30 days (1 month)
     const startDate = new Date();
     const endDate = new Date();
-    endDate.setDate(startDate.getDate() + 60);
+    endDate.setDate(startDate.getDate() + 30);
 
     const result = await this.generateWorkDays(job, startDate, endDate);
 
