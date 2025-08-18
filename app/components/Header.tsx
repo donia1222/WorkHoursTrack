@@ -417,4 +417,3 @@ export default function Header({ title, onProfilePress, onBackPress, showBackBut
     </SafeAreaView>
   );
 }
-

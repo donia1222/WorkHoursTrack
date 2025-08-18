@@ -21,6 +21,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import * as Updates from 'expo-updates';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -99,7 +100,16 @@ export default function SubscriptionScreen() {
         [
           {
             text: t('subscription.buttons.continue'),
-            onPress: () => navigateTo('mapa'),
+            onPress: async () => {
+              navigateTo('mapa');
+              // Reload the app after successful purchase
+              try {
+                await Updates.reloadAsync();
+              } catch (error) {
+                console.log('Could not reload app:', error);
+                // Silently fail if reload is not available (e.g., in development)
+              }
+            },
           },
         ]
       );

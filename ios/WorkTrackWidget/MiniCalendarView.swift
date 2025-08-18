@@ -94,7 +94,7 @@ struct MiniCalendarView: View {
         if let count = daysCount {
             return count
         }
-        return isCompact ? 7 : 28  // Default: 7 days for medium, 28 for large (4 weeks/month)
+        return isCompact ? 7 : 21  // Default: 7 days for medium, 21 for large (3 weeks)
     }
     
     private var visibleDays: [WorkDayInfo] {
@@ -158,7 +158,7 @@ struct MiniCalendarView: View {
                 }
             }
         } else {
-            // Large widget: 28 days in four rows (full month)
+            // Large widget: 21 days in three rows (3 weeks)
             VStack(spacing: 6) {
                 // Header with month name
                 HStack {
@@ -167,18 +167,17 @@ struct MiniCalendarView: View {
                     Text(getCurrentMonthYear())
                         .font(.system(size: 12, weight: .semibold))
                     Spacer()
-                    Text("Full Month")
+                    Text("3 Weeks")
                         .font(.system(size: 11, weight: .regular))
                 }
                 .foregroundColor(.white.opacity(0.8))
                 
-                // Four weeks grid
+                // Three weeks grid
                 VStack(spacing: 4) {
                     let weekSize = 7
                     let firstWeek = Array(visibleDays.prefix(weekSize))
                     let secondWeek = Array(visibleDays.dropFirst(weekSize).prefix(weekSize))
                     let thirdWeek = Array(visibleDays.dropFirst(weekSize * 2).prefix(weekSize))
-                    let fourthWeek = Array(visibleDays.dropFirst(weekSize * 3))
                     
                     HStack(spacing: 3) {
                         ForEach(firstWeek, id: \.date) { day in
@@ -194,12 +193,6 @@ struct MiniCalendarView: View {
                     
                     HStack(spacing: 3) {
                         ForEach(thirdWeek, id: \.date) { day in
-                            DayView(dayInfo: day, isCompact: false, isLargeWidget: true)
-                        }
-                    }
-                    
-                    HStack(spacing: 3) {
-                        ForEach(fourthWeek, id: \.date) { day in
                             DayView(dayInfo: day, isCompact: false, isLargeWidget: true)
                         }
                     }
@@ -264,8 +257,9 @@ struct DayView: View {
             
             // Day number with work indicator
             ZStack {
+                // All widgets now use transparent background
                 Circle()
-                    .fill(dayColor)
+                    .fill(Color.white.opacity(0.15))
                     .frame(width: circleSize, height: circleSize)
                 
                 if isToday {
@@ -276,20 +270,58 @@ struct DayView: View {
                 
                 Text(dayNumber)
                     .font(.system(size: fontSize, weight: .bold))
-                    .foregroundColor(dayInfo.type == .free ? .white.opacity(0.6) : .white)
+                    .foregroundColor(.white)
             }
             
-            // Hours worked (if applicable)
-            if let hours = dayInfo.hours, dayInfo.type == .work {
-                Text("\(String(format: "%.1f", hours))h")
-                    .font(.system(size: hoursSize, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.85))
-            } else if !isLargeWidget {
-                Text(" ")
-                    .font(.system(size: hoursSize))
+            // Icon for all widgets - always show to maintain alignment
+            if dayInfo.type != .free {
+                Image(systemName: iconName)
+                    .font(.system(size: iconSize, weight: .semibold))
+                    .foregroundColor(iconColor)
+            } else {
+                // Invisible icon for free days to maintain alignment
+                Image(systemName: "circle")
+                    .font(.system(size: iconSize, weight: .semibold))
+                    .foregroundColor(.clear)
             }
         }
         .frame(width: isLargeWidget ? 40 : nil)
+    }
+    
+    private var iconName: String {
+        switch dayInfo.type {
+        case .work:
+            return "briefcase.fill"  // Green briefcase for work
+        case .vacation:
+            return "sun.max.fill"     // Yellow sun for vacation
+        case .sick:
+            return "cross.fill"       // Red cross for sick
+        case .free:
+            return "house.fill"       // Blue house for free day
+        case .scheduled:
+            return "calendar.badge.clock"  // Calendar for scheduled
+        }
+    }
+    
+    private var iconColor: Color {
+        switch dayInfo.type {
+        case .work:
+            return Color(red: 0.2, green: 0.8, blue: 0.4)  // Green
+        case .vacation:
+            return Color(red: 1.0, green: 0.8, blue: 0.2)  // Yellow/Orange
+        case .sick:
+            return Color(red: 1.0, green: 0.3, blue: 0.3)  // Red
+        case .free:
+            return Color(red: 0.3, green: 0.6, blue: 1.0)  // Blue
+        case .scheduled:
+            return Color.white.opacity(0.7)
+        }
+    }
+    
+    private var iconSize: CGFloat {
+        if isSmallWidget { return 11 }
+        if isMediumWidget { return 12 }
+        return 10
     }
     
     private var circleSize: CGFloat {
@@ -347,11 +379,11 @@ struct MediumDayView: View {
     }
     
     var body: some View {
-        VStack(spacing: 4) {
-            // Day number circle - larger
+        VStack(spacing: 3) {
+            // Day number circle - transparent background
             ZStack {
                 Circle()
-                    .fill(dayColor)
+                    .fill(Color.white.opacity(0.15))
                     .frame(width: 36, height: 36)
                 
                 if isToday {
@@ -362,10 +394,52 @@ struct MediumDayView: View {
                 
                 Text(dayNumber)
                     .font(.system(size: 16, weight: isToday ? .bold : .semibold, design: .rounded))
-                    .foregroundColor(dayInfo.type == .free ? .white.opacity(0.7) : .white)
+                    .foregroundColor(.white)
+            }
+            
+            // Icon below the number
+            if dayInfo.type != .free {
+                Image(systemName: iconName)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(iconColor)
+            } else {
+                // Empty space for free days to maintain alignment
+                Image(systemName: "house.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.clear)
             }
         }
         .frame(maxWidth: .infinity)
+    }
+    
+    private var iconName: String {
+        switch dayInfo.type {
+        case .work:
+            return "briefcase.fill"  // Green briefcase for work
+        case .vacation:
+            return "sun.max.fill"     // Yellow sun for vacation
+        case .sick:
+            return "cross.fill"       // Red cross for sick
+        case .free:
+            return "house.fill"       // Blue house for free day
+        case .scheduled:
+            return "calendar.badge.clock"  // Calendar for scheduled
+        }
+    }
+    
+    private var iconColor: Color {
+        switch dayInfo.type {
+        case .work:
+            return Color(red: 0.2, green: 0.8, blue: 0.4)  // Green
+        case .vacation:
+            return Color(red: 1.0, green: 0.8, blue: 0.2)  // Yellow/Orange
+        case .sick:
+            return Color(red: 1.0, green: 0.3, blue: 0.3)  // Red
+        case .free:
+            return Color(red: 0.3, green: 0.6, blue: 1.0)  // Blue
+        case .scheduled:
+            return Color.white.opacity(0.7)
+        }
     }
 }
 

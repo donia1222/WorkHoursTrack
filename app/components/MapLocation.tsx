@@ -229,17 +229,18 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     backgroundColor: isDark ? '#0a0a0a' : '#f5f5f5',
   },
   mapWrapper: {
-    flex: 1,
-    position: 'relative',
+
+
 
   },
   container: {
-    flex: 1,
+  
   },
   map: {
 
-
   },
+
+  
   overlay: {
     position: 'absolute',
     top: 0,
@@ -253,7 +254,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
   centeredContent: {
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginTop: 60,
+    position: 'absolute',
+    top: 80,
+    left: 0,
+    right: 0,
+
   },
   mainActionCard: {
     width: 300,
@@ -271,9 +276,9 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     borderRadius: 28,
     padding: 32,
     alignItems: 'center',
-    position: 'relative',
 
     overflow: 'hidden',
+
   },
   mainActionCardGradient: {
     position: 'absolute',
@@ -2466,42 +2471,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
         <View style={styles.map}>
 
-         {/* Simple info overlay */}
-      {jobs.length === 0 && !showJobForm && (
+
        
-          <View style={[styles.centeredContent, ]}>
-            <TouchableOpacity
-              style={styles.mainActionCard}
-              onPress={handleAddJob}
-              activeOpacity={0.95}
-            >
-              <BlurView intensity={70} tint={isDark ? "dark" : "light"} style={[styles.mainActionCardInner, {
-                backgroundColor: isDark ? 'rgba(76, 135, 175, 0.15)' : 'rgba(76, 135, 175, 0.12)',
-              }]}>
-                <LinearGradient
-                  colors={isDark 
-                    ? ['rgba(76, 135, 175, 0.4)', 'rgba(76, 135, 175, 0.1)']
-                    : ['rgba(76, 135, 175, 0.3)', 'rgba(76, 135, 175, 0.05)']
-                  }
-                  style={StyleSheet.absoluteFillObject}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                />
-                <View style={[styles.mainActionIcon, {
-                  backgroundColor: colors.primary,
-                }]}>
-                  <IconSymbol size={40} name="plus" color="white" weight="bold" />
-                </View>
-                <Text style={styles.mainActionTitle}>{t('maps.add_job')}</Text>
-                <Text style={styles.mainActionDescription}>
-                  {t('maps.add_job_desc')}
-                </Text>
-              </BlurView>
-            </TouchableOpacity>
-          </View>
- 
-      )}
-            
             {/* 6 WIDGET CARDS - MODERN GRADIENT STYLE */}
             {jobs.length > 0 && (
               <View style={{
@@ -2540,6 +2511,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     activeOpacity={0.9}
                   >
                     <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
+
                       <View style={{
                         backgroundColor: isDark ? 'rgba(96, 165, 250, 0.25)' : 'rgba(59, 130, 246, 0.2)',
                         borderRadius: isTablet ? 20 : 12,
@@ -2669,6 +2641,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                       </View>
                     </View>
                     
+
                     {/* Show next days - 7 for iPad, 3 for phones */}
                     <View style={{ flex: 1, justifyContent: 'center' }}>
                       <View style={{ 
@@ -3588,6 +3561,35 @@ export default function MapLocation({ location, onNavigate }: Props) {
         </View>
       </Modal>
 
+              {/* Simple info overlay */}
+
+
+                            {jobs.length === 0 && !showJobForm && (
+       
+          <View style={[styles.centeredContent, ]}>
+            <TouchableOpacity
+              style={styles.mainActionCard}
+              onPress={handleAddJob}
+              activeOpacity={0.95}
+            >
+              <BlurView intensity={70} tint={isDark ? "dark" : "light"} style={[styles.mainActionCardInner, {
+                backgroundColor: isDark ? 'rgba(76, 135, 175, 0.15)' : 'rgba(76, 135, 175, 0.12)',
+              }]}>
+    
+                <View style={[styles.mainActionIcon, {
+                  backgroundColor: colors.primary,
+                }]}>
+                  <IconSymbol size={40} name="plus" color="white" weight="bold" />
+                </View>
+                <Text style={styles.mainActionTitle}>{t('maps.add_job')}</Text>
+                <Text style={styles.mainActionDescription}>
+                  {t('maps.add_job_desc')}
+                </Text>
+              </BlurView>
+            </TouchableOpacity>
+          </View>
+ 
+      )}
 
       {/* Job Selector Modal */}
       <JobSelectorModal

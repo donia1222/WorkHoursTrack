@@ -55,7 +55,7 @@ const getBottomMargin = () => {
     case 'iphone':
       return -25; // Regular iPhone (X and newer)
     case 'ipad':
-      return 10;   // iPad
+      return -0;   // iPad
     default:
       return -5;  // Android default
   }
