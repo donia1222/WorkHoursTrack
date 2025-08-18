@@ -331,18 +331,18 @@ struct WorkTrackMedium: View {
             // Top section - App header and job info
             HStack(alignment: .center) {
                 // App icon and name
-                HStack(spacing: 10) {
+                HStack(spacing: 8) {
                     if let ui = UIImage(named: "worktrack_icon") {
                         Image(uiImage: ui)
                             .resizable().scaledToFit()
-                            .frame(width: 26, height: 26)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .frame(width: 22, height: 22)
+                            .clipShape(RoundedRectangle(cornerRadius: 5))
                     } else {
                         Image(systemName: "briefcase.fill")
-                            .font(.system(size: 22))
+                            .font(.system(size: 18))
                     }
                     Text("VixTime")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .font(.system(size: 19, weight: .bold, design: .rounded))
                 }
                 .foregroundColor(.white)
                 

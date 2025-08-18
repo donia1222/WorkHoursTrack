@@ -55,6 +55,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    maxHeight: Platform.isPad ? '85%' : '100%',
   },
   transparentContainer: {
     flex: 1,
@@ -131,6 +132,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   tabContent: {
     flex: 1,
     padding: Theme.spacing.md,
+    paddingBottom: Platform.isPad ? Theme.spacing.xl * 2 : Theme.spacing.md,
   },
   section: {
     marginBottom: Theme.spacing.md,
@@ -486,6 +488,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    flexGrow: 1,
   },
   sectionSubtitle: {
     ...Theme.typography.footnote,
@@ -785,15 +788,16 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
 
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 120 : 100,
+    paddingTop: Platform.isPad ? 80 : (Platform.OS === 'ios' ? 120 : 100),
   },
   simplifiedKeyboardView: {
     width: '100%',
     alignItems: 'center',
   },
   simplifiedCard: {
-    width: '90%',
-    maxWidth: 400,
+    width: Platform.isPad ? '70%' : '90%',
+    maxWidth: Platform.isPad ? 600 : 400,
+    maxHeight: Platform.isPad ? '80%' : undefined,
     borderRadius: Theme.borderRadius.xl,
     overflow: 'hidden',
     shadowColor: '#000',
@@ -1896,6 +1900,10 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           onPress={() => {}}
           style={styles.simplifiedCard}
         >
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ flexGrow: 1 }}
+          >
           <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.simplifiedBlurCard}>
             {/* Close button */}
             <TouchableOpacity 
@@ -1972,6 +1980,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               </Text>
             </TouchableOpacity>
           </BlurView>
+          </ScrollView>
         </TouchableOpacity>
       </KeyboardAvoidingView>
     </TouchableOpacity>
@@ -3307,7 +3316,10 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     };
 
     return (
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: Platform.isPad ? 100 : 20 }}
+        showsVerticalScrollIndicator={false}>
         {/* AutoTimer Alert */}
         {showAutoTimerAlert && formData.autoTimer?.enabled && (
           <View style={{
@@ -3612,7 +3624,10 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     };
 
     return (
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: Platform.isPad ? 100 : 20 }}
+        showsVerticalScrollIndicator={false}>
         <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
           <Text style={styles.sectionTitle}>{t('job_form.delete.title')}</Text>
           <Text style={styles.sectionSubtitle}>{t('job_form.delete.subtitle')}</Text>
@@ -3730,7 +3745,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       <Modal 
         visible={visible} 
         animationType="slide" 
-        presentationStyle="formSheet"
+        presentationStyle={Platform.isPad ? "pageSheet" : "formSheet"}
         onRequestClose={onClose}
       >
       {isFirstTimeUser && !editingJob ? (
@@ -3794,9 +3809,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         </View>
 
         <KeyboardAvoidingView 
-          style={styles.content}
+          style={[styles.content, Platform.isPad && { maxHeight: '100%' }]}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? (Platform.isPad ? 120 : 100) : 0}
         >
           {currentTab === 'basic' && renderBasicTab()}
           {currentTab === 'schedule' && renderScheduleTab()}
