@@ -1229,6 +1229,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [wasJobCardsModalOpen, setWasJobCardsModalOpen] = useState(false);
   const [shouldReopenJobCardsModal, setShouldReopenJobCardsModal] = useState(false);
   const [selectedDaySchedule, setSelectedDaySchedule] = useState<number | null>(null);
+  const [monthlyOvertime, setMonthlyOvertime] = useState<number>(0);
   const mapRef = useRef<MapView>(null);
   
   // Optimización para prevenir congelamiento durante zoom rápido
@@ -1683,6 +1684,23 @@ export default function MapLocation({ location, onNavigate }: Props) {
     updateAutoTimerJobs();
   }, [jobs]);
 
+  // Load monthly overtime
+  useEffect(() => {
+    const loadOvertime = async () => {
+      const overtime = await calculateMonthlyOvertime();
+      setMonthlyOvertime(overtime);
+    };
+    
+    loadOvertime();
+    
+    // Refresh every minute if timer is active
+    const interval = setInterval(() => {
+      loadOvertime();
+    }, 60000);
+    
+    return () => clearInterval(interval);
+  }, [autoTimerStatus?.state]);
+
   // Calculate elapsed time for active AutoTimer
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -1827,6 +1845,34 @@ export default function MapLocation({ location, onNavigate }: Props) {
       }
     };
   }, [autoTimerStatus?.state, jobs]);
+
+  const calculateMonthlyOvertime = async (): Promise<number> => {
+    try {
+      const allWorkDays = await JobService.getWorkDays();
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      
+      let totalOvertime = 0;
+      
+      allWorkDays.forEach((day: any) => {
+        const dayDate = new Date(day.date);
+        
+        if (dayDate.getMonth() + 1 === currentMonth && 
+            dayDate.getFullYear() === currentYear && 
+            day.type === 'work' && 
+            day.overtime) {
+          // Overtime is hours over 8
+          totalOvertime += Math.max(0, (day.hours || 0) - 8);
+        }
+      });
+      
+      return totalOvertime;
+    } catch (error) {
+      console.error('Error calculating monthly overtime:', error);
+      return 0;
+    }
+  };
 
   const calculateJobStatistics = async (job: Job): Promise<{ thisMonthHours: number; thisMonthDays: number }> => {
     try {
@@ -2619,7 +2665,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         borderRadius: isTablet ? 10 : 8,
                         padding: isTablet ? 6 : 4,
                       }}>
-                        <IconSymbol size={isTablet ? 24 : 20} name="calendar" color={isDark ? '#60a5fa' : '#3b82f6'} />
+                        <IconSymbol size={isTablet ? 24 : 18} name="calendar" color={isDark ? '#60a5fa' : '#3b82f6'} />
                       </View>
                     </View>
                     
@@ -2651,19 +2697,24 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           
                           return nextDays.map((dayData, i) => {
                             let badgeColor = null;
+                            let badgeIcon = null;
                             if (dayData.workDay) {
                               switch (dayData.workDay.type) {
                                 case 'work':
                                   badgeColor = '#10b981';
+                                  badgeIcon = 'briefcase';
                                   break;
                                 case 'free':
                                   badgeColor = '#f59e0b';
+                                  badgeIcon = 'home';
                                   break;
                                 case 'vacation':
                                   badgeColor = '#8b5cf6';
+                                  badgeIcon = 'sunny';
                                   break;
                                 case 'sick':
                                   badgeColor = '#ef4444';
+                                  badgeIcon = 'thermometer';
                                   break;
                               }
                             }
@@ -2673,19 +2724,18 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                 key={i}
                                 style={{
                                   flex: 1,
-                                  height: isTablet ? 65 : 60,
+                                  height: isTablet ? 75 : 70,
                                   maxWidth: isTablet ? 60 : 50,
                                   backgroundColor: i === 0
                                     ? (isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(96, 165, 250, 0.15)')
                                     : (badgeColor ? `${badgeColor}20` : 'transparent'),
-                                  borderWidth: i === 0 ? 2 : (badgeColor ? 1.5 : 1),
-                                  borderColor: i === 0 ? '#60a5fa' : (badgeColor || '#e5e7eb'),
                                   borderRadius: 12,
                                   justifyContent: 'center',
                                   alignItems: 'center',
                                 }}
                               >
                                 <View style={{ alignItems: 'center' }}>
+                                  
                                   <Text style={{
                                     fontSize: isTablet ? 11 : 10,
                                     color: i === 0 ? '#3b82f6' : (isDark ? 'rgba(255, 255, 255, 0.6)' : '#6b7280'),
@@ -2700,6 +2750,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                       return dayName.slice(0, 3);
                                     })()}
                                   </Text>
+                                  
                                   <Text style={{
                                     fontSize: isTablet ? 22 : 20,
                                     color: i === 0 ? '#3b82f6' : (isDark ? 'rgba(255, 255, 255, 0.9)' : '#1f2937'),
@@ -2707,11 +2758,23 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                   }}>
                                     {dayData.day}
                                   </Text>
+                            {badgeIcon && (
+                                    <Ionicons 
+                                      name={badgeIcon as any} 
+                                      size={isTablet ? 18 : 14} 
+                                      color={badgeColor || '#3b82f6'}
+                                      style={{ marginTop: 2 }}
+                                    />
+                                  )}
                                 </View>
+                       
                               </View>
+
+                              
                             );
                           });
                         })()}
+                        
                       </View>
                       {/* Work indicators below days */}
                       <View style={{ 
@@ -2742,13 +2805,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             const isWork = dayData.workDay?.type === 'work';
                             return (
                               <View key={i} style={{ flex: 1, alignItems: 'center' }}>
-                                {isWork && (
-                                  <IconSymbol 
-                                    size={16} 
-                                    name="briefcase.fill" 
-                                    color={isDark ? '#10b981' : '#059669'}
-                                  />
-                                )}
+                        
                               </View>
                             );
                           });
@@ -3047,62 +3104,129 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     </View>
                   </TouchableOpacity>
 
-                  {/* BILLING WIDGET */}
+                  {/* OVERTIME WIDGET */}
                   <TouchableOpacity
                     style={{
                       flex: 1,
                       borderRadius: isTablet ? 28 : (isSmallScreen ? 20 : 24),
                       padding: isTablet ? 22 : (isSmallScreen ? 12 : 18),
-                      backgroundColor: isDark ? 'rgba(248, 113, 113, 0.12)' : 'rgba(252, 165, 165, 0.25)',
+                      backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(248, 113, 113, 0.18)',
                       backdropFilter: 'blur(20px)',
                       borderWidth: 1.5,
-                      borderColor: isDark ? 'rgba(248, 113, 113, 0.25)' : 'rgba(239, 68, 68, 0.3)',
+                      borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
                       shadowColor: '#ef4444',
                       shadowOffset: { width: 0, height: 4 },
                       shadowOpacity: 0.15,
                       shadowRadius: 20,
                       elevation: 5,
                     }}
-                    onPress={() => handleEditCategory('billing')}
+                    onPress={() => {
+                      triggerHaptic('light');
+                      navigateTo('reports');
+                    }}
                     activeOpacity={0.9}
                   >
                     <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
-                      {isTablet && (
-                        <View style={{
-                          backgroundColor: isDark ? 'rgba(248, 113, 113, 0.25)' : 'rgba(239, 68, 68, 0.2)',
-                          borderRadius: 20,
-                          padding: 16,
-                          marginRight: 20,
-                        }}>
-                          <IconSymbol size={36} name="doc.text.fill" color={isDark ? '#f87171' : '#ef4444'} />
-                        </View>
-                      )}
-                      <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
+                      {/* Circular Progress Chart */}
+                      {(() => {
+                        // Dynamic max based on current overtime value
+                        let maxValue = 10;
+                        if (monthlyOvertime > 80) maxValue = 160;
+                        else if (monthlyOvertime > 40) maxValue = 80;
+                        else if (monthlyOvertime > 20) maxValue = 40;
+                        else if (monthlyOvertime > 10) maxValue = 20;
+                        
+                        const percentage = Math.min(100, (monthlyOvertime / maxValue) * 100);
+                        const rotation = (percentage / 100) * 360 - 90;
+                        
+                        return (
+                          <View style={{ 
+                            width: isTablet ? 80 : 60, 
+                            height: isTablet ? 80 : 60,
+                            marginRight: isTablet ? 16 : 0,
+                            marginBottom: !isTablet ? 8 : 0,
+                          }}>
+                            <View style={{
+                              width: '100%',
+                              height: '100%',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                            }}>
+                              {/* Background circle */}
+                              <View style={{
+                                position: 'absolute',
+                                width: '100%',
+                                height: '100%',
+                                borderRadius: 100,
+                                borderWidth: isTablet ? 8 : 6,
+                                borderColor: isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                              }} />
+                              {/* Progress arc - simplified approach */}
+                              <View style={{
+                                position: 'absolute',
+                                width: '100%',
+                                height: '100%',
+                                borderRadius: 100,
+                                borderWidth: isTablet ? 8 : 6,
+                                borderColor: 'transparent',
+                                borderTopColor: percentage > 0 ? (isDark ? '#f87171' : '#ef4444') : 'transparent',
+                                borderRightColor: percentage > 25 ? (isDark ? '#f87171' : '#ef4444') : 'transparent',
+                                borderBottomColor: percentage > 50 ? (isDark ? '#f87171' : '#ef4444') : 'transparent',
+                                borderLeftColor: percentage > 75 ? (isDark ? '#f87171' : '#ef4444') : 'transparent',
+                                transform: [{ rotate: `${rotation}deg` }],
+                              }} />
+                              {/* Center text */}
+                              <View style={{ alignItems: 'center' }}>
+                                <Text style={{
+                                  fontSize: isTablet ? 20 : 16,
+                                  fontWeight: '700',
+                                  color: isDark ? '#f87171' : '#ef4444',
+                                }}>{monthlyOvertime.toFixed(1)}</Text>
+                                <Text style={{
+                                  fontSize: isTablet ? 10 : 8,
+                                  color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#991b1b',
+                                  fontWeight: '600',
+                                }}>hrs</Text>
+                              </View>
+                              {/* Max indicator */}
+                              <View style={{
+                                position: 'absolute',
+                                top: -14,
+                                right: 0,
+                                left: 0,
+                                alignItems: 'center',
+                              }}>
+                                <Text style={{
+                                  fontSize: isTablet ? 11 : 10,
+                                  color: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)',
+                                  fontWeight: '600',
+                                }}>/{maxValue}h</Text>
+                              </View>
+                            </View>
+                          </View>
+                        );
+                      })()}
+                      <View style={{ flex: 1, justifyContent: 'center' }}>
                         <Text style={{
                           fontSize: isTablet ? 16 : 13,
                           fontWeight: '600',
-                          color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#991b1b',
-                          marginBottom: isTablet ? 6 : 8,
-                        }}>{t('settings.financial_config.billing')}</Text>
-                        <View style={{ alignItems: isTablet ? 'flex-start' : 'center' }}>
+                          color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#7f1d1d',
+                          marginBottom: 4,
+                        }}>{t('maps.overtime')}</Text>
+                        <Text style={{
+                          fontSize: isTablet ? 14 : 11,
+                          color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#991b1b',
+                        }}>{getMonthName(new Date())}</Text>
+                        {monthlyOvertime > 0 && (
                           <Text style={{
-                            fontSize: isTablet ? 18 : 12,
-                            fontWeight: '500',
-                            color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#dc2626',
-                            textAlign: isTablet ? 'left' : 'center',
-                          }}>{t('maps.configure_company')}</Text>
-                        </View>
+                            fontSize: isTablet ? 11 : 9,
+                            color: isDark ? 'rgba(239, 68, 68, 0.7)' : 'rgba(239, 68, 68, 0.7)',
+                            marginTop: 4,
+                          }}>
+                            {monthlyOvertime >= 40 ? '🔥 High overtime!' : `+${monthlyOvertime.toFixed(1)}h extra`}
+                          </Text>
+                        )}
                       </View>
-                      {!isTablet && (
-                        <View style={{
-                          backgroundColor: isDark ? 'rgba(248, 113, 113, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                          borderRadius: 12,
-                          padding: 8,
-                          marginTop: 8,
-                        }}>
-                          <IconSymbol size={20} name="doc.text.fill" color={isDark ? '#f87171' : '#ef4444'} />
-                        </View>
-                      )}
                     </View>
                   </TouchableOpacity>
                 </View>
@@ -3288,226 +3412,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
               {/* Botón Ver Trabajos - solo si hay trabajos */}
               {!showJobForm && jobs.length > 0 && (
               <Animated.View style={[styles.noLocationButtons, animatedNoLocationButtonsStyle]}>
-  
-
-         
-            {/* Mini Calendar - Conditional render */}
-            {shouldShowMiniCalendar && miniCalendarData.length > 0 && !isSmallScreen && (
-              <GestureDetector gesture={Gesture.Pan()
-                .onEnd((event) => {
-                  const { velocityX } = event;
-                  if (Math.abs(velocityX) > 500) {
-                    if (velocityX > 0) {
-                      runOnJS(navigateWeek)('prev');
-                    } else {
-                      runOnJS(navigateWeek)('next');
-                    }
-                  }
-                })}>
-                <View style={[styles.miniCalendarContainer, animatedMiniCalendarStyle]}>
-                  <View style={[
-                    styles.miniCalendarCard,
-                    {
-                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.25)',
-                      borderWidth: 1.5,
-                      borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)',
-                      shadowColor: isDark ? '#000' : '#6366f1',
-                      shadowOffset: { width: 0, height: 12 },
-                      shadowOpacity: isDark ? 0.3 : 0.1,
-                      shadowRadius: 20,
-                      elevation: 12,
-                    }
-                  ]}>
-                    <BlurView intensity={isDark ? 60 : 80} tint={isDark ? "dark" : "light"} style={styles.miniCalendarBlur}>
-                  <View style={styles.miniCalendarHeader}>
-          
-                    <View style={styles.miniCalendarTitleContainer}>
-                      <View style={{
-                        backgroundColor: isDark ? 'rgba(147, 51, 234, 0.2)' : 'rgba(99, 102, 241, 0.15)',
-                        borderRadius: 12,
-                        padding: 8,
-                        borderWidth: 1,
-                        borderColor: isDark ? 'rgba(147, 51, 234, 0.3)' : 'rgba(99, 102, 241, 0.2)',
-                      }}>
-                        <IconSymbol size={24} name="calendar" color={isDark ? '#a855f7' : '#6366f1'} />
-                      </View>
-                      <Text style={[
-                        styles.miniCalendarTitle,
-                        {
-                          fontSize: isTablet ? 22 : (isSmallScreen ? 16 : 18),
-                          fontWeight: '700',
-                          color: isDark ? '#f3f4f6' : '#1f2937',
-                          letterSpacing: 0.5,
-                        }
-                      ]}>{getMonthName(currentWeekStart)}</Text>
-                    </View>
-             
-                  </View>
-                  
-                  {/* Day labels */}
-                  <View style={styles.miniCalendarDayLabels}>
-                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day, index) => (
-                      <Text key={index} style={styles.miniCalendarDayLabel}>
-                        {t(`calendar.days_short.${day}`)}
-                      </Text>
-                    ))}
-                  </View>
-                  
-                  <View style={styles.miniCalendarGrid}>
-                    {miniCalendarData.map((dayData, i) => {
-                      // Determinar color del badge basado en el tipo de día de trabajo
-                      let badgeColor = null;
-                      let badgeText = '';
-                      let timeText = '';
-                      
-                      if (dayData.workDay) {
-                        console.log('📅 Badge rendering for day', dayData.day, 'type:', dayData.workDay.type);
-                        switch (dayData.workDay.type) {
-                          case 'work':
-                            badgeColor = isDark ? '#10b981' : '#059669'; // Verde vibrante
-                            badgeText = 'checkmark-circle';
-                            // Mostrar horario si existe
-                            if (dayData.workDay.startTime && dayData.workDay.endTime) {
-                              // Formatear horas sin el cero inicial si es necesario
-                              const formatTime = (time: string) => {
-                                const [hours, minutes] = time.split(':');
-                                return `${parseInt(hours)}:${minutes}`;
-                              };
-                              
-                              // Si hay turno partido, mostrar ambos bloques
-                              if (dayData.workDay.secondStartTime && dayData.workDay.secondEndTime) {
-                                timeText = `${formatTime(dayData.workDay.startTime)}-${formatTime(dayData.workDay.endTime)}\n${formatTime(dayData.workDay.secondStartTime)}-${formatTime(dayData.workDay.secondEndTime)}`;
-                              } else {
-                                // Horario simple
-                                timeText = `${formatTime(dayData.workDay.startTime)}\n${formatTime(dayData.workDay.endTime)}`;
-                              }
-                            }
-                            break;
-                          case 'free':
-                            badgeColor = isDark ? '#f59e0b' : '#f59e0b'; // Amarillo vibrante
-                            badgeText = 'sunny';
-                            break;
-                          case 'vacation':
-                            badgeColor = isDark ? '#8b5cf6' : '#7c3aed'; // Púrpura para vacaciones
-                            badgeText = 'airplane';
-                            break;
-                          case 'sick':
-                            badgeColor = isDark ? '#ef4444' : '#dc2626'; // Rojo vibrante
-                            badgeText = 'medkit';
-                            break;
-                          default:
-                            console.log('⚠️ Unknown workDay type:', dayData.workDay.type);
-                            break;
-                        }
-                      }
-                      
-                      return (
-                        <TouchableOpacity 
-                          key={i} 
-                          style={[
-                            styles.miniCalendarDay,
-                            {
-                              backgroundColor: dayData.isToday 
-                                ? (isDark ? 'rgba(147, 51, 234, 0.25)' : 'rgba(99, 102, 241, 0.15)')
-                                : (badgeColor ? 'rgba(255, 255, 255, 0.05)' : 'transparent'),
-                              borderWidth: dayData.isToday ? 2 : (badgeColor ? 1 : 0),
-                              borderColor: dayData.isToday 
-                                ? (isDark ? '#a855f7' : '#6366f1')
-                                : (badgeColor ? `${badgeColor}40` : 'transparent'),
-                              borderRadius: 12,
-                              shadowColor: dayData.isToday ? (isDark ? '#9333ea' : '#6366f1') : 'transparent',
-                              shadowOffset: { width: 0, height: 4 },
-                              shadowOpacity: dayData.isToday ? 0.3 : 0,
-                              shadowRadius: 8,
-                              elevation: dayData.isToday ? 4 : 0,
-                            }
-                          ]}
-                          onPress={() => {
-                            if (dayData.workDay && dayData.workDay.type === 'work' && dayData.workDay.startTime) {
-                              setSelectedDaySchedule(selectedDaySchedule === i ? null : i);
-                            } else {
-                              onNavigate?.('calendar');
-                            }
-                          }}
-                          activeOpacity={0.7}
-                          onLongPress={() => onNavigate?.('calendar')}
-                        >
-                          <Text style={[
-                            styles.miniCalendarDayText, 
-                            { 
-                              color: dayData.isToday ? colors.primary : (isDark ? colors.text : colors.textSecondary),
-                              fontWeight: dayData.isToday ? '700' : '600'
-                            }
-                          ]}>
-                            {dayData.day}
-                          </Text>
-                          {badgeColor && (
-                            <View style={[
-                              styles.miniCalendarBadge, 
-                              { 
-                                backgroundColor: badgeColor,
-                                shadowColor: badgeColor,
-                                shadowOffset: { width: 0, height: 2 },
-                                shadowOpacity: 0.4,
-                                shadowRadius: 4,
-                                elevation: 3,
-                              }
-                            ]} />
-                          )}
-                          {dayData.isToday && !badgeColor && (
-                            <View style={[
-                              styles.miniCalendarDot, 
-                              { 
-                                backgroundColor: isDark ? '#a855f7' : '#6366f1',
-                                shadowColor: isDark ? '#a855f7' : '#6366f1',
-                                shadowOffset: { width: 0, height: 2 },
-                                shadowOpacity: 0.5,
-                                shadowRadius: 3,
-                                elevation: 2,
-                              }
-                            ]} />
-                          )}
-                          {/* Mostrar horario si está seleccionado */}
-                          {selectedDaySchedule === i && dayData.workDay && dayData.workDay.type === 'work' && timeText && (
-                            <View style={{
-                              position: 'absolute',
-                              zIndex: 1000,
-                              bottom: -18,
-                              left: -20,
-                              right: -20,
-                              backgroundColor: isDark ? 'rgba(0, 0, 0, 0.95)' : 'rgba(255, 255, 255, 0.98)',
-                              borderRadius: 6,
-                              padding: 2,
-                  
-                              shadowColor: '#000',
-                              shadowOffset: { width: 0, height: 2 },
-                              shadowOpacity: 0.2,
-                              shadowRadius: 4,
-                              elevation: 5,
-                              borderWidth: 1,
-                              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                            }}>
-                              <Text style={{
-                                fontSize: 9,
-                                color: colors.text,
-                                textAlign: 'center',
-                                fontWeight: '600',
-                                lineHeight: 11,
-                              }}>
-                                {timeText}
-                              </Text>
-                            </View>
-                          )}
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-     
-                    </BlurView>
-                  </View>
-              </View>
-              </GestureDetector>
-            )}
 
                   <TouchableOpacity 
                     style={styles.settingItem}
