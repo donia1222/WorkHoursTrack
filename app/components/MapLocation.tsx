@@ -873,21 +873,19 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     justifyContent: 'center',
     borderRadius: 8,
     position: 'relative',
-    marginBottom: 4,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.015)',
+    marginBottom: -14,
+
   },
   miniCalendarDayText: {
     fontSize: dayFontSize,
     fontWeight: '600',
     letterSpacing: -0.2,
-    borderWidth: 1.5,
-    borderColor: isDark ? 'rgba(138, 92, 246, 0.15)' : 'rgba(99, 101, 241, 0.13)',
-    padding: 4,
-    borderRadius: 20,
+marginTop: -15,
+
   },
   miniCalendarDot: {
     position: 'absolute',
-    bottom: 3,
+    bottom: 15,
     width: 4,
     height: 4,
     borderRadius: 2,
@@ -895,7 +893,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
   miniCalendarBadge: {
     position: 'absolute',
 
-    bottom: 0,
+    bottom: 15,
 
     width: 5,
     height: 5,

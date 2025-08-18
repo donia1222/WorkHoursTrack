@@ -162,10 +162,6 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.separator,
   },
-  inputError: {
-    borderColor: '#FF4444',
-    borderWidth: 2,
-  },
   addressInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -280,8 +276,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderColor: 'transparent',
   },
   colorOptionSelected: {
-    borderColor: '#FFFFFF',
-    transform: [{ scale: 1.1 }],
+
+    transform: [{ scale: 1 }],
   },
   segmentedControl: {
     flexDirection: 'row',
@@ -1969,14 +1965,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         <View style={styles.inputGroup}>
           <Text style={styles.label}>{t('job_form.basic.name')} {t('job_form.basic.name_required')}</Text>
           <TextInput
-            style={[styles.input, showNameError && styles.inputError]}
+            style={styles.input}
             value={formData.name}
-            onChangeText={(value) => {
-              updateFormData('name', value);
-              if (showNameError && value.trim()) {
-                setShowNameError(false); // Clear error when user starts typing
-              }
-            }}
+            onChangeText={(value) => updateFormData('name', value)}
             placeholder={t('job_form.basic.name_placeholder')}
             placeholderTextColor={colors.textTertiary}
           />
@@ -2111,17 +2102,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           </ScrollView>
         </View>
 
-        <View style={styles.inputGroup}>
-          <View style={styles.switchRow}>
-            <Text style={styles.label}>{t('job_form.basic.active')}</Text>
-            <Switch
-              value={formData.isActive}
-              onValueChange={(value) => updateFormData('isActive', value)}
-              trackColor={{ false: colors.separator, true: colors.primary }}
-              thumbColor="#FFFFFF"
-            />
-          </View>
-        </View>
+
       </BlurView>
 
       <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
@@ -2162,6 +2143,17 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             keyboardType="phone-pad"
           />
         </View>
+                <View style={styles.inputGroup}>
+         
+            <Text style={styles.label}>{t('job_form.basic.active')}</Text>
+            <Switch
+              value={formData.isActive}
+              onValueChange={(value) => updateFormData('isActive', value)}
+              trackColor={{ false: colors.separator, true: colors.primary }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+      
       </BlurView>
     </ScrollView>
     
@@ -3777,11 +3769,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   style={styles.premiumSubscribeButton}
                   onPress={() => {
                     setShowPremiumModal(false);
+                    onClose();
                     if (onNavigateToSubscription) {
-                      setTimeout(() => {
-                        onClose();
-                        onNavigateToSubscription();
-                      }, 100);
+                      onNavigateToSubscription();
                     }
                   }}
                 >
