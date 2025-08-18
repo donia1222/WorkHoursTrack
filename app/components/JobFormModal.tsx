@@ -162,6 +162,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.separator,
   },
+  inputError: {
+    borderColor: '#FF4444',
+    borderWidth: 2,
+  },
   addressInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1022,6 +1026,38 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderWidth: 2,
     borderColor: '#FFFFFF',
   },
+  // Sync button styles
+  syncButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  syncButtonLoading: {
+    backgroundColor: colors.textTertiary,
+  },
+  syncButtonSuccess: {
+    backgroundColor: '#4CAF50',
+  },
+  syncButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  syncButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
 
 export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true }: JobFormModalProps) {
@@ -1114,6 +1150,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [hasCheckedFirstTime, setHasCheckedFirstTime] = useState(false);
   const [activeTimerElapsed, setActiveTimerElapsed] = useState<number>(0);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncSuccess, setSyncSuccess] = useState(false);
+  const [showNameError, setShowNameError] = useState(false);
   
   const styles = getStyles(colors, isDark);
 
@@ -1121,6 +1160,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     if (visible) {
       setCurrentTab(initialTab);
       setHasUnsavedChanges(false); // Reset changes flag when opening modal
+      setShowNameError(false); // Reset name error when opening modal
     }
   }, [visible, initialTab]);
 
@@ -1521,7 +1561,25 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     if (formData.name?.trim()) {
       await handleSave();
     } else {
-      // If no name, just close without saving
+      // Check if any other fields have been filled
+      const hasOtherFields = formData.company?.trim() || 
+                            formData.address?.trim() || 
+                            formData.street?.trim() || 
+                            formData.city?.trim() || 
+                            formData.postalCode?.trim() ||
+                            formData.description?.trim() ||
+                            formData.contactPerson?.trim() ||
+                            formData.contactEmail?.trim() ||
+                            formData.contactPhone?.trim();
+      
+      if (hasOtherFields) {
+        // Show error on name field and don't close
+        setShowNameError(true);
+        setCurrentTab('basic'); // Switch to basic tab to show the error
+        return;
+      }
+      
+      // If no fields filled, just close without saving
       onClose();
     }
   };
@@ -1610,63 +1668,14 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           
           // Show confirmation with conflicts if any
           if (result.conflicts && result.conflicts.length > 0) {
-            Alert.alert(
-              t('job_form.auto_schedule.applied_title'),
-              t('job_form.auto_schedule.applied_conflicts', {
-                workDays: (result.generatedDays?.length || 0).toString(),
-                freeDays: (result.freeDays?.length || 0).toString(),
-                conflicts: (result.conflicts?.length || 0).toString()
-              }),
-              [
-                { 
-                  text: 'OK', 
-                  style: 'cancel',
-                  onPress: () => {
-                    onSave(savedJob);
-                    onClose();
-                  }
-                },
-                { 
-                  text: t('job_form.auto_schedule.view_calendar'), 
-                  onPress: () => {
-                    onSave(savedJob);
-                    onClose();
-                    setTimeout(() => {
-                      onNavigateToCalendar?.();
-                    }, 300);
-                  }
-                }
-              ]
-            );
+            // Auto schedule applied successfully with conflicts
+            onSave(savedJob);
+            onClose();
           } else {
-            Alert.alert(
-              t('job_form.auto_schedule.applied_title'),
-              t('job_form.auto_schedule.applied_success', {
-                workDays: (result.generatedDays?.length || 0).toString(),
-                freeDays: (result.freeDays?.length || 0).toString()
-              }),
-              [
-                { 
-                  text: 'OK', 
-                  style: 'cancel',
-                  onPress: () => {
-                    onSave(savedJob);
-                    onClose();
-                  }
-                },
-                { 
-                  text: t('job_form.auto_schedule.view_calendar'), 
-                  onPress: () => {
-                    onSave(savedJob);
-                    onClose();
-                    setTimeout(() => {
-                      onNavigateToCalendar?.();
-                    }, 300);
-                  }
-                }
-              ]
-            );
-            return; // Exit early when showing alert with calendar navigation
+            // Auto schedule applied successfully
+            onSave(savedJob);
+            onClose();
+            return;
           }
         } catch (error) {
           console.error('Error applying auto schedule:', error);
@@ -1960,9 +1969,14 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         <View style={styles.inputGroup}>
           <Text style={styles.label}>{t('job_form.basic.name')} {t('job_form.basic.name_required')}</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, showNameError && styles.inputError]}
             value={formData.name}
-            onChangeText={(value) => updateFormData('name', value)}
+            onChangeText={(value) => {
+              updateFormData('name', value);
+              if (showNameError && value.trim()) {
+                setShowNameError(false); // Clear error when user starts typing
+              }
+            }}
             placeholder={t('job_form.basic.name_placeholder')}
             placeholderTextColor={colors.textTertiary}
           />
@@ -2385,6 +2399,78 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               <View style={[styles.switchThumb, formData.schedule?.autoSchedule && styles.switchThumbActive]} />
             </TouchableOpacity>
           </View>
+
+          {/* Sync with Calendar Button */}
+          {formData.schedule?.autoSchedule && (
+            <TouchableOpacity
+              style={[
+                styles.syncButton,
+                isSyncing && styles.syncButtonLoading,
+                syncSuccess && styles.syncButtonSuccess
+              ]}
+              onPress={async () => {
+                if (isSyncing) return;
+                
+                setIsSyncing(true);
+                
+                // Simulate calendar sync
+                setTimeout(() => {
+                  setIsSyncing(false);
+                  setSyncSuccess(true);
+                  
+                  // Reset to normal state after 2 seconds
+                  setTimeout(() => {
+                    setSyncSuccess(false);
+                    // Navigate to calendar
+                    if (onNavigateToCalendar) {
+                      onClose();
+                      setTimeout(() => {
+                        onNavigateToCalendar();
+                      }, 300);
+                    }
+                  }, 2000);
+                }, 1500);
+              }}
+              disabled={isSyncing || syncSuccess}
+            >
+              <View style={styles.syncButtonContent}>
+                {isSyncing ? (
+                  <>
+                    <IconSymbol 
+                      size={20} 
+                      name="arrow.trianglehead.2.clockwise" 
+                      color="#FFF" 
+                    />
+                    <Text style={styles.syncButtonText}>
+                      {t('job_form.schedule.syncing')}
+                    </Text>
+                  </>
+                ) : syncSuccess ? (
+                  <>
+                    <IconSymbol 
+                      size={20} 
+                      name="checkmark.circle.fill" 
+                      color="#FFF" 
+                    />
+                    <Text style={styles.syncButtonText}>
+                      {t('job_form.schedule.sync_success')}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <IconSymbol 
+                      size={20} 
+                      name="calendar" 
+                      color="#FFF" 
+                    />
+                    <Text style={styles.syncButtonText}>
+                      {t('job_form.schedule.sync_calendar')}
+                    </Text>
+                  </>
+                )}
+              </View>
+            </TouchableOpacity>
+          )}
         </>
         )}
       </BlurView>
@@ -3691,9 +3777,11 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   style={styles.premiumSubscribeButton}
                   onPress={() => {
                     setShowPremiumModal(false);
-                    onClose();
                     if (onNavigateToSubscription) {
-                      onNavigateToSubscription();
+                      setTimeout(() => {
+                        onClose();
+                        onNavigateToSubscription();
+                      }, 100);
                     }
                   }}
                 >

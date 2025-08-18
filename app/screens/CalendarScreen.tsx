@@ -32,16 +32,16 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
   const { colors } = useTheme();
   const { t } = useLanguage();
   
-  const getWorkBadgeStyle = (workDay: WorkDay, job?: Job) => {
+  const getDayIcon = (workDay: WorkDay, job?: Job) => {
     if (!workDay) return null;
     
-    let badgeColor = '#9CA3AF'; // Default gray for OFF
-    let badgeText = 'OFF';
+    let iconName: any = '';
+    let iconColor = '#9CA3AF';
     let timeText = '';
     
     if (workDay.type === 'work' && job) {
-      badgeColor = '#30D158'; // Always use green for work days
-      badgeText = t('calendar.badge_work');
+      iconName = 'briefcase.fill'; // Maleta para trabajo
+      iconColor = '#30D158'; // Verde
       timeText = workDay.startTime || '';
       if (workDay.endTime) {
         timeText = `${workDay.startTime}-${workDay.endTime}`;
@@ -51,24 +51,24 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
         }
       }
     } else if (workDay.type === 'free') {
-      badgeColor = '#3B82F6'; // Blue
-      badgeText = t('calendar.badge_free');
+      iconName = 'house.fill'; // Casa para día libre
+      iconColor = '#3B82F6'; // Azul
     } else if (workDay.type === 'vacation') {
-      badgeColor = '#F59E0B'; // Yellow
-      badgeText = t('calendar.badge_vacation');
+      iconName = 'sun.max.fill'; // Sol para vacaciones
+      iconColor = '#F59E0B'; // Amarillo
     } else if (workDay.type === 'sick') {
-      badgeColor = '#EF4444'; // Red
-      badgeText = t('calendar.badge_sick');
+      iconName = 'cross.circle.fill'; // Cruz para enfermedad
+      iconColor = '#EF4444'; // Rojo
     }
     
-    return { badgeColor, badgeText, timeText };
+    return { iconName, iconColor, timeText };
   };
   
   const isToday = state === 'today';
   const isDisabled = state === 'disabled';
   const workDay = marking?.workDay;
   const job = marking?.job;
-  const badgeStyle = getWorkBadgeStyle(workDay, job);
+  const iconStyle = getDayIcon(workDay, job);
   
   return (
     <TouchableOpacity
@@ -84,55 +84,46 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
     >
       <View
         style={{
-          width: 32,
-          height: 32,
-          borderRadius: 16,
+          width: 36,
+          height: 36,
+          borderRadius: 18,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: isToday ? colors.primary + '20' : 'transparent',
-          borderWidth: isToday ? 2 : 0,
-          borderColor: colors.primary,
-          marginBottom: badgeStyle ? 6 : 0,
+          backgroundColor: 'transparent',
+          borderWidth: 0,
+          borderColor: 'transparent',
+          marginBottom: 2,
         }}
       >
         <Text
           style={{
-            fontSize: 15,
+            fontSize: 16,
             fontWeight: isToday ? '700' : '500',
-            color: isDisabled ? colors.textTertiary : isToday ? colors.primary : colors.text,
+            color: isDisabled ? colors.textTertiary : isToday ? '#007AFF' : colors.text,
           }}
         >
           {date.day}
         </Text>
       </View>
       
-      {badgeStyle && (
-        <View style={{ alignItems: 'center', width: '100%' }}>
+      {iconStyle && iconStyle.iconName && (
+        <View style={{ alignItems: 'center', width: '100%', marginTop: -10 }}>
           <View
             style={{
-              backgroundColor: badgeStyle.badgeColor + '15',
-              paddingHorizontal: 5,
-              paddingVertical: 3,
-              borderRadius: 8,
-              minWidth: 36,
+              width: 20,
+              height: 20,
               alignItems: 'center',
-              marginBottom: 2,
-              borderWidth: 1.5,
-              borderColor: badgeStyle.badgeColor,
+              justifyContent: 'center',
+              marginBottom: 0,
             }}
           >
-            <Text
-              style={{
-                color: badgeStyle.badgeColor,
-                fontSize: 10,
-                fontWeight: '700',
-                letterSpacing: 0.5,
-              }}
-            >
-              {badgeStyle.badgeText}
-            </Text>
+            <IconSymbol
+              name={iconStyle.iconName}
+              size={iconStyle.iconName === 'sun.max.fill' ? 20 : 16}
+              color={iconStyle.iconColor}
+            />
           </View>
-          {badgeStyle.timeText && (
+          {iconStyle.timeText && (
             <Text
               style={{
                 fontSize: 7,
@@ -143,7 +134,7 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
                 lineHeight: 9,
               }}
             >
-              {badgeStyle.timeText}
+              {iconStyle.timeText}
             </Text>
           )}
         </View>
@@ -1483,4 +1474,3 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
     </SafeAreaView>
   );
 }
-

@@ -135,7 +135,16 @@ export default function WorkDayModal({
   const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [hours, setHours] = useState<number>(8);
   const [notes, setNotes] = useState<string>('');
-  const [dayType, setDayType] = useState<'work' | 'free' | 'vacation' | 'sick'>('work');
+  const [dayType, setDayTypeState] = useState<'work' | 'free' | 'vacation' | 'sick'>('work');
+  
+  // Función para cambiar el tipo de día
+  const setDayType = (type: 'work' | 'free' | 'vacation' | 'sick') => {
+    setDayTypeState(type);
+    // Si cambia a trabajo y no hay trabajo seleccionado, seleccionar el primero
+    if (type === 'work' && !selectedJobId && jobs.length > 0) {
+      setSelectedJobId(jobs[0].id);
+    }
+  };
   const [showStatistics, setShowStatistics] = useState(false);
   const [scheduleMode, setScheduleMode] = useState<'job' | 'custom' | 'manual'>('job');
   const [startTime, setStartTime] = useState<string>('09:00');
@@ -316,14 +325,20 @@ export default function WorkDayModal({
   }, [existingWorkDay, jobs, visible, preselectedJobId]);
 
   const handleSave = () => {
-    if (dayType === 'work' && !selectedJobId) {
-      Alert.alert('Error', t('calendar.select_job_error'));
+    // Si es tipo trabajo y no hay trabajo seleccionado, seleccionar el primer trabajo disponible
+    let finalJobId = selectedJobId;
+    if (dayType === 'work' && !selectedJobId && jobs.length > 0) {
+      finalJobId = jobs[0].id;
+    }
+    
+    if (dayType === 'work' && !finalJobId) {
+      // Solo si no hay trabajos disponibles, no guardar
       return;
     }
 
     const workDay: Omit<WorkDay, 'id' | 'createdAt' | 'updatedAt'> = {
       date,
-      jobId: dayType === 'work' ? selectedJobId : undefined,
+      jobId: dayType === 'work' ? finalJobId : undefined,
       hours: dayType === 'work' ? hours : 0,
       notes: notes.trim(),
       overtime: dayType === 'work' && hours > 8,
@@ -445,8 +460,10 @@ export default function WorkDayModal({
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                  {/* Preselected job display - when job is preselected from calendar filter */}
-          {dayType === 'work' && preselectedJobId && (
+          {dayType === 'work' && preselectedJobId && jobs.length > 1 && (
+        
             <View style={styles.section}>
+                          
               <BlurView intensity={95} tint="light" style={styles.singleJobDisplay}>
                 <View style={styles.singleJobContent}>
                   {(() => {
@@ -461,8 +478,10 @@ export default function WorkDayModal({
                   })()}
                 </View>
               </BlurView>
+                        
             </View>
-          )}
+              )}
+
           {/* Day type selector */}
           <View style={styles.section}>
             <BlurView intensity={95} tint="light" style={styles.dayTypeContainer}>
@@ -495,7 +514,21 @@ export default function WorkDayModal({
                     </TouchableOpacity>
                   );
                 })}
+
+
+                        {existingWorkDay && onDelete && (
+              <TouchableOpacity
+                style={styles.dayTypeButton}
+                onPress={handleDelete}
+              >
+         
+                  <IconSymbol size={20} name="trash.fill" color={Theme.colors.error} />
+                  <Text style={styles.dayTypeButtonText}>{t('calendar.delete_workday')}</Text>
+      
+              </TouchableOpacity>
+          )}
               </View>
+              
             </BlurView>
           </View>
 
@@ -904,15 +937,7 @@ export default function WorkDayModal({
 
           {existingWorkDay && onDelete && (
             <View style={styles.section}>
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={handleDelete}
-              >
-                <BlurView intensity={90} tint="light" style={styles.deleteButtonInner}>
-                  <IconSymbol size={20} name="xmark" color={Theme.colors.error} />
-                  <Text style={styles.deleteButtonText}>{t('calendar.delete_workday')}</Text>
-                </BlurView>
-              </TouchableOpacity>
+
             </View>
           )}
         </ScrollView>

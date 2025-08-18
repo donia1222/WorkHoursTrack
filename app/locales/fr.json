@@ -577,6 +577,9 @@
       "enable_schedule": "Activer l'horaire",
       "enable_schedule_desc": "Activer l'horaire de travail et la synchronisation du calendrier pour ce travail",
       "auto_schedule": "Planification automatique",
+      "sync_calendar": "Synchroniser avec le calendrier",
+      "syncing": "Synchronisation...",
+      "sync_success": "Synchronisé !",
       "auto_schedule_desc": "Ajouter automatiquement les jours de travail au calendrier",
       "select_day": "Sélectionner le jour",
       "schedule_for": "Horaire pour"

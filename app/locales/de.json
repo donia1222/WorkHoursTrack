@@ -598,6 +598,9 @@
       "enable_schedule": "Zeitplan aktivieren",
       "enable_schedule_desc": "Arbeitszeiten und Kalendersynchronisation für diesen Job aktivieren",
       "auto_schedule": "Automatische Terminplanung",
+      "sync_calendar": "Mit Kalender synchronisieren",
+      "syncing": "Synchronisiere...",
+      "sync_success": "Synchronisiert!",
       "auto_schedule_desc": "Arbeitstage automatisch zum Kalender hinzufügen",
       "select_day": "Tag auswählen",
       "schedule_for": "Zeitplan für"

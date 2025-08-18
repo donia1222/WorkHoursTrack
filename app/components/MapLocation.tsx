@@ -854,7 +854,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
   },
   miniCalendarTitle: {
     fontSize: isTablet ? 20 : (isSmallScreen ? 14 : 17),
-    fontWeight: '700',
+    fontWeight: '500',
     color: colors.text,
     letterSpacing: -0.5,
   },
@@ -880,6 +880,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     fontSize: dayFontSize,
     fontWeight: '600',
     letterSpacing: -0.2,
+    borderWidth: 1.5,
+    borderColor: isDark ? 'rgba(138, 92, 246, 0.15)' : 'rgba(99, 101, 241, 0.13)',
+    padding: 4,
+    borderRadius: 20,
   },
   miniCalendarDot: {
     position: 'absolute',
@@ -890,10 +894,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
   },
   miniCalendarBadge: {
     position: 'absolute',
-    top: 2,
-    right: 2,
-    width: 8,
-    height: 8,
+
+    bottom: 0,
+
+    width: 5,
+    height: 5,
     borderRadius: 4,
   },
   miniCalendarBadgeText: {
@@ -903,9 +908,9 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
   },
   miniCalendarTitleContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+marginLeft: 10,
     flex: 1,
-    justifyContent: 'center',
+
     gap: 10,
   },
   miniCalendarArrow: {
@@ -928,11 +933,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     opacity: 1,
     letterSpacing: 0.3,
     textTransform: 'uppercase',
+    
+    
   },
   miniCalendarDayToday: {
-    backgroundColor: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(99, 102, 241, 0.15)',
-    borderWidth: 1.5,
-    borderColor: isDark ? 'rgba(139, 92, 246, 0.5)' : 'rgba(99, 102, 241, 0.3)',
+
   },
   miniCalendarTimeText: {
     fontSize: 7,
@@ -944,6 +949,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
     fontWeight: '600',
     paddingHorizontal: 1,
     letterSpacing: -0.3,
+    
   },
   miniCalendarButton: {
     borderRadius: 16,
@@ -2528,7 +2534,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   <View style={styles.miniCalendarHeader}>
           
                     <View style={styles.miniCalendarTitleContainer}>
-                      <IconSymbol size={24} name="calendar" color={colors.secondary} />
+                      <IconSymbol size={21} name="calendar" color={colors.secondary} />
                       <Text style={styles.miniCalendarTitle}>{getMonthName(currentWeekStart)}</Text>
                     </View>
              

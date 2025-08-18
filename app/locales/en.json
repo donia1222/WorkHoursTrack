@@ -729,6 +729,9 @@
       "enable_schedule": "Enable schedule",
       "enable_schedule_desc": "Enable work schedule and calendar sync for this job",
       "auto_schedule": "Auto scheduling",
+      "sync_calendar": "Sync with Calendar",
+      "syncing": "Syncing...",
+      "sync_success": "Synced!",
       "auto_schedule_desc": "Automatically add work days to calendar",
       "select_day": "Select day",
       "schedule_for": "Schedule for"

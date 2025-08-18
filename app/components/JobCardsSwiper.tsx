@@ -164,12 +164,14 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
             <View style={styles.dragHandle} />
              <ScrollView
                 ref={scrollViewRef}
-                horizontal={false}
-                showsVerticalScrollIndicator={false}
+                horizontal={true}
+                showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContainer}
                 style={styles.scrollView}
                 bounces={true}
                 pagingEnabled={true}
+                snapToInterval={screenWidth}
+                decelerationRate="fast"
                 onScroll={(event) => {
                   const contentOffsetX = event.nativeEvent.contentOffset.x;
                   const index = Math.round(contentOffsetX / screenWidth);
@@ -405,7 +407,18 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                               </TouchableOpacity>
                             </View>
                           </View>
-          {/* Dots removed - not needed with vertical scroll */}
+          {/* Dots indicator for horizontal scroll */}
+          <View style={styles.dotsContainer}>
+            {jobs.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.dot,
+                  index === currentIndex && styles.dotActive
+                ]}
+              />
+            ))}
+          </View>
                           {/* Footer - solo mostrar si hay onTimerToggle */}
                           {onTimerToggle && (
                             <View style={styles.footer}>
@@ -558,8 +571,7 @@ const createStyles = (colors: any, isDark: boolean) => {
     backgroundColor: colors.surfaces,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '90%',
-    minHeight: 200,
+    height: 460,
     paddingTop: 8,
     paddingBottom: 20,
     shadowColor: '#000',
@@ -582,19 +594,19 @@ const createStyles = (colors: any, isDark: boolean) => {
     paddingHorizontal: 0,
   },
   scrollView: {
-    maxHeight: '100%',
+    flex: 1,
   },
   fixedContainer: {
     // No height constraint, let it size to content
   },
   scrollContainer: {
-    flexDirection: 'column',
-    paddingBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
   jobContainer: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    
+    justifyContent: 'flex-start',
   },
   jobContent: {
     flex: 1,

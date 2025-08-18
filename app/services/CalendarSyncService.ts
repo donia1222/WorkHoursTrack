@@ -121,8 +121,8 @@ export class CalendarSyncService {
       }
       
       Alert.alert(
-        'Permisos de calendario',
-        'Se necesitan permisos de calendario para sincronizar eventos.',
+        'Permissions',
+        'Error requesting calendar permissions',
         [{ text: 'OK' }]
       );
       return false;
