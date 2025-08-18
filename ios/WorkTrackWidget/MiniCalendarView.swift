@@ -44,6 +44,13 @@ struct MiniCalendarView: View {
         return formatter.string(from: Date())
     }
     
+    private func getDayLabel(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE"
+        formatter.locale = Locale(identifier: "en_US")
+        return String(formatter.string(from: date).prefix(1))
+    }
+    
     // Get weeks grid for month view
     private func getWeeksGrid() -> [[WorkDayInfo?]] {
         guard !isCompact, let firstDay = visibleDays.first else {
@@ -131,14 +138,25 @@ struct MiniCalendarView: View {
             .padding(.horizontal, 4)
             .padding(.vertical, 6)
         } else if isCompact {
-            // Medium widget: 7-9 upcoming days in one row
-            HStack(spacing: daysToShow > 7 ? 3 : 4) {
-                ForEach(visibleDays, id: \.date) { day in
-                    DayView(dayInfo: day, isCompact: isCompact, isMediumWidget: true)
+            // Medium widget: 7 days in a clean, modern layout
+            VStack(spacing: 10) {
+                // Days of week labels
+                HStack(spacing: 4) {
+                    ForEach(visibleDays, id: \.date) { day in
+                        Text(getDayLabel(for: day.date))
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.white.opacity(0.7))
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                
+                // Day numbers with work indicators
+                HStack(spacing: 4) {
+                    ForEach(visibleDays, id: \.date) { day in
+                        MediumDayView(dayInfo: day)
+                    }
                 }
             }
-            .padding(.horizontal, daysToShow > 7 ? 4 : 8)
-            .padding(.vertical, 4)
         } else {
             // Large widget: 28 days in four rows (full month)
             VStack(spacing: 6) {
@@ -293,6 +311,61 @@ struct DayView: View {
         if isMediumWidget { return 9 }
         if isLargeWidget { return 9 }
         return 8
+    }
+}
+
+// MARK: - Medium Day View for better calendar in medium widget
+struct MediumDayView: View {
+    let dayInfo: WorkDayInfo
+    
+    private var dayNumber: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d"
+        return formatter.string(from: dayInfo.date)
+    }
+    
+    private var isToday: Bool {
+        Calendar.current.isDateInToday(dayInfo.date)
+    }
+    
+    private var dayColor: Color {
+        switch dayInfo.type {
+        case .work:
+            if let hexColor = dayInfo.jobColor {
+                return Color(hex: hexColor) ?? Color(red: 0.4, green: 0.7, blue: 1.0)
+            }
+            return Color(red: 0.4, green: 0.7, blue: 1.0)
+        case .vacation:
+            return Color(red: 1.0, green: 0.6, blue: 0.2)
+        case .sick:
+            return Color(red: 0.9, green: 0.3, blue: 0.3)
+        case .free:
+            return Color.white.opacity(0.15)
+        case .scheduled:
+            return Color.white.opacity(0.3)
+        }
+    }
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            // Day number circle - larger
+            ZStack {
+                Circle()
+                    .fill(dayColor)
+                    .frame(width: 36, height: 36)
+                
+                if isToday {
+                    Circle()
+                        .stroke(Color.white, lineWidth: 2.5)
+                        .frame(width: 36, height: 36)
+                }
+                
+                Text(dayNumber)
+                    .font(.system(size: 16, weight: isToday ? .bold : .semibold, design: .rounded))
+                    .foregroundColor(dayInfo.type == .free ? .white.opacity(0.7) : .white)
+            }
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 

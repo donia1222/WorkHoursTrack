@@ -327,71 +327,69 @@ struct WorkTrackMedium: View {
     var body: some View {
         let timer = timerData
         
-        VStack(spacing: 10) {
-            // App name header
-            HStack {
-                if let ui = UIImage(named: "worktrack_icon") {
-                    Image(uiImage: ui)
-                        .resizable().scaledToFit()
-                        .frame(width: 20, height: 20)
-                        .clipShape(RoundedRectangle(cornerRadius: 5))
-                } else {
-                    Image(systemName: "briefcase.fill")
-                        .font(.system(size: 16))
+        VStack(spacing: 8) {
+            // Top section - App header and job info
+            HStack(alignment: .center) {
+                // App icon and name
+                HStack(spacing: 10) {
+                    if let ui = UIImage(named: "worktrack_icon") {
+                        Image(uiImage: ui)
+                            .resizable().scaledToFit()
+                            .frame(width: 26, height: 26)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                    } else {
+                        Image(systemName: "briefcase.fill")
+                            .font(.system(size: 22))
+                    }
+                    Text("VixTime")
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
                 }
-                Text("VixTime")
-                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                .foregroundColor(.white)
+                
                 Spacer()
-            }
-            .foregroundColor(.white.opacity(0.95))
-            
-            // Jobs list
-            VStack(alignment: .leading, spacing: 4) {
-                if entry.jobs.isEmpty {
-                    Text("No jobs synced")
-                        .font(.system(size: 11))
-                        .foregroundColor(.red.opacity(0.8))
-                } else {
-                    ForEach(entry.jobs.prefix(2), id: \.self) { job in
-                        HStack(spacing: 4) {
-                            Circle()
-                                .fill(Color(hex: job.color ?? "#059669") ?? Color.green)
-                                .frame(width: 6, height: 6)
-                            Text(job.name)
-                                .font(.system(size: 10, weight: .medium))
-                            Spacer()
+                
+                // Job status
+                if timer.isActive {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 10, height: 10)
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.white.opacity(0.4), lineWidth: 1.5)
+                            )
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(timer.jobName)
+                                .font(.system(size: 12, weight: .semibold))
+                                .lineLimit(1)
+                            Text(timer.startTime, style: .time)
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .opacity(0.85)
                         }
+                        .foregroundColor(.white)
+                    }
+                } else if let firstJob = entry.jobs.first {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(Color(hex: firstJob.color ?? "#059669") ?? Color.green)
+                            .frame(width: 10, height: 10)
+                        Text(firstJob.name)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.white.opacity(0.9))
+                            .lineLimit(1)
                     }
                 }
             }
-            .foregroundColor(.white.opacity(0.85))
             
-            // Show timer if active, otherwise show calendar
-            if timer.isActive {
-                Spacer(minLength: 4)
-                
-                MediumTimerView(
-                    jobName: timer.jobName,
-                    location: timer.location,
-                    startTime: timer.startTime
-                )
-                
-                Spacer(minLength: 4)
-            } else {
-                Spacer(minLength: 0)
-                
-                // Calendar - Show next 7 days (aligned to left)
-                HStack {
-                    MiniCalendarView(
-                        days: MiniCalendarDataManager.readCalendarData(),
-                        isCompact: true
-                    )
-                    Spacer()
-                }
-            }
+            // Bottom section - Calendar (larger and centered)
+            MiniCalendarView(
+                days: MiniCalendarDataManager.readCalendarData(),
+                isCompact: true,
+                daysCount: 7
+            )
+            .frame(maxHeight: .infinity)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(14)
         .widgetURL(URL(string: "worktrack://"))
         .modifier(BackgroundMod())
     }
