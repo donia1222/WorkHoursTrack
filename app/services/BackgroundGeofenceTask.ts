@@ -29,6 +29,14 @@ interface BackgroundJob {
  */
 TaskManager.defineTask(BACKGROUND_GEOFENCE_TASK, async ({ data, error }) => {
   console.log('🎯 BACKGROUND GEOFENCE TASK EJECUTADA');
+  console.log('📱 Task ejecutada a las:', new Date().toLocaleTimeString());
+  
+  // Log immediate para debugging
+  await AsyncStorage.setItem('@last_geofence_event', JSON.stringify({
+    timestamp: new Date().toISOString(),
+    data: data,
+    error: error
+  }));
   
   if (error) {
     console.error('❌ Error en background geofence task:', error);
@@ -55,8 +63,12 @@ TaskManager.defineTask(BACKGROUND_GEOFENCE_TASK, async ({ data, error }) => {
   console.log(`🎯 BACKGROUND GEOFENCE ${eventTypeString} detectado en background`);
   console.log(`📍 Región: ${region.identifier} a las ${now.toLocaleTimeString()}`);
   console.log(`🔍 Event details:`, { eventType, region });
+  
+  // NO enviar notificación de debug - solo logs
 
   try {
+    // PRIMERO: Procesar acciones pendientes de CUALQUIER trabajo
+    await processPendingActions();
     // Obtener la configuración de trabajos guardada
     const jobsData = await AsyncStorage.getItem('jobs');
     if (!jobsData) {
@@ -106,40 +118,26 @@ async function handleBackgroundEnter(job: any, timestamp: string): Promise<void>
     }
 
     // Verificar delay configurado
-    const delayMinutes = job.autoTimer?.delayStart ?? 2;
+    const delayMinutes = job.autoTimer?.delayStart ?? 0; // Default 0 para pruebas
     
     if (delayMinutes > 0) {
-      // Guardar tiempo de entrada para verificar delay después
-      await AsyncStorage.setItem(`@auto_timer_enter_${job.id}`, timestamp);
+      // Guardar tiempo de entrada y delay para procesar después
+      const pendingStart = {
+        timestamp,
+        delayMinutes,
+        targetTime: new Date(Date.now() + delayMinutes * 60 * 1000).toISOString()
+      };
+      await AsyncStorage.setItem(`@auto_timer_pending_start_${job.id}`, JSON.stringify(pendingStart));
       
-      // Programar notificación para cuando se cumpla el delay
-      await sendBackgroundNotification(
-        '⏱️ AutoTimer Programado',
-        `Timer se iniciará para ${job.name} en ${delayMinutes} minutos`,
-        { jobId: job.id, action: 'scheduled_start' }
-      );
+      // NO notificar cuando se programa - solo cuando realmente inicie
+      console.log(`⏱️ Timer programado para iniciar en ${delayMinutes} minutos`);
       
-      // Programar el inicio real después del delay
-      setTimeout(async () => {
-        // Verificar que no haya sesión activa antes de iniciar
-        const currentSession = await JobService.getActiveSession();
-        if (!currentSession) {
-          const sessionForStorage = {
-            jobId: job.id,
-            startTime: new Date().toISOString(),
-            notes: 'Auto-started (Background)',
-          };
-          await JobService.saveActiveSession(sessionForStorage);
-          
-          await sendBackgroundNotification(
-            '✅ Timer Iniciado',
-            `Timer iniciado automáticamente en ${job.name}`,
-            { jobId: job.id, action: 'started' }
-          );
-        }
-      }, delayMinutes * 60 * 1000);
+      // NO usar setTimeout - el timer se iniciará cuando la app vuelva a foreground
+      // o cuando se procese el siguiente evento de geofencing
     } else {
       // Iniciar inmediatamente si no hay delay
+      console.log(`🔴 INICIANDO TIMER INMEDIATAMENTE para ${job.name}`);
+      
       const sessionForStorage = {
         jobId: job.id,
         startTime: timestamp,
@@ -147,13 +145,16 @@ async function handleBackgroundEnter(job: any, timestamp: string): Promise<void>
       };
 
       await JobService.saveActiveSession(sessionForStorage);
-      console.log(`✅ Sesión iniciada desde background para ${job.name} a las ${new Date(timestamp).toLocaleTimeString()}`);
+      console.log(`✅ Sesión guardada en storage para ${job.name}`);
 
-      await sendBackgroundNotification(
+      // Enviar UNA sola notificación cuando realmente inicia
+      await sendBackgroundNotificationForced(
         '✅ Timer Iniciado',
         `Timer iniciado automáticamente en ${job.name}`,
         { jobId: job.id, action: 'started' }
       );
+      
+      console.log(`🔔 Notificación de inicio enviada para ${job.name}`);
     }
 
     // Guardar evento en historial
@@ -187,48 +188,19 @@ async function handleBackgroundExit(job: any, timestamp: string): Promise<void> 
     const delayMinutes = job.autoTimer?.delayStop ?? 2;
     
     if (delayMinutes > 0) {
-      // Guardar tiempo de salida para verificar delay después
-      await AsyncStorage.setItem(`@auto_timer_exit_${job.id}`, timestamp);
+      // Guardar tiempo de salida y delay para procesar después
+      const pendingStop = {
+        timestamp,
+        delayMinutes,
+        targetTime: new Date(Date.now() + delayMinutes * 60 * 1000).toISOString()
+      };
+      await AsyncStorage.setItem(`@auto_timer_pending_stop_${job.id}`, JSON.stringify(pendingStop));
       
-      // Programar notificación
-      await sendBackgroundNotification(
-        '⏱️ AutoTimer Programado',
-        `Timer se detendrá para ${job.name} en ${delayMinutes} minutos`,
-        { jobId: job.id, action: 'scheduled_stop' }
-      );
+      // NO notificar cuando se programa - solo cuando realmente pare
+      console.log(`⏱️ Timer programado para detenerse en ${delayMinutes} minutos`);
       
-      // Programar la parada real después del delay
-      setTimeout(async () => {
-        // Verificar que la sesión siga activa antes de parar
-        const currentSession = await JobService.getActiveSession();
-        if (currentSession && currentSession.jobId === job.id) {
-          // Calcular tiempo trabajado
-          const startTime = new Date(currentSession.startTime);
-          const endTime = new Date();
-          const elapsedMs = endTime.getTime() - startTime.getTime();
-          const elapsedHours = Math.max(0.01, parseFloat((elapsedMs / (1000 * 60 * 60)).toFixed(2)));
-
-          // Crear registro de día laboral
-          const today = endTime.toISOString().split('T')[0];
-          const workDay = {
-            date: today,
-            jobId: job.id,
-            hours: elapsedHours,
-            notes: currentSession.notes || 'Auto-stopped (Background)',
-            overtime: elapsedHours > 8,
-            type: 'work' as const,
-          };
-
-          await JobService.addWorkDay(workDay);
-          await JobService.clearActiveSession();
-          
-          await sendBackgroundNotification(
-            '⏹️ Timer Detenido',
-            `Timer detenido para ${job.name}: ${elapsedHours.toFixed(2)}h registradas`,
-            { jobId: job.id, action: 'stopped', hours: elapsedHours }
-          );
-        }
-      }, delayMinutes * 60 * 1000);
+      // NO usar setTimeout - el timer se parará cuando la app vuelva a foreground
+      // o cuando se procese el siguiente evento de geofencing
     } else {
       // Parar inmediatamente si no hay delay
       const startTime = new Date(activeSession.startTime);
@@ -269,6 +241,28 @@ async function handleBackgroundExit(job: any, timestamp: string): Promise<void> 
  */
 async function sendBackgroundNotification(title: string, body: string, data: any): Promise<void> {
   try {
+    // Check if this notification was recently sent
+    const recentNotificationsKey = '@recent_background_notifications';
+    const recentData = await AsyncStorage.getItem(recentNotificationsKey);
+    const recentNotifications = recentData ? JSON.parse(recentData) : [];
+    
+    // Create unique notification ID
+    const notificationId = `${data.action}_${data.jobId}_${Date.now()}`;
+    const now = Date.now();
+    
+    // Check if similar notification was sent in last 5 seconds
+    const similarRecent = recentNotifications.find((n: any) => 
+      n.action === data.action && 
+      n.jobId === data.jobId && 
+      (now - n.timestamp) < 5000
+    );
+    
+    if (similarRecent) {
+      console.log(`⚠️ Similar notification recently sent, skipping: ${title}`);
+      return;
+    }
+    
+    // Send notification
     await Notifications.scheduleNotificationAsync({
       content: {
         title,
@@ -279,9 +273,64 @@ async function sendBackgroundNotification(title: string, body: string, data: any
       },
       trigger: null, // Inmediatamente
     });
+    
     console.log(`🔔 Notificación enviada: ${title}`);
+    
+    // Save to recent notifications
+    recentNotifications.push({
+      id: notificationId,
+      action: data.action,
+      jobId: data.jobId,
+      timestamp: now
+    });
+    
+    // Keep only notifications from last 30 seconds
+    const filtered = recentNotifications.filter((n: any) => 
+      (now - n.timestamp) < 30000
+    );
+    
+    await AsyncStorage.setItem(recentNotificationsKey, JSON.stringify(filtered));
   } catch (error) {
     console.error('❌ Error enviando notificación:', error);
+  }
+}
+
+/**
+ * Enviar notificación forzada sin deduplicación (para eventos críticos)
+ */
+async function sendBackgroundNotificationForced(title: string, body: string, data: any): Promise<void> {
+  try {
+    console.log(`🔴 FORZANDO envío de notificación: ${title}`);
+    
+    // Send notification immediately without any checks
+    const notificationId = await Notifications.scheduleNotificationAsync({
+      content: {
+        title,
+        body,
+        data,
+        sound: true,
+        priority: Notifications.AndroidNotificationPriority.MAX,
+        categoryIdentifier: 'timer_actions',
+      },
+      trigger: null, // Inmediatamente
+    });
+    
+    console.log(`✅ Notificación forzada enviada con ID: ${notificationId}`);
+  } catch (error) {
+    console.error('❌ Error enviando notificación forzada:', error);
+    // Try alternative method
+    try {
+      console.log('🔄 Intentando método alternativo de notificación...');
+      await Notifications.presentNotificationAsync({
+        title,
+        body,
+        data,
+        sound: true,
+      });
+      console.log('✅ Notificación enviada con método alternativo');
+    } catch (altError) {
+      console.error('❌ Error con método alternativo:', altError);
+    }
   }
 }
 
@@ -320,7 +369,17 @@ export async function startBackgroundGeofencing(jobs: any[]): Promise<boolean> {
   try {
     console.log('🚀 Iniciando background geofencing...');
 
-    // Verificar permisos
+    // Verificar permisos de notificaciones primero
+    const notificationStatus = await Notifications.getPermissionsAsync();
+    if (!notificationStatus.granted) {
+      console.log('📱 Solicitando permisos de notificaciones...');
+      const { granted } = await Notifications.requestPermissionsAsync();
+      if (!granted) {
+        console.error('❌ Permisos de notificaciones no otorgados');
+      }
+    }
+
+    // Verificar permisos de ubicación
     const { status } = await Location.requestBackgroundPermissionsAsync();
     if (status !== 'granted') {
       console.error('❌ Permisos de ubicación en background no otorgados');
@@ -365,10 +424,31 @@ export async function startBackgroundGeofencing(jobs: any[]): Promise<boolean> {
       console.log(`  - ${job?.name}: radio base ${baseRadius}m → efectivo ${region.radius}m (+15% margen)`);
     });
 
+    // Verificar si la tarea está definida
+    const isTaskDefined = TaskManager.isTaskDefined(BACKGROUND_GEOFENCE_TASK);
+    if (!isTaskDefined) {
+      console.error('❌ La tarea de geofencing no está definida');
+      return false;
+    }
+    
+    console.log('✅ Tarea de geofencing verificada y definida');
+    
+    // Detener cualquier geofencing previo
+    try {
+      await Location.stopGeofencingAsync(BACKGROUND_GEOFENCE_TASK);
+      console.log('🛑 Geofencing previo detenido');
+    } catch (e) {
+      // Ignorar si no había geofencing previo
+    }
+    
     // Iniciar monitoreo
     await Location.startGeofencingAsync(BACKGROUND_GEOFENCE_TASK, regions);
     
     console.log('✅ Background geofencing iniciado exitosamente');
+    
+    // NO enviar notificación de confirmación al activar - es molesto
+    console.log(`🌍 Monitoreando ${regions.length} ubicación(es) de trabajo`);
+    
     return true;
 
   } catch (error) {
@@ -394,6 +474,132 @@ export async function stopBackgroundGeofencing(): Promise<void> {
  */
 export function isTaskRegistered(): boolean {
   return TaskManager.isTaskDefined(BACKGROUND_GEOFENCE_TASK);
+}
+
+/**
+ * Procesar acciones pendientes que ya deberían haberse ejecutado
+ */
+async function processPendingActions(): Promise<void> {
+  try {
+    const now = new Date();
+    
+    // Buscar acciones pendientes de inicio
+    const keys = await AsyncStorage.getAllKeys();
+    const pendingKeys = keys.filter(key => 
+      key.startsWith('@auto_timer_pending_start_') || 
+      key.startsWith('@auto_timer_pending_stop_')
+    );
+    
+    // Track processed notifications to avoid duplicates
+    const processedNotifications = new Set<string>();
+    
+    for (const key of pendingKeys) {
+      const pendingData = await AsyncStorage.getItem(key);
+      if (!pendingData) continue;
+      
+      const pending = JSON.parse(pendingData);
+      const targetTime = new Date(pending.targetTime);
+      
+      // Si ya pasó el tiempo objetivo, ejecutar la acción
+      if (now >= targetTime) {
+        const jobId = key.split('_').pop();
+        const notificationKey = `${key.includes('pending_start') ? 'start' : 'stop'}_${jobId}_${pending.timestamp}`;
+        
+        // Skip if we already processed this notification
+        if (processedNotifications.has(notificationKey)) {
+          console.log(`⚠️ Notification ${notificationKey} already processed, skipping`);
+          await AsyncStorage.removeItem(key);
+          continue;
+        }
+        
+        if (key.includes('pending_start')) {
+          console.log('⏰ Ejecutando inicio pendiente desde background');
+          // Iniciar timer
+          const activeSession = await JobService.getActiveSession();
+          if (!activeSession) {
+            const sessionForStorage = {
+              jobId: jobId,
+              startTime: now.toISOString(),
+              notes: 'Auto-started (Background)',
+            };
+            await JobService.saveActiveSession(sessionForStorage);
+            
+            // Obtener nombre del trabajo
+            const jobsData = await AsyncStorage.getItem('jobs');
+            const jobs = jobsData ? JSON.parse(jobsData) : [];
+            const job = jobs.find((j: any) => j.id === jobId);
+            
+            // Mark as processed before sending notification
+            processedNotifications.add(notificationKey);
+            
+            // Enviar notificación cuando el timer realmente inicia después del delay
+            await sendBackgroundNotificationForced(
+              '✅ Timer Iniciado',
+              `Timer iniciado automáticamente en ${job?.name || 'trabajo'}`,
+              { jobId, action: 'started', timestamp: pending.timestamp }
+            );
+          } else {
+            console.log(`⚠️ Session already active, skipping pending start for job ${jobId}`);
+          }
+        } else if (key.includes('pending_stop')) {
+          console.log('⏰ Ejecutando parada pendiente desde background');
+          // Parar timer
+          const activeSession = await JobService.getActiveSession();
+          if (activeSession && activeSession.jobId === jobId) {
+            const startTime = new Date(activeSession.startTime);
+            const elapsedMs = now.getTime() - startTime.getTime();
+            const elapsedHours = Math.max(0.01, parseFloat((elapsedMs / (1000 * 60 * 60)).toFixed(2)));
+            
+            const today = now.toISOString().split('T')[0];
+            const workDay = {
+              date: today,
+              jobId: jobId as string,
+              hours: elapsedHours,
+              notes: activeSession.notes || 'Auto-stopped (Background)',
+              overtime: elapsedHours > 8,
+              type: 'work' as const,
+            };
+            
+            await JobService.addWorkDay(workDay);
+            await JobService.clearActiveSession();
+            
+            // Obtener nombre del trabajo
+            const jobsData = await AsyncStorage.getItem('jobs');
+            const jobs = jobsData ? JSON.parse(jobsData) : [];
+            const job = jobs.find((j: any) => j.id === jobId);
+            
+            // Mark as processed before sending notification
+            processedNotifications.add(notificationKey);
+            
+            // Enviar notificación cuando el timer realmente para después del delay
+            await sendBackgroundNotificationForced(
+              '⏹️ Timer Detenido',
+              `Timer detenido para ${job?.name || 'trabajo'}: ${elapsedHours.toFixed(2)}h registradas`,
+              { jobId, action: 'stopped', hours: elapsedHours, timestamp: pending.timestamp }
+            );
+          } else {
+            console.log(`⚠️ No active session for job ${jobId}, skipping pending stop`);
+          }
+        }
+        
+        // Limpiar la acción pendiente
+        await AsyncStorage.removeItem(key);
+      }
+    }
+    
+    // Save processed notifications for deduplication
+    if (processedNotifications.size > 0) {
+      const existingProcessed = await AsyncStorage.getItem('@processed_notifications');
+      const existing = existingProcessed ? JSON.parse(existingProcessed) : [];
+      const allProcessed = [...existing, ...Array.from(processedNotifications)];
+      
+      // Keep only last 100 processed notifications
+      const trimmed = allProcessed.slice(-100);
+      await AsyncStorage.setItem('@processed_notifications', JSON.stringify(trimmed));
+    }
+  } catch (error) {
+    console.error('❌ Error procesando acciones pendientes:', error);
+  }
 }
 
 /**

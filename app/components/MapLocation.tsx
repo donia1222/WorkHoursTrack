@@ -1198,6 +1198,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
     isIPadPortrait
   });
   
+
+  
   // Animation values for modal
   const modalScale = useSharedValue(0);
   const modalOpacity = useSharedValue(0);

@@ -21,7 +21,6 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import * as Updates from 'expo-updates';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -86,6 +85,23 @@ export default function SubscriptionScreen() {
   });
 
   const handlePurchase = async (packageToPurchase: any) => {
+    // Validar que el paquete tiene la información necesaria
+    if (!packageToPurchase?.product?.identifier) {
+      console.error('❌ Paquete inválido:', packageToPurchase);
+      Alert.alert(
+        t('subscription.error.title') || 'Error',
+        'Producto no disponible. Por favor intenta más tarde.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+    
+    console.log('📝 Iniciando compra del producto:', {
+      identifier: packageToPurchase.product.identifier,
+      price: packageToPurchase.product.priceString,
+      title: packageToPurchase.product.title,
+    });
+    
     setPurchasing(true);
     const result = await purchaseSubscription(packageToPurchase);
     setPurchasing(false);
@@ -100,16 +116,7 @@ export default function SubscriptionScreen() {
         [
           {
             text: t('subscription.buttons.continue'),
-            onPress: async () => {
-              navigateTo('mapa');
-              // Reload the app after successful purchase
-              try {
-                await Updates.reloadAsync();
-              } catch (error) {
-                console.log('Could not reload app:', error);
-                // Silently fail if reload is not available (e.g., in development)
-              }
-            },
+            onPress: () => navigateTo('mapa'),
           },
         ]
       );
@@ -540,9 +547,16 @@ Please describe your issue below:
 
 
         {/* Subscription Packages */}
-        {offerings && offerings.availablePackages.length > 0 && (
+        {offerings && offerings.availablePackages.length > 0 ? (
           <View style={styles.packagesContainer}>
-            {offerings.availablePackages.map((pkg, index) => (
+            {offerings.availablePackages.map((pkg, index) => {
+              // Validar el paquete antes de renderizar
+              if (!pkg?.product?.identifier) {
+                console.warn('⚠️ Paquete sin identificador:', pkg);
+                return null;
+              }
+              
+              return (
               <TouchableOpacity
                 key={index}
                 style={styles.packageCard}
@@ -584,8 +598,26 @@ Please describe your issue below:
                   </View>
                 </BlurView>
               </TouchableOpacity>
-            ))}
-                    {/* Cancellation Info */}
+              );
+            })}
+          </View>
+        ) : (
+          <View style={styles.noProductsContainer}>
+            <Text style={[styles.noProductsText, { color: colors.textSecondary }]}>
+              {isLoading ? 'Cargando productos...' : 'No hay productos disponibles en este momento'}
+            </Text>
+            {!isLoading && (
+              <TouchableOpacity
+                style={[styles.retryButton, { backgroundColor: colors.primary }]}
+                onPress={() => checkSubscriptionStatus()}
+              >
+                <Text style={styles.retryButtonText}>Reintentar</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+        
+        {/* Cancellation Info */}
         <BlurView intensity={85} tint={isDark ? "dark" : "light"} style={styles.cancellationContainer}>
           <LinearGradient
             colors={isDark 
@@ -605,8 +637,6 @@ Please describe your issue below:
             </Text>
           </View>
         </BlurView>
-          </View>
-        )}
 
         {/* Action Buttons */}
         <View style={styles.actionButtonsContainer}>
@@ -675,37 +705,37 @@ Please describe your issue below:
           </TouchableOpacity>
         </View>
 
-          {purchasing && (
+        {purchasing && (
             <View style={[styles.purchasingOverlay, { backgroundColor: colors.background + 'E6' }]}>
               <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.purchasingCard}>
                 <ActivityIndicator size="large" color={colors.primary} />
                 <Text style={[styles.purchasingText, { color: colors.text }]}>{t('subscription.processing')}</Text>
               </BlurView>
             </View>
-          )}
-        </Animated.View>
-      </ScrollView>
+        )}
+      </Animated.View>
+    </ScrollView>
 
-      {/* Privacy Policy Modal */}
-      <Modal
+    {/* Privacy Policy Modal */}
+    <Modal
         visible={showPrivacyPolicy}
         animationType="slide"
         presentationStyle="formSheet"
         onRequestClose={() => setShowPrivacyPolicy(false)}
       >
         <PrivacyPolicyScreen onClose={() => setShowPrivacyPolicy(false)} />
-      </Modal>
-      
-      {/* Terms of Service Modal */}
-      <Modal
+    </Modal>
+    
+    {/* Terms of Service Modal */}
+    <Modal
         visible={showTermsOfService}
         animationType="slide"
         presentationStyle="formSheet"
         onRequestClose={() => setShowTermsOfService(false)}
       >
         <TermsOfServiceScreen onClose={() => setShowTermsOfService(false)} />
-      </Modal>
-    </SafeAreaView>
+    </Modal>
+  </SafeAreaView>
   );
 }
 
@@ -1341,6 +1371,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
+  },
+  noProductsContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 20,
+  },
+  noProductsText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  retryButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   packageCardInner: {
     borderRadius: 20,

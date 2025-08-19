@@ -44,9 +44,15 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       try {
         const customerInfoUpdateListener = (info: CustomerInfo) => {
           console.log('🔔 CustomerInfo actualizado automáticamente');
-          // Verificar el entitlement 'premium'
-          const isSubscribed = !!info?.entitlements?.active?.['premium'] || 
-                               Object.keys(info?.activeSubscriptions || {}).length > 0;
+          
+          // Verificación mejorada de suscripción
+          const hasActiveSubscriptions = info?.activeSubscriptions && 
+                                        Object.keys(info.activeSubscriptions).length > 0;
+          const hasPremiumEntitlement = !!info?.entitlements?.active?.['premium'];
+          const hasAnyEntitlement = info?.entitlements?.active && 
+                                    Object.keys(info.entitlements.active).length > 0;
+          
+          const isSubscribed = hasActiveSubscriptions || hasPremiumEntitlement || hasAnyEntitlement;
           
           setState(prev => ({
             ...prev,
@@ -83,6 +89,10 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
       console.log('🚀 Inicializando RevenueCat...');
       
+      // Detectar si estamos en sandbox o producción
+      const isTestEnvironment = __DEV__ || process.env.NODE_ENV === 'development';
+      console.log(`🏗️ Entorno: ${isTestEnvironment ? 'SANDBOX/TEST' : 'PRODUCCIÓN'}`);
+      
       // Recuperar o generar un User ID persistente
       let appUserId = await AsyncStorage.getItem('revenueCatUserId');
       
@@ -95,10 +105,18 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         console.log('🆔 User ID recuperado:', appUserId);
       }
       
+      // Configurar RevenueCat con opciones adicionales para debugging
       Purchases.configure({
         apiKey: 'appl_QZiBEvsooXdbhkjQuKjzDQKEEIf',
-        appUserID: appUserId, // Usar ID persistente en lugar de undefined
+        appUserID: appUserId,
+        useAmazon: false, // Explícitamente usar App Store
       });
+      
+      // Configurar modo debug en desarrollo
+      if (isTestEnvironment) {
+        await Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+        console.log('🐛 Modo debug activado para RevenueCat');
+      }
 
       setState(prev => ({ ...prev, isInitialized: true }));
       console.log('✅ RevenueCat inicializado correctamente con User ID:', appUserId);
@@ -129,6 +147,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         hasActiveSubscriptions: !!customerInfo.activeSubscriptions,
         hasNonSubscriptions: !!customerInfo.nonSubscriptionTransactions,
       });
+      
+      // Debug completo del customerInfo
+      console.log('🔍 CustomerInfo completo:', JSON.stringify(customerInfo, null, 2));
 
       // Verificar entitlements activos de forma más segura
       let activeEntitlements = {};
@@ -173,17 +194,25 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       let isSubscribed = false;
       
       try {
-        // Verificar si tiene el entitlement 'premium'
-        isSubscribed = !!customerInfo?.entitlements?.active?.['premium'];
+        // Primero verificar suscripciones activas (más confiable en sandbox)
+        const hasActiveSubscriptions = customerInfo?.activeSubscriptions && 
+                                      Object.keys(customerInfo.activeSubscriptions).length > 0;
         
-        // Opción de respaldo: verificar también suscripciones activas
-        if (!isSubscribed && customerInfo?.activeSubscriptions) {
-          const hasActiveSubscriptions = Object.keys(customerInfo.activeSubscriptions).length > 0;
-          isSubscribed = hasActiveSubscriptions;
-          console.log(`🔍 Verificación por suscripciones (respaldo): ${hasActiveSubscriptions}`);
-        }
+        // Luego verificar el entitlement 'premium' si está configurado
+        const hasPremiumEntitlement = !!customerInfo?.entitlements?.active?.['premium'];
         
-        console.log(`🔍 Verificación: Entitlement 'premium'=${!!customerInfo?.entitlements?.active?.['premium']}, Estado final=${isSubscribed}`);
+        // También verificar si hay algún entitlement activo
+        const hasAnyEntitlement = customerInfo?.entitlements?.active && 
+                                  Object.keys(customerInfo.entitlements.active).length > 0;
+        
+        // La suscripción es válida si tiene cualquiera de estas condiciones
+        isSubscribed = hasActiveSubscriptions || hasPremiumEntitlement || hasAnyEntitlement;
+        
+        console.log(`🔍 Verificación de suscripción:`);
+        console.log(`  - Suscripciones activas: ${hasActiveSubscriptions}`);
+        console.log(`  - Entitlement 'premium': ${hasPremiumEntitlement}`);
+        console.log(`  - Cualquier entitlement: ${hasAnyEntitlement}`);
+        console.log(`  - Estado final: ${isSubscribed ? '✅ SUSCRITO' : '❌ NO SUSCRITO'}`);
       } catch (error) {
         console.error('❌ Error en verificación final:', error);
         isSubscribed = false;
@@ -227,15 +256,26 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     }
   };
 
-  const purchaseSubscription = async (packageToPurchase: any) => {
+  const purchaseSubscription = async (packageToPurchase: any, retryCount = 0) => {
     try {
       setState(prev => ({ ...prev, isLoading: true }));
       console.log('💳 Iniciando compra...');
+      console.log('📦 Detalles del paquete:', {
+        identifier: packageToPurchase?.identifier,
+        productIdentifier: packageToPurchase?.product?.identifier,
+        price: packageToPurchase?.product?.priceString,
+      });
       
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
-      // Verificar el entitlement 'premium'
-      const isSubscribed = !!customerInfo?.entitlements?.active?.['premium'] || 
-                           Object.keys(customerInfo?.activeSubscriptions || {}).length > 0;
+      
+      // Verificación mejorada de suscripción
+      const hasActiveSubscriptions = customerInfo?.activeSubscriptions && 
+                                    Object.keys(customerInfo.activeSubscriptions).length > 0;
+      const hasPremiumEntitlement = !!customerInfo?.entitlements?.active?.['premium'];
+      const hasAnyEntitlement = customerInfo?.entitlements?.active && 
+                                Object.keys(customerInfo.entitlements.active).length > 0;
+      
+      const isSubscribed = hasActiveSubscriptions || hasPremiumEntitlement || hasAnyEntitlement;
       
       setState(prev => ({
         ...prev,
@@ -251,13 +291,51 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     } catch (error: any) {
       setState(prev => ({ ...prev, isLoading: false }));
       
+      // Manejo detallado de errores
+      const errorCode = error?.code || error?.userInfo?.readable_error_code;
+      console.error('❌ Error en compra:', {
+        message: error.message,
+        code: errorCode,
+        userInfo: error.userInfo,
+      });
+      
       if (error.userCancelled) {
         console.log('🚫 Compra cancelada por el usuario');
-        return { success: false, error: 'User cancelled' };
+        return { success: false, error: 'Compra cancelada' };
       }
       
-      console.error('❌ Error en compra:', error);
-      return { success: false, error: error.message };
+      // Errores específicos de StoreKit
+      if (errorCode === 'STORE_PROBLEM' || error.message?.includes('App Store')) {
+        console.log('🏪 Problema con App Store detectado');
+        
+        // Retry logic para errores temporales
+        if (retryCount < 2) {
+          console.log(`🔄 Reintentando compra (intento ${retryCount + 1}/2)...`);
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Esperar 2 segundos
+          return purchaseSubscription(packageToPurchase, retryCount + 1);
+        }
+        
+        return { 
+          success: false, 
+          error: 'Error de App Store. Por favor verifica tu cuenta de sandbox o intenta más tarde.' 
+        };
+      }
+      
+      if (errorCode === 'PRODUCT_NOT_AVAILABLE') {
+        return { 
+          success: false, 
+          error: 'Producto no disponible. Verifica la configuración en App Store Connect.' 
+        };
+      }
+      
+      if (errorCode === 'NETWORK_ERROR') {
+        return { 
+          success: false, 
+          error: 'Error de conexión. Verifica tu conexión a internet.' 
+        };
+      }
+      
+      return { success: false, error: error.message || 'Error desconocido' };
     }
   };
 
@@ -279,9 +357,15 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         // Actualizar el User ID guardado si cambió
         await AsyncStorage.setItem('revenueCatUserId', newUserId);
       }
-      // Verificar el entitlement 'premium'
-      const isSubscribed = !!customerInfo?.entitlements?.active?.['premium'] || 
-                           Object.keys(customerInfo?.activeSubscriptions || {}).length > 0;
+      
+      // Verificación mejorada de suscripción
+      const hasActiveSubscriptions = customerInfo?.activeSubscriptions && 
+                                    Object.keys(customerInfo.activeSubscriptions).length > 0;
+      const hasPremiumEntitlement = !!customerInfo?.entitlements?.active?.['premium'];
+      const hasAnyEntitlement = customerInfo?.entitlements?.active && 
+                                Object.keys(customerInfo.entitlements.active).length > 0;
+      
+      const isSubscribed = hasActiveSubscriptions || hasPremiumEntitlement || hasAnyEntitlement;
       
       setState(prev => ({
         ...prev,

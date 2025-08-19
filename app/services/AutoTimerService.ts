@@ -407,12 +407,8 @@ class AutoTimerService {
         }, delaySeconds * 1000)
       };
       
-      // Send notification about scheduled start
-      await NotificationService.sendNotification(
-        'Auto-Timer Scheduled',
-        `Timer will start for ${job.name} in ${delayMinutes} minutes`,
-        { jobId: job.id, action: 'scheduled_start' }
-      );
+      // NO enviar notificación cuando se programa - solo cuando realmente inicie
+      console.log(`⏱️ Timer programado para iniciar en ${delayMinutes} minutos`);
     } else {
       // Start immediately if delay is 0
       console.log(`🚀 Starting timer immediately for ${job.name} (no delay configured)`);
@@ -464,12 +460,8 @@ class AutoTimerService {
         }, delaySeconds * 1000)
       };
       
-      // Send notification about scheduled stop
-      await NotificationService.sendNotification(
-        'Auto-Timer Scheduled',
-        `Timer will stop for ${job.name} in ${delayMinutes} minutes`,
-        { jobId: job.id, action: 'scheduled_stop' }
-      );
+      // NO enviar notificación cuando se programa - solo cuando realmente pare
+      console.log(`⏱️ Timer programado para detenerse en ${delayMinutes} minutos`);
     } else {
       // Stop immediately if delay is 0
       console.log(`🛑 Stopping timer immediately for ${job.name} (no delay configured)`);
@@ -602,17 +594,8 @@ class AutoTimerService {
             console.log('Live Activity could not be stopped - app might be closed');
           }
           
-          // Notificación simple para el usuario
-          const Notifications = require('expo-notifications');
-          await Notifications.scheduleNotificationAsync({
-            identifier: 'timer_stopped_' + Date.now(),
-            content: {
-              title: '⏹️ Timer Detenido',
-              body: `Timer detenido para "${job.name}"`,
-              sound: 'default',
-            },
-            trigger: null,
-          });
+          // Notificación ya enviada por notificationService más abajo
+          console.log('📱 Live Activity terminado');
         }
         
         // Enviar notificación normal
@@ -1248,7 +1231,69 @@ class AutoTimerService {
    */
   async checkPendingActions(): Promise<void> {
     try {
-      // First, check if there's a current delayed action that needs adjustment
+      const now = new Date();
+      
+      // First, check background pending actions
+      const keys = await AsyncStorage.getAllKeys();
+      const pendingKeys = keys.filter(key => 
+        key.startsWith('@auto_timer_pending_start_') || 
+        key.startsWith('@auto_timer_pending_stop_')
+      );
+      
+      // Track which actions we've processed to avoid duplicates
+      const processedActions = new Set<string>();
+      
+      for (const key of pendingKeys) {
+        const pendingData = await AsyncStorage.getItem(key);
+        if (!pendingData) continue;
+        
+        const pending = JSON.parse(pendingData);
+        const targetTime = new Date(pending.targetTime);
+        const jobId = key.split('_').pop();
+        
+        // Si ya pasó el tiempo objetivo, ejecutar la acción
+        if (now >= targetTime) {
+          console.log(`⏰ Processing pending action from background for job ${jobId}`);
+          
+          // Create action identifier to avoid duplicates
+          const actionId = `${key.includes('pending_start') ? 'start' : 'stop'}_${jobId}`;
+          if (processedActions.has(actionId)) {
+            console.log(`⚠️ Action ${actionId} already processed, skipping`);
+            await AsyncStorage.removeItem(key);
+            continue;
+          }
+          
+          const job = this.jobs.find(j => j.id === jobId);
+          if (job) {
+            if (key.includes('pending_start')) {
+              // Check if not already started
+              const activeSession = await JobService.getActiveSession();
+              if (!activeSession) {
+                console.log(`🚀 Starting timer from pending action for ${job.name}`);
+                await this.startAutoTimer(job);
+                processedActions.add(actionId);
+              } else {
+                console.log(`⚠️ Session already active, skipping pending start`);
+              }
+            } else if (key.includes('pending_stop')) {
+              // Check if still active
+              const activeSession = await JobService.getActiveSession();
+              if (activeSession && activeSession.jobId === jobId) {
+                console.log(`🛑 Stopping timer from pending action for ${job.name}`);
+                await this.stopAutoTimer(job);
+                processedActions.add(actionId);
+              } else {
+                console.log(`⚠️ No active session for job ${jobId}, skipping pending stop`);
+              }
+            }
+          }
+          
+          // Clean up
+          await AsyncStorage.removeItem(key);
+        }
+      }
+      
+      // Then check if there's a current delayed action that needs adjustment
       if (this.currentDelayedAction) {
         const elapsed = (Date.now() - this.currentDelayedAction.startTime.getTime()) / 1000;
         const remainingTime = this.currentDelayedAction.delaySeconds - elapsed;
@@ -1270,39 +1315,6 @@ class AutoTimerService {
           // Restart the interval to ensure countdown updates properly
           console.log(`🔄 Restarting status update interval with ${Math.ceil(remainingTime)}s remaining`);
           this.startStatusUpdateInterval();
-        }
-      }
-      
-      // Get all stored keys
-      const keys = await AsyncStorage.getAllKeys();
-      const pendingKeys = keys.filter(key => key.startsWith('@auto_timer_pending_'));
-      
-      for (const key of pendingKeys) {
-        const pendingAction = await AsyncStorage.getItem(key);
-        if (pendingAction) {
-          const action = JSON.parse(pendingAction);
-          const targetTime = new Date(action.targetTime);
-          const now = new Date();
-          
-          // Check if the action should have been executed
-          if (now >= targetTime) {
-            console.log(`⏰ Found expired pending action for job ${action.jobId}, executing now`);
-            
-            const job = this.jobs.find(j => j.id === action.jobId);
-            if (job) {
-              // Execute the pending action based on the action type
-              if (action.action === 'start' && (this.currentState === 'entering' || this.currentState === 'inactive')) {
-                console.log(`⏰ Executing pending start action for ${job.name}`);
-                await this.startAutoTimer(job);
-              } else if (action.action === 'stop' && this.currentState === 'leaving') {
-                console.log(`⏰ Executing pending stop action for ${job.name}`);
-                await this.stopAutoTimer(job);
-              }
-            }
-            
-            // Clean up
-            await AsyncStorage.removeItem(key);
-          }
         }
       }
     } catch (error) {

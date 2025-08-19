@@ -250,15 +250,7 @@ export default function JobSelectorModal({
           </View>
 
           <View style={styles.content}>
-          <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.infoCard}>
-            <LinearGradient
-              colors={isDark ? ['rgba(0, 122, 255, 0.12)', 'rgba(0, 122, 255, 0.04)'] : ['rgba(0, 122, 255, 0.08)', 'rgba(0, 122, 255, 0.02)']}
-              style={styles.infoCardGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            />
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
-          </BlurView>
+
 
           {loading ? (
             <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.loadingCard}>
