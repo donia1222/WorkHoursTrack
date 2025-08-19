@@ -234,10 +234,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
 
   },
   container: {
-  
+    flex: 1,
   },
   map: {
-
+    flex: 1,
+    position: 'relative',
   },
 
   
@@ -3036,7 +3037,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             <Text style={{
                               fontSize: 14,
                               fontWeight: '500',
-                              color: 'white',
+                              color: isDark ?  '#eeb526ff' : '#d9941dff',
                               marginTop: 12,
                               opacity: 0.9,
                             }}>{t('maps.configure_rates')}</Text>

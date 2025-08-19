@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Alert, StyleSheet, Text, TouchableOpacity, SafeAreaView, Linking, AppState, Modal, Image } from 'react-native';
 import * as Location from 'expo-location';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -702,7 +703,7 @@ function AppContent() {
 
   // Renderizar siempre con header y menu para mantener consistencia
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {(currentScreen === 'mapa' || currentScreen === 'chatbot' || currentScreen === 'timer' || currentScreen === 'reports' || currentScreen === 'calendar' || currentScreen === 'settings' || currentScreen === 'subscription') && (
         <Header 
           title={getScreenTitle()} 
@@ -855,6 +856,8 @@ function AppContent() {
         </View>
       )}
       
+
+      
       <View style={{ flex: 1 }}>
         {renderCurrentScreen()}
       </View>
@@ -1003,7 +1006,7 @@ function AppContent() {
           }
         }}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

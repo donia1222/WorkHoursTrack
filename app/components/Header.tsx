@@ -27,8 +27,8 @@ interface HeaderProps {
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   safeArea: {
-    marginTop: -20,
     backgroundColor: colors.background,
+    marginTop:  -10 ,
   },
   blurContainer: {
     elevation: 10,
