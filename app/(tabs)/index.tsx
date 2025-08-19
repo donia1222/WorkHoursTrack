@@ -357,7 +357,7 @@ function AppContent() {
               jobWithAutoTimer.location.longitude
             );
             
-            const radius = jobWithAutoTimer.autoTimer?.geofenceRadius || 100;
+            const radius = jobWithAutoTimer.autoTimer?.geofenceRadius || 50;
             const isInsideRadius = distance <= radius;
             
             console.log('🔍 Distance from job:', distance, 'meters');

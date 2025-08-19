@@ -1297,8 +1297,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         autoTimer: editingJob.autoTimer || {
           enabled: false,
           geofenceRadius: 50,
-          delayStart: 1,
-          delayStop: 1,
+          delayStart: 2,
+          delayStop: 2,
           notifications: true,
         },
       });
@@ -1352,8 +1352,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         autoTimer: {
           enabled: false,
           geofenceRadius: 50,
-          delayStart: 1,
-          delayStop: 1,
+          delayStart: 2,
+          delayStop: 2,
           notifications: true,
         },
       });
@@ -1429,7 +1429,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           jobCoordinates.longitude
         );
         
-        const radius = formData.autoTimer?.geofenceRadius || 100;
+        const radius = formData.autoTimer?.geofenceRadius || 50;
         const isInsideRadius = distance <= radius;
         
         // Show alert only if outside radius and haven't shown it yet
@@ -3127,7 +3127,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             jobCoordinates.longitude
           );
           
-          const radius = formData.autoTimer?.geofenceRadius || 100;
+          const radius = formData.autoTimer?.geofenceRadius || 50;
           const isInsideRadius = distance <= radius;
           
           // Mostrar alerta si está fuera del radio
@@ -3167,22 +3167,17 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                         await JobService.clearActiveSession();
                       }
                       
-                      // También cancelar cualquier AutoTimer activo para el otro trabajo
+                      // Detener y reiniciar el servicio AutoTimer para el nuevo trabajo
                       const autoTimerService = AutoTimerService.getInstance();
-                      await autoTimerService.cancelPendingAction();
-                      
-                      // Detener el servicio AutoTimer
+                      // Stop handles everything including canceling pending actions
                       autoTimerService.stop();
-                      
-                      // Poner el sistema en modo manual
-                      await autoTimerService.setManualMode();
                       
                       // Desactivar el AutoTimer del otro trabajo
                       const updatedOtherJob = {
                         ...jobWithAutoTimer,
                         autoTimer: {
                           enabled: false,
-                          geofenceRadius: jobWithAutoTimer.autoTimer?.geofenceRadius || 100,
+                          geofenceRadius: jobWithAutoTimer.autoTimer?.geofenceRadius || 50,
                           delayStart: jobWithAutoTimer.autoTimer?.delayStart || 2,
                           delayStop: jobWithAutoTimer.autoTimer?.delayStop || 2,
                           notifications: jobWithAutoTimer.autoTimer?.notifications !== false
@@ -3259,15 +3254,10 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     await liveActivityService.endLiveActivity(Math.floor(elapsedHours * 3600));
                   }
                   
-                  // También cancelar cualquier AutoTimer activo para este trabajo
+                  // Detener el servicio AutoTimer completamente
                   const autoTimerService = AutoTimerService.getInstance();
-                  await autoTimerService.cancelPendingAction();
-                  
-                  // Detener el servicio AutoTimer
+                  // Stop handles everything
                   autoTimerService.stop();
-                  
-                  // Poner el sistema en modo manual
-                  await autoTimerService.setManualMode();
                   
                   // Desactivar completamente el AutoTimer
                   updateNestedData('autoTimer', 'enabled', false);
@@ -3464,6 +3454,64 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     const currentValue = formData.autoTimer?.geofenceRadius || 50;
                     const newValue = Math.min(200, currentValue + 5);
                     updateNestedData('autoTimer', 'geofenceRadius', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="plus" color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Delay Start Control */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.auto_timer.delay_start')}</Text>
+              <Text style={styles.labelDescription}>{t('job_form.auto_timer.delay_start_desc')}</Text>
+              <View style={styles.counterContainer}>
+                <TouchableOpacity
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStart ?? 2;
+                    const newValue = Math.max(0, currentValue - 1);
+                    updateNestedData('autoTimer', 'delayStart', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="minus" color={colors.primary} />
+                </TouchableOpacity>
+                <Text style={styles.counterText}>{formData.autoTimer?.delayStart ?? 2} min</Text>
+                <TouchableOpacity
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStart ?? 2;
+                    const newValue = Math.min(10, currentValue + 1);
+                    updateNestedData('autoTimer', 'delayStart', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="plus" color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Delay Stop Control */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.auto_timer.delay_stop')}</Text>
+              <Text style={styles.labelDescription}>{t('job_form.auto_timer.delay_stop_desc')}</Text>
+              <View style={styles.counterContainer}>
+                <TouchableOpacity
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStop ?? 2;
+                    const newValue = Math.max(0, currentValue - 1);
+                    updateNestedData('autoTimer', 'delayStop', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="minus" color={colors.primary} />
+                </TouchableOpacity>
+                <Text style={styles.counterText}>{formData.autoTimer?.delayStop ?? 2} min</Text>
+                <TouchableOpacity
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStop ?? 2;
+                    const newValue = Math.min(10, currentValue + 1);
+                    updateNestedData('autoTimer', 'delayStop', newValue);
                   }}
                 >
                   <IconSymbol size={20} name="plus" color={colors.primary} />

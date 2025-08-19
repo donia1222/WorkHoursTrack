@@ -11,12 +11,9 @@ import { startBackgroundGeofencing, stopBackgroundGeofencing } from './Backgroun
 
 export type AutoTimerState = 
   | 'inactive'     // Not monitoring or no jobs nearby
-  | 'pre-start'    // 5 second countdown before starting timer
   | 'entering'     // Inside geofence, waiting to start timer
   | 'active'       // Timer is running automatically
-  | 'leaving'      // Outside geofence, waiting to stop timer
-  | 'manual'       // Manual timer is active, auto-timer disabled
-  | 'cancelled';   // User cancelled pending action, waiting for manual restart
+  | 'leaving';     // Outside geofence, waiting to stop timer
 
 export interface AutoTimerStatus {
   state: AutoTimerState;
@@ -48,9 +45,9 @@ class AutoTimerService {
   private alertCallbacks: ((showAlert: boolean) => void)[] = [];
   private isEnabled = false;
   private statusUpdateInterval: NodeJS.Timeout | null = null;
-  private pausedDelayedAction: DelayedAction | null = null; // To remember paused countdown
   private sentNotifications: Set<string> = new Set(); // Track sent notifications to avoid duplicates
   private autoTimerStartTime: Date | null = null; // Track when auto timer actually started
+  private lastProcessedEvents: Map<string, number> = new Map(); // For event deduplication
 
   constructor() {
     this.geofenceService = GeofenceService.getInstance();
@@ -102,7 +99,7 @@ class AutoTimerService {
       // Restore state from storage (after jobs are set)
       await this.restoreState();
 
-      // Check for active sessions and handle them properly
+      // Check for active sessions - NEVER clear them automatically
       const activeSession = await JobService.getActiveSession();
       if (activeSession) {
         console.log(`🔍 Found active session:`, {
@@ -111,13 +108,14 @@ class AutoTimerService {
           notes: activeSession.notes
         });
         
-        // Only clear if it's not an auto-started session or if it doesn't match our state
-        if (activeSession.notes === 'Auto-started' && this.currentState === 'active' && this.currentJobId === activeSession.jobId) {
-          console.log(`✅ Keeping existing auto-started session for job ${activeSession.jobId}`);
-        } else {
-          console.log(`🧹 Clearing session (not auto-started or state mismatch)`);
-          await JobService.clearActiveSession();
+        // If there's an auto-started session, restore our state to match it
+        if (activeSession.notes === 'Auto-started' || activeSession.notes === 'Auto-started (Background)') {
+          console.log(`✅ Restoring state from existing auto-started session for job ${activeSession.jobId}`);
+          this.currentState = 'active';
+          this.currentJobId = activeSession.jobId;
+          this.autoTimerStartTime = new Date(activeSession.startTime);
         }
+        // NEVER clear active sessions - they should only be stopped by exit or manual stop
       }
 
       // Start geofence monitoring in FOREGROUND ONLY mode
@@ -130,10 +128,19 @@ class AutoTimerService {
         console.log('🟢 Auto timer service started successfully');
         console.log(`📊 Current status: ${this.currentState}, Job: ${this.currentJobId}, Enabled: ${this.isEnabled}`);
         
-        // Iniciar background geofencing DESPUÉS de confirmar success
+        // Iniciar background geofencing solo si no está ya activo
         try {
-          await startBackgroundGeofencing(autoTimerJobs);
-          console.log('🌍 Background geofencing iniciado correctamente');
+          // Verificar si ya está activo antes de iniciar
+          const isBackgroundActive = await this.isBackgroundGeofencingActive();
+          if (!isBackgroundActive) {
+            await startBackgroundGeofencing(autoTimerJobs);
+            console.log('🌍 Background geofencing iniciado correctamente');
+          } else {
+            console.log('🔄 Background geofencing ya está activo, actualizando trabajos');
+            // Reiniciar con nuevos trabajos si cambió la configuración
+            await stopBackgroundGeofencing();
+            await startBackgroundGeofencing(autoTimerJobs);
+          }
         } catch (error) {
           console.error('❌ Error iniciando background geofencing:', error);
         }
@@ -149,7 +156,7 @@ class AutoTimerService {
               job.location.latitude,
               job.location.longitude
             );
-            const radius = job.autoTimer?.geofenceRadius || 100;
+            const radius = job.autoTimer?.geofenceRadius || 50; // Default 50m
             return distance <= radius;
           });
           
@@ -194,7 +201,7 @@ class AutoTimerService {
     this.stopStatusUpdateInterval();
     this.currentState = 'inactive';
     this.currentJobId = null;
-    this.pausedDelayedAction = null; // Clear paused state
+    this.autoTimerStartTime = null; // Clear start time
     this.isEnabled = false;
     
     // FORZAR el cierre de TODOS los Live Activities
@@ -202,8 +209,11 @@ class AutoTimerService {
     console.log('📱 FORCE ended all Live Activities on AutoTimer stop');
     
     this.clearNotificationHistory(); // Clear notification history when stopping
+    
+    // Save state and notify all listeners
+    await this.saveState();
     this.notifyStatusChange();
-    console.log('Auto timer service stopped');
+    console.log('Auto timer service stopped - state:', this.currentState);
   }
 
   /**
@@ -238,18 +248,36 @@ class AutoTimerService {
    * Handle geofence enter/exit events
    */
   private async handleGeofenceEvent(event: GeofenceEvent): Promise<void> {
-    console.log(`🎯 Geofence ${event.eventType} event for job ${event.jobId}, current state: ${this.currentState}`);
+    // Implement event deduplication (prevent duplicate events from foreground/background)
+    const eventKey = `${event.jobId}-${event.eventType}`;
+    const eventTime = event.timestamp.getTime();
+    const lastEventTime = this.lastProcessedEvents.get(eventKey);
     
-    // Skip if AutoTimer is in cancelled state (user manually paused)
-    if (this.currentState === 'cancelled') {
-      console.log('⏸️ AutoTimer is cancelled, ignoring geofence event');
+    // Increase deduplication window to 10 seconds for better conflict prevention
+    if (lastEventTime && (eventTime - lastEventTime) < 10000) {
+      console.log(`🔄 Duplicate event detected for ${eventKey}, ignoring (${eventTime - lastEventTime}ms apart)`);
       return;
     }
     
-    // Skip if manual timer is active
+    // Store this event time
+    this.lastProcessedEvents.set(eventKey, eventTime);
+    
+    // Clean up old events (older than 1 minute)
+    const oneMinuteAgo = Date.now() - 60000;
+    for (const [key, time] of this.lastProcessedEvents.entries()) {
+      if (time < oneMinuteAgo) {
+        this.lastProcessedEvents.delete(key);
+      }
+    }
+    
+    console.log(`\n🎯 [AutoTimerService] ${event.eventType.toUpperCase()} event`);
+    console.log(`   Job: ${this.jobs.find(j => j.id === event.jobId)?.name || event.jobId}`);
+    console.log(`   Current State: ${this.currentState}${this.currentJobId ? ` (job: ${this.currentJobId})` : ''}`);
+    
+    // Skip if there's an active timer for a different job
     const activeSession = await JobService.getActiveSession();
-    if (activeSession && activeSession.jobId !== event.jobId) {
-      console.log('Manual timer active for different job, ignoring geofence event');
+    if (activeSession && activeSession.jobId !== event.jobId && event.eventType === 'enter') {
+      console.log('Timer active for different job, ignoring enter event');
       return;
     }
 
@@ -270,7 +298,7 @@ class AutoTimerService {
    * Handle entering a job's geofence
    */
   private async handleJobEnter(job: Job): Promise<void> {
-    console.log(`Entered geofence for ${job.name}`);
+    console.log(`\n✅ [ENTER] Processing entry for: ${job.name}`);
 
     // Cancel any pending exit action
     if (this.currentDelayedAction?.action === 'stop') {
@@ -286,6 +314,11 @@ class AutoTimerService {
     // Check if there's an active session for this job
     const activeSession = await JobService.getActiveSession();
     if (activeSession && activeSession.jobId === job.id) {
+      // If it's a manual session (not auto-started), don't interfere
+      if (activeSession.notes !== 'Auto-started' && activeSession.notes !== 'Auto-started (Background)') {
+        console.log(`⚠️ Manual timer running for ${job.name}, AutoTimer will not interfere`);
+        return;
+      }
       console.log(`⚡ Timer already running for ${job.name}, setting state to active`);
       this.currentState = 'active';
       this.currentJobId = job.id;
@@ -353,16 +386,48 @@ class AutoTimerService {
       return;
     }
 
-    // Start timer immediately without delay
-    console.log(`🚀 Starting timer immediately for ${job.name}`);
-    await this.startAutoTimer(job);
+    // Use configured delay or default (2 minutes)
+    const delayMinutes = job.autoTimer?.delayStart ?? 2;
+    
+    if (delayMinutes > 0) {
+      // Schedule timer start with delay
+      console.log(`⏱️ Scheduling timer start for ${job.name} in ${delayMinutes} minutes`);
+      this.currentState = 'entering';
+      this.currentJobId = job.id;
+      
+      const delaySeconds = delayMinutes * 60;
+      this.currentDelayedAction = {
+        jobId: job.id,
+        action: 'start',
+        startTime: new Date(),
+        delaySeconds: delaySeconds,
+        timeout: setTimeout(async () => {
+          console.log(`🚀 Starting timer for ${job.name} after ${delayMinutes} minute delay`);
+          await this.startAutoTimer(job);
+        }, delaySeconds * 1000)
+      };
+      
+      // Send notification about scheduled start
+      await NotificationService.sendNotification(
+        'Auto-Timer Scheduled',
+        `Timer will start for ${job.name} in ${delayMinutes} minutes`,
+        { jobId: job.id, action: 'scheduled_start' }
+      );
+    } else {
+      // Start immediately if delay is 0
+      console.log(`🚀 Starting timer immediately for ${job.name} (no delay configured)`);
+      await this.startAutoTimer(job);
+    }
+    
+    await this.saveState();
+    this.notifyStatusChange();
   }
 
   /**
    * Handle exiting a job's geofence
    */
   private async handleJobExit(job: Job): Promise<void> {
-    console.log(`Exited geofence for ${job.name}`);
+    console.log(`\n🚪 [EXIT] Processing exit for: ${job.name}`);
 
     // Cancel any pending start action
     if (this.currentDelayedAction?.action === 'start' && this.currentDelayedAction.jobId === job.id) {
@@ -379,9 +444,40 @@ class AutoTimerService {
       return;
     }
 
-    // Stop timer immediately without delay
-    console.log(`🛑 Stopping timer immediately for ${job.name}`);
-    await this.stopAutoTimer(job);
+    // Use configured delay or default (2 minutes)
+    const delayMinutes = job.autoTimer?.delayStop ?? 2;
+    
+    if (delayMinutes > 0) {
+      // Schedule timer stop with delay
+      console.log(`⏱️ Scheduling timer stop for ${job.name} in ${delayMinutes} minutes`);
+      this.currentState = 'exiting';
+      
+      const delaySeconds = delayMinutes * 60;
+      this.currentDelayedAction = {
+        jobId: job.id,
+        action: 'stop',
+        startTime: new Date(),
+        delaySeconds: delaySeconds,
+        timeout: setTimeout(async () => {
+          console.log(`🛑 Stopping timer for ${job.name} after ${delayMinutes} minute delay`);
+          await this.stopAutoTimer(job);
+        }, delaySeconds * 1000)
+      };
+      
+      // Send notification about scheduled stop
+      await NotificationService.sendNotification(
+        'Auto-Timer Scheduled',
+        `Timer will stop for ${job.name} in ${delayMinutes} minutes`,
+        { jobId: job.id, action: 'scheduled_stop' }
+      );
+    } else {
+      // Stop immediately if delay is 0
+      console.log(`🛑 Stopping timer immediately for ${job.name} (no delay configured)`);
+      await this.stopAutoTimer(job);
+    }
+    
+    await this.saveState();
+    this.notifyStatusChange();
   }
 
   /**
@@ -671,12 +767,6 @@ class AutoTimerService {
       case 'leaving':
         message = `leaving:${remainingTime}`;
         break;
-      case 'manual':
-        message = 'manual';
-        break;
-      case 'cancelled':
-        message = 'cancelled';
-        break;
     }
 
     return {
@@ -689,38 +779,35 @@ class AutoTimerService {
     };
   }
 
+
   /**
-   * Force cancel any pending action (user override)
+   * Reset to monitoring state (stop active timer but keep monitoring)
    */
-  async cancelPendingAction(): Promise<void> {
-    console.log('🚫 User called cancelPendingAction()');
-    if (this.currentDelayedAction) {
-      const jobId = this.currentDelayedAction.jobId;
-      const action = this.currentDelayedAction.action;
-      
-      // Calculate remaining time to preserve for resume
-      const elapsed = (Date.now() - this.currentDelayedAction.startTime.getTime()) / 1000;
-      const remainingSeconds = Math.max(0, this.currentDelayedAction.delaySeconds - elapsed);
-      
-      console.log(`⏸️ Pausing ${action} countdown for job ${jobId} with ${Math.ceil(remainingSeconds)}s remaining`);
-      
-      // Save the paused state
-      this.pausedDelayedAction = {
-        ...this.currentDelayedAction,
-        delaySeconds: remainingSeconds, // Save remaining time
-        startTime: new Date() // Will be updated when resumed
-      };
-      
-      await this.cancelDelayedAction();
-      this.currentState = 'cancelled';
-      this.currentJobId = jobId; // Keep job ID to show which job was cancelled
-      
-      console.log(`✅ AutoTimer state set to 'cancelled' for job ${jobId}`);
-      this.notifyStatusChange();
-      console.log('🔔 Status change notification sent');
-    } else {
-      console.log('⚠️ No pending action to cancel');
+  async resetToMonitoring(): Promise<void> {
+    console.log('🔄 Resetting AutoTimer to monitoring state');
+    
+    // Cancel any delayed actions
+    await this.cancelDelayedAction();
+    
+    // Reset state but keep service enabled
+    this.currentState = 'inactive';
+    this.currentJobId = null;
+    this.autoTimerStartTime = null;
+    
+    // Stop Live Activity updates if running
+    if (this.statusUpdateInterval) {
+      clearInterval(this.statusUpdateInterval);
+      this.statusUpdateInterval = null;
     }
+    
+    // End Live Activity
+    await this.liveActivityService.endAllLiveActivities();
+    
+    // Save and notify
+    await this.saveState();
+    this.notifyStatusChange();
+    
+    console.log('✅ AutoTimer reset to monitoring state');
   }
 
   /**
@@ -759,13 +846,10 @@ class AutoTimerService {
         console.log(`💾 Force stopped and saved: ${elapsedHours}h`);
       }
       
-      // Cancel any pending actions and set to cancelled state
-      await this.cancelDelayedAction();
-      this.currentState = 'cancelled'; // Changed from 'inactive' to 'cancelled'
-      // Keep the currentJobId so UI shows which job was cancelled
-      this.notifyStatusChange();
+      // Reset to monitoring state (keeps service active but stops timer)
+      await this.resetToMonitoring();
       
-      console.log('🚫 AutoTimer set to cancelled state after manual stop');
+      console.log('🚫 AutoTimer reset after manual stop');
       
       return result;
     } catch (error) {
@@ -782,14 +866,20 @@ class AutoTimerService {
   }
 
   /**
-   * Set the service to manual mode (when user manually overrides)
+   * Check if background geofencing is active
    */
-  async setManualMode(): Promise<void> {
-    await this.cancelDelayedAction();
-    this.currentState = 'manual';
-    this.notifyStatusChange();
-    console.log('Auto timer service set to manual mode');
+  private async isBackgroundGeofencingActive(): Promise<boolean> {
+    try {
+      const TaskManager = require('expo-task-manager');
+      const BACKGROUND_GEOFENCE_TASK = 'background-geofence-task';
+      const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_GEOFENCE_TASK);
+      return isRegistered;
+    } catch (error) {
+      console.error('Error checking background geofencing status:', error);
+      return false;
+    }
   }
+
 
   /**
    * Add status change listener
@@ -1113,6 +1203,11 @@ class AutoTimerService {
         // Los listeners de UI se actualizarán solo cuando sea necesario
         this.notifyStatusChangeForCountdown();
       }
+      
+      // Check if active session was manually stopped every 5 seconds
+      if (this.currentState === 'active' && Date.now() % 5000 < 1000) {
+        this.checkActiveSessionStatus();
+      }
     }, 1000);
   }
 
@@ -1126,32 +1221,25 @@ class AutoTimerService {
     }
   }
 
-  /**
-   * Handle manual timer start (disable auto timer for that job)
-   */
-  async handleManualTimerStart(jobId: string): Promise<void> {
-    // Cancel any pending actions for this job
-    if (this.currentDelayedAction && this.currentDelayedAction.jobId === jobId) {
-      await this.cancelDelayedAction();
-    }
-    
-    this.currentState = 'manual';
-    this.currentJobId = jobId;
-    this.notifyStatusChange();
-  }
 
   /**
-   * Handle manual timer stop (re-enable auto timer)
+   * Check if active session was manually stopped and reset state
    */
-  async handleManualTimerStop(): Promise<void> {
-    // Set to cancelled state instead of inactive to prevent auto-restart
-    this.currentState = 'cancelled';
-    // Keep currentJobId to show which job was cancelled
-    this.notifyStatusChange();
-    
-    console.log('🚫 Manual timer stopped, AutoTimer set to cancelled state');
-    
-    // Don't restart geofence monitoring - wait for manual restart
+  private async checkActiveSessionStatus(): Promise<void> {
+    if (this.currentState === 'active' && this.currentJobId) {
+      const activeSession = await JobService.getActiveSession();
+      
+      // If there's no active session but we think we're active, reset
+      if (!activeSession) {
+        console.log('🔄 AutoTimer detected session was stopped manually, resetting to monitoring');
+        await this.resetToMonitoring();
+      }
+      // If session exists but for different job, also reset
+      else if (activeSession.jobId !== this.currentJobId) {
+        console.log('🔄 AutoTimer detected different session active, resetting');
+        await this.resetToMonitoring();
+      }
+    }
   }
 
   /**
@@ -1222,54 +1310,6 @@ class AutoTimerService {
     }
   }
 
-  /**
-   * Manually restart from cancelled state
-   */
-  async manualRestart(): Promise<void> {
-    if (this.currentState === 'cancelled' && this.currentJobId && this.pausedDelayedAction) {
-      console.log(`▶️ Resuming countdown with ${Math.ceil(this.pausedDelayedAction.delaySeconds)}s remaining`);
-      
-      const job = this.jobs.find(j => j.id === this.currentJobId);
-      if (job) {
-        // Resume with remaining time
-        const remainingSeconds = this.pausedDelayedAction.delaySeconds;
-        const action = this.pausedDelayedAction.action;
-        
-        if (remainingSeconds <= 0) {
-          // Time already expired, execute action immediately
-          if (action === 'start') {
-            await this.startAutoTimer(job);
-          } else {
-            await this.stopAutoTimer(job);
-          }
-        } else {
-          // Resume countdown with remaining time
-          this.currentState = action === 'start' ? 'entering' : 'leaving';
-          
-          const timeout = setTimeout(async () => {
-            console.log(`🚀 Resumed countdown completed for ${job.name}`);
-            if (action === 'start') {
-              await this.startAutoTimer(job);
-            } else {
-              await this.stopAutoTimer(job);
-            }
-          }, remainingSeconds * 1000);
-
-          this.currentDelayedAction = {
-            jobId: job.id,
-            action: action,
-            timeout,
-            startTime: new Date(),
-            delaySeconds: remainingSeconds,
-          };
-          
-          // Clear paused state
-          this.pausedDelayedAction = null;
-          this.notifyStatusChange();
-        }
-      }
-    }
-  }
 }
 
 export default AutoTimerService;

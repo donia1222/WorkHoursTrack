@@ -1273,9 +1273,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         await liveActivityService.startLiveActivity(job.name, job.address, new Date());
         console.log('📱 Live Activity started for manual timer');
       }
-      
-      // Notify auto timer service about manual start
-      autoTimerService.handleManualTimerStart(selectedJobId);
     } catch (error) {
       console.error('Error starting timer:', error);
       Alert.alert('Error', t('timer.start_timer_error'));
@@ -1406,34 +1403,12 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           isUpdate: true
         });
         
-        // If AutoTimer was active, disable it completely
+        // If AutoTimer was active, just reset it to monitoring state
+        // DO NOT disable the AutoTimer - it should continue monitoring
         if (wasAutoTimerActive && activeSession?.jobId) {
-          console.log('🚫 Disabling AutoTimer completely for job after manual stop');
-          
-          // Get the job and disable its AutoTimer
-          const jobs = await JobService.getJobs();
-          const job = jobs.find(j => j.id === activeSession.jobId);
-          
-          if (job) {
-            // Disable AutoTimer for this job
-            const updatedJob = {
-              ...job,
-              autoTimer: {
-                ...job.autoTimer,
-                enabled: false,
-                geofenceRadius: job.autoTimer?.geofenceRadius || 100,
-                delayStart: job.autoTimer?.delayStart || 2,
-                delayStop: job.autoTimer?.delayStop || 2,
-                notifications: job.autoTimer?.notifications !== false
-              }
-            };
-            
-            await JobService.updateJob(job.id, updatedJob);
-            console.log(`✅ AutoTimer disabled for job: ${job.name}`);
-            
-            // Stop the AutoTimer service
-            autoTimerService.stop();
-          }
+          console.log('🔄 Resetting AutoTimer to monitoring state after manual stop');
+          // The AutoTimer will automatically reset when the session is cleared
+          // It will continue monitoring and restart when entering the area again
         }
         
         setSuccessModalVisible(true);
@@ -1473,34 +1448,12 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           isUpdate: false
         });
         
-        // If AutoTimer was active, disable it completely
+        // If AutoTimer was active, just reset it to monitoring state
+        // DO NOT disable the AutoTimer - it should continue monitoring
         if (wasAutoTimerActive && activeSession?.jobId) {
-          console.log('🚫 Disabling AutoTimer completely for job after manual stop');
-          
-          // Get the job and disable its AutoTimer
-          const jobs = await JobService.getJobs();
-          const job = jobs.find(j => j.id === activeSession.jobId);
-          
-          if (job) {
-            // Disable AutoTimer for this job
-            const updatedJob = {
-              ...job,
-              autoTimer: {
-                ...job.autoTimer,
-                enabled: false,
-                geofenceRadius: job.autoTimer?.geofenceRadius || 100,
-                delayStart: job.autoTimer?.delayStart || 2,
-                delayStop: job.autoTimer?.delayStop || 2,
-                notifications: job.autoTimer?.notifications !== false
-              }
-            };
-            
-            await JobService.updateJob(job.id, updatedJob);
-            console.log(`✅ AutoTimer disabled for job: ${job.name}`);
-            
-            // Stop the AutoTimer service
-            autoTimerService.stop();
-          }
+          console.log('🔄 Resetting AutoTimer to monitoring state after manual stop');
+          // The AutoTimer will automatically reset when the session is cleared
+          // It will continue monitoring and restart when entering the area again
         }
         
         setSuccessModalVisible(true);
@@ -1512,9 +1465,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       setIsRunning(false);
       setElapsedTime(0);
       setNotes('');
-      
-      // Notify auto timer service about manual stop
-      autoTimerService.handleManualTimerStop();
       
       // Reload recent timer sessions after saving
       await loadRecentTimerSessions();
@@ -1538,8 +1488,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
             style: 'destructive',
             onPress: async () => {
               await stopTimer();
-              // Set auto timer to manual mode
-              await autoTimerService.setManualMode();
             }
           }
         ]
@@ -2095,7 +2043,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                       latitude: activeAutoTimerJob.location.latitude,
                       longitude: activeAutoTimerJob.location.longitude,
                     }}
-                    radius={activeAutoTimerJob.autoTimer?.geofenceRadius || 100}
+                    radius={activeAutoTimerJob.autoTimer?.geofenceRadius || 50}
                     fillColor="rgba(0, 122, 255, 0.15)"
                     strokeColor="rgba(0, 122, 255, 0.5)"
                     strokeWidth={2}

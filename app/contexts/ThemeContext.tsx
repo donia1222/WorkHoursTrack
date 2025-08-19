@@ -29,7 +29,7 @@ const lightColors: ThemeColors = {
   success: '#30D158',
   warning: '#FF9500',
   error: '#FF3B30',
-  background: '#e6e9faff',
+  background: '#FFFFFF',
   surface: '#FFFFFF',
   surfaces: 'rgba(255, 255, 255, 0.94)',
   card: '#FFFFFF',

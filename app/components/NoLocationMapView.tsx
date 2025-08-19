@@ -303,7 +303,7 @@ export default function NoLocationMapView({ onNavigate }: Props) {
         autoTimer: {
           ...job.autoTimer,
           enabled: value,
-          geofenceRadius: job.autoTimer?.geofenceRadius || 100,
+          geofenceRadius: job.autoTimer?.geofenceRadius || 50,
           delayStart: job.autoTimer?.delayStart || 2,
           delayStop: job.autoTimer?.delayStop || 2,
           notifications: job.autoTimer?.notifications !== false,

@@ -1,7 +1,6 @@
 import * as Location from 'expo-location';
 import { AppState } from 'react-native';
 import { Job } from '../types/WorkTypes';
-import BackgroundLocationTaskManager, { type BackgroundGeofenceData } from './BackgroundLocationTask';
 
 export interface GeofenceStatus {
   jobId: string;
@@ -27,7 +26,6 @@ class GeofenceService {
   private currentStatuses: Map<string, GeofenceStatus> = new Map();
   private eventCallbacks: ((event: GeofenceEvent) => void)[] = [];
   private isActive = false;
-  private backgroundTaskManager: BackgroundLocationTaskManager;
   private isBackgroundMode = false;
 
   static getInstance(): GeofenceService {
@@ -38,7 +36,7 @@ class GeofenceService {
   }
 
   constructor() {
-    this.backgroundTaskManager = BackgroundLocationTaskManager.getInstance();
+    // Background task manager removed - using native geofencing instead
   }
 
   /**
@@ -84,12 +82,29 @@ class GeofenceService {
         }
       });
 
-      // Start location tracking with improved settings for AutoTimer
+      // Calculate optimal GPS settings based on smallest radius
+      const radiuses = jobsToMonitor.map(job => job.autoTimer?.geofenceRadius || 50);
+      const smallestRadius = Math.min(...radiuses);
+      
+      // Adjust distance interval based on smallest radius
+      // For small radios (20-30m), use smaller interval for better detection
+      let distanceInterval: number;
+      if (smallestRadius <= 30) {
+        distanceInterval = 5; // 5m for radios <= 30m
+      } else if (smallestRadius <= 50) {
+        distanceInterval = 10; // 10m for radios <= 50m
+      } else {
+        distanceInterval = 15; // 15m for radios > 50m
+      }
+
+      console.log(`📍 GPS Config: Smallest radius ${smallestRadius}m → Distance interval ${distanceInterval}m`);
+
+      // Start location tracking with optimized settings
       this.locationSubscription = await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.High,
-          timeInterval: 1000, // Update every 1 second for better AutoTimer responsiveness
-          distanceInterval: 1, // Update when user moves 1 meter (maximum sensitivity)
+          accuracy: Location.Accuracy.Balanced, // Balanced for battery/accuracy trade-off
+          timeInterval: 10000, // Update every 10 seconds
+          distanceInterval: distanceInterval, // Dynamic based on smallest radius
         },
         (location) => {
           this.processLocationUpdate(location, jobsToMonitor);
@@ -119,7 +134,7 @@ class GeofenceService {
     try {
       console.log('🔄 Forcing location update...');
       const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
+        accuracy: Location.Accuracy.Balanced, // Use Balanced for consistency
       });
       
       this.processLocationUpdate(location, jobs);
@@ -164,11 +179,23 @@ class GeofenceService {
         job.location.longitude
       );
 
-      const radius = job.autoTimer.geofenceRadius || 100;
-      const isInside = distance <= radius;
+      // Implement hysteresis: different radius for entry and exit
+      const baseRadius = job.autoTimer.geofenceRadius || 50; // Default to 50m
+      const entryRadius = baseRadius; // Enter at configured radius
+      const exitRadius = baseRadius * 1.3; // Exit at 30% more distance to avoid GPS noise
       
       const currentStatus = this.currentStatuses.get(job.id);
       const wasInside = currentStatus?.isInside || false;
+      
+      // Use different radius based on current state
+      let isInside: boolean;
+      if (!wasInside) {
+        // Currently outside, use entry radius
+        isInside = distance <= entryRadius;
+      } else {
+        // Currently inside, use exit radius (must go further to exit)
+        isInside = distance <= exitRadius;
+      }
 
       // Update status
       this.currentStatuses.set(job.id, {
@@ -178,11 +205,15 @@ class GeofenceService {
         lastUpdate: new Date(),
       });
 
-      console.log(`🔍 GeofenceService Update - Job: ${job.name}`);
-      console.log(`   - Distance: ${distance.toFixed(2)}m`);
-      console.log(`   - Radius: ${radius}m`);
-      console.log(`   - Was Inside: ${wasInside}`);
-      console.log(`   - Is Inside: ${isInside}`);
+      // Only log significant events or state changes to reduce noise
+      if (wasInside !== isInside || distance <= exitRadius * 1.1) {
+        console.log(`📍 [GeofenceService] ${job.name}:`);
+        console.log(`   Distance: ${distance.toFixed(1)}m | Radius: ${entryRadius}m (entry) / ${exitRadius}m (exit)`);
+        console.log(`   State: ${wasInside ? 'INSIDE' : 'OUTSIDE'} → ${isInside ? 'INSIDE' : 'OUTSIDE'} ${wasInside !== isInside ? '⚠️ CHANGED' : ''}`);
+        if (wasInside !== isInside) {
+          console.log(`   ✅ Triggering ${isInside ? 'ENTER' : 'EXIT'} event`);
+        }
+      }
 
       // Check for state changes
       if (wasInside !== isInside) {
@@ -332,7 +363,7 @@ class GeofenceService {
             job.location.longitude
           );
 
-          const radius = job.autoTimer?.geofenceRadius || 100;
+          const radius = job.autoTimer?.geofenceRadius || 50; // Default 50m
           const isInside = distance <= radius;
 
           return {

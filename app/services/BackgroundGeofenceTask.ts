@@ -100,26 +100,61 @@ async function handleBackgroundEnter(job: any, timestamp: string): Promise<void>
     // Verificar si ya hay una sesión activa
     const activeSession = await JobService.getActiveSession();
     if (activeSession && activeSession.jobId === job.id) {
-      console.log(`⚡ Ya hay una sesión activa para ${job.name}, ignorando entrada`);
-      return;
+      console.log(`⚡ Ya hay una sesión activa para ${job.name}, continuando`);
+      // NO RETURN - La sesión debe continuar activa
+      return; // Solo salimos si ya está activa para este trabajo
     }
 
-    // Crear nueva sesión activa
-    const sessionForStorage = {
-      jobId: job.id,
-      startTime: timestamp,
-      notes: 'Auto-started (Background)',
-    };
+    // Verificar delay configurado
+    const delayMinutes = job.autoTimer?.delayStart ?? 2;
+    
+    if (delayMinutes > 0) {
+      // Guardar tiempo de entrada para verificar delay después
+      await AsyncStorage.setItem(`@auto_timer_enter_${job.id}`, timestamp);
+      
+      // Programar notificación para cuando se cumpla el delay
+      await sendBackgroundNotification(
+        '⏱️ AutoTimer Programado',
+        `Timer se iniciará para ${job.name} en ${delayMinutes} minutos`,
+        { jobId: job.id, action: 'scheduled_start' }
+      );
+      
+      // Programar el inicio real después del delay
+      setTimeout(async () => {
+        // Verificar que no haya sesión activa antes de iniciar
+        const currentSession = await JobService.getActiveSession();
+        if (!currentSession) {
+          const sessionForStorage = {
+            jobId: job.id,
+            startTime: new Date().toISOString(),
+            notes: 'Auto-started (Background)',
+          };
+          await JobService.saveActiveSession(sessionForStorage);
+          
+          await sendBackgroundNotification(
+            '✅ Timer Iniciado',
+            `Timer iniciado automáticamente en ${job.name}`,
+            { jobId: job.id, action: 'started' }
+          );
+        }
+      }, delayMinutes * 60 * 1000);
+    } else {
+      // Iniciar inmediatamente si no hay delay
+      const sessionForStorage = {
+        jobId: job.id,
+        startTime: timestamp,
+        notes: 'Auto-started (Background)',
+      };
 
-    await JobService.saveActiveSession(sessionForStorage);
-    console.log(`✅ Sesión iniciada desde background para ${job.name} a las ${new Date(timestamp).toLocaleTimeString()}`);
+      await JobService.saveActiveSession(sessionForStorage);
+      console.log(`✅ Sesión iniciada desde background para ${job.name} a las ${new Date(timestamp).toLocaleTimeString()}`);
 
-    // Enviar notificación pidiendo al usuario que abra la app
-    await sendBackgroundNotification(
-      '⏰ WorkTrack - AutoTimer',
-      `Has llegado a ${job.name}. Abre la app para iniciar el contador de tiempo.`,
-      { jobId: job.id, action: 'arrived' }
-    );
+      await sendBackgroundNotification(
+        '✅ Timer Iniciado',
+        `Timer iniciado automáticamente en ${job.name}`,
+        { jobId: job.id, action: 'started' }
+      );
+    }
 
     // Guardar evento en historial
     await saveBackgroundEvent('enter', job, timestamp);
@@ -148,39 +183,78 @@ async function handleBackgroundExit(job: any, timestamp: string): Promise<void> 
       return;
     }
 
-    // Calcular tiempo trabajado
-    const startTime = new Date(activeSession.startTime);
-    const endTime = new Date(timestamp);
-    const elapsedMs = endTime.getTime() - startTime.getTime();
-    const elapsedHours = Math.max(0.01, parseFloat((elapsedMs / (1000 * 60 * 60)).toFixed(2)));
+    // Verificar delay configurado
+    const delayMinutes = job.autoTimer?.delayStop ?? 2;
+    
+    if (delayMinutes > 0) {
+      // Guardar tiempo de salida para verificar delay después
+      await AsyncStorage.setItem(`@auto_timer_exit_${job.id}`, timestamp);
+      
+      // Programar notificación
+      await sendBackgroundNotification(
+        '⏱️ AutoTimer Programado',
+        `Timer se detendrá para ${job.name} en ${delayMinutes} minutos`,
+        { jobId: job.id, action: 'scheduled_stop' }
+      );
+      
+      // Programar la parada real después del delay
+      setTimeout(async () => {
+        // Verificar que la sesión siga activa antes de parar
+        const currentSession = await JobService.getActiveSession();
+        if (currentSession && currentSession.jobId === job.id) {
+          // Calcular tiempo trabajado
+          const startTime = new Date(currentSession.startTime);
+          const endTime = new Date();
+          const elapsedMs = endTime.getTime() - startTime.getTime();
+          const elapsedHours = Math.max(0.01, parseFloat((elapsedMs / (1000 * 60 * 60)).toFixed(2)));
 
-    console.log(`⏱️ Tiempo trabajado: ${elapsedHours} horas`);
+          // Crear registro de día laboral
+          const today = endTime.toISOString().split('T')[0];
+          const workDay = {
+            date: today,
+            jobId: job.id,
+            hours: elapsedHours,
+            notes: currentSession.notes || 'Auto-stopped (Background)',
+            overtime: elapsedHours > 8,
+            type: 'work' as const,
+          };
 
-    // Crear registro de día laboral
-    const today = endTime.toISOString().split('T')[0];
-    const workDay = {
-      date: today,
-      jobId: job.id,
-      hours: elapsedHours,
-      notes: activeSession.notes || 'Auto-stopped (Background)',
-      overtime: elapsedHours > 8,
-      type: 'work' as const,
-    };
+          await JobService.addWorkDay(workDay);
+          await JobService.clearActiveSession();
+          
+          await sendBackgroundNotification(
+            '⏹️ Timer Detenido',
+            `Timer detenido para ${job.name}: ${elapsedHours.toFixed(2)}h registradas`,
+            { jobId: job.id, action: 'stopped', hours: elapsedHours }
+          );
+        }
+      }, delayMinutes * 60 * 1000);
+    } else {
+      // Parar inmediatamente si no hay delay
+      const startTime = new Date(activeSession.startTime);
+      const endTime = new Date(timestamp);
+      const elapsedMs = endTime.getTime() - startTime.getTime();
+      const elapsedHours = Math.max(0.01, parseFloat((elapsedMs / (1000 * 60 * 60)).toFixed(2)));
 
-    // Guardar día laboral usando JobService
-    await JobService.addWorkDay(workDay);
+      const today = endTime.toISOString().split('T')[0];
+      const workDay = {
+        date: today,
+        jobId: job.id,
+        hours: elapsedHours,
+        notes: activeSession.notes || 'Auto-stopped (Background)',
+        overtime: elapsedHours > 8,
+        type: 'work' as const,
+      };
 
-    // Limpiar sesión activa usando JobService
-    await JobService.clearActiveSession();
+      await JobService.addWorkDay(workDay);
+      await JobService.clearActiveSession();
 
-    console.log(`✅ Sesión terminada desde background para ${job.name}: ${elapsedHours}h registradas`);
-
-    // Enviar notificación
-    await sendBackgroundNotification(
-      '🛑 WorkTrack - AutoTimer',
-      `Has salido de ${job.name}. Timer detenido: ${elapsedHours}h registradas.`,
-      { jobId: job.id, action: 'left', hours: elapsedHours }
-    );
+      await sendBackgroundNotification(
+        '⏹️ Timer Detenido',
+        `Timer detenido para ${job.name}: ${elapsedHours.toFixed(2)}h registradas`,
+        { jobId: job.id, action: 'stopped', hours: elapsedHours }
+      );
+    }
 
     // Guardar evento en historial
     await saveBackgroundEvent('exit', job, timestamp);
@@ -265,20 +339,30 @@ export async function startBackgroundGeofencing(jobs: any[]): Promise<boolean> {
       return false;
     }
 
-    // Crear regiones de geofencing
-    const regions: Location.LocationRegion[] = validJobs.map(job => ({
-      identifier: job.id,
-      latitude: job.location.latitude,
-      longitude: job.location.longitude,
-      radius: job.autoTimer?.geofenceRadius || 50, // Usar el radio configurado por el usuario
-      notifyOnEnter: true,
-      notifyOnExit: true,
-    }));
+    // Crear regiones de geofencing con histéresis
+    // NOTA: iOS/Android no soportan radios diferentes para entrada/salida nativamente
+    // Usamos el radio base para entrada y lo aumentamos para salida
+    const regions: Location.LocationRegion[] = validJobs.map(job => {
+      const baseRadius = job.autoTimer?.geofenceRadius || 50;
+      // Usamos un radio intermedio (15% más) para el geofence nativo
+      // Esto reduce falsos positivos manteniendo buena detección
+      const effectiveRadius = Math.round(baseRadius * 1.15);
+      
+      return {
+        identifier: job.id,
+        latitude: job.location.latitude,
+        longitude: job.location.longitude,
+        radius: effectiveRadius, // Radio con margen de seguridad
+        notifyOnEnter: true,
+        notifyOnExit: true,
+      };
+    });
 
     console.log(`📍 Configurando ${regions.length} regiones de geofencing:`);
     regions.forEach(region => {
       const job = validJobs.find(j => j.id === region.identifier);
-      console.log(`  - ${job?.name}: (${region.latitude}, ${region.longitude}) radio ${region.radius}m`);
+      const baseRadius = job?.autoTimer?.geofenceRadius || 50;
+      console.log(`  - ${job?.name}: radio base ${baseRadius}m → efectivo ${region.radius}m (+15% margen)`);
     });
 
     // Iniciar monitoreo

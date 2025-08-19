@@ -2122,7 +2122,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
     );
     
     // Generar una posición aleatoria dentro del círculo del geofence
-    const radius = activeJob.autoTimer.geofenceRadius || 100;
+    const radius = activeJob.autoTimer.geofenceRadius || 50;
     const angle = Math.random() * 2 * Math.PI; // Ángulo aleatorio
     const distance = Math.random() * (radius * 0.6); // Dentro del 60% del radio para que se vea bien
     
@@ -2376,7 +2376,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
         autoTimer: {
           ...job.autoTimer,
           enabled: value,
-          geofenceRadius: job.autoTimer?.geofenceRadius || 100,
+          geofenceRadius: job.autoTimer?.geofenceRadius || 50,
           delayStart: job.autoTimer?.delayStart || 2,
           delayStop: job.autoTimer?.delayStop || 2,
           notifications: job.autoTimer?.notifications !== false,
