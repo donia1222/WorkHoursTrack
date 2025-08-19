@@ -2474,8 +2474,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
        
             {/* 6 WIDGET CARDS - MODERN GRADIENT STYLE */}
-            {jobs.length > 0 && (
-              <View style={{
+            <View style={{
                 position: 'absolute',
                 top: isTablet ? 40 : (isSmallScreen ? 30 : 35),
                 left: isTablet ? 20 : (isSmallScreen ? 8 : 12),
@@ -2507,7 +2506,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
                       shadowRadius: 20,
                       elevation: 5,
                     }}
-                    onPress={() => setShowJobCardsModal(true)}
+                    onPress={() => {
+                      if (jobs.length === 0) {
+                        setShowJobForm(true);
+                      } else {
+                        setShowJobCardsModal(true);
+                      }
+                    }}
                     activeOpacity={0.9}
                   >
                     <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
@@ -2522,23 +2527,53 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         <IconSymbol size={isTablet ? 36 : (isSmallScreen ? 18 : 22)} name="briefcase.fill" color={isDark ? '#93c5fd' : '#2563eb'} />
                       </View>
                       <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
-                        <Text style={{
-                          fontSize: isTablet ? 16 : (isSmallScreen ? 11 : 13),
-                          fontWeight: '600',
-                          color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
-                          marginBottom: isTablet ? 6 : (isSmallScreen ? 2 : 4),
-                        }}>{t('maps.active_jobs')}</Text>
-                        <Text style={{
-                          fontSize: isTablet ? 42 : (isSmallScreen ? 22 : 26),
-                          fontWeight: '700',
-                          color: isDark ? 'white' : '#1e40af',
-                          marginTop: isTablet ? 0 : (isSmallScreen ? 2 : 4),
-                        }}>{jobs.length}</Text>
-                        <Text style={{
-                          fontSize: isTablet ? 14 : (isSmallScreen ? 9 : 11),
-                          color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
-                          marginTop: isTablet ? 4 : (isSmallScreen ? 1 : 2),
-                        }}>{jobs.length > 0 ? (jobs[0].name.length > (isSmallScreen ? 10 : 12) ? jobs[0].name.substring(0, isSmallScreen ? 10 : 12) + '...' : jobs[0].name) : ''}</Text>
+                        {jobs.length === 0 ? (
+                          <>
+                            <Text style={{
+                              fontSize: isTablet ? 16 : (isSmallScreen ? 11 : 13),
+                              fontWeight: '600',
+                              color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
+                              marginBottom: isTablet ? 6 : (isSmallScreen ? 2 : 4),
+                            }}>{t('maps.no_jobs')}</Text>
+                            <View style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 6,
+                              backgroundColor: isDark ? 'rgba(96, 165, 250, 0.2)' : 'rgba(59, 130, 246, 0.15)',
+                              paddingHorizontal: isTablet ? 16 : 12,
+                              paddingVertical: isTablet ? 10 : 8,
+                              borderRadius: isTablet ? 14 : 10,
+                              marginTop: 4,
+                            }}>
+                              <IconSymbol size={isTablet ? 20 : 16} name="plus.circle.fill" color={isDark ? '#93c5fd' : '#2563eb'} />
+                              <Text style={{
+                                fontSize: isTablet ? 15 : (isSmallScreen ? 11 : 13),
+                                fontWeight: '600',
+                                color: isDark ? '#93c5fd' : '#2563eb',
+                              }}>{t('maps.add_job')}</Text>
+                            </View>
+                          </>
+                        ) : (
+                          <>
+                            <Text style={{
+                              fontSize: isTablet ? 16 : (isSmallScreen ? 11 : 13),
+                              fontWeight: '600',
+                              color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
+                              marginBottom: isTablet ? 6 : (isSmallScreen ? 2 : 4),
+                            }}>{t('maps.active_jobs')}</Text>
+                            <Text style={{
+                              fontSize: isTablet ? 42 : (isSmallScreen ? 22 : 26),
+                              fontWeight: '700',
+                              color: isDark ? 'white' : '#1e40af',
+                              marginTop: isTablet ? 0 : (isSmallScreen ? 2 : 4),
+                            }}>{jobs.length}</Text>
+                            <Text style={{
+                              fontSize: isTablet ? 14 : (isSmallScreen ? 9 : 11),
+                              color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
+                              marginTop: isTablet ? 4 : (isSmallScreen ? 1 : 2),
+                            }}>{jobs[0].name.length > (isSmallScreen ? 10 : 12) ? jobs[0].name.substring(0, isSmallScreen ? 10 : 12) + '...' : jobs[0].name}</Text>
+                          </>
+                        )}
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -2674,20 +2709,20 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             if (dayData.workDay) {
                               switch (dayData.workDay.type) {
                                 case 'work':
-                                  badgeColor = '#10b981';
+                                  badgeColor = '#3b82f6';
                                   badgeIcon = 'briefcase';
                                   break;
                                 case 'free':
-                                  badgeColor = '#f59e0b';
+                                  badgeColor = '#10b981';
                                   badgeIcon = 'home';
                                   break;
                                 case 'vacation':
-                                  badgeColor = '#8b5cf6';
+                                  badgeColor = '#facc15';
                                   badgeIcon = 'sunny';
                                   break;
                                 case 'sick':
                                   badgeColor = '#ef4444';
-                                  badgeIcon = 'thermometer';
+                                  badgeIcon = 'medkit';
                                   break;
                               }
                             }
@@ -2731,13 +2766,22 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                   }}>
                                     {dayData.day}
                                   </Text>
-                            {badgeIcon && (
-                                    <Ionicons 
-                                      name={badgeIcon as any} 
-                                      size={isTablet ? 18 : 14} 
-                                      color={badgeColor || '#3b82f6'}
-                                      style={{ marginTop: 2 }}
-                                    />
+                            {badgeIcon && badgeColor && (
+                                    <View style={{
+                                      backgroundColor: badgeColor,
+                                      borderRadius: 10,
+                                      width: isTablet ? 20 : 16,
+                                      height: isTablet ? 20 : 16,
+                                      justifyContent: 'center',
+                                      alignItems: 'center',
+                                      marginTop: 2,
+                                    }}>
+                                      <Ionicons 
+                                        name={badgeIcon as any} 
+                                        size={isTablet ? 14 : 12} 
+                                        color="#ffffff"
+                                      />
+                                    </View>
                                   )}
                                 </View>
                        
@@ -3374,7 +3418,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   </TouchableOpacity>
                 )}
               </View>
-            )}
 
             {/* Hide old calendar and buttons */}
             {false && (
@@ -3561,35 +3604,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
         </View>
       </Modal>
 
-              {/* Simple info overlay */}
 
 
-                            {jobs.length === 0 && !showJobForm && (
-       
-          <View style={[styles.centeredContent, ]}>
-            <TouchableOpacity
-              style={styles.mainActionCard}
-              onPress={handleAddJob}
-              activeOpacity={0.95}
-            >
-              <BlurView intensity={70} tint={isDark ? "dark" : "light"} style={[styles.mainActionCardInner, {
-                backgroundColor: isDark ? 'rgba(76, 135, 175, 0.15)' : 'rgba(76, 135, 175, 0.12)',
-              }]}>
-    
-                <View style={[styles.mainActionIcon, {
-                  backgroundColor: colors.primary,
-                }]}>
-                  <IconSymbol size={40} name="plus" color="white" weight="bold" />
-                </View>
-                <Text style={styles.mainActionTitle}>{t('maps.add_job')}</Text>
-                <Text style={styles.mainActionDescription}>
-                  {t('maps.add_job_desc')}
-                </Text>
-              </BlurView>
-            </TouchableOpacity>
-          </View>
- 
-      )}
 
       {/* Job Selector Modal */}
       <JobSelectorModal

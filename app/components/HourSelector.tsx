@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,15 +15,48 @@ interface HourSelectorProps {
   onHoursChange: (hours: number) => void;
   minHours?: number;
   maxHours?: number;
+  standardHours?: number; // Horas estándar del trabajo (por defecto 8)
+  onStandardHoursChange?: (hours: number) => void; // Callback para cambiar horas estándar
+  isPaidByHour?: boolean; // Si está pagado por hora (no calcular overtime)
+  onPaidByHourChange?: (value: boolean) => void;
 }
 
 export default function HourSelector({ 
   hours, 
   onHoursChange, 
   minHours = 0.5, 
-  maxHours = 16 
+  maxHours = 16,
+  standardHours = 8,
+  onStandardHoursChange,
+  isPaidByHour = false,
+  onPaidByHourChange
 }: HourSelectorProps) {
   const { t } = useLanguage();
+  const [localStandardHours, setLocalStandardHours] = useState(standardHours);
+  const [localIsPaidByHour, setLocalIsPaidByHour] = useState(isPaidByHour);
+  
+  useEffect(() => {
+    setLocalStandardHours(standardHours);
+  }, [standardHours]);
+  
+  useEffect(() => {
+    setLocalIsPaidByHour(isPaidByHour);
+  }, [isPaidByHour]);
+  
+  const changeStandardHours = (newHours: number) => {
+    setLocalStandardHours(newHours);
+    if (onStandardHoursChange) {
+      onStandardHoursChange(newHours);
+    }
+  };
+  
+  const togglePaidByHour = () => {
+    const newValue = !localIsPaidByHour;
+    setLocalIsPaidByHour(newValue);
+    if (onPaidByHourChange) {
+      onPaidByHourChange(newValue);
+    }
+  };
   const decreaseHours = () => {
     const newHours = Math.max(minHours, hours - 0.5);
     onHoursChange(newHours);
@@ -43,8 +76,14 @@ export default function HourSelector({
   };
 
   const getHoursStatus = () => {
-    if (hours <= 4) return 'short';
-    if (hours <= 8) return 'normal';
+    // Si es pago por hora, siempre es normal
+    if (localIsPaidByHour) return 'normal';
+    
+    // Usar la mitad de las horas estándar como límite para turno corto
+    const shortThreshold = localStandardHours * 0.5;
+    
+    if (hours <= shortThreshold) return 'short';
+    if (hours <= localStandardHours) return 'normal';
     return 'overtime';
   };
 
@@ -78,11 +117,84 @@ export default function HourSelector({
 
   return (
     <BlurView intensity={95} tint="light" style={styles.container}>
+      {/* Checkbox para pago por hora */}
+      <TouchableOpacity 
+        style={styles.paidByHourContainer}
+        onPress={togglePaidByHour}
+      >
+        <View style={styles.checkboxRow}>
+          <View style={[styles.checkbox, localIsPaidByHour && styles.checkboxChecked]}>
+            {localIsPaidByHour && (
+              <IconSymbol name="checkmark" size={14} color="#FFFFFF" />
+            )}
+          </View>
+          <Text style={styles.paidByHourLabel}>
+            {t('calendar.paid_by_hour') || 'Pago por hora (sin horas extras)'}
+          </Text>
+        </View>
+      </TouchableOpacity>
+
+      {/* Selector de horas estándar - Solo si NO es pago por hora */}
+      {!localIsPaidByHour && (
+        <>
+          <View style={styles.standardHoursSection}>
+            <Text style={styles.standardHoursLabel}>
+              {t('calendar.standard_hours')}
+            </Text>
+            <View style={styles.standardHoursSelector}>
+              <TouchableOpacity
+                style={[
+                  styles.standardButton,
+                  localStandardHours <= 1 && styles.buttonDisabled
+                ]}
+                onPress={() => changeStandardHours(Math.max(1, localStandardHours - 1))}
+                disabled={localStandardHours <= 1}
+              >
+                <IconSymbol 
+                  size={20} 
+                  name="minus" 
+                  color={localStandardHours <= 1 ? Theme.colors.textTertiary : Theme.colors.primary} 
+                />
+              </TouchableOpacity>
+              
+              <Text style={styles.standardHoursText}>
+                {localStandardHours}h
+              </Text>
+              
+              <TouchableOpacity
+                style={[
+                  styles.standardButton,
+                  localStandardHours >= 12 && styles.buttonDisabled
+                ]}
+                onPress={() => changeStandardHours(Math.min(12, localStandardHours + 1))}
+                disabled={localStandardHours >= 12}
+              >
+                <IconSymbol 
+                  size={20} 
+                  name="plus" 
+                  color={localStandardHours >= 12 ? Theme.colors.textTertiary : Theme.colors.primary} 
+                />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.standardHoursHint}>
+              {hours > localStandardHours 
+                ? t('calendar.hours_extra', { hours: (hours - localStandardHours).toFixed(1) })
+                : hours === localStandardHours 
+                ? t('calendar.full_workday')
+                : t('calendar.hours_remaining', { hours: (localStandardHours - hours).toFixed(1) })}
+            </Text>
+          </View>
+          <View style={styles.divider} />
+        </>
+      )}
+
       <View style={styles.header}>
         <Text style={styles.title}>{t('calendar.worked_hours')}</Text>
-        <Text style={[styles.status, { color: getStatusColor() }]}>
-          {getStatusText()}
-        </Text>
+        {!localIsPaidByHour && (
+          <Text style={[styles.status, { color: getStatusColor() }]}>
+            {getStatusText()}
+          </Text>
+        )}
       </View>
 
       <View style={styles.selectorContainer}>
@@ -108,7 +220,9 @@ export default function HourSelector({
               style={[
                 styles.progressFill, 
                 { 
-                  width: `${Math.min((hours / 12) * 100, 100)}%`,
+                  width: localIsPaidByHour 
+                    ? `${Math.min((hours / 12) * 100, 100)}%`
+                    : `${Math.min((hours / (localStandardHours * 1.5)) * 100, 100)}%`,
                   backgroundColor: getStatusColor()
                 }
               ]} 
@@ -135,7 +249,19 @@ export default function HourSelector({
       <View style={styles.presets}>
         <Text style={styles.presetsLabel}>{t('calendar.quick_presets')}</Text>
         <View style={styles.presetButtons}>
-          {[4, 6, 8, 10, 12].map((preset) => (
+          {(() => {
+            // Si es pago por hora, usar presets fijos
+            const presets = localIsPaidByHour 
+              ? [2, 4, 6, 8, 10] // Presets fijos para pago por hora
+              : [
+                  Math.round(localStandardHours * 0.5), // 50% del estándar
+                  Math.round(localStandardHours * 0.75), // 75% del estándar
+                  localStandardHours, // Horas estándar
+                  Math.round(localStandardHours * 1.25), // 125% del estándar
+                  Math.round(localStandardHours * 1.5), // 150% del estándar
+                ].filter((v, i, a) => a.indexOf(v) === i); // Eliminar duplicados
+            
+            return presets.map((preset) => (
             <TouchableOpacity
               key={preset}
               style={[
@@ -153,7 +279,8 @@ export default function HourSelector({
                 {preset}h
               </Text>
             </TouchableOpacity>
-          ))}
+            ));
+          })()}
         </View>
       </View>
     </BlurView>
@@ -165,6 +292,74 @@ const styles = StyleSheet.create({
     borderRadius: Theme.borderRadius.lg,
     padding: Theme.spacing.lg,
     ...Theme.shadows.medium,
+  },
+  standardHoursSection: {
+    alignItems: 'center',
+    marginBottom: Theme.spacing.md,
+  },
+  standardHoursLabel: {
+    ...Theme.typography.footnote,
+    color: Theme.colors.textSecondary,
+    marginBottom: Theme.spacing.xs,
+    fontWeight: '600',
+  },
+  standardHoursSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.lg,
+  },
+  standardButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: `${Theme.colors.primary}15`,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Theme.shadows.small,
+  },
+  standardHoursText: {
+    ...Theme.typography.title2,
+    color: Theme.colors.primary,
+    fontWeight: '700',
+    minWidth: 50,
+    textAlign: 'center',
+  },
+  standardHoursHint: {
+    ...Theme.typography.caption2,
+    color: Theme.colors.textTertiary,
+    marginTop: Theme.spacing.xs,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Theme.colors.separator,
+    marginVertical: Theme.spacing.md,
+    marginHorizontal: -Theme.spacing.lg,
+  },
+  paidByHourContainer: {
+    paddingVertical: Theme.spacing.sm,
+    marginBottom: Theme.spacing.md,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.sm,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: Theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: Theme.colors.primary,
+  },
+  paidByHourLabel: {
+    ...Theme.typography.callout,
+    color: Theme.colors.text,
+    fontWeight: '500',
   },
   header: {
     alignItems: 'center',

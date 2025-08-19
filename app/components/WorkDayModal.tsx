@@ -134,6 +134,8 @@ export default function WorkDayModal({
   };
   const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [hours, setHours] = useState<number>(8);
+  const [customStandardHours, setCustomStandardHours] = useState<number>(8);
+  const [isPaidByHour, setIsPaidByHour] = useState<boolean>(false);
   const [notes, setNotes] = useState<string>('');
   const [dayType, setDayTypeState] = useState<'work' | 'free' | 'vacation' | 'sick'>('work');
   
@@ -259,6 +261,10 @@ export default function WorkDayModal({
       setNotes(existingWorkDay.notes || '');
       setDayType(existingWorkDay.type);
       
+      // Set custom standard hours from job
+      const job = jobs.find(j => j.id === existingWorkDay.jobId);
+      setCustomStandardHours(job?.defaultHours || 8);
+      
       // Set schedule mode and times based on existing data
       if (existingWorkDay.startTime && existingWorkDay.endTime) {
         setStartTime(existingWorkDay.startTime);
@@ -292,6 +298,7 @@ export default function WorkDayModal({
         if (preselectedJob) {
           setSelectedJobId(preselectedJob.id);
           setHours(preselectedJob.defaultHours);
+          setCustomStandardHours(preselectedJob.defaultHours);
           
           // Use job schedule if available and enabled
           if (preselectedJob.schedule && preselectedJob.schedule.enabled) {
@@ -308,6 +315,7 @@ export default function WorkDayModal({
         if (defaultJob) {
           setSelectedJobId(defaultJob.id);
           setHours(defaultJob.defaultHours);
+          setCustomStandardHours(defaultJob.defaultHours);
           
           // Use job schedule if available and enabled
           if (defaultJob.schedule && defaultJob.schedule.enabled) {
@@ -341,7 +349,7 @@ export default function WorkDayModal({
       jobId: dayType === 'work' ? finalJobId : undefined,
       hours: dayType === 'work' ? hours : 0,
       notes: notes.trim(),
-      overtime: dayType === 'work' && hours > 8,
+      overtime: dayType === 'work' && !isPaidByHour && hours > customStandardHours,
       type: dayType,
       startTime: dayType === 'work' && scheduleMode !== 'manual' ? startTime : undefined,
       endTime: dayType === 'work' && scheduleMode !== 'manual' ? endTime : undefined,
@@ -843,6 +851,10 @@ export default function WorkDayModal({
               <HourSelector
                 hours={hours}
                 onHoursChange={setHours}
+                standardHours={customStandardHours}
+                onStandardHoursChange={setCustomStandardHours}
+                isPaidByHour={isPaidByHour}
+                onPaidByHourChange={setIsPaidByHour}
               />
             </View>
           )}
@@ -899,7 +911,7 @@ export default function WorkDayModal({
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>{t('calendar.summary_hours')}</Text>
                   <Text style={styles.summaryValue}>
-                    {hours}h {hours > 8 && t('calendar.with_overtime')}
+                    {hours}h {!isPaidByHour && hours > customStandardHours && t('calendar.with_overtime')}
                   </Text>
                 </View>
               )}
