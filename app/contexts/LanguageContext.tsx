@@ -10,8 +10,11 @@ import en from '../locales/en.json';
 import de from '../locales/de.json';
 import fr from '../locales/fr.json';
 import it from '../locales/it.json';
+import pt from '../locales/pt.json';
+import nl from '../locales/nl.json';
+import tr from '../locales/tr.json';
 
-export type SupportedLanguage = 'es' | 'en' | 'de' | 'fr' | 'it';
+export type SupportedLanguage = 'es' | 'en' | 'de' | 'fr' | 'it' | 'pt' | 'nl' | 'tr';
 
 interface LanguageContextType {
   language: SupportedLanguage;
@@ -30,6 +33,9 @@ const i18n = new I18n({
   de,
   fr,
   it,
+  pt,
+  nl,
+  tr,
 });
 
 i18n.enableFallback = true;
@@ -56,15 +62,21 @@ const getDeviceLanguage = (): SupportedLanguage => {
       return 'fr';
     case 'it':
       return 'it';
+    case 'pt':
+      return 'pt';
+    case 'nl':
+      return 'nl';
+    case 'tr':
+      return 'tr';
     default:
-      // Si no está entre los 5 idiomas soportados, usar inglés
+      // Si no está entre los 8 idiomas soportados, usar inglés
       console.log('Language not supported, defaulting to English');
       return 'en';
   }
 };
 
 const updateNotificationTranslations = (locale: SupportedLanguage) => {
-  const localeData = { es, en, de, fr, it }[locale];
+  const localeData = { es, en, de, fr, it, pt, nl, tr }[locale];
   
   // Verificar que existan las traducciones
   if (!localeData?.preferences?.notifications) {
@@ -145,6 +157,48 @@ const updateNotificationTranslations = (locale: SupportedLanguage) => {
       default_body: 'Evento per',
       minute: 'minuto',
       minutes: 'minuti',
+    },
+    pt: {
+      timer_started_title: notifications.timer_started_title || '⏰ Timer Iniciado',
+      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Timer automático iniciado para',
+      timer_stopped_title: notifications.timer_stopped_title || '⏹️ Timer Parado',
+      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Timer automático parado para',
+      timer_will_start_title: notifications.timer_will_start_title || '🚀 Timer Vai Iniciar',
+      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/minutos? para "{{jobName}}"/, '').trim() || 'Timer iniciará em',
+      timer_will_stop_title: notifications.timer_will_stop_title || '⏸️ Timer Vai Parar',
+      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/minutos? para "{{jobName}}"/, '').trim() || 'Timer parará em',
+      default_title: notifications.default_notification_title || '📱 Notificação',
+      default_body: 'Evento para',
+      minute: 'minuto',
+      minutes: 'minutos',
+    },
+    nl: {
+      timer_started_title: notifications.timer_started_title || '⏰ Timer Gestart',
+      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Automatische timer gestart voor',
+      timer_stopped_title: notifications.timer_stopped_title || '⏹️ Timer Gestopt',
+      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Automatische timer gestopt voor',
+      timer_will_start_title: notifications.timer_will_start_title || '🚀 Timer Gaat Starten',
+      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/minuten? voor "{{jobName}}"/, '').trim() || 'Timer start over',
+      timer_will_stop_title: notifications.timer_will_stop_title || '⏸️ Timer Gaat Stoppen',
+      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/minuten? voor "{{jobName}}"/, '').trim() || 'Timer stopt over',
+      default_title: notifications.default_notification_title || '📱 Melding',
+      default_body: 'Gebeurtenis voor',
+      minute: 'minuut',
+      minutes: 'minuten',
+    },
+    tr: {
+      timer_started_title: notifications.timer_started_title || '⏰ Zamanlayıcı Başladı',
+      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Otomatik zamanlayıcı başladı',
+      timer_stopped_title: notifications.timer_stopped_title || '⏹️ Zamanlayıcı Durdu',
+      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Otomatik zamanlayıcı durdu',
+      timer_will_start_title: notifications.timer_will_start_title || '🚀 Zamanlayıcı Başlayacak',
+      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/dakika? için "{{jobName}}"/, '').trim() || 'Zamanlayıcı başlayacak',
+      timer_will_stop_title: notifications.timer_will_stop_title || '⏸️ Zamanlayıcı Duracak',
+      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/dakika? için "{{jobName}}"/, '').trim() || 'Zamanlayıcı duracak',
+      default_title: notifications.default_notification_title || '📱 Bildirim',
+      default_body: 'Etkinlik',
+      minute: 'dakika',
+      minutes: 'dakika',
     },
   };
 
@@ -258,6 +312,9 @@ export const languageConfig = {
   de: { name: 'Deutsch', flag: '🇩🇪', nativeName: 'Deutsch' },
   fr: { name: 'Français', flag: '🇫🇷', nativeName: 'Français' },
   it: { name: 'Italiano', flag: '🇮🇹', nativeName: 'Italiano' },
+  pt: { name: 'Português', flag: '🇧🇷', nativeName: 'Português' },
+  nl: { name: 'Nederlands', flag: '🇳🇱', nativeName: 'Nederlands' },
+  tr: { name: 'Türkçe', flag: '🇹🇷', nativeName: 'Türkçe' },
 };
 
 // Helper function to debug Quick Actions language (for development)

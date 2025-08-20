@@ -44,13 +44,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: isDark ? 'rgba(139, 92, 246, 0.1)' : 'rgba(99, 102, 241, 0.08)',
   },
-  blurGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
+
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -284,16 +278,8 @@ export default function Header({ title, onProfilePress, onBackPress, showBackBut
   
   return (
     <SafeAreaView style={styles.safeArea}>
-      <BlurView intensity={isDark ? 98 : 96} tint={isDark ? "dark" : "light"} style={styles.blurContainer}>
-        <LinearGradient
-          colors={isDark 
-            ? ['rgba(139, 92, 246, 0.05)', 'rgba(59, 130, 246, 0.05)'] 
-            : ['rgba(147, 51, 234, 0.03)', 'rgba(79, 70, 229, 0.03)']
-          }
-          style={styles.blurGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
+      <BlurView intensity={isDark ? 99 : 99} tint={isDark ? "dark" : "light"} style={styles.blurContainer}>
+ 
         <View style={styles.container}>
           {showBackButton && onBackPress ? (
             <TouchableOpacity onPress={() => { triggerHaptic('light'); onBackPress(); }} style={styles.backButton}>
