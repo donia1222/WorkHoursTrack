@@ -182,7 +182,7 @@ class GeofenceService {
       // Implement hysteresis: different radius for entry and exit
       const baseRadius = job.autoTimer.geofenceRadius || 50; // Default to 50m
       const entryRadius = baseRadius; // Enter at configured radius
-      const exitRadius = baseRadius * 1.6; // Exit at 60% more distance to avoid GPS noise
+      const exitRadius = baseRadius * 1.3; // Exit at 30% more distance to avoid GPS noise
       
       const currentStatus = this.currentStatuses.get(job.id);
       const wasInside = currentStatus?.isInside || false;
@@ -337,8 +337,7 @@ class GeofenceService {
    * Check if background task is currently registered and running
    */
   async isBackgroundTaskActive(): Promise<boolean> {
-    // Background task manager removed - using native geofencing instead
-    return false;
+    return await this.backgroundTaskManager.isBackgroundTaskRunning();
   }
 
   /**

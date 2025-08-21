@@ -25,7 +25,10 @@
       "title": "Dil",
       "description": "Uygulama dilini seçin",
       "default": "Varsayılan dil",
-      "change_to": "{{language}} diline değiştir"
+      "change_to": "{{language}} diline değiştir",
+      "autodetect": "Otomatik algıla",
+      "autodetect_active": "Algılandı: {{language}}",
+      "autodetect_inactive": "Cihaz dilini kullan"
     },
     "notifications": {
       "title": "Bildirimler",

@@ -25,7 +25,10 @@
       "title": "Language",
       "description": "Select the application language",
       "default": "Default language",
-      "change_to": "Change to {{language}}"
+      "change_to": "Change to {{language}}",
+      "autodetect": "Auto-detect",
+      "autodetect_active": "Detected: {{language}}",
+      "autodetect_inactive": "Use device language"
     },
     "notifications": {
       "title": "Notifications",

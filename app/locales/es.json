@@ -25,7 +25,10 @@
       "title": "Idioma",
       "description": "Selecciona el idioma de la aplicación",
       "default": "Idioma predeterminado",
-      "change_to": "Cambiar a {{language}}"
+      "change_to": "Cambiar a {{language}}",
+      "autodetect": "Autodetectar",
+      "autodetect_active": "Detectado: {{language}}",
+      "autodetect_inactive": "Usar idioma del dispositivo"
     },
     "notifications": {
       "title": "Notificaciones",

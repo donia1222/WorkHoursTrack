@@ -25,7 +25,10 @@
       "title": "Sprache",
       "description": "Wählen Sie die Anwendungssprache",
       "default": "Standardsprache",
-      "change_to": "Wechseln zu {{language}}"
+      "change_to": "Wechseln zu {{language}}",
+      "autodetect": "Automatisch erkennen",
+      "autodetect_active": "Erkannt: {{language}}",
+      "autodetect_inactive": "Gerätesprache verwenden"
     },
     "notifications": {
       "title": "Benachrichtigungen",

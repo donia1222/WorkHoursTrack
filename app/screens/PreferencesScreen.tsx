@@ -194,6 +194,38 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   languageIconBg: {
     backgroundColor: 'rgba(52, 199, 89, 0.15)',
   },
+  languageOption: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.md,
+    marginRight: Theme.spacing.sm,
+    borderRadius: Theme.borderRadius.md,
+    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+    minWidth: 80,
+  },
+  languageOptionActive: {
+    backgroundColor: colors.primary,
+  },
+  languageFlag: {
+    fontSize: 32,
+    marginBottom: Theme.spacing.xs,
+  },
+  languageText: {
+    ...Theme.typography.footnote,
+    color: colors.text,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  languageTextActive: {
+    color: '#FFFFFF',
+  },
+  languageSubtext: {
+    ...Theme.typography.caption2,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
+    textAlign: 'center',
+  },
   notificationIconBg: {
     backgroundColor: 'rgba(0, 122, 255, 0.15)',
   },
@@ -416,7 +448,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
 
 export default function PreferencesScreen({ onClose, scrollToNotifications, onNavigateToSubscription }: PreferencesScreenProps) {
   const { themeMode, setThemeMode, colors, isDark } = useTheme();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage, t, isAutoDetect } = useLanguage();
   const { hapticEnabled, updateHapticEnabled } = useHapticFeedback();
   const { isSubscribed } = useSubscription();
   const { 
@@ -447,7 +479,7 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
     }, 100);
   };
 
-  const handleLanguageChange = (lang: SupportedLanguage) => {
+  const handleLanguageChange = (lang: SupportedLanguage | 'auto') => {
     setLanguage(lang);
   };
 
@@ -672,28 +704,54 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
             {t('preferences.language.description')}
           </Text>
           
-          {Object.entries(languageConfig).map(([langCode, config]) => (
+          {/* Language options in horizontal scroll */}
+          <ScrollView 
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingVertical: Theme.spacing.sm }}
+          >
+            {/* Auto-detect option */}
             <TouchableOpacity 
-              key={langCode}
-              style={styles.settingItem}
-              onPress={() => handleLanguageChange(langCode as SupportedLanguage)}
+              style={[
+                styles.languageOption,
+                isAutoDetect && styles.languageOptionActive
+              ]}
+              onPress={() => handleLanguageChange('auto')}
             >
-              <View style={[styles.settingIcon, styles.languageIconBg]}>
-                <Text style={styles.flagEmoji}>{config.flag}</Text>
-              </View>
-              <View style={styles.settingContent}>
-                <Text style={styles.settingTitle}>{config.name}</Text>
-                <Text style={styles.settingDescription}>
-                  {language === langCode ? t('preferences.language.default') : t('preferences.language.change_to', { language: config.nativeName })}
+              <Text style={styles.languageFlag}>🌐</Text>
+              <Text style={[
+                styles.languageText,
+                isAutoDetect && styles.languageTextActive
+              ]}>
+                Auto
+              </Text>
+              {isAutoDetect && (
+                <Text style={styles.languageSubtext}>
+                  {languageConfig[language]?.nativeName || language}
                 </Text>
-              </View>
-              {language === langCode && (
-                <View style={styles.checkmark}>
-                  <IconSymbol size={20} name="checkmark.circle.fill" color={colors.success} />
-                </View>
               )}
             </TouchableOpacity>
-          ))}
+            
+            {/* Manual language options */}
+            {Object.entries(languageConfig).map(([langCode, config]) => (
+              <TouchableOpacity 
+                key={langCode}
+                style={[
+                  styles.languageOption,
+                  !isAutoDetect && language === langCode && styles.languageOptionActive
+                ]}
+                onPress={() => handleLanguageChange(langCode as SupportedLanguage)}
+              >
+                <Text style={styles.languageFlag}>{config.flag}</Text>
+                <Text style={[
+                  styles.languageText,
+                  !isAutoDetect && language === langCode && styles.languageTextActive
+                ]}>
+                  {config.nativeName}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </BlurView>
 
         {/* Haptic Feedback Section */}

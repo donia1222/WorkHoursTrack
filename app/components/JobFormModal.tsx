@@ -30,7 +30,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Job, DEFAULT_COLORS } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import { AutoScheduleService } from '../services/AutoScheduleService';
-import AutoTimerService from '../services/AutoTimerService';
+import AutoTimerService from '../services/SimpleAutoTimer';
 import { FreeAddressSearch } from './FreeAddressSearch';
 import AddressAutocompleteDropdown from './AddressAutocompleteDropdown';
 import * as Updates from 'expo-updates';
@@ -1297,8 +1297,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         autoTimer: editingJob.autoTimer || {
           enabled: false,
           geofenceRadius: 50,
-          delayStart: 2,
-          delayStop: 2,
+          delayStart: 0,
+          delayStop: 0,
           notifications: true,
         },
       });
@@ -1352,8 +1352,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         autoTimer: {
           enabled: false,
           geofenceRadius: 50,
-          delayStart: 2,
-          delayStop: 2,
+          delayStart: 0,
+          delayStop: 0,
           notifications: true,
         },
       });
@@ -3178,8 +3178,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                         autoTimer: {
                           enabled: false,
                           geofenceRadius: jobWithAutoTimer.autoTimer?.geofenceRadius || 50,
-                          delayStart: jobWithAutoTimer.autoTimer?.delayStart || 2,
-                          delayStop: jobWithAutoTimer.autoTimer?.delayStop || 2,
+                          delayStart: jobWithAutoTimer.autoTimer?.delayStart || 0,
+                          delayStop: jobWithAutoTimer.autoTimer?.delayStop || 0,
                           notifications: jobWithAutoTimer.autoTimer?.notifications !== false
                         }
                       };
@@ -3469,18 +3469,18 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 <TouchableOpacity
                   style={styles.counterButton}
                   onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStart ?? 2;
+                    const currentValue = formData.autoTimer?.delayStart ?? 0;
                     const newValue = Math.max(0, currentValue - 1);
                     updateNestedData('autoTimer', 'delayStart', newValue);
                   }}
                 >
                   <IconSymbol size={20} name="minus" color={colors.primary} />
                 </TouchableOpacity>
-                <Text style={styles.counterText}>{formData.autoTimer?.delayStart ?? 2} min</Text>
+                <Text style={styles.counterText}>{formData.autoTimer?.delayStart ?? 0} min</Text>
                 <TouchableOpacity
                   style={styles.counterButton}
                   onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStart ?? 2;
+                    const currentValue = formData.autoTimer?.delayStart ?? 0;
                     const newValue = Math.min(10, currentValue + 1);
                     updateNestedData('autoTimer', 'delayStart', newValue);
                   }}
@@ -3498,18 +3498,18 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 <TouchableOpacity
                   style={styles.counterButton}
                   onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStop ?? 2;
+                    const currentValue = formData.autoTimer?.delayStop ?? 0;
                     const newValue = Math.max(0, currentValue - 1);
                     updateNestedData('autoTimer', 'delayStop', newValue);
                   }}
                 >
                   <IconSymbol size={20} name="minus" color={colors.primary} />
                 </TouchableOpacity>
-                <Text style={styles.counterText}>{formData.autoTimer?.delayStop ?? 2} min</Text>
+                <Text style={styles.counterText}>{formData.autoTimer?.delayStop ?? 0} min</Text>
                 <TouchableOpacity
                   style={styles.counterButton}
                   onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStop ?? 2;
+                    const currentValue = formData.autoTimer?.delayStop ?? 0;
                     const newValue = Math.min(10, currentValue + 1);
                     updateNestedData('autoTimer', 'delayStop', newValue);
                   }}
@@ -3623,8 +3623,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               <Text style={styles.previewText}>
                            <Text style={styles.previewTitle}>📍</Text>
                 {t('job_form.auto_timer.preview', {
-                  delayStart: formData.autoTimer?.delayStart || 2,
-                  delayStop: formData.autoTimer?.delayStop || 2
+                  delayStart: formData.autoTimer?.delayStart || 0,
+                  delayStop: formData.autoTimer?.delayStop || 0
                 })}
               </Text>
             </View>

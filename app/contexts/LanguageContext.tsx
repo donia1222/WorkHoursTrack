@@ -13,19 +13,24 @@ import it from '../locales/it.json';
 import pt from '../locales/pt.json';
 import nl from '../locales/nl.json';
 import tr from '../locales/tr.json';
+import ja from '../locales/ja.json';
+import ru from '../locales/ru.json';
 
-export type SupportedLanguage = 'es' | 'en' | 'de' | 'fr' | 'it' | 'pt' | 'nl' | 'tr';
+export type SupportedLanguage = 'es' | 'en' | 'de' | 'fr' | 'it' | 'pt' | 'nl' | 'tr' | 'ja' | 'ru';
 
 interface LanguageContextType {
   language: SupportedLanguage;
-  setLanguage: (language: SupportedLanguage) => Promise<void>;
+  setLanguage: (language: SupportedLanguage | 'auto') => Promise<void>;
   t: (key: string, options?: any) => string;
   isLoading: boolean;
+  resetToDeviceLanguage: () => Promise<void>;
+  isAutoDetect: boolean;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'user_language';
+const AUTODETECT_KEY = 'language_autodetect';
 
 const i18n = new I18n({
   es,
@@ -36,6 +41,8 @@ const i18n = new I18n({
   pt,
   nl,
   tr,
+  ja,
+  ru,
 });
 
 i18n.enableFallback = true;
@@ -43,176 +50,75 @@ i18n.defaultLocale = 'en';
 
 const getDeviceLanguage = (): SupportedLanguage => {
   const locales = Localization.getLocales();
-  const deviceLanguage = locales[0]?.languageCode;
+  const deviceLanguage = locales[0]?.languageCode?.toLowerCase();
   const deviceRegion = locales[0]?.regionCode;
   
   // Manejar casos especiales de idiomas con regiones
   const fullLocale = deviceRegion ? `${deviceLanguage}-${deviceRegion}` : deviceLanguage;
   
-  console.log('Device language detected:', deviceLanguage, 'Full locale:', fullLocale);
+  console.log('=== Language Detection Debug ===');
+  console.log('Device language code:', deviceLanguage);
+  console.log('Device region:', deviceRegion);
+  console.log('Full locale:', fullLocale);
+  console.log('Language tag:', locales[0]?.languageTag);
+  console.log('All locales:', JSON.stringify(locales, null, 2));
   
-  switch (deviceLanguage) {
-    case 'es':
-      return 'es';
-    case 'en':
-      return 'en';
-    case 'de':
-      return 'de';
-    case 'fr':
-      return 'fr';
-    case 'it':
-      return 'it';
-    case 'pt':
-      return 'pt';
-    case 'nl':
-      return 'nl';
-    case 'tr':
-      return 'tr';
-    default:
-      // Si no está entre los 8 idiomas soportados, usar inglés
-      console.log('Language not supported, defaulting to English');
-      return 'en';
+  // Primero intentar coincidencia exacta
+  if (deviceLanguage) {
+    switch (deviceLanguage) {
+      case 'es':
+      case 'ca': // Catalán -> Español
+      case 'gl': // Gallego -> Español
+      case 'eu': // Euskera -> Español
+        return 'es';
+      case 'en':
+        return 'en';
+      case 'de':
+      case 'gsw': // Alemán suizo
+        return 'de';
+      case 'fr':
+        return 'fr';
+      case 'it':
+        return 'it';
+      case 'pt':
+        return 'pt';
+      case 'nl':
+      case 'fy': // Frisón -> Holandés
+        return 'nl';
+      case 'tr':
+        return 'tr';
+      case 'ja':
+        return 'ja';
+      case 'ru':
+        return 'ru';
+    }
   }
-};
-
-const updateNotificationTranslations = (locale: SupportedLanguage) => {
-  const localeData = { es, en, de, fr, it, pt, nl, tr }[locale];
   
-  // Verificar que existan las traducciones
-  if (!localeData?.preferences?.notifications) {
-    console.warn('Notification translations not found for locale:', locale);
-    return;
+  // Si no hay coincidencia exacta, intentar con el languageTag completo
+  const languageTag = locales[0]?.languageTag?.toLowerCase();
+  if (languageTag) {
+    // Verificar si empieza con alguno de nuestros idiomas soportados
+    if (languageTag.startsWith('es')) return 'es';
+    if (languageTag.startsWith('en')) return 'en';
+    if (languageTag.startsWith('de')) return 'de';
+    if (languageTag.startsWith('fr')) return 'fr';
+    if (languageTag.startsWith('it')) return 'it';
+    if (languageTag.startsWith('pt')) return 'pt';
+    if (languageTag.startsWith('nl')) return 'nl';
+    if (languageTag.startsWith('tr')) return 'tr';
+    if (languageTag.startsWith('ja')) return 'ja';
+    if (languageTag.startsWith('ru')) return 'ru';
   }
-
-  const notifications = localeData.preferences.notifications;
   
-  // Definir las traducciones específicas para cada idioma
-  const translationsByLocale = {
-    es: {
-      timer_started_title: notifications.timer_started_title || '⏰ Timer Iniciado',
-      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Timer automático iniciado para',
-      timer_stopped_title: notifications.timer_stopped_title || '⏹️ Timer Pausado',
-      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Timer automático pausado para',
-      timer_will_start_title: notifications.timer_will_start_title || '🚀 Timer se Iniciará',
-      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/minutos? para "{{jobName}}"/, '').trim() || 'Timer se iniciará en',
-      timer_will_stop_title: notifications.timer_will_stop_title || '⏸️ Timer se Pausará',
-      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/minutos? para "{{jobName}}"/, '').trim() || 'Timer se pausará en',
-      default_title: notifications.default_notification_title || '📱 Notificación',
-      default_body: 'Evento para',
-      minute: 'minuto',
-      minutes: 'minutos',
-    },
-    en: {
-      timer_started_title: notifications.timer_started_title || '⏰ Timer Started',
-      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Automatic timer started for',
-      timer_stopped_title: notifications.timer_stopped_title || '⏹️ Timer Stopped',
-      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Automatic timer stopped for',
-      timer_will_start_title: notifications.timer_will_start_title || '🚀 Timer Will Start',
-      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/minutes? for "{{jobName}}"/, '').trim() || 'Timer will start in',
-      timer_will_stop_title: notifications.timer_will_stop_title || '⏸️ Timer Will Stop',
-      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/minutes? for "{{jobName}}"/, '').trim() || 'Timer will stop in',
-      default_title: notifications.default_notification_title || '📱 Notification',
-      default_body: 'Event for',
-      minute: 'minute',
-      minutes: 'minutes',
-    },
-    de: {
-      timer_started_title: notifications.timer_started_title || '⏰ Timer Gestartet',
-      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Automatischer Timer gestartet für',
-      timer_stopped_title: notifications.timer_stopped_title || '⏹️ Timer Pausiert',
-      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Automatischer Timer pausiert für',
-      timer_will_start_title: notifications.timer_will_start_title || '🚀 Timer Wird Starten',
-      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/Minuten? für "{{jobName}}"/, '').trim() || 'Timer startet in',
-      timer_will_stop_title: notifications.timer_will_stop_title || '⏸️ Timer Wird Pausieren',
-      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/Minuten? für "{{jobName}}"/, '').trim() || 'Timer pausiert in',
-      default_title: notifications.default_notification_title || '📱 Benachrichtigung',
-      default_body: 'Ereignis für',
-      minute: 'Minute',
-      minutes: 'Minuten',
-    },
-    fr: {
-      timer_started_title: notifications.timer_started_title || '⏰ Minuteur Démarré',
-      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Minuteur automatique démarré pour',
-      timer_stopped_title: notifications.timer_stopped_title || '⏹️ Minuteur Arrêté',
-      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Minuteur automatique arrêté pour',
-      timer_will_start_title: notifications.timer_will_start_title || '🚀 Le Minuteur Va Démarrer',
-      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/minutes? pour "{{jobName}}"/, '').trim() || 'Le minuteur démarrera dans',
-      timer_will_stop_title: notifications.timer_will_stop_title || "⏸️ Le Minuteur Va S'arrêter",
-      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/minutes? pour "{{jobName}}"/, '').trim() || "Le minuteur s'arrêtera dans",
-      default_title: notifications.default_notification_title || '📱 Notification',
-      default_body: 'Événement pour',
-      minute: 'minute',
-      minutes: 'minutes',
-    },
-    it: {
-      timer_started_title: notifications.timer_started_title || '⏰ Timer Avviato',
-      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Timer automatico avviato per',
-      timer_stopped_title: notifications.timer_stopped_title || '⏹️ Timer Fermato',
-      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Timer automatico fermato per',
-      timer_will_start_title: notifications.timer_will_start_title || '🚀 Il Timer Si Avvierà',
-      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/minuti? per "{{jobName}}"/, '').trim() || 'Il timer si avvierà tra',
-      timer_will_stop_title: notifications.timer_will_stop_title || '⏸️ Il Timer Si Fermerà',
-      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/minuti? per "{{jobName}}"/, '').trim() || 'Il timer si fermerà tra',
-      default_title: notifications.default_notification_title || '📱 Notifica',
-      default_body: 'Evento per',
-      minute: 'minuto',
-      minutes: 'minuti',
-    },
-    pt: {
-      timer_started_title: notifications.timer_started_title || '⏰ Timer Iniciado',
-      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Timer automático iniciado para',
-      timer_stopped_title: notifications.timer_stopped_title || '⏹️ Timer Parado',
-      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Timer automático parado para',
-      timer_will_start_title: notifications.timer_will_start_title || '🚀 Timer Vai Iniciar',
-      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/minutos? para "{{jobName}}"/, '').trim() || 'Timer iniciará em',
-      timer_will_stop_title: notifications.timer_will_stop_title || '⏸️ Timer Vai Parar',
-      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/minutos? para "{{jobName}}"/, '').trim() || 'Timer parará em',
-      default_title: notifications.default_notification_title || '📱 Notificação',
-      default_body: 'Evento para',
-      minute: 'minuto',
-      minutes: 'minutos',
-    },
-    nl: {
-      timer_started_title: notifications.timer_started_title || '⏰ Timer Gestart',
-      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Automatische timer gestart voor',
-      timer_stopped_title: notifications.timer_stopped_title || '⏹️ Timer Gestopt',
-      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Automatische timer gestopt voor',
-      timer_will_start_title: notifications.timer_will_start_title || '🚀 Timer Gaat Starten',
-      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/minuten? voor "{{jobName}}"/, '').trim() || 'Timer start over',
-      timer_will_stop_title: notifications.timer_will_stop_title || '⏸️ Timer Gaat Stoppen',
-      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/minuten? voor "{{jobName}}"/, '').trim() || 'Timer stopt over',
-      default_title: notifications.default_notification_title || '📱 Melding',
-      default_body: 'Gebeurtenis voor',
-      minute: 'minuut',
-      minutes: 'minuten',
-    },
-    tr: {
-      timer_started_title: notifications.timer_started_title || '⏰ Zamanlayıcı Başladı',
-      timer_started_body: notifications.timer_started_body?.replace('"{{jobName}}"', '') || 'Otomatik zamanlayıcı başladı',
-      timer_stopped_title: notifications.timer_stopped_title || '⏹️ Zamanlayıcı Durdu',
-      timer_stopped_body: notifications.timer_stopped_body?.replace('"{{jobName}}"', '') || 'Otomatik zamanlayıcı durdu',
-      timer_will_start_title: notifications.timer_will_start_title || '🚀 Zamanlayıcı Başlayacak',
-      timer_will_start_body: notifications.timer_will_start_body?.replace('{{minutes}}', '').replace(/dakika? için "{{jobName}}"/, '').trim() || 'Zamanlayıcı başlayacak',
-      timer_will_stop_title: notifications.timer_will_stop_title || '⏸️ Zamanlayıcı Duracak',
-      timer_will_stop_body: notifications.timer_will_stop_body?.replace('{{minutes}}', '').replace(/dakika? için "{{jobName}}"/, '').trim() || 'Zamanlayıcı duracak',
-      default_title: notifications.default_notification_title || '📱 Bildirim',
-      default_body: 'Etkinlik',
-      minute: 'dakika',
-      minutes: 'dakika',
-    },
-  };
-
-  // Usar las traducciones del locale actual
-  const translations = translationsByLocale[locale];
-  
-  if (translations) {
-    NotificationService.getInstance().updateTranslations(translations);
-  }
+  // Si no está entre los 8 idiomas soportados, usar inglés
+  console.log('Language not supported, defaulting to English. Device language:', deviceLanguage, 'LanguageTag:', languageTag);
+  return 'en';
 };
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setCurrentLanguage] = useState<SupportedLanguage>('en');
   const [isLoading, setIsLoading] = useState(true);
+  const [isAutoDetect, setIsAutoDetect] = useState(true);
 
   useEffect(() => {
     loadLanguage();
@@ -220,22 +126,34 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const loadLanguage = async () => {
     try {
-      const savedLanguage = await AsyncStorage.getItem(STORAGE_KEY);
+      // Primero verificar si el modo autodetección está activado
+      const autoDetectMode = await AsyncStorage.getItem(AUTODETECT_KEY);
+      const isAuto = autoDetectMode === null || autoDetectMode === 'true'; // Por defecto es true
+      setIsAutoDetect(isAuto);
+      
       let languageToUse: SupportedLanguage;
       
-      if (savedLanguage) {
-        // Usuario ya seleccionó un idioma manualmente
-        languageToUse = savedLanguage as SupportedLanguage;
-      } else {
-        // Primera vez o no hay preferencia guardada
-        // Detectar idioma del dispositivo
+      if (isAuto) {
+        // Modo autodetección activado - siempre detectar el idioma del dispositivo
         languageToUse = getDeviceLanguage();
-        // No guardar automáticamente para permitir que el usuario lo cambie si desea
+        console.log('Auto-detect mode ON - detected language:', languageToUse);
+      } else {
+        // Modo manual - cargar el idioma guardado
+        const savedLanguage = await AsyncStorage.getItem(STORAGE_KEY);
+        if (savedLanguage) {
+          languageToUse = savedLanguage as SupportedLanguage;
+          console.log('Manual mode - loading saved language:', languageToUse);
+        } else {
+          // Si no hay idioma guardado, detectar pero guardar
+          languageToUse = getDeviceLanguage();
+          await AsyncStorage.setItem(STORAGE_KEY, languageToUse);
+          console.log('Manual mode - no saved language, using device:', languageToUse);
+        }
       }
       
       setCurrentLanguage(languageToUse);
       i18n.locale = languageToUse;
-      updateNotificationTranslations(languageToUse);
+
       
       // Update Quick Actions with detected language
       try {
@@ -248,7 +166,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       const deviceLanguage = getDeviceLanguage();
       setCurrentLanguage(deviceLanguage);
       i18n.locale = deviceLanguage;
-      updateNotificationTranslations(deviceLanguage);
+      
+      // Intentar guardar el idioma detectado como fallback
+      try {
+        await AsyncStorage.setItem(STORAGE_KEY, deviceLanguage);
+        console.log('Fallback language saved:', deviceLanguage);
+      } catch (saveError) {
+        console.error('Error saving fallback language:', saveError);
+      }
       
       // Update Quick Actions with fallback language
       try {
@@ -261,22 +186,63 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const setLanguage = async (newLanguage: SupportedLanguage) => {
+  const setLanguage = async (newLanguage: SupportedLanguage | 'auto') => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, newLanguage);
-      setCurrentLanguage(newLanguage);
-      i18n.locale = newLanguage;
-      updateNotificationTranslations(newLanguage);
-      
-      // Update Quick Actions when user manually changes language
-      try {
-        await SimpleQuickActionsManager.updateLanguage(newLanguage);
-        console.log('Quick Actions language updated to:', newLanguage);
-      } catch (error) {
-        console.error('Error updating Quick Actions language:', error);
+      if (newLanguage === 'auto') {
+        // Activar modo autodetección
+        await AsyncStorage.setItem(AUTODETECT_KEY, 'true');
+        await AsyncStorage.removeItem(STORAGE_KEY); // Limpiar idioma manual guardado
+        setIsAutoDetect(true);
+        
+        // Detectar y aplicar idioma del dispositivo
+        const deviceLanguage = getDeviceLanguage();
+        setCurrentLanguage(deviceLanguage);
+        i18n.locale = deviceLanguage;
+        
+        // Update Quick Actions
+        try {
+          await SimpleQuickActionsManager.updateLanguage(deviceLanguage);
+          console.log('Auto-detect enabled, language set to:', deviceLanguage);
+        } catch (error) {
+          console.error('Error updating Quick Actions language:', error);
+        }
+      } else {
+        // Desactivar modo autodetección y guardar idioma manual
+        await AsyncStorage.setItem(AUTODETECT_KEY, 'false');
+        await AsyncStorage.setItem(STORAGE_KEY, newLanguage);
+        setIsAutoDetect(false);
+        setCurrentLanguage(newLanguage);
+        i18n.locale = newLanguage;
+        
+        // Update Quick Actions when user manually changes language
+        try {
+          await SimpleQuickActionsManager.updateLanguage(newLanguage);
+          console.log('Manual language set to:', newLanguage);
+        } catch (error) {
+          console.error('Error updating Quick Actions language:', error);
+        }
       }
     } catch (error) {
       console.error('Error saving language:', error);
+    }
+  };
+
+  const resetToDeviceLanguage = async () => {
+    try {
+      const deviceLanguage = getDeviceLanguage();
+      await AsyncStorage.setItem(STORAGE_KEY, deviceLanguage);
+      setCurrentLanguage(deviceLanguage);
+      i18n.locale = deviceLanguage;
+      
+      // Update Quick Actions with device language
+      try {
+        await SimpleQuickActionsManager.updateLanguage(deviceLanguage);
+        console.log('Reset to device language:', deviceLanguage);
+      } catch (error) {
+        console.error('Error updating Quick Actions after reset:', error);
+      }
+    } catch (error) {
+      console.error('Error resetting to device language:', error);
     }
   };
 
@@ -290,7 +256,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         language, 
         setLanguage, 
         t, 
-        isLoading 
+        isLoading,
+        resetToDeviceLanguage,
+        isAutoDetect 
       }}
     >
       {children}
@@ -315,15 +283,18 @@ export const languageConfig = {
   pt: { name: 'Português', flag: '🇧🇷', nativeName: 'Português' },
   nl: { name: 'Nederlands', flag: '🇳🇱', nativeName: 'Nederlands' },
   tr: { name: 'Türkçe', flag: '🇹🇷', nativeName: 'Türkçe' },
+  ja: { name: '日本語', flag: '🇯🇵', nativeName: '日本語' },
+  ru: { name: 'Русский', flag: '🇷🇺', nativeName: 'Русский' },
 };
 
 // Helper function to debug Quick Actions language (for development)
 export const debugQuickActionsLanguage = async () => {
   const currentQALanguage = SimpleQuickActionsManager.getCurrentLanguage();
+  const locales = Localization.getLocales();
   console.log('=== Quick Actions Language Debug ===');
   console.log('Current Quick Actions language:', currentQALanguage);
-  console.log('Device locale:', Localization.locale);
-  console.log('Device language code:', Localization.locale.split('-')[0]);
+  console.log('Device locales:', locales);
+  console.log('Device language code:', locales[0]?.languageCode);
   
   // Force refresh with current language
   try {

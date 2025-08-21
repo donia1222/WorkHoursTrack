@@ -25,7 +25,10 @@
       "title": "Taal",
       "description": "Selecteer de taal van de applicatie",
       "default": "Standaardtaal",
-      "change_to": "Wijzigen naar {{language}}"
+      "change_to": "Wijzigen naar {{language}}",
+      "autodetect": "Automatisch detecteren",
+      "autodetect_active": "Gedetecteerd: {{language}}",
+      "autodetect_inactive": "Apparaattaal gebruiken"
     },
     "notifications": {
       "title": "Meldingen",

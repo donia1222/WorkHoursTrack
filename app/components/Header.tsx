@@ -27,8 +27,9 @@ interface HeaderProps {
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   safeArea: {
+    marginTop: -10,
     backgroundColor: colors.background,
-    marginTop:  -20 ,
+    zIndex: 1001,
   },
   blurContainer: {
     elevation: 10,
@@ -44,7 +45,13 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: isDark ? 'rgba(139, 92, 246, 0.1)' : 'rgba(99, 102, 241, 0.08)',
   },
-
+  blurGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -278,8 +285,8 @@ export default function Header({ title, onProfilePress, onBackPress, showBackBut
   
   return (
     <SafeAreaView style={styles.safeArea}>
-      <BlurView intensity={isDark ? 99 : 99} tint={isDark ? "dark" : "light"} style={styles.blurContainer}>
- 
+      <BlurView intensity={isDark ? 98 : 96} tint={isDark ? "dark" : "light"} style={styles.blurContainer}>
+
         <View style={styles.container}>
           {showBackButton && onBackPress ? (
             <TouchableOpacity onPress={() => { triggerHaptic('light'); onBackPress(); }} style={styles.backButton}>
