@@ -511,8 +511,8 @@ class AutoTimerService {
           await Notifications.scheduleNotificationAsync({
             identifier: 'timer_stopped_' + Date.now(),
             content: {
-              title: '⏹️ Timer Detenido',
-              body: `Timer detenido para "${job.name}"`,
+              title: '⏹️ Timer Stopped',
+              body: `Timer stopped for "${job.name}"`,
               sound: 'default',
             },
             trigger: null,

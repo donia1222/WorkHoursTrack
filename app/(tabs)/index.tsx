@@ -746,7 +746,7 @@ function AppContent() {
         <View 
           style={{
             position: 'absolute',
-            top: 85, // Below the header
+            top: 95, // Below the header
             left: 12,
             right: 12,
             zIndex: 1000,
@@ -806,7 +806,7 @@ function AppContent() {
                 marginBottom: 4,
                 letterSpacing: 0.3,
               }}>
-                AutoTimer Activo
+    
               </Text>
               <Text style={{
                 fontSize: 13,

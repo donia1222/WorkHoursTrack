@@ -3322,18 +3322,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         </Text>
                       </View>
                     </View>
-                    <View style={{
-                      backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(37, 99, 235, 0.15)',
-                      borderRadius: 20,
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                    }}>
-                      <Text style={{
-                        fontSize: isTablet ? 12 : 10,
-                        fontWeight: '600',
-                        color: isDark ? '#93c5fd' : '#3b82f6',
-                      }}>NUEVO</Text>
-                    </View>
                   </View>
                 </TouchableOpacity>
                 )}

@@ -117,18 +117,18 @@ class NotificationService {
   };
   private pendingBackgroundNotifications: Map<string, any> = new Map();
   private translations: NotificationTranslations = {
-    timer_started_title: '⏰ Timer Iniciado',
-    timer_started_body: 'Timer automático iniciado para',
-    timer_stopped_title: '⏹️ Timer Pausado',
-    timer_stopped_body: 'Timer automático pausado para',
-    timer_will_start_title: '🚀 Timer se Iniciará',
-    timer_will_start_body: 'Timer se iniciará en',
-    timer_will_stop_title: '⏸️ Timer se Pausará',
-    timer_will_stop_body: 'Timer se pausará en',
-    default_title: '📱 Notificación',
-    default_body: 'Evento para',
-    minute: 'minuto',
-    minutes: 'minutos',
+    timer_started_title: '⏰ Timer Started',
+    timer_started_body: 'Automatic timer started for',
+    timer_stopped_title: '⏹️ Timer Stopped',
+    timer_stopped_body: 'Automatic timer stopped for',
+    timer_will_start_title: '🚀 Timer Will Start',
+    timer_will_start_body: 'Timer will start in',
+    timer_will_stop_title: '⏸️ Timer Will Stop',
+    timer_will_stop_body: 'Timer will stop in',
+    default_title: '📱 Notification',
+    default_body: 'Event for',
+    minute: 'minute',
+    minutes: 'minutes',
   };
 
   private constructor() {
@@ -772,20 +772,20 @@ class NotificationService {
     identifier: string
   ): Promise<void> {
     try {
-      let title = '⏰ Recordatorio de Trabajo';
+      let title = '⏰ Work Reminder';
       let body = '';
       
       if (minutesBefore === 0) {
-        body = `Es hora de empezar a trabajar en ${jobName} (${startTime})`;
+        body = `Time to start work at ${jobName} (${startTime})`;
       } else if (minutesBefore === 1) {
-        body = `En 1 minuto empieza tu turno en ${jobName} (${startTime})`;
+        body = `Your shift at ${jobName} starts in 1 minute (${startTime})`;
       } else if (minutesBefore < 60) {
-        body = `En ${minutesBefore} minutos empieza tu turno en ${jobName} (${startTime})`;
+        body = `Your shift at ${jobName} starts in ${minutesBefore} minutes (${startTime})`;
       } else {
         const hours = Math.floor(minutesBefore / 60);
         const mins = minutesBefore % 60;
         const timeText = mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-        body = `En ${timeText} empieza tu turno en ${jobName} (${startTime})`;
+        body = `Your shift at ${jobName} starts in ${timeText} (${startTime})`;
       }
 
       console.log('📝 Scheduling notification:');

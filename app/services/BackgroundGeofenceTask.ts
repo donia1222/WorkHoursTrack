@@ -117,8 +117,10 @@ async function handleBackgroundEnter(job: any, timestamp: string): Promise<void>
       return; // Solo salimos si ya está activa para este trabajo
     }
 
-    // Verificar delay configurado
-    const delayMinutes = job.autoTimer?.delayStart ?? 0; // Default 0 para pruebas
+    // Verificar delay configurado - usar mismos nombres que SimpleAutoTimer
+    const delayMinutes = Number(
+      job.autoTimer?.startDelayMinutes ?? job.autoTimer?.startDelay ?? job.autoTimer?.delayStart ?? 0
+    );
     
     if (delayMinutes > 0) {
       // Guardar tiempo de entrada y delay para procesar después
@@ -149,8 +151,8 @@ async function handleBackgroundEnter(job: any, timestamp: string): Promise<void>
 
       // Enviar UNA sola notificación cuando realmente inicia
       await sendBackgroundNotificationForced(
-        '✅ Timer Iniciado',
-        `Timer iniciado automáticamente en ${job.name}`,
+        '✅ Timer Started',
+        `Automatic timer started at ${job.name}`,
         { jobId: job.id, action: 'started' }
       );
       
@@ -184,8 +186,10 @@ async function handleBackgroundExit(job: any, timestamp: string): Promise<void> 
       return;
     }
 
-    // Verificar delay configurado
-    const delayMinutes = job.autoTimer?.delayStop ?? 2;
+    // Verificar delay configurado - usar mismos nombres que SimpleAutoTimer
+    const delayMinutes = Number(
+      job.autoTimer?.stopDelayMinutes ?? job.autoTimer?.stopDelay ?? job.autoTimer?.delayStop ?? 0
+    );
     
     if (delayMinutes > 0) {
       // Guardar tiempo de salida y delay para procesar después
@@ -222,8 +226,8 @@ async function handleBackgroundExit(job: any, timestamp: string): Promise<void> 
       await JobService.clearActiveSession();
 
       await sendBackgroundNotification(
-        '⏹️ Timer Detenido',
-        `Timer detenido para ${job.name}: ${elapsedHours.toFixed(2)}h registradas`,
+        '⏹️ Timer Stopped',
+        `Timer stopped for ${job.name}: ${elapsedHours.toFixed(2)}h recorded`,
         { jobId: job.id, action: 'stopped', hours: elapsedHours }
       );
     }
@@ -398,20 +402,18 @@ export async function startBackgroundGeofencing(jobs: any[]): Promise<boolean> {
       return false;
     }
 
-    // Crear regiones de geofencing con histéresis
-    // NOTA: iOS/Android no soportan radios diferentes para entrada/salida nativamente
-    // Usamos el radio base para entrada y lo aumentamos para salida
+    // Crear regiones de geofencing - usar el mismo radio que SimpleAutoTimer
     const regions: Location.LocationRegion[] = validJobs.map(job => {
-      const baseRadius = job.autoTimer?.geofenceRadius || 50;
-      // Usamos un radio intermedio (15% más) para el geofence nativo
-      // Esto reduce falsos positivos manteniendo buena detección
-      const effectiveRadius = Math.round(baseRadius * 1.15);
+      // Usar EXACTAMENTE el mismo radio que SimpleAutoTimer
+      const configuredRadius = Number(job.autoTimer?.geofenceRadius ?? job.autoTimer?.radius ?? 50);
+      const baseRadius = Math.max(30, isNaN(configuredRadius) ? 50 : configuredRadius);
+      // NO añadir margen extra - usar el radio exacto
       
       return {
         identifier: job.id,
         latitude: job.location.latitude,
         longitude: job.location.longitude,
-        radius: effectiveRadius, // Radio con margen de seguridad
+        radius: baseRadius, // Radio exacto sin margen
         notifyOnEnter: true,
         notifyOnExit: true,
       };
@@ -420,8 +422,7 @@ export async function startBackgroundGeofencing(jobs: any[]): Promise<boolean> {
     console.log(`📍 Configurando ${regions.length} regiones de geofencing:`);
     regions.forEach(region => {
       const job = validJobs.find(j => j.id === region.identifier);
-      const baseRadius = job?.autoTimer?.geofenceRadius || 50;
-      console.log(`  - ${job?.name}: radio base ${baseRadius}m → efectivo ${region.radius}m (+15% margen)`);
+      console.log(`  - ${job?.name}: radio ${region.radius}m (exacto)`);
     });
 
     // Verificar si la tarea está definida
@@ -540,8 +541,8 @@ async function processPendingActions(): Promise<void> {
             
             // Enviar notificación cuando el timer realmente inicia después del delay
             await sendBackgroundNotificationForced(
-              '✅ Timer Iniciado',
-              `Timer iniciado automáticamente en ${job?.name || 'trabajo'}`,
+              '✅ Timer Started',
+              `Automatic timer started at ${job?.name || 'work'}`,
               { jobId, action: 'started', timestamp: pending.timestamp }
             );
           } else {
@@ -579,8 +580,8 @@ async function processPendingActions(): Promise<void> {
             
             // Enviar notificación cuando el timer realmente para después del delay
             await sendBackgroundNotificationForced(
-              '⏹️ Timer Detenido',
-              `Timer detenido para ${job?.name || 'trabajo'}: ${elapsedHours.toFixed(2)}h registradas`,
+              '⏹️ Timer Stopped',
+              `Timer stopped for ${job?.name || 'work'}: ${elapsedHours.toFixed(2)}h recorded`,
               { jobId, action: 'stopped', hours: elapsedHours, timestamp: pending.timestamp }
             );
           } else {
@@ -620,29 +621,3 @@ export async function getBackgroundEvents(): Promise<any[]> {
     return [];
   }
 }
-
-/**
- * Método para simular eventos de geofencing (solo para pruebas)
- */
-// export async function simulateGeofenceEvent(jobId: string, eventType: 'enter' | 'exit'): Promise<void> {
-//   console.log(`🧪 Simulando evento ${eventType} para trabajo ${jobId}`);
-  
-//   const mockData = {
-//     eventType: eventType === 'enter' ? Location.GeofencingEventType.Enter : Location.GeofencingEventType.Exit,
-//     region: {
-//       identifier: jobId,
-//       latitude: 0,
-//       longitude: 0,
-//       radius: 100,
-//       notifyOnEnter: true,
-//       notifyOnExit: true,
-//     }
-//   };
-
-//   // Ejecutar la tarea como si fuera un evento real
-//   // TaskManager no expone getTaskOptions
-//   // const taskExecutor = TaskManager.getTaskOptions(BACKGROUND_GEOFENCE_TASK);
-//   // if (taskExecutor) {
-//   //   await (taskExecutor as any).taskExecutor({ data: mockData, error: null });
-//   // }
-// }

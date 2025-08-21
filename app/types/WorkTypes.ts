@@ -82,6 +82,9 @@ export interface Job {
     geofenceRadius: number; // Detection radius in meters (default: 100)
     delayStart: number; // Minutes to wait before starting timer (default: 2)
     delayStop: number; // Minutes to wait before stopping timer (default: 2)
+    startDelayMinutes?: number; // Alternative name for SimpleAutoTimer compatibility
+    stopDelayMinutes?: number; // Alternative name for SimpleAutoTimer compatibility
+    radius?: number; // Alternative name for geofenceRadius
     notifications: boolean; // Show in-app notifications (default: true)
   };
 }

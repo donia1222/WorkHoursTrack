@@ -31,6 +31,7 @@ import { Job, DEFAULT_COLORS } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import { AutoScheduleService } from '../services/AutoScheduleService';
 import AutoTimerService from '../services/SimpleAutoTimer';
+import { startBackgroundGeofencing } from '../services/BackgroundGeofenceTask';
 import { FreeAddressSearch } from './FreeAddressSearch';
 import AddressAutocompleteDropdown from './AddressAutocompleteDropdown';
 import * as Updates from 'expo-updates';
@@ -1352,8 +1353,10 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         autoTimer: {
           enabled: false,
           geofenceRadius: 50,
-          delayStart: 0,
-          delayStop: 0,
+          startDelayMinutes: 0,  // Nombre correcto para SimpleAutoTimer
+          stopDelayMinutes: 0,   // Nombre correcto para SimpleAutoTimer
+          delayStart: 0,         // Mantener para compatibilidad
+          delayStop: 0,          // Mantener para compatibilidad
           notifications: true,
         },
       });
@@ -1709,6 +1712,25 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
       onSave(savedJob);
       onClose();
+      
+      // Si el auto-timer está activado, iniciar los servicios
+      if (savedJob.autoTimer?.enabled) {
+        setTimeout(async () => {
+          try {
+            // Iniciar SimpleAutoTimer para monitoreo con app abierta
+            const autoTimerService = AutoTimerService.getInstance();
+            await autoTimerService.startSimpleMonitoring();
+            console.log('✅ SimpleAutoTimer iniciado para', savedJob.name);
+            
+            // Iniciar background geofencing para app cerrada
+            const allJobs = await JobService.getJobs();
+            await startBackgroundGeofencing(allJobs);
+            console.log('✅ Background geofencing iniciado');
+          } catch (error) {
+            console.error('Error iniciando servicios de auto-timer:', error);
+          }
+        }, 1000);
+      }
       
       // Only reload the app if there were actual changes
       if (hasUnsavedChanges) {
@@ -3172,6 +3194,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                       // Stop handles everything including canceling pending actions
                       autoTimerService.stop();
                       
+                      // Si se está activando, iniciar el monitoreo
+                      if (value) {
+                        setTimeout(async () => {
+                          await autoTimerService.startSimpleMonitoring();
+                        }, 500);
+                      }
+                      
                       // Desactivar el AutoTimer del otro trabajo
                       const updatedOtherJob = {
                         ...jobWithAutoTimer,
@@ -3472,6 +3501,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     const currentValue = formData.autoTimer?.delayStart ?? 0;
                     const newValue = Math.max(0, currentValue - 1);
                     updateNestedData('autoTimer', 'delayStart', newValue);
+                    updateNestedData('autoTimer', 'startDelayMinutes', newValue); // También actualizar el nombre correcto
                   }}
                 >
                   <IconSymbol size={20} name="minus" color={colors.primary} />
@@ -3483,6 +3513,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     const currentValue = formData.autoTimer?.delayStart ?? 0;
                     const newValue = Math.min(10, currentValue + 1);
                     updateNestedData('autoTimer', 'delayStart', newValue);
+                    updateNestedData('autoTimer', 'startDelayMinutes', newValue); // También actualizar el nombre correcto
                   }}
                 >
                   <IconSymbol size={20} name="plus" color={colors.primary} />
@@ -3501,6 +3532,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     const currentValue = formData.autoTimer?.delayStop ?? 0;
                     const newValue = Math.max(0, currentValue - 1);
                     updateNestedData('autoTimer', 'delayStop', newValue);
+                    updateNestedData('autoTimer', 'stopDelayMinutes', newValue); // También actualizar el nombre correcto
                   }}
                 >
                   <IconSymbol size={20} name="minus" color={colors.primary} />
@@ -3512,6 +3544,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     const currentValue = formData.autoTimer?.delayStop ?? 0;
                     const newValue = Math.min(10, currentValue + 1);
                     updateNestedData('autoTimer', 'delayStop', newValue);
+                    updateNestedData('autoTimer', 'stopDelayMinutes', newValue); // También actualizar el nombre correcto
                   }}
                 >
                   <IconSymbol size={20} name="plus" color={colors.primary} />
