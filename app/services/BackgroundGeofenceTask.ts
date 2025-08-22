@@ -200,11 +200,12 @@ async function handleBackgroundExit(job: any, timestamp: string): Promise<void> 
       };
       await AsyncStorage.setItem(`@auto_timer_pending_stop_${job.id}`, JSON.stringify(pendingStop));
       
-      // NO notificar cuando se programa - solo cuando realmente pare
       console.log(`⏱️ Timer programado para detenerse en ${delayMinutes} minutos`);
       
-      // NO usar setTimeout - el timer se parará cuando la app vuelva a foreground
-      // o cuando se procese el siguiente evento de geofencing
+      // La parada se ejecutará cuando:
+      // 1. La app vuelva a foreground
+      // 2. Se procese el siguiente evento de geofencing
+      // 3. Se cumpla el tiempo del delay
     } else {
       // Parar inmediatamente si no hay delay
       const startTime = new Date(activeSession.startTime);
@@ -402,18 +403,17 @@ export async function startBackgroundGeofencing(jobs: any[]): Promise<boolean> {
       return false;
     }
 
-    // Crear regiones de geofencing - usar el mismo radio que SimpleAutoTimer
+    // Crear regiones de geofencing - usar EXACTAMENTE el mismo radio que SimpleAutoTimer
     const regions: Location.LocationRegion[] = validJobs.map(job => {
-      // Usar EXACTAMENTE el mismo radio que SimpleAutoTimer
+      // Usar EXACTAMENTE el mismo radio que SimpleAutoTimer (línea 158-159 de SimpleAutoTimer.ts)
       const configuredRadius = Number(job.autoTimer?.geofenceRadius ?? job.autoTimer?.radius ?? 50);
       const baseRadius = Math.max(30, isNaN(configuredRadius) ? 50 : configuredRadius);
-      // NO añadir margen extra - usar el radio exacto
       
       return {
         identifier: job.id,
         latitude: job.location.latitude,
         longitude: job.location.longitude,
-        radius: baseRadius, // Radio exacto sin margen
+        radius: baseRadius, // Radio exacto, SIN modificaciones
         notifyOnEnter: true,
         notifyOnExit: true,
       };
@@ -422,7 +422,7 @@ export async function startBackgroundGeofencing(jobs: any[]): Promise<boolean> {
     console.log(`📍 Configurando ${regions.length} regiones de geofencing:`);
     regions.forEach(region => {
       const job = validJobs.find(j => j.id === region.identifier);
-      console.log(`  - ${job?.name}: radio ${region.radius}m (exacto)`);
+      console.log(`  - ${job?.name}: radio ${region.radius}m`);
     });
 
     // Verificar si la tarea está definida

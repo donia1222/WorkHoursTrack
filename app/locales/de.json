@@ -1004,6 +1004,7 @@
       "priority_support": "✓ Prioritäts-Support"
     },
     "processing": "Kauf wird verarbeitet...",
+    "processing_note": "Dies kann einen Moment dauern...",
     "success": {
       "title": "Abonnement Erfolgreich!",
       "message": "Sie haben jetzt vollständigen Zugang zu allen Premium-Funktionen.",

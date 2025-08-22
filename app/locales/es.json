@@ -1116,6 +1116,7 @@
       "priority_support": "✓ Soporte prioritario"
     },
     "processing": "Procesando compra...",
+    "processing_note": "Esto puede tomar unos momentos...",
     "success": {
       "title": "¡Suscripción Exitosa!",
       "message": "Ya tienes acceso completo a todas las funciones premium.",

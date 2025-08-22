@@ -85,6 +85,7 @@ export default function SubscriptionScreen() {
   });
 
   const handlePurchase = async (packageToPurchase: any) => {
+    console.log('🛍️ Iniciando handlePurchase');
     // Validar que el paquete tiene la información necesaria
     if (!packageToPurchase?.product?.identifier) {
       console.error('❌ Paquete inválido:', packageToPurchase);
@@ -102,25 +103,41 @@ export default function SubscriptionScreen() {
       title: packageToPurchase.product.title,
     });
     
+    console.log('🔄 Estableciendo estado purchasing a true');
     setPurchasing(true);
+    
+    console.log('📡 Llamando a purchaseSubscription...');
+    const purchaseStartTime = Date.now();
     const result = await purchaseSubscription(packageToPurchase);
+    const purchaseEndTime = Date.now();
+    console.log(`🕰️ purchaseSubscription retornó en ${purchaseEndTime - purchaseStartTime}ms`);
+    console.log('📋 Resultado de compra:', result.success ? 'EXITOSO' : 'FALLIDO');
+    
+    console.log('🔄 Estableciendo estado purchasing a false');
     setPurchasing(false);
 
     if (result.success) {
+      console.log('🎆 Iniciando verificación adicional de suscripción...');
       // Forzar una verificación adicional del estado de suscripción
       await checkSubscriptionStatus();
+      console.log('✅ Verificación adicional completada');
       
+      console.log('📢 Mostrando alerta de éxito...');
       Alert.alert(
         t('subscription.success.title'),
         t('subscription.success.message'),
         [
           {
             text: t('subscription.buttons.continue'),
-            onPress: () => navigateTo('mapa'),
+            onPress: () => {
+              console.log('👤 Usuario presionó continuar en alerta de éxito');
+              navigateTo('mapa');
+            },
           },
         ]
       );
     } else {
+      console.log('❌ Error en compra:', result.error);
       if (result.error !== 'User cancelled') {
         Alert.alert('Error', t('subscription.errors.purchase_failed'));
       }
@@ -710,6 +727,9 @@ Please describe your issue below:
               <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.purchasingCard}>
                 <ActivityIndicator size="large" color={colors.primary} />
                 <Text style={[styles.purchasingText, { color: colors.text }]}>{t('subscription.processing')}</Text>
+                <Text style={[styles.purchasingSubtext, { color: colors.textSecondary, marginTop: 8, fontSize: 14, textAlign: 'center' }]}>
+                  {t('subscription.processing_note') || 'Conectando con App Store...'}
+                </Text>
               </BlurView>
             </View>
         )}

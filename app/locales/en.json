@@ -1127,6 +1127,7 @@
       "priority_support": "✓ Priority support"
     },
     "processing": "Processing purchase...",
+    "processing_note": "This may take a few moments...",
     "success": {
       "title": "Subscription Successful!",
       "message": "You now have complete access to all premium features.",

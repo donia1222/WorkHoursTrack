@@ -266,7 +266,11 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         price: packageToPurchase?.product?.priceString,
       });
       
+      console.log('⏳ Llamando a Purchases.purchasePackage...');
+      const startTime = Date.now();
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
+      const endTime = Date.now();
+      console.log(`✅ purchasePackage completado en ${endTime - startTime}ms`);
       
       // Verificación mejorada de suscripción
       const hasActiveSubscriptions = customerInfo?.activeSubscriptions && 
@@ -277,6 +281,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       
       const isSubscribed = hasActiveSubscriptions || hasPremiumEntitlement || hasAnyEntitlement;
       
+      console.log('📊 Actualizando estado de suscripción...');
       setState(prev => ({
         ...prev,
         isSubscribed,
@@ -284,11 +289,13 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         isLoading: false,
       }));
 
+      console.log('💾 Guardando en AsyncStorage...');
       await AsyncStorage.setItem('isSubscribed', JSON.stringify(isSubscribed));
-      console.log('✅ Compra exitosa');
+      console.log('✅ Compra exitosa y estado actualizado');
       
       return { success: true, customerInfo };
     } catch (error: any) {
+      console.log('⚠️ Error capturado en purchaseSubscription');
       setState(prev => ({ ...prev, isLoading: false }));
       
       // Manejo detallado de errores
