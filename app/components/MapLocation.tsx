@@ -19,7 +19,10 @@ import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
-import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
+// IMPORTANTE: Usamos SimpleAutoTimer que es el que realmente está activo
+import SimpleAutoTimer from '../services/SimpleAutoTimer';
+// Mantener AutoTimerService solo para los tipos
+import { AutoTimerStatus } from '../services/AutoTimerService';
 import { JobCardsSwiper } from './JobCardsSwiper';
 import { useFocusEffect } from '@react-navigation/native';
 import WidgetSyncService from '../services/WidgetSyncService';
@@ -234,14 +237,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
 
   
   overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    pointerEvents: 'box-none',
+
   },
   centeredContent: {
     alignItems: 'center',
@@ -1207,7 +1203,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [jobStatistics, setJobStatistics] = useState<Map<string, { thisMonthHours: number; thisMonthDays: number }>>(new Map());
   const [activeTimerJobId, setActiveTimerJobId] = useState<string | null>(null);
   const [autoTimerStatus, setAutoTimerStatus] = useState<AutoTimerStatus | null>(null);
-  const [autoTimerService] = useState(() => AutoTimerService.getInstance());
+  // IMPORTANTE: Usar SimpleAutoTimer en lugar de AutoTimerService
+  const [autoTimerService] = useState(() => SimpleAutoTimer.getInstance());
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isTimerPaused, setIsTimerPaused] = useState(false);
   const [isAutoTimerMinimized, setIsAutoTimerMinimized] = useState(false);
@@ -1575,6 +1572,28 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
   // AutoTimer service initialization - runs only once
   useEffect(() => {
+    // Listen for status changes from SimpleAutoTimer
+    const handleStatusChanged = async (status: { state: string; jobId?: string }) => {
+      console.log('📡 MapLocation: SimpleAutoTimer emitted status change:', status);
+      
+      // Update AutoTimer status immediately
+      const updatedStatus = await autoTimerService.getStatus();
+      setAutoTimerStatus(updatedStatus);
+      
+      // If timer became active, update elapsed time immediately
+      if (status.state === 'active' && status.jobId) {
+        const elapsed = await autoTimerService.getElapsedTime();
+        setElapsedTime(elapsed);
+        console.log('⏱️ MapLocation: Timer activated, elapsed time:', elapsed);
+      } else if (status.state === 'inactive') {
+        setElapsedTime(0);
+        console.log('⏱️ MapLocation: Timer deactivated, resetting elapsed time');
+      }
+    };
+    
+    // Add listener for SimpleAutoTimer events
+    autoTimerService.on('statusChanged', handleStatusChanged);
+    
     const handleAutoTimerStatusChange = (status: AutoTimerStatus) => {
       console.log('🔄 MapLocation received AutoTimer status change:', {
         state: status.state,
@@ -1620,14 +1639,16 @@ export default function MapLocation({ location, onNavigate }: Props) {
     autoTimerService.addAlertListener(handleAutoTimerAlert);
     
     // Get current status immediately to sync with any ongoing countdown
-    const currentStatus = autoTimerService.getStatus();
-    setAutoTimerStatus(currentStatus);
-    console.log('🔄 MapLocation: Synced with current AutoTimer status:', currentStatus.state, currentStatus.remainingTime);
+    autoTimerService.getStatus().then(currentStatus => {
+      setAutoTimerStatus(currentStatus);
+      console.log('🔄 MapLocation: Synced with current AutoTimer status:', currentStatus.state, currentStatus.remainingTime);
+    });
 
     // Cleanup on unmount
     return () => {
       autoTimerService.removeStatusListener(handleAutoTimerStatusChange);
       autoTimerService.removeAlertListener(handleAutoTimerAlert);
+      autoTimerService.removeListener('statusChanged', handleStatusChanged);
     };
   }, []); // Empty dependency array - runs only once
 
@@ -1636,9 +1657,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
     useCallback(() => {
       console.log('🔄 MapLocation: Screen focused, updating AutoTimer status');
       // Immediate update
-      const currentStatus = autoTimerService.getStatus();
-      setAutoTimerStatus(currentStatus);
-      console.log('🔄 MapLocation: Updated status on focus:', currentStatus.state);
+      autoTimerService.getStatus().then(currentStatus => {
+        setAutoTimerStatus(currentStatus);
+        console.log('🔄 MapLocation: Updated status on focus:', currentStatus.state);
+      });
       
       // Reset mini calendar animations to prevent header issues
       miniCalendarOpacity.value = 0;
@@ -1646,8 +1668,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
       miniCalendarScale.value = 0.95;
       
       // Delayed update to catch any async state changes
-      const timeoutId = setTimeout(() => {
-        const delayedStatus = autoTimerService.getStatus();
+      const timeoutId = setTimeout(async () => {
+        const delayedStatus = await autoTimerService.getStatus();
         setAutoTimerStatus(delayedStatus);
         console.log('🔄 MapLocation: Delayed status update:', delayedStatus.state);
         
@@ -2383,7 +2405,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
       const updatedJobs = await JobService.getJobs();
       if (autoTimerService.isServiceEnabled()) {
         console.log('🔄 Restarting AutoTimer service with updated jobs after toggle');
-        await autoTimerService.stop();
+        autoTimerService.stop();
         await autoTimerService.start(updatedJobs);
       } else if (value) {
         console.log('🚀 Starting AutoTimer service after enabling AutoTimer');
@@ -3605,10 +3627,29 @@ export default function MapLocation({ location, onNavigate }: Props) {
         visible={showJobForm}
         editingJob={editingJob}
         initialTab={editingJob && selectedEditType ? getEditInfo(selectedEditType).tab : 'basic'}
-        onClose={() => {
+        onClose={async () => {
           console.log('🟡 MapLocation: JobFormModal closing');
           setShowJobForm(false);
           setEditingJob(null);
+          
+          // Refresh AutoTimer status when modal closes
+          // This ensures timer widget updates immediately if AutoTimer was activated
+          console.log('🔄 MapLocation: Refreshing AutoTimer status after JobFormModal close');
+          try {
+            const updatedStatus = await autoTimerService.getStatus();
+            setAutoTimerStatus(updatedStatus);
+            console.log('✅ MapLocation: AutoTimer status refreshed:', updatedStatus.state);
+            
+            // If timer is active, trigger elapsed time update immediately
+            if (updatedStatus.state === 'active' && updatedStatus.jobId) {
+              const elapsed = await autoTimerService.getElapsedTime();
+              setElapsedTime(elapsed);
+              console.log('⏱️ MapLocation: Elapsed time updated:', elapsed, 'seconds');
+            }
+          } catch (error) {
+            console.error('❌ MapLocation: Error refreshing AutoTimer status:', error);
+          }
+          
           // If the modal was open before editing, reopen it (but not if coming from settings button)
           if (wasJobCardsModalOpen && shouldReopenJobCardsModal) {
             setTimeout(() => {

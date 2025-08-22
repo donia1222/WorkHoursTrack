@@ -9,10 +9,11 @@ import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { JobService } from './JobService';
 import NotificationService from './NotificationService';
+import { EventEmitter } from 'events';
 
 type GeoState = 'inside' | 'outside' | 'unknown';
 
-class SimpleAutoTimer {
+class SimpleAutoTimer extends EventEmitter {
   private static instance: SimpleAutoTimer;
   private locationWatcher: Location.LocationSubscription | null = null;
   private notificationService: NotificationService;
@@ -33,6 +34,7 @@ class SimpleAutoTimer {
   private readonly minGapStopSec  = 5;   // antirrebote entre stops
 
   private constructor() {
+    super();
     this.notificationService = NotificationService.getInstance();
   }
 
@@ -53,6 +55,21 @@ class SimpleAutoTimer {
     }
 
     console.log('🚀 INICIANDO SIMPLE AUTO TIMER');
+    
+    // IMPORTANTE: Verificar si hay una sesión activa antes de empezar
+    const existingSession = await JobService.getActiveSession();
+    if (existingSession) {
+      console.log('⏱️ SESIÓN ACTIVA ENCONTRADA:', {
+        jobId: existingSession.jobId,
+        startTime: existingSession.startTime,
+        elapsed: Math.floor((Date.now() - new Date(existingSession.startTime).getTime()) / 1000) + ' segundos'
+      });
+      
+      // Marcar que estamos dentro para que no reinicie el timer
+      this.lastGeoState = 'inside';
+      this.insideSince = new Date(existingSession.startTime).getTime();
+      this.lastStartActionAt = new Date(existingSession.startTime).getTime();
+    }
 
     // Permisos
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -114,6 +131,14 @@ class SimpleAutoTimer {
 
     this.isRunning = true;
     console.log('✅ SIMPLE AUTO TIMER ACTIVO');
+    
+    // Emit current status when monitoring starts
+    const activeSession = await JobService.getActiveSession();
+    if (activeSession) {
+      this.emit('statusChanged', { state: 'active', jobId: activeSession.jobId });
+    } else {
+      this.emit('statusChanged', { state: 'inactive' });
+    }
   }
 
   /**
@@ -184,6 +209,20 @@ class SimpleAutoTimer {
             console.log(`⏳ Dentro, esperando startDelay: ${staySec.toFixed(0)} / ${startDelaySec}s`);
           }
         }
+      } else {
+        // Ya hay sesión activa, verificar que sea para este trabajo
+        if (activeSession && activeSession.jobId === job.id) {
+          const elapsedSec = Math.floor((now - new Date(activeSession.startTime).getTime()) / 1000);
+          console.log(`⏱️ Timer activo para ${job.name} (${elapsedSec}s transcurridos)`);
+          
+          // Actualizar estado interno para no reiniciar
+          if (!this.insideSince) {
+            this.insideSince = new Date(activeSession.startTime).getTime();
+          }
+          if (!this.lastStartActionAt) {
+            this.lastStartActionAt = new Date(activeSession.startTime).getTime();
+          }
+        }
       }
 
       this.lastGeoState = 'inside';
@@ -223,14 +262,33 @@ class SimpleAutoTimer {
    */
   private async startTimer(job: any): Promise<void> {
     try {
+      // Verificar una vez más que no hay sesión activa (doble verificación)
+      const existingSession = await JobService.getActiveSession();
+      if (existingSession && existingSession.jobId === job.id) {
+        console.log(`⚠️ Ya existe sesión activa para ${job.name}, no crear duplicado`);
+        return;
+      }
+      
       const startTime = new Date();
       await JobService.saveActiveSession({
         jobId: job.id,
         startTime: startTime.toISOString(),
-        notes: 'Auto-started (NoHysteresis)',
+        notes: 'Auto-started (SimpleAutoTimer)',
       });
+      
+      // Guardar también de forma redundante para BackgroundGeofenceTask
+      const redundantSessionKey = `@bg_session_${job.id}`;
+      await AsyncStorage.setItem(redundantSessionKey, JSON.stringify({
+        jobId: job.id,
+        startTime: startTime.toISOString(),
+        notes: 'Auto-started (SimpleAutoTimer)',
+      }));
+      
       await this.notificationService.sendNotification('timer_started', job.name);
-      console.log(`✅ Timer iniciado para ${job.name}`);
+      console.log(`✅ Timer iniciado para ${job.name} a las ${startTime.toLocaleTimeString()}`);
+      
+      // Emit event for listeners (like MapLocation)
+      this.emit('statusChanged', { state: 'active', jobId: job.id });
     } catch (error) {
       console.error('Error iniciando timer:', error);
     }
@@ -263,9 +321,17 @@ class SimpleAutoTimer {
       });
 
       await JobService.clearActiveSession();
+      
+      // Limpiar también sesión redundante
+      const redundantSessionKey = `@bg_session_${activeSession.jobId ?? job.id}`;
+      await AsyncStorage.removeItem(redundantSessionKey);
+      
       await this.notificationService.sendNotification('timer_stopped', job?.name ?? 'Trabajo');
 
       console.log(`🛑 Timer parado: ${elapsedHours}h`);
+      
+      // Emit event for listeners (like MapLocation)
+      this.emit('statusChanged', { state: 'inactive' });
     } catch (error) {
       console.error('Error parando timer:', error);
     }
@@ -301,6 +367,104 @@ class SimpleAutoTimer {
     this.insideSince = null;
     this.outsideSince = null;
     console.log('🛑 SIMPLE AUTO TIMER DETENIDO');
+  }
+  /**
+   * Get current status (for compatibility with MapLocation)
+   */
+  async getStatus(): Promise<any> {
+    const activeSession = await JobService.getActiveSession();
+    
+    if (activeSession) {
+      const jobsData = await AsyncStorage.getItem('jobs');
+      const jobs = jobsData ? JSON.parse(jobsData) : [];
+      const job = jobs.find((j: any) => j.id === activeSession.jobId);
+      
+      return {
+        state: 'active',
+        jobId: activeSession.jobId,
+        jobName: job?.name || null,
+        remainingTime: 0,
+        totalDelayTime: 0,
+        message: 'active',
+      };
+    }
+    
+    return {
+      state: 'inactive',
+      jobId: null,
+      jobName: null,
+      remainingTime: 0,
+      totalDelayTime: 0,
+      message: 'inactive',
+    };
+  }
+
+  /**
+   * Get elapsed time for active timer
+   */
+  async getElapsedTime(): Promise<number> {
+    const activeSession = await JobService.getActiveSession();
+    if (activeSession) {
+      const startTime = new Date(activeSession.startTime).getTime();
+      const now = Date.now();
+      return Math.floor((now - startTime) / 1000);
+    }
+    return 0;
+  }
+
+  /**
+   * Check if service is enabled
+   */
+  isServiceEnabled(): boolean {
+    return this.isRunning;
+  }
+
+  /**
+   * Start service (for compatibility with AutoTimerService)
+   */
+  async start(jobs: any[]): Promise<boolean> {
+    await this.startSimpleMonitoring();
+    return true;
+  }
+
+  /**
+   * Update jobs (for compatibility)
+   */
+  async updateJobs(jobs: any[]): Promise<void> {
+    // SimpleAutoTimer reloads jobs on each location update
+    console.log('📝 Jobs updated (will reload on next location update)');
+  }
+
+  /**
+   * Add status listener (for compatibility)
+   */
+  addStatusListener(callback: (status: any) => void): void {
+    // For compatibility - SimpleAutoTimer doesn't use listeners
+    console.log('📌 Status listener added (compatibility mode)');
+  }
+
+  /**
+   * Remove status listener (for compatibility)
+   */
+  removeStatusListener(callback: (status: any) => void): void {
+    // For compatibility
+    console.log('📌 Status listener removed (compatibility mode)');
+  }
+
+  /**
+   * Add alert listener (for compatibility)
+   */
+  addAlertListener(callback: (showAlert: boolean) => void): void {
+    // For compatibility
+    console.log('📌 Alert listener added (compatibility mode)');
+  }
+
+  /**
+   * Remove alert listener (for compatibility)
+   */
+  removeAlertListener(callback: (showAlert: boolean) => void): void {
+    // For compatibility
+    console.log('📌 Alert listener removed (compatibility mode)');
   }
 }
 
