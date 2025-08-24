@@ -909,6 +909,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     hours: number;
     totalHours?: number;
     isUpdate: boolean;
+    wasAutoTimerActive?: boolean;
+    jobId?: string;
   }>({ hours: 0, isUpdate: false });
   const [recentTimerSessions, setRecentTimerSessions] = useState<WorkDay[]>([]);
   const [notesModalVisible, setNotesModalVisible] = useState(false);
@@ -1400,16 +1402,10 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         setSuccessModalData({
           hours: parseFloat(hours.toFixed(2)),
           totalHours: parseFloat(updatedHours.toFixed(2)),
-          isUpdate: true
+          isUpdate: true,
+          wasAutoTimerActive,
+          jobId: activeSession.jobId
         });
-        
-        // If AutoTimer was active, just reset it to monitoring state
-        // DO NOT disable the AutoTimer - it should continue monitoring
-        if (wasAutoTimerActive && activeSession?.jobId) {
-          console.log('🔄 Resetting AutoTimer to monitoring state after manual stop');
-          // The AutoTimer will automatically reset when the session is cleared
-          // It will continue monitoring and restart when entering the area again
-        }
         
         setSuccessModalVisible(true);
       } else {
@@ -1445,16 +1441,10 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         // Show success modal for new work day
         setSuccessModalData({
           hours: parseFloat(hours.toFixed(2)),
-          isUpdate: false
+          isUpdate: false,
+          wasAutoTimerActive,
+          jobId: activeSession.jobId
         });
-        
-        // If AutoTimer was active, just reset it to monitoring state
-        // DO NOT disable the AutoTimer - it should continue monitoring
-        if (wasAutoTimerActive && activeSession?.jobId) {
-          console.log('🔄 Resetting AutoTimer to monitoring state after manual stop');
-          // The AutoTimer will automatically reset when the session is cleared
-          // It will continue monitoring and restart when entering the area again
-        }
         
         setSuccessModalVisible(true);
       }
@@ -1574,12 +1564,45 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     return null;
   };
 
-  const handleSuccessModalConfirm = (breakMinutes?: number) => {
+  const disableAutoTimerAfterStop = async (reason: string) => {
+    if (successModalData.wasAutoTimerActive && successModalData.jobId) {
+      console.log(`🛑 Disabling AutoTimer ${reason}`);
+      const job = jobs.find(j => j.id === successModalData.jobId);
+      if (job && job.autoTimer?.enabled) {
+        try {
+          // Disable AutoTimer in job configuration
+          const updatedJob = {
+            ...job,
+            autoTimer: {
+              ...job.autoTimer,
+              enabled: false
+            }
+          };
+          await JobService.updateJob(job.id, updatedJob);
+          console.log('✅ AutoTimer disabled for job:', job.name);
+          
+          // Reload jobs to ensure the update is reflected
+          await loadJobs();
+          
+          // Stop AutoTimer services by updating with empty jobs array
+          const autoTimerService = AutoTimerService.getInstance();
+          await autoTimerService.updateJobs([]);
+          console.log('🛑 AutoTimer services stopped (updated with empty jobs)');
+        } catch (error) {
+          console.error('Error disabling AutoTimer:', error);
+        }
+      }
+    }
+  };
+
+  const handleSuccessModalConfirm = async (breakMinutes?: number) => {
+    await disableAutoTimerAfterStop('after user confirmed session');
     setSuccessModalVisible(false);
     onNavigate('reports');
   };
 
-  const handleSuccessModalClose = () => {
+  const handleSuccessModalClose = async () => {
+    await disableAutoTimerAfterStop('after modal closed');
     setSuccessModalVisible(false);
   };
 

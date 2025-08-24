@@ -3654,20 +3654,24 @@ export default function MapLocation({ location, onNavigate }: Props) {
           // Refresh AutoTimer status when modal closes
           // This ensures timer widget updates immediately if AutoTimer was activated
           console.log('🔄 MapLocation: Refreshing AutoTimer status after JobFormModal close');
-          try {
-            const updatedStatus = await autoTimerService.getStatus();
-            setAutoTimerStatus(updatedStatus);
-            console.log('✅ MapLocation: AutoTimer status refreshed:', updatedStatus.state);
-            
-            // If timer is active, trigger elapsed time update immediately
-            if (updatedStatus.state === 'active' && updatedStatus.jobId) {
-              const elapsed = await autoTimerService.getElapsedTime();
-              setElapsedTime(elapsed);
-              console.log('⏱️ MapLocation: Elapsed time updated:', elapsed, 'seconds');
+          
+          // Wait a bit to ensure JobFormModal has finished initializing AutoTimer
+          setTimeout(async () => {
+            try {
+              const updatedStatus = await autoTimerService.getStatus();
+              setAutoTimerStatus(updatedStatus);
+              console.log('✅ MapLocation: AutoTimer status refreshed (delayed):', updatedStatus.state);
+              
+              // If timer is active, trigger elapsed time update immediately
+              if (updatedStatus.state === 'active' && updatedStatus.jobId) {
+                const elapsed = await autoTimerService.getElapsedTime();
+                setElapsedTime(elapsed);
+                console.log('⏱️ MapLocation: Elapsed time updated:', elapsed, 'seconds');
+              }
+            } catch (error) {
+              console.error('❌ MapLocation: Error refreshing AutoTimer status:', error);
             }
-          } catch (error) {
-            console.error('❌ MapLocation: Error refreshing AutoTimer status:', error);
-          }
+          }, 1200); // Wait slightly longer than JobFormModal's 1000ms setTimeout
           
           // If the modal was open before editing, reopen it (but not if coming from settings button)
           if (wasJobCardsModalOpen && shouldReopenJobCardsModal) {

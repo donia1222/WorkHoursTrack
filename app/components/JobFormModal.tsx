@@ -1397,10 +1397,18 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         try {
           const activeSession = await JobService.getActiveSession();
           if (activeSession && activeSession.jobId === editingJob.id) {
-            const startTime = new Date(activeSession.startTime);
-            const now = new Date();
-            const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-            setActiveTimerElapsed(elapsedSeconds);
+            // Check if timer is paused
+            const session = activeSession as any; // Cast to avoid TS issues
+            if (session.isPaused && session.pausedElapsedTime !== undefined) {
+              // Use the saved paused time instead of calculating from startTime
+              setActiveTimerElapsed(session.pausedElapsedTime);
+            } else {
+              // Timer is running normally, calculate elapsed time
+              const startTime = new Date(activeSession.startTime);
+              const now = new Date();
+              const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+              setActiveTimerElapsed(elapsedSeconds);
+            }
           } else {
             setActiveTimerElapsed(0);
           }
@@ -1719,9 +1727,38 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       onClose();
       
       // Si el auto-timer está activado, iniciar los servicios
+      // PERO solo si no hay una sesión reciente que fue parada manualmente
       if (savedJob.autoTimer?.enabled) {
         setTimeout(async () => {
           try {
+            // Verificar si hay una sesión activa o reciente que fue parada manualmente
+            const activeSession = await JobService.getActiveSession();
+            if (activeSession) {
+              console.log('⚠️ Hay una sesión activa, no iniciando AutoTimer automáticamente');
+              return;
+            }
+            
+            // Verificar si se paró manualmente en los últimos 30 segundos
+            const recentWorkDays = await JobService.getWorkDays();
+            const today = new Date().toISOString().split('T')[0];
+            const todayWorkDays = recentWorkDays.filter(wd => 
+              wd.date === today && 
+              wd.jobId === savedJob.id && 
+              wd.type === 'work'
+            );
+            
+            if (todayWorkDays.length > 0) {
+              const lastWorkDay = todayWorkDays[todayWorkDays.length - 1];
+              const lastWorkTime = new Date(lastWorkDay.updatedAt || lastWorkDay.createdAt || Date.now());
+              const timeSinceLastWork = Date.now() - lastWorkTime.getTime();
+              
+              // Si se trabajó en los últimos 2 minutos, no iniciar automáticamente
+              if (timeSinceLastWork < 2 * 60 * 1000) {
+                console.log('⚠️ Trabajo reciente detectado, no iniciando AutoTimer automáticamente');
+                return;
+              }
+            }
+            
             // Iniciar SimpleAutoTimer para monitoreo con app abierta
             const autoTimerService = AutoTimerService.getInstance();
             await autoTimerService.startSimpleMonitoring();
@@ -3200,9 +3237,41 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                       autoTimerService.stop();
                       
                       // Si se está activando, iniciar el monitoreo
+                      // PERO solo si no hay trabajo reciente
                       if (value) {
                         setTimeout(async () => {
-                          await autoTimerService.startSimpleMonitoring();
+                          try {
+                            // Verificar si hay una sesión activa
+                            const activeSession = await JobService.getActiveSession();
+                            if (activeSession) {
+                              console.log('⚠️ Hay una sesión activa, no iniciando AutoTimer desde switch');
+                              return;
+                            }
+                            
+                            // Verificar trabajo reciente en los últimos 2 minutos
+                            const recentWorkDays = await JobService.getWorkDays();
+                            const today = new Date().toISOString().split('T')[0];
+                            const todayWorkDays = recentWorkDays.filter(wd => 
+                              wd.date === today && 
+                              wd.jobId === editingJob.id && 
+                              wd.type === 'work'
+                            );
+                            
+                            if (todayWorkDays.length > 0) {
+                              const lastWorkDay = todayWorkDays[todayWorkDays.length - 1];
+                              const lastWorkTime = new Date(lastWorkDay.updatedAt || lastWorkDay.createdAt || Date.now());
+                              const timeSinceLastWork = Date.now() - lastWorkTime.getTime();
+                              
+                              if (timeSinceLastWork < 2 * 60 * 1000) {
+                                console.log('⚠️ Trabajo reciente desde switch, no iniciando AutoTimer automáticamente');
+                                return;
+                              }
+                            }
+                            
+                            await autoTimerService.startSimpleMonitoring();
+                          } catch (error) {
+                            console.error('Error iniciando AutoTimer desde switch:', error);
+                          }
                         }, 500);
                       }
                       
