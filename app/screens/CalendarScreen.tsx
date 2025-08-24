@@ -571,7 +571,12 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
       en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
       de: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
       fr: ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
-      it: ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre']
+      it: ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'],
+      pt: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+      nl: ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'],
+      tr: ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'],
+      ja: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+      ru: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
     };
 
     const days = {
@@ -579,7 +584,12 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
       en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
       de: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
       fr: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
-      it: ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato']
+      it: ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'],
+      pt: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
+      nl: ['Zondag', 'Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag'],
+      tr: ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'],
+      ja: ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'],
+      ru: ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']
     };
 
     const daysShort = {
@@ -587,7 +597,12 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
       en: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
       de: ['S', 'M', 'D', 'M', 'D', 'F', 'S'],
       fr: ['D', 'L', 'M', 'M', 'J', 'V', 'S'],
-      it: ['D', 'L', 'M', 'M', 'G', 'V', 'S']
+      it: ['D', 'L', 'M', 'M', 'G', 'V', 'S'],
+      pt: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'],
+      nl: ['Z', 'M', 'D', 'W', 'D', 'V', 'Z'],
+      tr: ['P', 'P', 'S', 'Ç', 'P', 'C', 'C'],
+      ja: ['日', '月', '火', '水', '木', '金', '土'],
+      ru: ['В', 'П', 'В', 'С', 'Ч', 'П', 'С']
     };
 
     const today = {
@@ -595,7 +610,12 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
       en: 'Today',
       de: 'Heute',
       fr: "Aujourd'hui",
-      it: 'Oggi'
+      it: 'Oggi',
+      pt: 'Hoje',
+      nl: 'Vandaag',
+      tr: 'Bugün',
+      ja: '今日',
+      ru: 'Сегодня'
     };
 
     LocaleConfig.locales[language] = {
@@ -1383,36 +1403,8 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           </BlurView>
         </TouchableOpacity>
 
-        <View style={styles.statsCard}>
-          <BlurView 
-            intensity={isDark ? 96 : 94} 
-            tint={isDark ? "dark" : "light"} 
-            style={{ padding: 28, borderRadius: 24 }}
-          >
-            <LinearGradient
-              colors={isDark ? ['rgba(0, 122, 255, 0.1)', 'rgba(0, 122, 255, 0.02)'] : ['rgba(0, 122, 255, 0.08)', 'rgba(0, 122, 255, 0.01)']}
-              style={[styles.statsCardGradient, { borderRadius: 24 }]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            />
-          <Text style={styles.statsTitle}>{t('calendar.month_stats')}</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <IconSymbol size={24} name="clock.fill" color={colors.success} />
-              <Text style={styles.statNumber}>{stats.workDays}</Text>
-              <Text style={styles.statLabel}>{t('calendar.worked_days')}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <IconSymbol size={24} name="clock.fill" color={colors.success} />
-              <Text style={styles.statNumber}>{Math.round(stats.totalHours)}h</Text>
-              <Text style={styles.statLabel}>{t('calendar.total_hours')}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <IconSymbol size={24} name="chart.bar.fill" color={colors.warning} />
-              <Text style={styles.statNumber}>{stats.overtimeDays}</Text>
-              <Text style={styles.statLabel}>{t('calendar.overtime_days')}</Text>
-            </View>
-          </View>
+   
+
 
           {/* Day type breakdown */}
           {(stats.freeDays > 0 || stats.vacationDays > 0 || stats.sickDays > 0) && (
@@ -1443,8 +1435,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
               </View>
             </View>
           )}
-          </BlurView>
-        </View>
+  
 
         <View style={styles.legendCard}>
 

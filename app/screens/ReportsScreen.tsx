@@ -6,16 +6,19 @@ import {
   SafeAreaView, 
   ScrollView, 
   TouchableOpacity,
+  Switch,
   Animated,
   Dimensions,
   Modal,
   Platform,
   Alert,
   ActivityIndicator,
+  AppState,
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Job, WorkDay } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import { useBackNavigation, useNavigation } from '../context/NavigationContext';
@@ -151,8 +154,10 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const [salaryPeriod, setSalaryPeriod] = useState<'hour' | 'week' | 'month'>('hour');
   const [showJobFormModal, setShowJobFormModal] = useState(false);
   const [editingJobForBilling, setEditingJobForBilling] = useState<Job | null>(null);
+  const [useTimeFormat, setUseTimeFormat] = useState(true); // false = decimal (8.05h), true = time (8h 3m) - DEFAULT: HH:MM
   
   const { handleBack } = useBackNavigation();
+  const navigation = useNavigation();
   const { colors, isDark } = useTheme();
   const { t, language } = useLanguage();
   const { triggerHaptic } = useHapticFeedback();
@@ -166,6 +171,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
   useEffect(() => {
     loadData();
+    loadTimeFormatPreference();
     
     // Entrance animation
     Animated.parallel([
@@ -181,6 +187,17 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         friction: 7,
       }),
     ]).start();
+    
+    // Reload preference when screen comes back into focus using AppState
+    const appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        loadTimeFormatPreference();
+      }
+    });
+    
+    return () => {
+      appStateSubscription?.remove();
+    };
   }, [fadeAnim, scaleAnim]);
 
 
@@ -226,6 +243,41 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     }
   };
 
+  const loadTimeFormatPreference = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('@time_format_preference');
+      if (saved !== null) {
+        setUseTimeFormat(saved === 'true');
+      }
+    } catch (error) {
+      console.error('Error loading time format preference:', error);
+    }
+  };
+
+  const toggleTimeFormat = async () => {
+    const newValue = !useTimeFormat;
+    setUseTimeFormat(newValue);
+    try {
+      await AsyncStorage.setItem('@time_format_preference', newValue.toString());
+    } catch (error) {
+      console.error('Error saving time format preference:', error);
+    }
+  };
+
+  const formatHoursForDisplay = (hours: number): string => {
+    if (useTimeFormat) {
+      // Time format: 8h 3m
+      const h = Math.floor(hours);
+      const m = Math.round((hours - h) * 60);
+      if (h === 0) return `${m}m`;
+      if (m === 0) return `${h}h`;
+      return `${h}h ${m}m`;
+    } else {
+      // Decimal format: 8.05h
+      return `${hours.toFixed(2)}h`;
+    }
+  };
+
   const calculateStatsFromRecentActivity = () => {
     console.log('🎯 Using getRecentWorkDays logic that WORKS!');
     console.log('Raw workDays loaded:', workDays.length);
@@ -259,7 +311,9 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     
     // Step 4: Calculate totals using the SAME data structure
     const totalHours = monthWorkDays.reduce((sum, day) => sum + (day.hours || 0), 0);
-    const totalDays = monthWorkDays.length;
+    // Count unique days only (multiple sessions on same day count as 1 day)
+    const uniqueDates = new Set(monthWorkDays.map(day => day.date.split('T')[0]));
+    const totalDays = uniqueDates.size;
     const overtimeHours = monthWorkDays.reduce((sum, day) => 
       sum + (day.overtime ? Math.max(0, (day.hours || 0) - 8) : 0), 0);
     const avgHoursPerDay = totalDays > 0 ? totalHours / totalDays : 0;
@@ -283,7 +337,9 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       jobStats = jobs.map(job => {
         const jobWorkDays = monthWorkDays.filter(day => day.jobId === job.id);
         const jobHours = jobWorkDays.reduce((sum, day) => sum + (day.hours || 0), 0);
-        const jobDays = jobWorkDays.length;
+        // Count unique days for this job (multiple sessions same day = 1 day)
+        const jobUniqueDates = new Set(jobWorkDays.map(day => day.date.split('T')[0]));
+        const jobDays = jobUniqueDates.size;
         const percentage = totalHours > 0 ? (jobHours / totalHours) * 100 : 0;
 
         return {
@@ -389,7 +445,9 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
     // Calculate totals
     const totalHours = filteredWorkDays.reduce((sum, day) => sum + day.hours, 0);
-    const totalDays = filteredWorkDays.length;
+    // Count unique days only (multiple sessions on same day count as 1 day)
+    const uniqueDates = new Set(filteredWorkDays.map(day => day.date.split('T')[0]));
+    const totalDays = uniqueDates.size;
     const overtimeHours = filteredWorkDays.reduce((sum, day) => 
       sum + (day.overtime ? day.hours - 8 : 0), 0);
     const avgHoursPerDay = totalDays > 0 ? totalHours / totalDays : 0;
@@ -406,7 +464,9 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       jobStats = jobs.map(job => {
         const jobWorkDays = periodWorkDays.filter(day => day.jobId === job.id);
         const jobHours = jobWorkDays.reduce((sum, day) => sum + day.hours, 0);
-        const jobDays = jobWorkDays.length;
+        // Count unique days for this job (multiple sessions same day = 1 day)
+        const jobUniqueDates = new Set(jobWorkDays.map(day => day.date.split('T')[0]));
+        const jobDays = jobUniqueDates.size;
         const percentage = totalHours > 0 ? (jobHours / totalHours) * 100 : 0;
 
         return {
@@ -475,7 +535,52 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       filteredWorkDays = filteredWorkDays.filter(day => day.jobId === selectedJobId);
     }
     
-    return filteredWorkDays
+    // Group by date and job to consolidate multiple sessions
+    const consolidatedMap = new Map<string, WorkDay>();
+    
+    filteredWorkDays.forEach(day => {
+      const dateKey = day.date.split('T')[0]; // Get just the date part
+      const key = `${dateKey}_${day.jobId || 'no-job'}`;
+      
+      const existing = consolidatedMap.get(key);
+      if (existing) {
+        // Merge with existing day
+        const updatedDay = { ...existing };
+        
+        // Add hours (with precision)
+        const oldHours = updatedDay.hours;
+        const newHours = day.hours;
+        updatedDay.hours = oldHours + newHours;
+        
+        // Combine notes
+        if (day.notes && updatedDay.notes) {
+          updatedDay.notes = `${updatedDay.notes}\n---\n${day.notes}`;
+        } else if (day.notes) {
+          updatedDay.notes = day.notes;
+        }
+        
+        // Keep earliest start time
+        if (day.actualStartTime && (!updatedDay.actualStartTime || day.actualStartTime < updatedDay.actualStartTime)) {
+          updatedDay.actualStartTime = day.actualStartTime;
+        }
+        
+        // Keep latest end time
+        if (day.actualEndTime && (!updatedDay.actualEndTime || day.actualEndTime > updatedDay.actualEndTime)) {
+          updatedDay.actualEndTime = day.actualEndTime;
+        }
+        
+        // Update overtime status
+        updatedDay.overtime = updatedDay.hours > 8;
+        
+        consolidatedMap.set(key, updatedDay);
+      } else {
+        // First entry for this date/job
+        consolidatedMap.set(key, { ...day });
+      }
+    });
+    
+    // Convert map back to array and sort
+    return Array.from(consolidatedMap.values())
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, visibleRecentDays);
   };
@@ -489,7 +594,40 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       filteredWorkDays = filteredWorkDays.filter(day => day.jobId === selectedJobId);
     }
     
-    return filteredWorkDays
+    // Group by date and job to consolidate multiple sessions (same logic as getRecentWorkDays)
+    const consolidatedMap = new Map<string, WorkDay>();
+    
+    filteredWorkDays.forEach(day => {
+      const dateKey = day.date.split('T')[0];
+      const key = `${dateKey}_${day.jobId || 'no-job'}`;
+      
+      const existing = consolidatedMap.get(key);
+      if (existing) {
+        const updatedDay = { ...existing };
+        updatedDay.hours = updatedDay.hours + day.hours;
+        
+        if (day.notes && updatedDay.notes) {
+          updatedDay.notes = `${updatedDay.notes}\n---\n${day.notes}`;
+        } else if (day.notes) {
+          updatedDay.notes = day.notes;
+        }
+        
+        if (day.actualStartTime && (!updatedDay.actualStartTime || day.actualStartTime < updatedDay.actualStartTime)) {
+          updatedDay.actualStartTime = day.actualStartTime;
+        }
+        
+        if (day.actualEndTime && (!updatedDay.actualEndTime || day.actualEndTime > updatedDay.actualEndTime)) {
+          updatedDay.actualEndTime = day.actualEndTime;
+        }
+        
+        updatedDay.overtime = updatedDay.hours > 8;
+        consolidatedMap.set(key, updatedDay);
+      } else {
+        consolidatedMap.set(key, { ...day });
+      }
+    });
+    
+    return Array.from(consolidatedMap.values())
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   };
 
@@ -1003,7 +1141,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
       <div class="stats-grid">
         <div class="stat-item">
-          <div class="stat-number">${periodStats.totalHours.toFixed(1)}h</div>
+          <div class="stat-number">${formatHoursDisplay(periodStats.totalHours)}</div>
           <div class="stat-label">${t('reports.total_hours')}</div>
         </div>
         <div class="stat-item">
@@ -1011,7 +1149,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           <div class="stat-label">${t('reports.worked_days')}</div>
         </div>
         <div class="stat-item">
-          <div class="stat-number">${periodStats.avgHoursPerDay.toFixed(1)}h</div>
+          <div class="stat-number">${formatHoursDisplay(periodStats.avgHoursPerDay)}</div>
           <div class="stat-label">${t('reports.average_per_day')}</div>
         </div>
       </div>
@@ -1024,7 +1162,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
             <div class="job-item">
               <div>
                 <div class="job-name">${stat.job.name}</div>
-                <div class="job-stats">${stat.hours.toFixed(1)}h • ${stat.days} ${t('reports.days')} • ${stat.percentage.toFixed(1)}%</div>
+                <div class="job-stats">${formatHoursDisplay(stat.hours)} • ${stat.days} ${t('reports.days')} • ${stat.percentage.toFixed(1)}%</div>
               </div>
             </div>
           `).join('')}
@@ -1049,7 +1187,10 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                 </div>
                 <div>
                   <span class="activity-hours">${day.hours}h</span>
-                  ${(day.startTime && day.endTime) ? `<br><span class="activity-schedule">${day.startTime}-${day.endTime}${day.secondStartTime && day.secondEndTime ? `, ${day.secondStartTime}-${day.secondEndTime}` : ''}</span>` : ''}
+                  ${(day.actualStartTime && day.actualEndTime) ? 
+                    `<br><span class="activity-schedule">${day.actualStartTime.substring(0, 5)}-${day.actualEndTime.substring(0, 5)}</span>` : 
+                    (day.startTime && day.endTime) ? 
+                    `<br><span class="activity-schedule">${day.startTime}-${day.endTime}${day.secondStartTime && day.secondEndTime ? `, ${day.secondStartTime}-${day.secondEndTime}` : ''}</span>` : ''}
                   ${day.overtime ? '<span class="activity-overtime">OT</span>' : ''}
                 </div>
               </div>
@@ -1110,10 +1251,10 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
               <div style="flex: 1; margin-left: 30px;">
                 <h3 style="color: #333; font-size: 16px; margin-bottom: 15px; border-bottom: 2px solid #28a745; padding-bottom: 5px;">💰 ${t('reports.summary') || 'RESUMEN / SUMMARY'}</h3>
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
-                  <div style="margin-bottom: 8px;"><strong>📊 ${t('reports.total_hours')}: ${periodStats.totalHours.toFixed(1)}h</strong></div>
+                  <div style="margin-bottom: 8px;"><strong>📊 ${t('reports.total_hours')}: ${formatHoursDisplay(periodStats.totalHours)}</strong></div>
                   <div style="margin-bottom: 8px;"><strong>📅 ${t('reports.worked_days')}: ${periodStats.totalDays}</strong></div>
-                  <div style="margin-bottom: 8px;"><strong>⏱️ ${t('reports.average_per_day')}: ${periodStats.avgHoursPerDay.toFixed(1)}h</strong></div>
-                  ${periodStats.overtimeHours > 0 ? `<div style="color: #ff6b35;"><strong>⏰ Overtime: ${periodStats.overtimeHours.toFixed(1)}h</strong></div>` : ''}
+                  <div style="margin-bottom: 8px;"><strong>⏱️ ${t('reports.average_per_day')}: ${formatHoursDisplay(periodStats.avgHoursPerDay)}</strong></div>
+                  ${periodStats.overtimeHours > 0 ? `<div style="color: #ff6b35;"><strong>⏰ Overtime: ${formatHoursDisplay(periodStats.overtimeHours)}</strong></div>` : ''}
                 </div>
               </div>
             </div>
@@ -1393,19 +1534,44 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               />
-              <Text style={styles.statsTitle}>{getPeriodLabel()}</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <Text style={styles.statsTitle}>{getPeriodLabel()}</Text>
+                <TouchableOpacity 
+                  onPress={toggleTimeFormat}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                    borderRadius: 16,
+                  }}
+                >
+                  <Text style={{ 
+                    color: colors.textSecondary, 
+                    fontSize: 11, 
+                    marginRight: 4,
+                    fontWeight: '600'
+                  }}>
+                    {useTimeFormat ? 'HH:MM' : '0.00h'}
+                  </Text>
+                  <Switch
+                    value={useTimeFormat}
+                    onValueChange={toggleTimeFormat}
+                    trackColor={{ false: colors.border, true: colors.primary }}
+                    thumbColor={'#FFFFFF'}
+                    style={{ transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] }}
+                  />
+                </TouchableOpacity>
+              </View>
               <View style={styles.statsGrid}>
                 <View style={styles.modernStatItem}>
                   <View style={styles.statIconContainer}>
                     <AnimatedIcon size={32} name="clock.fill" color={colors.success} />
                   </View>
-                  <AnimatedNumber 
-                    value={periodStats.totalHours} 
-                    decimals={1} 
-                    suffix="h" 
-                    style={styles.modernStatNumber}
-                    duration={1200}
-                  />
+                  <Text style={styles.modernStatNumber}>
+                    {formatHoursForDisplay(periodStats.totalHours)}
+                  </Text>
                   <Text style={styles.modernStatLabel}>{t('reports.total_hours')}</Text>
                 </View>
                 <View style={styles.modernStatItem}>
@@ -1423,13 +1589,9 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                   <View style={styles.statIconContainer}>
                     <AnimatedIcon size={32} name="chart.bar.fill" color={colors.warning} />
                   </View>
-                  <AnimatedNumber 
-                    value={periodStats.avgHoursPerDay} 
-                    decimals={1} 
-                    suffix="h" 
-                    style={styles.modernStatNumber}
-                    duration={1400}
-                  />
+                  <Text style={styles.modernStatNumber}>
+                    {formatHoursForDisplay(periodStats.avgHoursPerDay)}
+                  </Text>
                   <Text style={styles.modernStatLabel}>{t('reports.average_per_day')}</Text>
                 </View>
               </View>
@@ -1462,7 +1624,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                   <View style={styles.jobStatDetails}>
                     <Text style={styles.jobStatName}>{stat.job.name}</Text>
                     <Text style={styles.jobStatHours}>
-                      {stat.hours.toFixed(1)}h • {stat.percentage.toFixed(1)}%
+                      {formatHoursDisplay(stat.hours)} • {stat.percentage.toFixed(1)}%
                     </Text>
                   </View>
                 </View>
@@ -1505,16 +1667,22 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                       </View>
                     </View>
                     <View style={styles.recentRight}>
-                      <Text style={styles.recentHours}>{formatHoursDisplay(day.hours)}</Text>
-                      {/* Show specific schedule if available */}
-                      {(day.startTime && day.endTime) && (
-                        <Text style={styles.recentSchedule}>
+                      <Text style={styles.recentHours}>
+                        {formatHoursForDisplay(day.hours)}
+                      </Text>
+                      {/* Show actual times if available, otherwise scheduled times */}
+                      {(day.actualStartTime && day.actualEndTime) ? (
+                        <Text style={[styles.recentSchedule, { color: colors.primary }]}>
+                          {day.actualStartTime.substring(0, 5)}-{day.actualEndTime.substring(0, 5)}
+                        </Text>
+                      ) : (day.startTime && day.endTime) ? (
+                        <Text style={[styles.recentSchedule, { color: colors.textSecondary }]}>
                           {day.startTime}-{day.endTime}
                           {day.secondStartTime && day.secondEndTime && (
                             `, ${day.secondStartTime}-${day.secondEndTime}`
                           )}
                         </Text>
-                      )}
+                      ) : null}
                       {day.overtime && (
                         <Text style={styles.recentOvertime}>{t('reports.ot')}</Text>
                       )}

@@ -255,10 +255,14 @@ export default function JobStatisticsModal({
       const currentMonth = now.getMonth() + 1;
       const currentYear = now.getFullYear();
       
+      // Count unique days (multiple sessions same day = 1 day)
+      const uniqueDates = new Set(workDays.map(day => day.date.split('T')[0]));
+      const uniqueDaysCount = uniqueDates.size;
+      
       // Calculate statistics
       const stats: JobStatistics = {
         totalHours: 0,
-        totalDays: workDays.length,
+        totalDays: uniqueDaysCount, // Use unique days count
         avgHoursPerDay: 0,
         overtimeDays: 0,
         totalEarnings: 0,
@@ -275,14 +279,22 @@ export default function JobStatisticsModal({
       };
 
       let lastWorkDate: Date | null = null;
+      const uniqueWorkDays = new Set<string>();
+      const uniqueMonthDays = new Set<string>();
 
       workDays.forEach((day: WorkDay) => {
         const dayDate = new Date(day.date);
+        const dayKey = day.date.split('T')[0]; // Get just the date part
         
         // Total statistics
         if (day.type === 'work') {
           stats.totalHours += day.hours;
-          stats.workDaysByType.work++;
+          
+          // Count unique work days only
+          if (!uniqueWorkDays.has(dayKey)) {
+            uniqueWorkDays.add(dayKey);
+            stats.workDaysByType.work++;
+          }
           
           if (day.overtime) {
             stats.overtimeDays++;
@@ -293,14 +305,22 @@ export default function JobStatisticsModal({
             lastWorkDate = dayDate;
           }
         } else {
-          stats.workDaysByType[day.type]++;
+          // For non-work days, count unique days as well
+          if (!uniqueWorkDays.has(dayKey)) {
+            uniqueWorkDays.add(dayKey);
+            stats.workDaysByType[day.type]++;
+          }
         }
 
         // This month statistics
         if (dayDate.getMonth() + 1 === currentMonth && dayDate.getFullYear() === currentYear) {
           if (day.type === 'work') {
             stats.thisMonthHours += day.hours;
-            stats.thisMonthDays++;
+            // Count unique days for this month
+            if (!uniqueMonthDays.has(dayKey)) {
+              uniqueMonthDays.add(dayKey);
+              stats.thisMonthDays++;
+            }
           }
         }
       });

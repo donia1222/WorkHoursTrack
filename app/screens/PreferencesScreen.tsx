@@ -26,6 +26,7 @@ import { useSubscription } from '../hooks/useSubscription';
 import NotificationService from '../services/NotificationService';
 import { forceCompleteWidgetSync } from '../services/ForceWidgetSync';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface PreferencesScreenProps {
   onClose?: () => void;
@@ -467,9 +468,36 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
   const [permissionStatus, setPermissionStatus] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [useTimeFormat, setUseTimeFormat] = useState(true); // Time format preference
 
   const handleThemeChange = (mode: 'auto' | 'light' | 'dark') => {
     setThemeMode(mode);
+  };
+
+  // Load time format preference
+  useEffect(() => {
+    loadTimeFormatPreference();
+  }, []);
+
+  const loadTimeFormatPreference = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('@time_format_preference');
+      if (saved !== null) {
+        setUseTimeFormat(saved === 'true');
+      }
+    } catch (error) {
+      console.error('Error loading time format preference:', error);
+    }
+  };
+
+  const toggleTimeFormat = async () => {
+    const newValue = !useTimeFormat;
+    setUseTimeFormat(newValue);
+    try {
+      await AsyncStorage.setItem('@time_format_preference', newValue.toString());
+    } catch (error) {
+      console.error('Error saving time format preference:', error);
+    }
   };
 
   const handleClose = () => {
@@ -796,6 +824,56 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
             />
           </TouchableOpacity>
         )}
+
+        {/* Time Format Section */}
+        <TouchableOpacity 
+          style={[{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: Theme.spacing.lg,
+            paddingVertical: Theme.spacing.md,
+            marginVertical: Theme.spacing.sm,
+            backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+            borderRadius: Theme.borderRadius.md,
+          }]}
+          onPress={toggleTimeFormat}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: 'rgba(52, 199, 89, 0.15)',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <IconSymbol size={18} name="clock.fill" color="#34C759" />
+            </View>
+            <View>
+              <Text style={{
+                fontSize: 16,
+                fontWeight: '600',
+                color: colors.text,
+              }}>
+                Time Format
+              </Text>
+              <Text style={{
+                fontSize: 12,
+                color: colors.textSecondary,
+                marginTop: 2,
+              }}>
+                {useTimeFormat ? 'HH:MM' : '0.00h'}
+              </Text>
+            </View>
+          </View>
+          <Switch
+            value={useTimeFormat}
+            onValueChange={toggleTimeFormat}
+            trackColor={{ false: colors.separator, true: colors.primary }}
+            thumbColor={useTimeFormat ? '#FFFFFF' : colors.textSecondary}
+          />
+        </TouchableOpacity>
 
         {/* Notifications Section */}
         <View ref={notificationsRef}>

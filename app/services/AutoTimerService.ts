@@ -112,11 +112,14 @@ class AutoTimerService {
         });
         
         // Only clear if it's not an auto-started session or if it doesn't match our state
-        if (activeSession.notes === 'Auto-started' && this.currentState === 'active' && this.currentJobId === activeSession.jobId) {
+        const isAutoStarted = activeSession.notes?.includes('Auto-started') || activeSession.notes?.includes('Background');
+        if (isAutoStarted && this.currentState === 'active' && this.currentJobId === activeSession.jobId) {
           console.log(`✅ Keeping existing auto-started session for job ${activeSession.jobId}`);
-        } else {
-          console.log(`🧹 Clearing session (not auto-started or state mismatch)`);
+        } else if (!isAutoStarted) {
+          console.log(`🧹 Clearing session (not auto-started)`);
           await JobService.clearActiveSession();
+        } else {
+          console.log(`⚠️ Keeping session despite state mismatch (auto-started session)`);
         }
       }
 

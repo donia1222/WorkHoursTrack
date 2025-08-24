@@ -908,10 +908,12 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   const [successModalData, setSuccessModalData] = useState<{
     hours: number;
     totalHours?: number;
+    seconds: number; // Add seconds for precise time display
+    totalSeconds?: number; // Add total seconds for update scenarios
     isUpdate: boolean;
     wasAutoTimerActive?: boolean;
     jobId?: string;
-  }>({ hours: 0, isUpdate: false });
+  }>({ hours: 0, seconds: 0, isUpdate: false });
   const [recentTimerSessions, setRecentTimerSessions] = useState<WorkDay[]>([]);
   const [notesModalVisible, setNotesModalVisible] = useState(false);
   
@@ -1095,16 +1097,17 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isRunning && activeSession) {
+    // Only update timer if it's running AND not from AutoTimer
+    if (isRunning && activeSession && autoTimerStatus?.state !== 'active') {
       interval = setInterval(() => {
         const now = new Date();
         const elapsed = Math.floor((now.getTime() - activeSession.startTime.getTime()) / 1000);
         setElapsedTime(elapsed);
       }, 1000);
     }
-    // When paused, keep the elapsed time static (it's already set in pauseTimer)
+    // When paused or AutoTimer is active, keep the elapsed time static or let AutoTimer update it
     return () => clearInterval(interval);
-  }, [isRunning, activeSession]);
+  }, [isRunning, activeSession, autoTimerStatus?.state]);
 
   // Calculate elapsed time for active AutoTimer
   useEffect(() => {
@@ -1113,12 +1116,14 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     if (autoTimerStatus?.state === 'active') {
       const updateAutoTimerElapsedTime = async () => {
         try {
+          // Use the AutoTimer service's getElapsedTime method for consistency
+          const elapsed = await autoTimerService.getElapsedTime();
+          setAutoTimerElapsedTime(elapsed);
+          
+          // If this is the main timer running from AutoTimer, sync the main elapsed time too
           const activeSession = await JobService.getActiveSession();
-          if (activeSession) {
-            const startTime = new Date(activeSession.startTime);
-            const now = new Date();
-            const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-            setAutoTimerElapsedTime(elapsed);
+          if (activeSession && !(activeSession as any).isPaused && isRunning) {
+            setElapsedTime(elapsed);
           }
         } catch (error) {
           console.error('Error calculating AutoTimer elapsed time:', error);
@@ -1137,7 +1142,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         clearInterval(interval);
       }
     };
-  }, [autoTimerStatus?.state]);
+  }, [autoTimerStatus?.state, isRunning]);
 
   // Reload active session when AutoTimer becomes active
   useEffect(() => {
@@ -1181,15 +1186,28 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         setNotes(sessionData.notes || '');
         setIsRunning(!isPaused); // Si está pausado, no está corriendo
         
+        // Always try to sync with AutoTimer first if there's an active session
+        try {
+          const autoTimerElapsed = await autoTimerService.getElapsedTime();
+          if (autoTimerElapsed > 0) {
+            setElapsedTime(autoTimerElapsed);
+            console.log('⏱️ Synced with AutoTimer elapsed time:', autoTimerElapsed);
+            return; // Exit early if we got the time from AutoTimer
+          }
+        } catch (e) {
+          // AutoTimer might not be ready yet, fall back to other methods
+        }
+        
         if (isPaused && pausedElapsedTime > 0) {
           // If paused, show the paused elapsed time
           setElapsedTime(pausedElapsedTime);
           console.log('⏸️ Timer loaded in paused state with elapsed time:', pausedElapsedTime);
         } else {
-          // If running, calculate current elapsed time
+          // If running normally, calculate current elapsed time
           const now = new Date();
           const elapsed = Math.floor((now.getTime() - new Date(sessionData.startTime).getTime()) / 1000);
           setElapsedTime(elapsed);
+          console.log('⏱️ Calculated elapsed time from startTime:', elapsed);
         }
       }
     } catch (error) {
@@ -1348,7 +1366,15 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     try {
       const hours = getSessionHours();
       const today = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      
+      // Calculate actual start and end times
+      const actualEndTime = now.toTimeString().split(' ')[0]; // HH:MM:SS format
+      const sessionStartTime = new Date(activeSession.startTime);
+      const actualStartTime = sessionStartTime.toTimeString().split(' ')[0]; // HH:MM:SS format
+      
       console.log(`Stopping timer - Elapsed time: ${elapsedTime}s, Hours: ${hours}`);
+      console.log(`Session times - Start: ${actualStartTime}, End: ${actualEndTime}`);
       
       // Terminar el Live Activity con el tiempo final
       const liveActivityService = LiveActivityService.getInstance();
@@ -1382,6 +1408,9 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           notes: combinedNotes,
           overtime: updatedHours > 8,
           type: 'work',
+          // Keep existing actual times if they exist, otherwise use current session times
+          actualStartTime: existingWorkDay.actualStartTime || actualStartTime,
+          actualEndTime: actualEndTime, // Always update end time to current
           // Add schedule times if available
           ...(daySchedule && {
             startTime: daySchedule.startTime,
@@ -1400,8 +1429,10 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         
         // Show success modal for updated work day
         setSuccessModalData({
-          hours: parseFloat(hours.toFixed(2)),
-          totalHours: parseFloat(updatedHours.toFixed(2)),
+          hours: hours,
+          totalHours: updatedHours,
+          seconds: elapsedTime, // Pass elapsed seconds for precise display
+          totalSeconds: Math.round(updatedHours * 3600), // Convert total hours to seconds
           isUpdate: true,
           wasAutoTimerActive,
           jobId: activeSession.jobId
@@ -1422,6 +1453,9 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           notes: notes,
           overtime: hours > 8,
           type: 'work',
+          // Add actual session times
+          actualStartTime: actualStartTime,
+          actualEndTime: actualEndTime,
           // Add schedule times if available
           ...(daySchedule && {
             startTime: daySchedule.startTime,
@@ -1440,7 +1474,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         
         // Show success modal for new work day
         setSuccessModalData({
-          hours: parseFloat(hours.toFixed(2)),
+          hours: hours,
+          seconds: elapsedTime, // Pass elapsed seconds for precise display
           isUpdate: false,
           wasAutoTimerActive,
           jobId: activeSession.jobId
@@ -1523,8 +1558,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
 
   const getSessionHours = () => {
     const hours = elapsedTime / 3600; // Convert seconds to hours
-    // Ensure we always save at least 0.01 hours (36 seconds) for any session
-    return Math.max(0.01, parseFloat(hours.toFixed(2)));
+    return hours; // Keep full precision, no rounding
   };
 
   const currentSelectedJob = jobs.find(job => job.id === selectedJobId);
@@ -1939,9 +1973,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                 </Animated.Text>
  
               </View>
-              <Text style={styles.timerHours}>
-                ≈ {getSessionHours()}h{getSessionHours() > 8 ? ` (${t('timer.overtime')})` : ''}
-              </Text>
             </Animated.View>
 
             {activeSession && currentSelectedJob && autoTimerStatus?.state !== 'active' && (
@@ -2180,6 +2211,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         visible={successModalVisible}
         hours={successModalData.hours}
         totalHours={successModalData.totalHours}
+        seconds={successModalData.seconds}
+        totalSeconds={successModalData.totalSeconds}
         isUpdate={successModalData.isUpdate}
         onConfirm={handleSuccessModalConfirm}
         onClose={handleSuccessModalClose}

@@ -30,7 +30,11 @@ interface TimerSuccessModalProps {
   visible: boolean;
   hours: number;
   totalHours?: number;
+  seconds?: number; // Elapsed seconds for precise time display
+  totalSeconds?: number; // Total seconds for update scenarios
   isUpdate?: boolean;
+  startTime?: string; // HH:MM:SS format
+  endTime?: string; // HH:MM:SS format
   onConfirm: (breakMinutes?: number) => void;
   onClose: () => void;
 }
@@ -41,7 +45,11 @@ export default function TimerSuccessModal({
   visible,
   hours,
   totalHours,
+  seconds,
+  totalSeconds,
   isUpdate = false,
+  startTime,
+  endTime,
   onConfirm,
   onClose,
 }: TimerSuccessModalProps) {
@@ -53,6 +61,21 @@ export default function TimerSuccessModal({
   const scaleAnimation = useSharedValue(0);
   const checkmarkAnimation = useSharedValue(0);
   const contentOpacity = useSharedValue(0);
+  
+  // Format time in HH:MM:SS format
+  const formatTime = (totalSecs: number): string => {
+    const hrs = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+    
+    if (hrs > 0) {
+      return `${hrs}h ${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`;
+    } else if (mins > 0) {
+      return `${mins}m ${secs.toString().padStart(2, '0')}s`;
+    } else {
+      return `${secs}s`;
+    }
+  };
   
   // Calculate displayed hours based on break time
   const displayedHours = breakMinutes ? 
@@ -133,20 +156,7 @@ export default function TimerSuccessModal({
               end={{ x: 1, y: 1 }}
             />
             
-            {/* Close Button */}
-            <TouchableOpacity
-              style={[styles.closeButton, { 
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)' 
-              }]}
-              onPress={onClose}
-            >
-              <IconSymbol
-                name="xmark"
-                size={16}
-                color={isDark ? '#FFFFFF' : '#000000'}
-              />
-            </TouchableOpacity>
-            
+           
             {/* Success Icon */}
             <Animated.View style={[styles.iconContainer, animatedCheckmarkStyle]}>
               <LinearGradient
@@ -171,7 +181,7 @@ export default function TimerSuccessModal({
                     {isUpdate ? t('timer.session_hours') : t('timer.hours_worked')}
                   </Text>
                   <Text style={[styles.hoursValue, { color: '#007AFF' }]}>
-                    {displayedHours.toFixed(2)}h
+                    {seconds ? formatTime(seconds) : `${displayedHours.toFixed(2)}h`}
                   </Text>
                 </View>
                 
@@ -185,12 +195,29 @@ export default function TimerSuccessModal({
                         {t('timer.total_hours')}
                       </Text>
                       <Text style={[styles.hoursValue, { color: '#34C759' }]}>
-                        {(displayedTotalHours || totalHours).toFixed(2)}h
+                        {totalSeconds ? formatTime(totalSeconds) : `${(displayedTotalHours || totalHours).toFixed(2)}h`}
                       </Text>
                     </View>
                   </>
                 )}
               </View>
+              
+              {/* Show session time range if available */}
+              {startTime && endTime && (
+                <View style={[styles.timeRangeContainer, { 
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                }]}>
+                  <IconSymbol 
+                    size={18} 
+                    name="clock.fill" 
+                    color={isDark ? '#60A5FA' : '#3B82F6'} 
+                  />
+                  <Text style={[styles.timeRangeText, { color: isDark ? '#E5E7EB' : '#374151' }]}>
+                    {startTime.substring(0, 5)} - {endTime.substring(0, 5)}
+                  </Text>
+                </View>
+              )}
               
               <Text style={[styles.message, { color: isDark ? '#FFFFFF' : '#000000', opacity: 0.8 }]}>
                 {isUpdate 
@@ -351,6 +378,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textAlign: 'center',
     lineHeight: 22,
+  },
+  timeRangeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 8,
+    borderWidth: 1,
+  },
+  timeRangeText: {
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
   breakTimeContainer: {
     flexDirection: 'row',

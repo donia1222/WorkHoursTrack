@@ -320,7 +320,11 @@ class SimpleAutoTimer extends EventEmitter {
       const sessionStart = new Date(activeSession.startTime);
       const now = new Date();
       const elapsedMs = now.getTime() - sessionStart.getTime();
-      const elapsedHours = Math.max(0.01, parseFloat((elapsedMs / (1000 * 60 * 60)).toFixed(2)));
+      const elapsedHours = elapsedMs / (1000 * 60 * 60); // Keep full precision
+
+      // Get actual start and end times
+      const actualStartTime = sessionStart.toTimeString().split(' ')[0]; // HH:MM:SS format
+      const actualEndTime = now.toTimeString().split(' ')[0]; // HH:MM:SS format
 
       const today = now.toISOString().split('T')[0];
       await JobService.addWorkDay({
@@ -330,6 +334,8 @@ class SimpleAutoTimer extends EventEmitter {
         notes: 'Auto-stopped (NoHysteresis)',
         overtime: elapsedHours > 8,
         type: 'work',
+        actualStartTime: actualStartTime,
+        actualEndTime: actualEndTime,
       });
 
       await JobService.clearActiveSession();
