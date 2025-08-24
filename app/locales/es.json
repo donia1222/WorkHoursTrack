@@ -1233,6 +1233,8 @@
     "pdf_document": "Documento PDF",
     "cancel": "Cancelar",
     "error_processing_request": "Lo siento, hubo un error al procesar tu solicitud. Por favor, intenta de nuevo.",
+    "searching_web": "Buscando información laboral...",
+    "sources_consulted": "Fuentes consultadas:",
     "selected_image": "Imagen seleccionada",
     "image_load_error": "Error al cargar imagen",
     "export_calendar": {

@@ -1392,7 +1392,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     let interval: NodeJS.Timeout;
     
     const checkActiveTimer = async () => {
-      if (editingJob && formData.autoTimer?.enabled && currentTab === 'auto') {
+      if (editingJob && formData.autoTimer?.enabled) {
         try {
           const activeSession = await JobService.getActiveSession();
           if (activeSession && activeSession.jobId === editingJob.id) {
@@ -1406,19 +1406,23 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         } catch (error) {
           console.error('Error checking active timer:', error);
         }
+      } else {
+        setActiveTimerElapsed(0);
       }
     };
     
-    if (visible && currentTab === 'auto') {
+    if (visible) {
       checkActiveTimer();
-      // Reduce frequency to avoid performance issues
-      interval = setInterval(checkActiveTimer, 5000);
+      // Update every second for real-time display when in auto tab or when timer is active
+      if (currentTab === 'auto' || activeTimerElapsed > 0) {
+        interval = setInterval(checkActiveTimer, 1000);
+      }
     }
     
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [visible, currentTab, editingJob, formData.autoTimer?.enabled]);
+  }, [visible, currentTab, editingJob, formData.autoTimer?.enabled, activeTimerElapsed]);
 
   // Monitor AutoTimer status and show alert when needed
   useEffect(() => {
@@ -3459,99 +3463,6 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
         {formData.autoTimer?.enabled && (
           <>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('job_form.auto_timer.geofence_radius')}</Text>
-              <Text style={styles.labelDescription}>{t('job_form.auto_timer.geofence_radius_desc')}</Text>
-              <View style={styles.counterContainer}>
-                <TouchableOpacity 
-                  style={styles.counterButton}
-                  onPress={() => {
-                    const currentValue = formData.autoTimer?.geofenceRadius || 50;
-                    const newValue = Math.max(5, currentValue - 5);
-                    updateNestedData('autoTimer', 'geofenceRadius', newValue);
-                  }}
-                >
-                  <IconSymbol size={20} name="minus" color={colors.primary} />
-                </TouchableOpacity>
-                <View style={styles.counterValue}>
-                  <Text style={styles.counterText}>{formData.autoTimer?.geofenceRadius || 50}</Text>
-                  <Text style={styles.counterUnit}>{t('common.meters')}</Text>
-                </View>
-                <TouchableOpacity 
-                  style={styles.counterButton}
-                  onPress={() => {
-                    const currentValue = formData.autoTimer?.geofenceRadius || 50;
-                    const newValue = Math.min(200, currentValue + 5);
-                    updateNestedData('autoTimer', 'geofenceRadius', newValue);
-                  }}
-                >
-                  <IconSymbol size={20} name="plus" color={colors.primary} />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Delay Start Control */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('job_form.auto_timer.delay_start')}</Text>
-              <Text style={styles.labelDescription}>{t('job_form.auto_timer.delay_start_desc')}</Text>
-              <View style={styles.counterContainer}>
-                <TouchableOpacity
-                  style={styles.counterButton}
-                  onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStart ?? 0;
-                    const newValue = Math.max(0, currentValue - 1);
-                    updateNestedData('autoTimer', 'delayStart', newValue);
-                    updateNestedData('autoTimer', 'startDelayMinutes', newValue); // También actualizar el nombre correcto
-                  }}
-                >
-                  <IconSymbol size={20} name="minus" color={colors.primary} />
-                </TouchableOpacity>
-                <Text style={styles.counterText}>{formData.autoTimer?.delayStart ?? 0} min</Text>
-                <TouchableOpacity
-                  style={styles.counterButton}
-                  onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStart ?? 0;
-                    const newValue = Math.min(10, currentValue + 1);
-                    updateNestedData('autoTimer', 'delayStart', newValue);
-                    updateNestedData('autoTimer', 'startDelayMinutes', newValue); // También actualizar el nombre correcto
-                  }}
-                >
-                  <IconSymbol size={20} name="plus" color={colors.primary} />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Delay Stop Control */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('job_form.auto_timer.delay_stop')}</Text>
-              <Text style={styles.labelDescription}>{t('job_form.auto_timer.delay_stop_desc')}</Text>
-              <View style={styles.counterContainer}>
-                <TouchableOpacity
-                  style={styles.counterButton}
-                  onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStop ?? 0;
-                    const newValue = Math.max(0, currentValue - 1);
-                    updateNestedData('autoTimer', 'delayStop', newValue);
-                    updateNestedData('autoTimer', 'stopDelayMinutes', newValue); // También actualizar el nombre correcto
-                  }}
-                >
-                  <IconSymbol size={20} name="minus" color={colors.primary} />
-                </TouchableOpacity>
-                <Text style={styles.counterText}>{formData.autoTimer?.delayStop ?? 0} min</Text>
-                <TouchableOpacity
-                  style={styles.counterButton}
-                  onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStop ?? 0;
-                    const newValue = Math.min(10, currentValue + 1);
-                    updateNestedData('autoTimer', 'delayStop', newValue);
-                    updateNestedData('autoTimer', 'stopDelayMinutes', newValue); // También actualizar el nombre correcto
-                  }}
-                >
-                  <IconSymbol size={20} name="plus" color={colors.primary} />
-                </TouchableOpacity>
-              </View>
-            </View>
-
             {/* Map showing job location and geofence radius */}
             {mapRegion && jobCoordinates && (
               <View style={styles.mapContainer}>
@@ -3650,16 +3561,6 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   thumbColor={formData.autoTimer?.notifications !== false ? colors.primary : colors.textTertiary}
                 />
               </View>
-            </View>
-   <View style={styles.previewCard}>
-   
-              <Text style={styles.previewText}>
-                           <Text style={styles.previewTitle}>📍</Text>
-                {t('job_form.auto_timer.preview', {
-                  delayStart: formData.autoTimer?.delayStart || 0,
-                  delayStop: formData.autoTimer?.delayStop || 0
-                })}
-              </Text>
             </View>
           </>
         )}

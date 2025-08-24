@@ -2704,16 +2704,25 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           const today = new Date();
                           const todayIndex = miniCalendarData.findIndex(d => d.isToday);
                           const daysToShow = isTablet ? 7 : 3;
-                          const nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + daysToShow) : [];
+                          let nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + daysToShow) : [];
                           
-                          // Si no hay días, crear días por defecto
-                          if (nextDays.length === 0) {
-                            for (let i = 0; i < daysToShow; i++) {
-                              const date = new Date();
-                              date.setDate(date.getDate() + i);
+                          // Si no hay suficientes días (fin de semana), crear días adicionales
+                          const missingDays = daysToShow - nextDays.length;
+                          if (missingDays > 0) {
+                            // Obtener la última fecha disponible o usar hoy
+                            let lastDate = today;
+                            if (nextDays.length > 0) {
+                              const lastDayData = nextDays[nextDays.length - 1];
+                              lastDate = new Date(today.getFullYear(), today.getMonth(), parseInt(lastDayData.day));
+                            }
+                            
+                            // Agregar los días que faltan
+                            for (let i = 1; i <= missingDays; i++) {
+                              const newDate = new Date(lastDate);
+                              newDate.setDate(lastDate.getDate() + i);
                               nextDays.push({
-                                day: date.getDate().toString(),
-                                isToday: i === 0,
+                                day: newDate.getDate().toString(),
+                                isToday: false,
                                 workDay: null
                               });
                             }
@@ -2820,15 +2829,25 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           const today = new Date();
                           const todayIndex = miniCalendarData.findIndex(d => d.isToday);
                           const daysToShow = isTablet ? 7 : 3;
-                          const nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + daysToShow) : [];
+                          let nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + daysToShow) : [];
                           
-                          if (nextDays.length === 0) {
-                            for (let i = 0; i < daysToShow; i++) {
-                              const date = new Date();
-                              date.setDate(date.getDate() + i);
+                          // Si no hay suficientes días (fin de semana), crear días adicionales
+                          const missingDays = daysToShow - nextDays.length;
+                          if (missingDays > 0) {
+                            // Obtener la última fecha disponible o usar hoy
+                            let lastDate = today;
+                            if (nextDays.length > 0) {
+                              const lastDayData = nextDays[nextDays.length - 1];
+                              lastDate = new Date(today.getFullYear(), today.getMonth(), parseInt(lastDayData.day));
+                            }
+                            
+                            // Agregar los días que faltan
+                            for (let i = 1; i <= missingDays; i++) {
+                              const newDate = new Date(lastDate);
+                              newDate.setDate(lastDate.getDate() + i);
                               nextDays.push({
-                                day: date.getDate().toString(),
-                                isToday: i === 0,
+                                day: newDate.getDate().toString(),
+                                isToday: false,
                                 workDay: null
                               });
                             }

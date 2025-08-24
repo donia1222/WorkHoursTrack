@@ -212,8 +212,14 @@ class SimpleAutoTimer extends EventEmitter {
       } else {
         // Ya hay sesión activa, verificar que sea para este trabajo
         if (activeSession && activeSession.jobId === job.id) {
+          const isPaused = (activeSession as any).isPaused || false;
           const elapsedSec = Math.floor((now - new Date(activeSession.startTime).getTime()) / 1000);
-          console.log(`⏱️ Timer activo para ${job.name} (${elapsedSec}s transcurridos)`);
+          
+          if (isPaused) {
+            console.log(`⏸️ Timer pausado para ${job.name}`);
+          } else {
+            console.log(`⏱️ Timer activo para ${job.name} (${elapsedSec}s transcurridos)`);
+          }
           
           // Actualizar estado interno para no reiniciar
           if (!this.insideSince) {
@@ -235,21 +241,27 @@ class SimpleAutoTimer extends EventEmitter {
         this.outsideSince = now;
       }
 
-      // STOP si hay timer
+      // STOP si hay timer (pero no si está pausado)
       if (hasActiveTimer) {
-        const stayOutSec = this.outsideSince ? (now - this.outsideSince) / 1000 : 0;
-        const sinceLastStop = this.lastStopActionAt ? (now - this.lastStopActionAt) / 1000 : Infinity;
+        const isPaused = (activeSession as any).isPaused || false;
+        
+        if (!isPaused) {
+          const stayOutSec = this.outsideSince ? (now - this.outsideSince) / 1000 : 0;
+          const sinceLastStop = this.lastStopActionAt ? (now - this.lastStopActionAt) / 1000 : Infinity;
 
-        if (stayOutSec >= stopDelaySec && sinceLastStop >= this.minGapStopSec) {
-          console.log(`🛑 Fuera y cumpliendo delay (${stayOutSec.toFixed(0)}s) → parar`);
-          await this.stopTimer(job);
-          this.lastStopActionAt = now;
-        } else {
-          if (stopDelaySec > 0) {
-            console.log(`⏳ Fuera, esperando stopDelay: ${stayOutSec.toFixed(0)} / ${stopDelaySec}s`);
+          if (stayOutSec >= stopDelaySec && sinceLastStop >= this.minGapStopSec) {
+            console.log(`🛑 Fuera y cumpliendo delay (${stayOutSec.toFixed(0)}s) → parar`);
+            await this.stopTimer(job);
+            this.lastStopActionAt = now;
           } else {
-            console.log('⏳ Fuera, esperando próximo fix para confirmar salida…'); // con 0s debería caer en la siguiente lectura
+            if (stopDelaySec > 0) {
+              console.log(`⏳ Fuera, esperando stopDelay: ${stayOutSec.toFixed(0)} / ${stopDelaySec}s`);
+            } else {
+              console.log('⏳ Fuera, esperando próximo fix para confirmar salida…'); // con 0s debería caer en la siguiente lectura
+            }
           }
+        } else {
+          console.log(`⏸️ Timer pausado, no se auto-detiene`);
         }
       }
 
@@ -405,9 +417,18 @@ class SimpleAutoTimer extends EventEmitter {
   async getElapsedTime(): Promise<number> {
     const activeSession = await JobService.getActiveSession();
     if (activeSession) {
-      const startTime = new Date(activeSession.startTime).getTime();
-      const now = Date.now();
-      return Math.floor((now - startTime) / 1000);
+      const isPaused = (activeSession as any).isPaused || false;
+      const pausedElapsedTime = (activeSession as any).pausedElapsedTime || 0;
+      
+      if (isPaused) {
+        // If paused, return the stored elapsed time
+        return pausedElapsedTime;
+      } else {
+        // If running, calculate current elapsed time
+        const startTime = new Date(activeSession.startTime).getTime();
+        const now = Date.now();
+        return Math.floor((now - startTime) / 1000);
+      }
     }
     return 0;
   }
@@ -425,6 +446,79 @@ class SimpleAutoTimer extends EventEmitter {
   async start(jobs: any[]): Promise<boolean> {
     await this.startSimpleMonitoring();
     return true;
+  }
+
+  /**
+   * Pause the active timer
+   */
+  async pauseTimer(): Promise<void> {
+    try {
+      const activeSession = await JobService.getActiveSession();
+      if (!activeSession) {
+        console.log('⚠️ No active session to pause');
+        return;
+      }
+
+      const now = new Date();
+      const elapsed = Math.floor((now.getTime() - new Date(activeSession.startTime).getTime()) / 1000);
+      
+      const sessionForStorage = {
+        jobId: activeSession.jobId,
+        startTime: activeSession.startTime,
+        notes: activeSession.notes || 'Auto-started (SimpleAutoTimer)',
+        isPaused: true,
+        pausedElapsedTime: elapsed,
+      };
+      
+      await JobService.saveActiveSession(sessionForStorage);
+      console.log(`⏸️ SimpleAutoTimer: Timer paused with ${elapsed}s elapsed`);
+      
+      // Emit status change
+      this.emit('statusChanged', { state: 'active', jobId: activeSession.jobId, isPaused: true });
+    } catch (error) {
+      console.error('❌ SimpleAutoTimer: Error pausing timer:', error);
+    }
+  }
+
+  /**
+   * Resume the paused timer
+   */
+  async resumeTimer(): Promise<void> {
+    try {
+      const sessionData = await JobService.getActiveSession();
+      if (!sessionData) {
+        console.log('⚠️ No session to resume');
+        return;
+      }
+      
+      const pausedElapsedTime = (sessionData as any).pausedElapsedTime || 0;
+      
+      // Calculate new start time by subtracting paused elapsed time from now
+      const now = new Date();
+      const adjustedStartTime = new Date(now.getTime() - (pausedElapsedTime * 1000));
+      
+      const sessionForStorage = {
+        jobId: sessionData.jobId,
+        startTime: adjustedStartTime.toISOString(),
+        notes: sessionData.notes || 'Auto-started (SimpleAutoTimer)',
+        isPaused: false,
+        pausedElapsedTime: 0,
+      };
+      
+      await JobService.saveActiveSession(sessionForStorage);
+      console.log(`▶️ SimpleAutoTimer: Timer resumed from ${pausedElapsedTime}s`);
+      
+      // Update internal state
+      if (this.lastStartActionAt) {
+        // Adjust the lastStartActionAt to account for paused time
+        this.lastStartActionAt = adjustedStartTime.getTime();
+      }
+      
+      // Emit status change
+      this.emit('statusChanged', { state: 'active', jobId: sessionData.jobId, isPaused: false });
+    } catch (error) {
+      console.error('❌ SimpleAutoTimer: Error resuming timer:', error);
+    }
   }
 
   /**

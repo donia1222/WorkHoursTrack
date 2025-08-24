@@ -1244,6 +1244,8 @@
     "pdf_document": "PDF document",
     "cancel": "Cancel",
     "error_processing_request": "Sorry, there was an error processing your request. Please try again.",
+    "searching_web": "Searching for labor information...",
+    "sources_consulted": "Sources consulted:",
     "selected_image": "Selected image",
     "image_load_error": "Error loading image",
     "export_calendar": {

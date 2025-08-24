@@ -20,6 +20,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { MediaType } from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { GoogleVisionService } from '@/app/services/GoogleVisionService';
+import { EnhancedAIService, WebSearchResult } from '@/app/services/EnhancedAIService';
 import ChatMessage, { ChatMessageData } from '@/app/components/ChatMessage';
 import ImagePreview from '@/app/components/ImagePreview';
 import WelcomeMessage from '@/app/components/WelcomeMessage';
@@ -301,6 +302,40 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontWeight: '700',
     color: '#000',
   },
+  searchIndicator: {
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  searchHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  searchTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  searchSources: {
+    gap: 6,
+  },
+  sourceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  sourceText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  searchLoader: {
+    marginTop: 8,
+  },
 });
 
 export default function ChatbotScreen() {
@@ -328,6 +363,8 @@ export default function ChatbotScreen() {
   const [lastAnalyzedDocument, setLastAnalyzedDocument] = useState<{ uri: string; name: string; type: string } | null>(null);
   const [waitingForPersonSelection, setWaitingForPersonSelection] = useState(false);
   const [waitingForClarification, setWaitingForClarification] = useState(false);
+  const [searchingSources, setSearchingSources] = useState<WebSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Cargar trabajos al inicializar
   useEffect(() => {
@@ -873,13 +910,34 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
               language // 🔥 AGREGADO: idioma actual
             );
           } else {
-            console.log('💬 [CHAT] Respuesta simple sin contexto de archivo');
-            responseText = await GoogleVisionService.getChatResponseWithContext(
-              inputText, 
+            console.log('💬 [CHAT] Respuesta con EnhancedAIService');
+            // Usar EnhancedAIService - solo muestra búsqueda si es pregunta laboral
+            setSearchingSources([]);
+            
+            const response = await EnhancedAIService.sendMessage(
+              inputText,
+              language,
               history,
-              undefined,
-              language // 🔥 AGREGADO: idioma actual
+              (sources) => {
+                // Solo mostrar indicador de búsqueda si hay fuentes
+                if (sources && sources.length > 0) {
+                  setIsSearching(true);
+                  setSearchingSources(sources);
+                  console.log('🔍 [CHAT] Buscando en:', sources.map(s => s.title));
+                }
+              }
             );
+            
+            setIsSearching(false);
+            
+            if (response.success) {
+              responseText = response.data || '';
+              if (response.searchingSources) {
+                setSearchingSources(response.searchingSources);
+              }
+            } else {
+              responseText = response.error || t('chatbot.error_processing_request');
+            }
           }
         }
       }
@@ -976,6 +1034,37 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       />
+
+      {/* Web Search Indicator */}
+      {(isSearching || searchingSources.length > 0) && (
+        <View style={styles.searchIndicator}>
+          <View style={styles.searchHeader}>
+            <Ionicons name="search" size={16} color={colors.primary} />
+            <Text style={styles.searchTitle}>
+              {isSearching ? t('chatbot.searching_web') : t('chatbot.sources_consulted')}
+            </Text>
+          </View>
+          {searchingSources.length > 0 && (
+            <View style={styles.searchSources}>
+              {searchingSources.map((source, index) => (
+                <View key={index} style={styles.sourceItem}>
+                  <Ionicons name="globe-outline" size={14} color={colors.textSecondary} />
+                  <Text style={styles.sourceText} numberOfLines={1}>
+                    {source.title || source.url}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+          {isSearching && (
+            <ActivityIndicator 
+              size="small" 
+              color={colors.primary} 
+              style={styles.searchLoader}
+            />
+          )}
+        </View>
+      )}
 
       {selectedImage && (
         <ImagePreview 
