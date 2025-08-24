@@ -31,6 +31,7 @@ import { Job, DEFAULT_COLORS } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import { AutoScheduleService } from '../services/AutoScheduleService';
 import AutoTimerService from '../services/SimpleAutoTimer';
+// @ts-ignore
 import { startBackgroundGeofencing } from '../services/BackgroundGeofenceTask';
 import { FreeAddressSearch } from './FreeAddressSearch';
 import AddressAutocompleteDropdown from './AddressAutocompleteDropdown';
@@ -1411,10 +1412,10 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       }
     };
     
-    if (visible) {
+    if (visible && (currentTab === 'auto' || editingJob)) {
       checkActiveTimer();
-      // Update every second for real-time display when in auto tab or when timer is active
-      if (currentTab === 'auto' || activeTimerElapsed > 0) {
+      // Update every second for real-time display when in auto tab
+      if (currentTab === 'auto') {
         interval = setInterval(checkActiveTimer, 1000);
       }
     }
@@ -1422,7 +1423,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [visible, currentTab, editingJob, formData.autoTimer?.enabled, activeTimerElapsed]);
+  }, [visible, currentTab, editingJob, formData.autoTimer?.enabled]);
 
   // Monitor AutoTimer status and show alert when needed
   useEffect(() => {
