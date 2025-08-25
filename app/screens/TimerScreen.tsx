@@ -8,7 +8,6 @@ import {
   ScrollView,
   Alert,
   TextInput,
-  StatusBar,
   Modal,
   Animated as RNAnimated,
 } from 'react-native';
@@ -28,15 +27,14 @@ import JobFormModal from '../components/JobFormModal';
 import TimerSuccessModal from '../components/TimerSuccessModal';
 import { Job, WorkDay, StoredActiveSession } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
-import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
-import LiveActivityService from '../services/LiveActivityService';
-import MapView, { Marker, Circle, PROVIDER_DEFAULT } from 'react-native-maps';
+import { ManualTimerService } from '../services/ManualTimerService';
 
-import { useBackNavigation, useNavigation } from '../context/NavigationContext';
+import { useNavigation } from '../context/NavigationContext';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
+import { useTimeFormat } from '../hooks/useTimeFormat';
 
 
 interface TimerScreenProps {
@@ -53,7 +51,7 @@ interface ActiveSession {
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: isDark ? 'rgba(59, 130, 246, 0.08)' : 'rgba(59, 130, 246, 0.04)', // Azul suave
   },
   header: {
     borderBottomWidth: 1,
@@ -107,6 +105,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 16,
+    backgroundColor: 'transparent',
   },
   section: {
     marginVertical: 12,
@@ -885,27 +884,124 @@ marginTop: -4,
     color: colors.textSecondary,
     textAlign: 'center',
   },
+  // New modern styles for recent sessions
+  recentSessionCardBlur: {
+    flex: 1,
+    borderRadius: 20,
+  },
+  recentSessionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  recentSessionJobInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 8,
+  },
+  recentSessionJobIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  recentSessionJobTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text,
+    flex: 1,
+  },
+  deleteSessionButtonNew: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+  },
+  recentSessionTimeDisplay: {
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingVertical: 8,
+  },
+  recentSessionHoursNew: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  recentSessionTypeLabel: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    opacity: 0.8,
+  },
+  recentSessionMetadata: {
+    gap: 6,
+  },
+  recentSessionDateInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  recentSessionTimeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  recentSessionDateNew: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  recentSessionTimeNew: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  recentSessionNotesIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border + '20',
+  },
+  recentSessionNotesText: {
+    fontSize: 10,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+    flex: 1,
+  },
 });
 
 export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   const { colors, isDark } = useTheme();
   const { t, language } = useLanguage();
   const { triggerHaptic } = useHapticFeedback();
+  const { formatTime: formatTimeFromHours } = useTimeFormat();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [showAllJobs, setShowAllJobs] = useState<boolean>(false);
   const [isRunning, setIsRunning] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [autoTimerElapsedTime, setAutoTimerElapsedTime] = useState(0);
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
   const [notes, setNotes] = useState('');
-  const [autoTimerStatus, setAutoTimerStatus] = useState<AutoTimerStatus | null>(null);
-  const [autoTimerService] = useState(() => AutoTimerService.getInstance());
-  const { handleBack } = useBackNavigation();
   const { selectedJob, setSelectedJob } = useNavigation();
   const [isJobFormModalVisible, setIsJobFormModalVisible] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
-  const [successModalData, setSuccessModalData] = useState<{
+  const [successModalData] = useState<{
     hours: number;
     totalHours?: number;
     seconds: number; // Add seconds for precise time display
@@ -916,6 +1012,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   }>({ hours: 0, seconds: 0, isUpdate: false });
   const [recentTimerSessions, setRecentTimerSessions] = useState<WorkDay[]>([]);
   const [notesModalVisible, setNotesModalVisible] = useState(false);
+  const [statsModalVisible, setStatsModalVisible] = useState(false);
   
   // Animaciones
   const pulseAnimation = useSharedValue(1);
@@ -1045,113 +1142,25 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     }
   }, [selectedJob, isRunning, activeSession]);
 
-  // Initialize and manage auto timer service
-  // AutoTimer service initialization - runs only once
-  useEffect(() => {
-    const handleAutoTimerStatusChange = (status: AutoTimerStatus) => {
-      console.log('🔄 TimerScreen received AutoTimer status change:', {
-        state: status.state,
-        jobId: status.jobId,
-        jobName: status.jobName,
-        remainingTime: status.remainingTime,
-        remainingFormatted: status.remainingTime >= 60 
-          ? `${Math.floor(status.remainingTime / 60)}:${Math.floor(status.remainingTime % 60).toString().padStart(2, '0')}`
-          : `${Math.floor(status.remainingTime)}s`
-      });
-      setAutoTimerStatus(status);
-    };
 
-    // Add status listener
-    autoTimerService.addStatusListener(handleAutoTimerStatusChange);
-    
-    // Get current status immediately to sync with any ongoing countdown
-    const currentStatus = autoTimerService.getStatus();
-    setAutoTimerStatus(currentStatus);
-    console.log('🔄 TimerScreen: Synced with current AutoTimer status:', currentStatus.state, currentStatus.remainingTime);
-
-    // Cleanup on unmount (but don't stop the service - it should persist across screens)
-    return () => {
-      autoTimerService.removeStatusListener(handleAutoTimerStatusChange);
-    };
-  }, []); // Empty dependency array - runs only once
-
-  // Update jobs in AutoTimer service when jobs change
-  useEffect(() => {
-    const updateAutoTimerJobs = async () => {
-      if (jobs.length > 0) {
-        console.log('🔄 TimerScreen: Updating AutoTimer with jobs:', jobs.length);
-        
-        // If service is not enabled, start it; otherwise just update jobs
-        if (!autoTimerService.isServiceEnabled()) {
-          console.log('🚀 TimerScreen: Starting AutoTimer service');
-          autoTimerService.start(jobs);
-        } else {
-          console.log('🔄 TimerScreen: Service already running, just updating jobs');
-          await autoTimerService.updateJobs(jobs);
-        }
-      }
-    };
-    
-    updateAutoTimerJobs();
-  }, [jobs]);
-
+  // Update elapsed time for timer
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    // Only update timer if it's running AND not from AutoTimer
-    if (isRunning && activeSession && autoTimerStatus?.state !== 'active') {
+    
+    if (isRunning && activeSession) {
       interval = setInterval(() => {
         const now = new Date();
         const elapsed = Math.floor((now.getTime() - activeSession.startTime.getTime()) / 1000);
         setElapsedTime(elapsed);
       }, 1000);
     }
-    // When paused or AutoTimer is active, keep the elapsed time static or let AutoTimer update it
-    return () => clearInterval(interval);
-  }, [isRunning, activeSession, autoTimerStatus?.state]);
-
-  // Calculate elapsed time for active AutoTimer
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
     
-    if (autoTimerStatus?.state === 'active') {
-      const updateAutoTimerElapsedTime = async () => {
-        try {
-          // Use the AutoTimer service's getElapsedTime method for consistency
-          const elapsed = await autoTimerService.getElapsedTime();
-          setAutoTimerElapsedTime(elapsed);
-          
-          // If this is the main timer running from AutoTimer, sync the main elapsed time too
-          const activeSession = await JobService.getActiveSession();
-          if (activeSession && !(activeSession as any).isPaused && isRunning) {
-            setElapsedTime(elapsed);
-          }
-        } catch (error) {
-          console.error('Error calculating AutoTimer elapsed time:', error);
-        }
-      };
-
-      // Update immediately and then every second
-      updateAutoTimerElapsedTime();
-      interval = setInterval(updateAutoTimerElapsedTime, 1000);
-    } else {
-      setAutoTimerElapsedTime(0);
-    }
-
     return () => {
       if (interval) {
         clearInterval(interval);
       }
     };
-  }, [autoTimerStatus?.state, isRunning]);
-
-  // Reload active session when AutoTimer becomes active
-  useEffect(() => {
-    console.log('🔄 TimerScreen AutoTimer effect - state:', autoTimerStatus?.state, 'hasActiveSession:', !!activeSession);
-    if (autoTimerStatus?.state === 'active' && !activeSession) {
-      console.log('🔄 AutoTimer is now active but no activeSession, reloading session in TimerScreen');
-      loadActiveSession();
-    }
-  }, [autoTimerStatus?.state, activeSession]);
+  }, [isRunning, activeSession]);
 
   const loadJobs = async () => {
     try {
@@ -1171,12 +1180,12 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
 
   const loadActiveSession = async () => {
     try {
-      const sessionData: StoredActiveSession | null = await JobService.getActiveSession();
-      console.log('📱 TimerScreen loadActiveSession result:', sessionData ? 'found session' : 'no session');
+      const sessionData = await ManualTimerService.getManualSession();
+      console.log('📱 TimerScreen loadManualSession result:', sessionData ? 'found session' : 'no session');
       if (sessionData) {
-        const isPaused = (sessionData as any).isPaused || false;
-        const pausedElapsedTime = (sessionData as any).pausedElapsedTime || 0;
-        console.log('🔄 TimerScreen setting active session, isPaused:', isPaused, 'pausedElapsedTime:', pausedElapsedTime, 'for job:', sessionData.jobId);
+        const isPaused = sessionData.isPaused || false;
+        const pausedElapsedTime = sessionData.pausedElapsedTime || 0;
+        console.log('🔄 TimerScreen setting manual session, isPaused:', isPaused, 'pausedElapsedTime:', pausedElapsedTime, 'for job:', sessionData.jobId);
         
         setActiveSession({
           ...sessionData,
@@ -1186,32 +1195,21 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         setNotes(sessionData.notes || '');
         setIsRunning(!isPaused); // Si está pausado, no está corriendo
         
-        // Always try to sync with AutoTimer first if there's an active session
-        try {
-          const autoTimerElapsed = await autoTimerService.getElapsedTime();
-          if (autoTimerElapsed > 0) {
-            setElapsedTime(autoTimerElapsed);
-            console.log('⏱️ Synced with AutoTimer elapsed time:', autoTimerElapsed);
-            return; // Exit early if we got the time from AutoTimer
-          }
-        } catch (e) {
-          // AutoTimer might not be ready yet, fall back to other methods
-        }
         
         if (isPaused && pausedElapsedTime > 0) {
           // If paused, show the paused elapsed time
           setElapsedTime(pausedElapsedTime);
-          console.log('⏸️ Timer loaded in paused state with elapsed time:', pausedElapsedTime);
+          console.log('⏸️ Manual timer loaded in paused state with elapsed time:', pausedElapsedTime);
         } else {
           // If running normally, calculate current elapsed time
           const now = new Date();
           const elapsed = Math.floor((now.getTime() - new Date(sessionData.startTime).getTime()) / 1000);
           setElapsedTime(elapsed);
-          console.log('⏱️ Calculated elapsed time from startTime:', elapsed);
+          console.log('⏱️ Manual timer calculated elapsed time from startTime:', elapsed);
         }
       }
     } catch (error) {
-      console.error('Error loading active session:', error);
+      console.error('Error loading manual timer session:', error);
     }
   };
 
@@ -1269,221 +1267,90 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     }
 
     try {
-      const sessionForStorage: StoredActiveSession = {
+      const startTime = new Date();
+      const session: StoredActiveSession = {
         jobId: selectedJobId,
-        startTime: new Date().toISOString(),
-        notes: notes,
+        startTime: startTime.toISOString(),
+        notes: '',
       };
-
-      const session: ActiveSession = {
+      
+      await ManualTimerService.saveManualSession(session);
+      
+      setActiveSession({
         jobId: selectedJobId,
-        startTime: new Date(),
-        notes: notes,
-      };
-
-      await JobService.saveActiveSession(sessionForStorage);
-      setActiveSession(session);
+        startTime,
+        notes: '',
+      });
       setIsRunning(true);
       setElapsedTime(0);
-      
-      // Iniciar Live Activity para timer manual
-      const job = jobs.find(j => j.id === selectedJobId);
-      if (job) {
-        const liveActivityService = LiveActivityService.getInstance();
-        await liveActivityService.startLiveActivity(job.name, job.address, new Date());
-        console.log('📱 Live Activity started for manual timer');
-      }
+      console.log('✅ Manual timer started successfully');
     } catch (error) {
-      console.error('Error starting timer:', error);
+      console.error('Error starting manual timer:', error);
       Alert.alert('Error', t('timer.start_timer_error'));
     }
   };
 
   const pauseTimer = async () => {
-    setIsRunning(false);
-    
-    // Save the paused state with accumulated time
-    if (activeSession) {
-      try {
-        const now = new Date();
-        const elapsed = Math.floor((now.getTime() - activeSession.startTime.getTime()) / 1000);
-        
-        const sessionForStorage = {
+    try {
+      if (activeSession) {
+        const updatedSession: StoredActiveSession = {
           jobId: activeSession.jobId,
           startTime: activeSession.startTime.toISOString(),
           notes: activeSession.notes,
           isPaused: true,
-          pausedElapsedTime: elapsed, // Save elapsed time at pause
-        };
-        
-        await JobService.saveActiveSession(sessionForStorage);
-        console.log(`⏸️ Timer paused with ${elapsed}s elapsed`);
-      } catch (error) {
-        console.error('Error pausing timer:', error);
+          pausedElapsedTime: elapsedTime,
+        } as StoredActiveSession;
+        await ManualTimerService.saveManualSession(updatedSession);
+        setIsRunning(false);
+        console.log('⏸️ Manual timer paused successfully');
       }
+    } catch (error) {
+      console.error('Error pausing timer:', error);
     }
   };
 
   const resumeTimer = async () => {
-    setIsRunning(true);
-    
-    // When resuming, adjust the start time to account for paused time
-    if (activeSession) {
-      try {
-        const sessionData = await JobService.getActiveSession();
-        const pausedElapsedTime = (sessionData as any).pausedElapsedTime || 0;
-        
-        // Calculate new start time by subtracting paused elapsed time from now
-        const now = new Date();
-        const adjustedStartTime = new Date(now.getTime() - (pausedElapsedTime * 1000));
-        
-        const sessionForStorage = {
+    try {
+      if (activeSession) {
+        const updatedSession: StoredActiveSession = {
           jobId: activeSession.jobId,
-          startTime: adjustedStartTime.toISOString(),
+          startTime: activeSession.startTime.toISOString(),
           notes: activeSession.notes,
           isPaused: false,
-          pausedElapsedTime: 0, // Clear paused time
-        };
-        
-        await JobService.saveActiveSession(sessionForStorage);
-        
-        // Update local state with adjusted start time
-        setActiveSession({
-          ...activeSession,
-          startTime: adjustedStartTime,
-        });
-        
-        console.log(`▶️ Timer resumed from ${pausedElapsedTime}s`);
-      } catch (error) {
-        console.error('Error resuming timer:', error);
+        } as StoredActiveSession;
+        await ManualTimerService.saveManualSession(updatedSession);
+        setIsRunning(true);
+        console.log('▶️ Manual timer resumed successfully');
       }
+    } catch (error) {
+      console.error('Error resuming timer:', error);
     }
   };
 
-  const stopTimer = async () => {
+  const handleStopButton = async () => {
     if (!activeSession) return;
-
+    
     try {
-      const hours = getSessionHours();
-      const today = new Date().toISOString().split('T')[0];
-      const now = new Date();
+      const job = jobs.find(j => j.id === activeSession.jobId);
+      if (!job) return;
       
-      // Calculate actual start and end times
-      const actualEndTime = now.toTimeString().split(' ')[0]; // HH:MM:SS format
-      const sessionStartTime = new Date(activeSession.startTime);
-      const actualStartTime = sessionStartTime.toTimeString().split(' ')[0]; // HH:MM:SS format
+      const endTime = new Date();
+      const totalSeconds = elapsedTime;
+      const hours = totalSeconds / 3600;
       
-      console.log(`Stopping timer - Elapsed time: ${elapsedTime}s, Hours: ${hours}`);
-      console.log(`Session times - Start: ${actualStartTime}, End: ${actualEndTime}`);
+      const workDay: WorkDay = {
+        id: `timer-${Date.now()}`,
+        jobId: activeSession.jobId,
+        date: endTime.toISOString().split('T')[0],
+        type: 'work',
+        hours,
+        overtime: false,
+        notes: notes || '',
+        createdAt: endTime.toISOString(),
+        updatedAt: endTime.toISOString(),
+      };
       
-      // Terminar el Live Activity con el tiempo final
-      const liveActivityService = LiveActivityService.getInstance();
-      await liveActivityService.endLiveActivity(elapsedTime);
-      console.log('📱 Live Activity ended');
-      
-      // Check if there's already a work day for this date and job
-      const allWorkDays = await JobService.getWorkDays();
-      const existingWorkDay = allWorkDays.find(day => 
-        day.date === today && 
-        day.jobId === activeSession.jobId && 
-        day.type === 'work'
-      );
-      
-      if (existingWorkDay) {
-        // Update existing work day - add hours
-        const updatedHours = existingWorkDay.hours + hours;
-        const combinedNotes = existingWorkDay.notes && notes 
-          ? `${existingWorkDay.notes}\n---\n${notes}` 
-          : existingWorkDay.notes || notes;
-          
-        // Get the job and its schedule for today
-        const job = jobs.find(j => j.id === activeSession.jobId);
-        const todayDate = new Date();
-        const daySchedule = job ? getScheduleForDay(job, todayDate) : null;
-        
-        const updatedWorkDay: Omit<WorkDay, 'id' | 'createdAt' | 'updatedAt'> = {
-          date: today,
-          jobId: activeSession.jobId,
-          hours: updatedHours,
-          notes: combinedNotes,
-          overtime: updatedHours > 8,
-          type: 'work',
-          // Keep existing actual times if they exist, otherwise use current session times
-          actualStartTime: existingWorkDay.actualStartTime || actualStartTime,
-          actualEndTime: actualEndTime, // Always update end time to current
-          // Add schedule times if available
-          ...(daySchedule && {
-            startTime: daySchedule.startTime,
-            endTime: daySchedule.endTime,
-            ...(daySchedule.hasSplitShift && {
-              secondStartTime: daySchedule.secondStartTime,
-              secondEndTime: daySchedule.secondEndTime,
-            }),
-          }),
-        };
-        
-        await JobService.updateWorkDay(existingWorkDay.id, updatedWorkDay);
-        
-        // Check if AutoTimer was active
-        const wasAutoTimerActive = autoTimerStatus?.state === 'active';
-        
-        // Show success modal for updated work day
-        setSuccessModalData({
-          hours: hours,
-          totalHours: updatedHours,
-          seconds: elapsedTime, // Pass elapsed seconds for precise display
-          totalSeconds: Math.round(updatedHours * 3600), // Convert total hours to seconds
-          isUpdate: true,
-          wasAutoTimerActive,
-          jobId: activeSession.jobId
-        });
-        
-        setSuccessModalVisible(true);
-      } else {
-        // Create new work day
-        // Get the job and its schedule for today
-        const job = jobs.find(j => j.id === activeSession.jobId);
-        const todayDate = new Date();
-        const daySchedule = job ? getScheduleForDay(job, todayDate) : null;
-        
-        const workDay: Omit<WorkDay, 'id' | 'createdAt' | 'updatedAt'> = {
-          date: today,
-          jobId: activeSession.jobId,
-          hours: hours,
-          notes: notes,
-          overtime: hours > 8,
-          type: 'work',
-          // Add actual session times
-          actualStartTime: actualStartTime,
-          actualEndTime: actualEndTime,
-          // Add schedule times if available
-          ...(daySchedule && {
-            startTime: daySchedule.startTime,
-            endTime: daySchedule.endTime,
-            ...(daySchedule.hasSplitShift && {
-              secondStartTime: daySchedule.secondStartTime,
-              secondEndTime: daySchedule.secondEndTime,
-            }),
-          }),
-        };
-
-        await JobService.addWorkDay(workDay);
-        
-        // Check if AutoTimer was active
-        const wasAutoTimerActive = autoTimerStatus?.state === 'active';
-        
-        // Show success modal for new work day
-        setSuccessModalData({
-          hours: hours,
-          seconds: elapsedTime, // Pass elapsed seconds for precise display
-          isUpdate: false,
-          wasAutoTimerActive,
-          jobId: activeSession.jobId
-        });
-        
-        setSuccessModalVisible(true);
-      }
-      
+      await JobService.addWorkDay(workDay);
       await JobService.clearActiveSession();
       
       setActiveSession(null);
@@ -1491,34 +1358,11 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       setElapsedTime(0);
       setNotes('');
       
-      // Reload recent timer sessions after saving
       await loadRecentTimerSessions();
-      
+      console.log('✅ Timer stopped successfully');
     } catch (error) {
       console.error('Error stopping timer:', error);
       Alert.alert('Error', t('timer.save_error'));
-    }
-  };
-
-  const handleStopButton = async () => {
-    if (autoTimerStatus?.state === 'active') {
-      // If auto timer is active, give user choice to stop manually
-      Alert.alert(
-        t('timer.auto_timer.manual_override'),
-        t('timer.auto_timer.manual_override_message'),
-        [
-          { text: t('common.cancel'), style: 'cancel' },
-          { 
-            text: t('timer.stop'), 
-            style: 'destructive',
-            onPress: async () => {
-              await stopTimer();
-            }
-          }
-        ]
-      );
-    } else {
-      await stopTimer();
     }
   };
 
@@ -1534,32 +1378,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     }
   };
 
-  const getAutoTimerMessage = (status: AutoTimerStatus): string => {
-    const messageParts = status.message.split(':');
-    const messageType = messageParts[0];
-    const seconds = parseInt(messageParts[1] || '0');
-    const minutes = Math.ceil(seconds / 60);
 
-    switch (messageType) {
-      case 'inactive':
-        return t('timer.auto_timer.inactive');
-      case 'entering':
-        return t('timer.auto_timer.will_start', { minutes });
-      case 'active':
-        return t('timer.auto_timer.started_auto');
-      case 'leaving':
-        return t('timer.auto_timer.will_stop', { minutes });
-      case 'manual':
-        return t('timer.auto_timer.manual_override');
-      default:
-        return status.message;
-    }
-  };
-
-  const getSessionHours = () => {
-    const hours = elapsedTime / 3600; // Convert seconds to hours
-    return hours; // Keep full precision, no rounding
-  };
+  // Auto timer message function removed - using unified context now
 
   const currentSelectedJob = jobs.find(job => job.id === selectedJobId);
 
@@ -1572,71 +1392,13 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     setIsJobFormModalVisible(false);
   };
 
-  // Helper function to get schedule for a specific day from job
-  const getScheduleForDay = (job: Job, date: Date) => {
-    if (!job.schedule) return null;
-    
-    const dayOfWeek = date.getDay();
-    
-    // Try new weeklySchedule structure first
-    if (job.schedule.weeklySchedule && job.schedule.weeklySchedule[dayOfWeek]) {
-      return job.schedule.weeklySchedule[dayOfWeek];
-    }
-    
-    // Fallback to legacy structure
-    if (job.schedule.workDays && job.schedule.workDays.includes(dayOfWeek)) {
-      return {
-        startTime: job.schedule.startTime || '09:00',
-        endTime: job.schedule.endTime || '17:00',
-        hasSplitShift: job.schedule.hasSplitShift || false,
-        secondStartTime: job.schedule.secondStartTime,
-        secondEndTime: job.schedule.secondEndTime,
-        breakTime: job.schedule.breakTime || 60,
-      };
-    }
-    
-    return null;
-  };
-
-  const disableAutoTimerAfterStop = async (reason: string) => {
-    if (successModalData.wasAutoTimerActive && successModalData.jobId) {
-      console.log(`🛑 Disabling AutoTimer ${reason}`);
-      const job = jobs.find(j => j.id === successModalData.jobId);
-      if (job && job.autoTimer?.enabled) {
-        try {
-          // Disable AutoTimer in job configuration
-          const updatedJob = {
-            ...job,
-            autoTimer: {
-              ...job.autoTimer,
-              enabled: false
-            }
-          };
-          await JobService.updateJob(job.id, updatedJob);
-          console.log('✅ AutoTimer disabled for job:', job.name);
-          
-          // Reload jobs to ensure the update is reflected
-          await loadJobs();
-          
-          // Stop AutoTimer services by updating with empty jobs array
-          const autoTimerService = AutoTimerService.getInstance();
-          await autoTimerService.updateJobs([]);
-          console.log('🛑 AutoTimer services stopped (updated with empty jobs)');
-        } catch (error) {
-          console.error('Error disabling AutoTimer:', error);
-        }
-      }
-    }
-  };
-
-  const handleSuccessModalConfirm = async (breakMinutes?: number) => {
-    await disableAutoTimerAfterStop('after user confirmed session');
+  // Success modal handlers - simplified since AutoTimer context handles stopping
+  const handleSuccessModalConfirm = async () => {
     setSuccessModalVisible(false);
     onNavigate('reports');
   };
 
   const handleSuccessModalClose = async () => {
-    await disableAutoTimerAfterStop('after modal closed');
     setSuccessModalVisible(false);
   };
 
@@ -1646,86 +1408,132 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         horizontal 
         showsHorizontalScrollIndicator={false}
         style={styles.recentSessionsList}
-        contentContainerStyle={{ paddingRight: 20 }}
+        contentContainerStyle={{ paddingRight: 20, paddingLeft: 4 }}
       >
         {recentTimerSessions.map((session) => {
           const job = jobs.find(j => j.id === session.jobId);
           const sessionDate = new Date(session.date);
           const createdDate = session.createdAt ? new Date(session.createdAt) : sessionDate;
+          const isToday = sessionDate.toDateString() === new Date().toDateString();
+          const isYesterday = new Date(Date.now() - 86400000).toDateString() === sessionDate.toDateString();
+          
+          // Format date more elegantly
+          let dateDisplay;
+          if (isToday) {
+            dateDisplay = t('common.today');
+          } else if (isYesterday) {
+            dateDisplay = t('common.yesterday');
+          } else {
+            dateDisplay = sessionDate.toLocaleDateString(
+              language === 'es' ? 'es-ES' : 
+              language === 'en' ? 'en-US' : 
+              language === 'de' ? 'de-DE' : 
+              language === 'fr' ? 'fr-FR' : 
+              language === 'it' ? 'it-IT' : 'en-US', 
+              { day: 'numeric', month: 'short' }
+            ).replace(/\.$/, '');
+          }
           
           return (
-            <BlurView 
-              key={session.id} 
-              intensity={95} 
-              tint={isDark ? "dark" : "light"} 
-              style={styles.recentSessionCard}
+            <RNAnimated.View
+              key={session.id}
+              style={[
+                styles.recentSessionCard,
+                {
+                  transform: [
+                    {
+                      scale: fadeAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.8, 1],
+                      }),
+                    },
+                  ],
+                  opacity: fadeAnim,
+                },
+              ]}
             >
-              <LinearGradient
-                colors={isDark ? 
-                  ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.03)'] : 
-                  ['rgba(142, 142, 147, 0.05)', 'rgba(142, 142, 147, 0.02)']
-                }
-                style={styles.recentSessionCardGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              />
-              
-              {/* Delete Button */}
-              <TouchableOpacity 
-                style={styles.deleteSessionButton}
-                onPress={() => {
-                  triggerHaptic('light');
-                  deleteTimerSession(session.id);
-                }}
-                activeOpacity={0.7}
+              <BlurView 
+                intensity={isDark ? 92 : 96} 
+                tint={isDark ? "dark" : "light"} 
+                style={styles.recentSessionCardBlur}
               >
-                <IconSymbol size={12} name="xmark" color={colors.textSecondary} />
-              </TouchableOpacity>
-              
-              <Text style={styles.recentSessionDate}>
-                {sessionDate.toLocaleDateString(
-                  language === 'es' ? 'es-ES' : 
-                  language === 'en' ? 'en-US' : 
-                  language === 'de' ? 'de-DE' : 
-                  language === 'fr' ? 'fr-FR' : 
-                  language === 'it' ? 'it-IT' : 'en-US', 
-                  { 
-                    day: 'numeric', 
-                    month: 'short' 
+                <LinearGradient
+                  colors={job ? 
+                    [job.color + '12', job.color + '04'] : 
+                    isDark ? 
+                      ['rgba(99, 102, 241, 0.12)', 'rgba(99, 102, 241, 0.04)'] : 
+                      ['rgba(99, 102, 241, 0.08)', 'rgba(99, 102, 241, 0.02)']
                   }
-                ).replace(/\.$/, '')}
-              </Text>
-              
-              <Text style={styles.recentSessionTime}>
-                {createdDate.toLocaleTimeString(
-                  language === 'es' ? 'es-ES' : 
-                  language === 'en' ? 'en-US' : 
-                  language === 'de' ? 'de-DE' : 
-                  language === 'fr' ? 'fr-FR' : 
-                  language === 'it' ? 'it-IT' : 'en-US', 
-                  { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  }
-                )}
-              </Text>
-              
-              {job && (
-                <View style={styles.recentSessionJob}>
-                  <View style={[styles.recentSessionJobDot, { backgroundColor: job.color }]} />
-                  <Text style={styles.recentSessionJobName} numberOfLines={1}>
-                    {job.name}
+                  style={styles.recentSessionCardGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
+                
+                {/* Header with job info and delete */}
+                <View style={styles.recentSessionHeader}>
+                  {job && (
+                    <View style={styles.recentSessionJobInfo}>
+                      <View style={[styles.recentSessionJobIndicator, { backgroundColor: job.color }]} />
+                      <Text style={styles.recentSessionJobTitle} numberOfLines={1}>
+                        {job.name}
+                      </Text>
+                    </View>
+                  )}
+                  
+                  <TouchableOpacity 
+                    style={styles.deleteSessionButtonNew}
+                    onPress={() => {
+                      triggerHaptic('light');
+                      deleteTimerSession(session.id);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <IconSymbol size={14} name="xmark" color={colors.textSecondary} />
+                  </TouchableOpacity>
+                </View>
+                
+                {/* Time Display - Main Feature */}
+                <View style={styles.recentSessionTimeDisplay}>
+                  <Text style={[styles.recentSessionHoursNew, { color: job?.color || colors.primary }]}>
+                    {formatTimeFromHours(session.hours)}
+                  </Text>
+                  <Text style={styles.recentSessionTypeLabel}>
+                    {session.overtime ? t('timer.overtime') : t('timer.regular')}
                   </Text>
                 </View>
-              )}
-              
-              <Text style={styles.recentSessionHours}>
-                {session.hours.toFixed(1)}h
-              </Text>
-              <Text style={styles.recentSessionHoursLabel}>
-                {session.overtime ? t('timer.overtime') : t('timer.regular')}
-              </Text>
-            </BlurView>
+                
+                {/* Date and Time Info */}
+                <View style={styles.recentSessionMetadata}>
+                  <View style={styles.recentSessionDateInfo}>
+                    <IconSymbol size={12} name="calendar" color={colors.textSecondary} />
+                    <Text style={styles.recentSessionDateNew}>
+                      {dateDisplay}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.recentSessionTimeInfo}>
+                    <IconSymbol size={12} name="clock" color={colors.textSecondary} />
+                    <Text style={styles.recentSessionTimeNew}>
+                      {createdDate.toLocaleTimeString(
+                        language === 'es' ? 'es-ES' : 'en-US', 
+                        { hour: '2-digit', minute: '2-digit' }
+                      )}
+                    </Text>
+                  </View>
+                </View>
+                
+                {/* Notes indicator if exists and is not auto-timer related */}
+                {session.notes && !session.notes.includes('Auto-started') && !session.notes.includes('SimpleAutoTimer') && (
+                  <View style={styles.recentSessionNotesIndicator}>
+                    <IconSymbol size={10} name="note.text" color={colors.textSecondary} />
+                    <Text style={styles.recentSessionNotesText} numberOfLines={1}>
+                      {session.notes}
+                    </Text>
+                  </View>
+                )}
+                
+              </BlurView>
+            </RNAnimated.View>
           );
         })}
       </ScrollView>
@@ -1887,25 +1695,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   return (
     <SafeAreaView style={styles.container}>
 
-                                     {/* Auto Timer Quick Setup */}
-            {!isRunning && !activeSession && selectedJobId && autoTimerStatus?.state !== 'active' && (
-              (() => {
-                const selectedJob = jobs.find(job => job.id === selectedJobId);
-                const hasLocation = selectedJob?.location?.latitude && selectedJob?.location?.longitude;
-                const hasAutoTimer = selectedJob?.autoTimer?.enabled;
-                
-                if (hasLocation && hasAutoTimer) {
-                  return (
-                    <View style={styles.section}>
-                      <View style={styles.autoTimerSetupHeader}>
-                        <Text style={styles.autoTimerSetupTitle}>{t('timer.auto_timer.available_title')}</Text>
-                      </View>
-                    </View>
-                  );
-                }
-                return null;
-              })()
-            )}
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {jobs.length === 0 ? (
@@ -1936,37 +1725,6 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           <View style={styles.timerContent}>
       
             <Animated.View style={[styles.timerDisplay, animatedTimerStyle]}>
-              {autoTimerStatus?.state === 'active' && activeSession && (
-                <View style={{
-                  position: 'absolute',
-                  top:-5,
-                  alignSelf: 'center',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: 'rgba(76, 217, 100, 0.18)',
-                  paddingHorizontal: 14,
-                  paddingVertical: 6,
-                  borderRadius: 14,
-                  borderWidth: 1.5,
-                  borderColor: 'rgba(76, 217, 100, 0.35)',
-                  gap: 6,
-                }}>
-                  <View style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: 5,
-                    backgroundColor: '#4CD964',
-                  }} />
-                  <Text style={{
-                    fontSize: 10,
-                    fontWeight: '700',
-                    color: '#4CD964',
-                    letterSpacing: 0.5,
-                  }}>
-                    AutoTimer
-                  </Text>
-                </View>
-              )}
               <View style={styles.timerTimeContainer}>
                 <Animated.Text style={[styles.timerTime, animatedTimeTextStyle]}>
                   {formatTime(elapsedTime)}
@@ -1975,7 +1733,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
               </View>
             </Animated.View>
 
-            {activeSession && currentSelectedJob && autoTimerStatus?.state !== 'active' && (
+            {activeSession && currentSelectedJob && (
               <View style={styles.activeJobInfo}>
                 <View style={[styles.jobColorDot, { backgroundColor: currentSelectedJob.color }]} />
                 <Text style={styles.activeJobName}>{currentSelectedJob.name}</Text>
@@ -2054,98 +1812,9 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         </BlurView>
         </RNAnimated.View>
 
-        {/* Mini Map - Show when AutoTimer is active */}
-        {autoTimerStatus?.state === 'active' && autoTimerStatus?.jobId && (() => {
-          const activeAutoTimerJob = jobs.find(j => j.id === autoTimerStatus.jobId);
-          if (activeAutoTimerJob?.location?.latitude && activeAutoTimerJob?.location?.longitude) {
-            const mapRegion = {
-              latitude: activeAutoTimerJob.location.latitude,
-              longitude: activeAutoTimerJob.location.longitude,
-              latitudeDelta: 0.002,  // Más zoom (más cerca)
-              longitudeDelta: 0.002,  // Más zoom (más cerca)
-            };
-            
-            return (
-              <View style={styles.miniMapContainer}>
-                <MapView
-                  style={[styles.miniMap, { borderRadius: 24 }]}
-                  region={mapRegion}
-                  provider={PROVIDER_DEFAULT}
-                  showsUserLocation={true}
-                  showsMyLocationButton={false}
-                  scrollEnabled={true}     // Permitir mover el mapa
-                  zoomEnabled={true}       // Permitir zoom con gestos
-                  rotateEnabled={true}     // Permitir rotar
-                  pitchEnabled={true}      // Permitir inclinar
-                >
-                  {/* Job location marker */}
-                  <Marker
-                    coordinate={{
-                      latitude: activeAutoTimerJob.location.latitude,
-                      longitude: activeAutoTimerJob.location.longitude,
-                    }}
-                    title={activeAutoTimerJob.name}
-                  >
-                    <View style={styles.jobMarkerContainer}>
-                      <IconSymbol size={16} name="building.2.fill" color="#FFFFFF" />
-                    </View>
-                  </Marker>
-                  
-                  {/* Geofence circle */}
-                  <Circle
-                    center={{
-                      latitude: activeAutoTimerJob.location.latitude,
-                      longitude: activeAutoTimerJob.location.longitude,
-                    }}
-                    radius={activeAutoTimerJob.autoTimer?.geofenceRadius || 50}
-                    fillColor="rgba(0, 122, 255, 0.15)"
-                    strokeColor="rgba(0, 122, 255, 0.5)"
-                    strokeWidth={2}
-                  />
-                </MapView>
-                {/* Chip flotante con el nombre del trabajo */}
-                <View style={{
-                  position: 'absolute',
-                  top: 12,
-                  right: 12,
-                  backgroundColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)',
-                  paddingHorizontal: 14,
-                  paddingVertical: 8,
-                  borderRadius: 20,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  borderWidth: 1,
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 4,
-                  elevation: 3,
-                }}>
-                  <View style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: activeAutoTimerJob.color || colors.primary,
-                    marginRight: 8,
-                  }} />
-                  <Text style={{
-                    fontSize: 13,
-                    fontWeight: '600',
-                    color: colors.text,
-                    letterSpacing: 0.2,
-                  }}>
-                    {activeAutoTimerJob.name}
-                  </Text>
-                </View>
-              </View>
-            );
-          }
-          return null;
-        })()}
 
-        {/* Recent Timer Sessions - Only show if there are sessions and AutoTimer is not active */}
-        {recentTimerSessions.length > 0 && autoTimerStatus?.state !== 'active' && (
+        {/* Recent Timer Sessions - Only show if there are sessions */}
+        {recentTimerSessions.length > 0 && (
           <View style={styles.recentSessionsContainer}>
             <View style={styles.recentSessionsHeader}>
               <Text style={styles.recentSessionsTitle}>
@@ -2156,44 +1825,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           </View>
         )}
 
-        {/* Quick Actions - Moved below recent sessions */}
-        {!isRunning && !activeSession && (
-          <View style={styles.quickActions}>
-            <Text style={styles.quickActionsTitle}>{t('timer.quick_actions')}</Text>
-            <View style={styles.quickActionButtons}>
-              <TouchableOpacity 
-                style={styles.autoTimerQuickButton}
-                onPress={() => {
-                  triggerHaptic('light');
-                  setIsJobFormModalVisible(true);
-                }}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={isDark ? 
-                    ['rgba(0, 122, 255, 0.2)', 'rgba(0, 122, 255, 0.05)'] : 
-                    ['rgba(0, 122, 255, 0.15)', 'rgba(0, 122, 255, 0.03)']
-                  }
-                  style={styles.autoTimerQuickButtonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                />
-                <View style={styles.autoTimerQuickButtonContent}>
-                  <View style={styles.autoTimerQuickButtonIcon}>
-                    <IconSymbol size={16} name="location.fill" color={colors.primary} />
-                  </View>
-                  <Text style={styles.autoTimerQuickButtonText}>
-                    AUTOTIMER
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              
-            </View>
-       
-          </View>
-        )}
-
-
+      
           </>
         )}
       </ScrollView>
@@ -2203,7 +1835,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         onClose={() => setIsJobFormModalVisible(false)}
         editingJob={selectedJobId ? jobs.find(job => job.id === selectedJobId) : null}
         onSave={handleJobFormSave}
-        initialTab="auto"
+        initialTab="basic"
         onNavigateToSubscription={() => onNavigate('subscription')}
       />
 
@@ -2260,6 +1892,155 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
               {t('timer.notes_hint')}
             </Text>
           </View>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Statistics Modal */}
+      <Modal
+        visible={statsModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setStatsModalVisible(false)}
+      >
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity 
+              onPress={() => setStatsModalVisible(false)}
+              style={styles.modalCloseButton}
+            >
+              <IconSymbol size={24} name="xmark" color={colors.textSecondary} />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>{t('timer.quick_stats')}</Text>
+            <TouchableOpacity 
+              onPress={() => {
+                triggerHaptic('success');
+                setStatsModalVisible(false);
+                onNavigate('reports');
+              }}
+              style={styles.modalSaveButton}
+            >
+              <IconSymbol size={20} name="arrow.right" color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView style={styles.modalContent}>
+            <View style={{ paddingBottom: 20 }}>
+              {/* Quick Stats Summary */}
+              <View style={[styles.notesCard, { backgroundColor: colors.surface }]}>
+                <LinearGradient
+                  colors={isDark ? 
+                    ['rgba(34, 197, 94, 0.08)', 'rgba(34, 197, 94, 0.03)'] : 
+                    ['rgba(34, 197, 94, 0.05)', 'rgba(34, 197, 94, 0.02)']
+                  }
+                  style={styles.notesCardGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
+                <Text style={[styles.notesTitle, { textAlign: 'center', marginBottom: 24 }]}>
+                  {t('timer.this_week_summary')}
+                </Text>
+                
+                {/* Quick stats display */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 }}>
+                  <View style={{ alignItems: 'center' }}>
+                    <Text style={{ fontSize: 28, fontWeight: '700', color: colors.text }}>
+                      {formatTimeFromHours(recentTimerSessions.slice(0, 7).reduce((sum, session) => sum + session.hours, 0))}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>
+                      {t('timer.total_hours')}
+                    </Text>
+                  </View>
+                  <View style={{ alignItems: 'center' }}>
+                    <Text style={{ fontSize: 28, fontWeight: '700', color: colors.text }}>
+                      {recentTimerSessions.slice(0, 7).length}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>
+                      {t('timer.sessions')}
+                    </Text>
+                  </View>
+                  <View style={{ alignItems: 'center' }}>
+                    <Text style={{ fontSize: 28, fontWeight: '700', color: colors.text }}>
+                      {jobs.length}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>
+                      {t('timer.active_jobs')}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Recent Sessions Quick View */}
+              <View style={[styles.notesCard, { backgroundColor: colors.surface, marginTop: 16 }]}>
+            
+                <Text style={[styles.notesTitle, { marginBottom: 16 }]}>
+                  {t('timer.recent_activity')}
+                </Text>
+                
+                {recentTimerSessions.slice(0, 5).map((session) => {
+                  const job = jobs.find(j => j.id === session.jobId);
+                  return (
+                    <View key={session.id} style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      paddingVertical: 8,
+                      borderBottomWidth: 1,
+                      borderBottomColor: colors.border + '20',
+                    }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                        {job && (
+                          <View style={[styles.compactJobTabDot, { 
+                            backgroundColor: job.color,
+                            marginRight: 8 
+                          }]} />
+                        )}
+                        <Text style={{ fontSize: 14, color: colors.text, flex: 1 }} numberOfLines={1}>
+                          {job?.name || t('common.unknown_job')}
+                        </Text>
+                      </View>
+                      <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }}>
+                        {formatTimeFromHours(session.hours)}
+                      </Text>
+                    </View>
+                  );
+                })}
+                
+                {recentTimerSessions.length === 0 && (
+                  <Text style={{ 
+                    fontSize: 14, 
+                    color: colors.textSecondary, 
+                    textAlign: 'center',
+                    fontStyle: 'italic',
+                    paddingVertical: 20
+                  }}>
+                    {t('timer.no_recent_sessions')}
+                  </Text>
+                )}
+              </View>
+
+              {/* Quick Action to View Full Reports */}
+              <TouchableOpacity
+                style={[styles.viewStatsButton, { 
+                  marginTop: 24,
+                  alignSelf: 'center',
+                  paddingVertical: 16,
+                  paddingHorizontal: 32
+                }]}
+                onPress={() => {
+                  triggerHaptic('light');
+                  setStatsModalVisible(false);
+                  onNavigate('reports');
+                }}
+                activeOpacity={0.8}
+              >
+                <IconSymbol size={18} name="chart.bar.fill" color={colors.primary} />
+                <Text style={[styles.viewStatsButtonText, { fontSize: 16 }]}>
+                  {t('timer.view_full_reports')}
+                </Text>
+                <IconSymbol size={16} name="arrow.right" color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>

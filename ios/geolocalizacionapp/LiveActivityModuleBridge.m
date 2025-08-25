@@ -21,4 +21,8 @@ RCT_EXTERN_METHOD(hasActiveLiveActivity:(RCTPromiseResolveBlock)resolver
 RCT_EXTERN_METHOD(endAllLiveActivities:(RCTPromiseResolveBlock)resolver
                   rejecter:(RCTPromiseRejectBlock)rejecter)
 
+RCT_EXTERN_METHOD(syncTimerToWidget:(NSDictionary *)timerData
+                  resolver:(RCTPromiseResolveBlock)resolver
+                  rejecter:(RCTPromiseRejectBlock)rejecter)
+
 @end

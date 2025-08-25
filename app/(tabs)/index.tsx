@@ -19,7 +19,6 @@ import Loading from '../components/Loading';
 import SplashLoader from '../components/SplashLoader';
 import MapLocation from '../components/MapLocation';
 import WelcomeModal from '../components/WelcomeModal';
-import Header from '../components/Header';
 import PrivacyLocationModal from '../components/PrivacyLocationModal';
 import BottomNavigation from '../components/BottomNavigation';
 
@@ -323,77 +322,7 @@ function AppContent() {
     }
   };
 
-  // Título por pantalla
-  const getScreenTitle = () => {
-    switch (currentScreen) {
-      case 'mapa':
-        return (
-          <View style={{ overflow: 'hidden', borderRadius: 10 }}>
-            <Text style={styles.workText}>
-              <Text style={{ color: '#007AFF', fontWeight: '700' }}>Vix</Text>
-              <Text style={{ color: '#5856D6', fontWeight: '700' }}>Time</Text>
-            </Text>
-          </View>
-        );
-      case 'timer':
-        return (
-          <View style={styles.screenTitle}>
-            <IconSymbol size={20} name="clock.fill" color="#34C759" />
-            <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('timer.title')}</Text>
-          </View>
-        );
-      case 'reports':
-        return (
-          <View style={styles.screenTitle}>
-            <IconSymbol size={23} name="doc.text.fill" color="#FF9500" />
-            <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('reports.title')}</Text>
-          </View>
-        );
-      case 'calendar':
-        return (
-          <View style={styles.screenTitle}>
-            <IconSymbol size={23} name="calendar" color="#6366F1" />
-            <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('calendar.title')}</Text>
-          </View>
-        );
-      case 'settings':
-        return (
-          <View style={styles.screenTitle}>
-            <IconSymbol size={23} name="gear" color="#8E8E93" />
-            <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('settings.title')}</Text>
-          </View>
-        );
-      case 'subscription':
-        return (
-          <View style={styles.screenTitle}>
-            <IconSymbol size={23} name="crown.fill" color="#FFD700" />
-            <Text style={[styles.screenTitleText, { color: colors.text }]}>{t('subscription.title')}</Text>
-          </View>
-        );
-      case 'chatbot':
-        return t('chatbot.title') || 'Chatbot IA';
-      default:
-        return (
-          <View style={styles.workTrackTitle}>
-            <IconSymbol size={22} name="clock.fill" color="#007AFF" />
-            <Text style={styles.workText}>
-              <Text style={{ color: '#0056CC' }}>Vix</Text>
-              <Text style={{ color: '#007AFF' }}>Time</Text>
-            </Text>
-          </View>
-        );
-    }
-  };
 
-  // Pantallas con header
-  const showHeader =
-    currentScreen === 'mapa' ||
-    currentScreen === 'chatbot' ||
-    currentScreen === 'timer' ||
-    currentScreen === 'reports' ||
-    currentScreen === 'calendar' ||
-    currentScreen === 'settings' ||
-    currentScreen === 'subscription';
 
   // Loading gates
   if (initialLoading) return <SplashLoader isExiting={isExiting} />;
@@ -425,35 +354,6 @@ function AppContent() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {showHeader && (
-        <Header
-          title={getScreenTitle()}
-          onProfilePress={() => navigateTo('settings')}
-          isSettingsActive={currentScreen === 'settings'}
-          currentScreen={currentScreen}
-          onExportPress={currentScreen === 'reports' ? () => globalThis.reportsScreenExportHandler?.() : undefined}
-          onSyncPress={currentScreen === 'calendar' ? () => globalThis.calendarScreenSyncHandler?.() : undefined}
-          onNotesPress={currentScreen === 'timer' ? () => globalThis.timerScreenNotesHandler?.() : undefined}
-          onInfoPress={
-            currentScreen === 'mapa' && showInfoButton
-              ? async () => {
-                  setShowHelpSupport(true);
-                  await AsyncStorage.setItem('infoButtonPressed', 'true');
-                  setShowInfoButton(false);
-                }
-              : undefined
-          }
-          onBackupPress={
-            currentScreen === 'mapa' && !showInfoButton
-              ? async () => {
-                  await loadAutoBackupConfig();
-                  setShowAutoBackupModal(true);
-                }
-              : undefined
-          }
-        />
-      )}
-
       <View style={{ flex: 1 }}>{renderCurrentScreen()}</View>
 
       <BottomNavigation />
@@ -584,9 +484,5 @@ function AppContent() {
 }
 
 export default function Index() {
-  return (
-    <NavigationProvider>
-      <AppContent />
-    </NavigationProvider>
-  );
+  return <AppContent />;
 }

@@ -13,6 +13,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { AutoTimerProvider } from './contexts/AutoTimerContext';
 import { AutoBackupService } from './services/AutoBackupService';
 import WidgetCalendarService from './services/WidgetCalendarService';
 import WidgetSyncService from './services/WidgetSyncService';
@@ -138,9 +139,11 @@ export default function RootLayout() {
       <LanguageProvider>
         <ThemeProvider>
           <NotificationProvider>
-            <NavigationThemeProvider value={DefaultTheme}>
-              <AppWithStatusBar />
-            </NavigationThemeProvider>
+            <AutoTimerProvider>
+              <NavigationThemeProvider value={DefaultTheme}>
+                <AppWithStatusBar />
+              </NavigationThemeProvider>
+            </AutoTimerProvider>
           </NotificationProvider>
         </ThemeProvider>
       </LanguageProvider>

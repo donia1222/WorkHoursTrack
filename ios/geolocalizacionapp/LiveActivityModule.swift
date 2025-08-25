@@ -765,6 +765,75 @@ class LiveActivityModule: NSObject {
     }
     
     @objc
+    func syncTimerToWidget(_ timerData: NSDictionary,
+                           resolver: @escaping RCTPromiseResolveBlock,
+                           rejecter: @escaping RCTPromiseRejectBlock) {
+        
+        guard let sharedDefaults = UserDefaults(suiteName: LiveActivityModule.appGroupIdentifier) else {
+            print("❌ Failed to access shared UserDefaults for widget sync")
+            rejecter("ERROR", "Failed to access shared storage", nil)
+            return
+        }
+        
+        // Extract data from React Native
+        let isActive = timerData["isActive"] as? Bool ?? false
+        let jobName = timerData["jobName"] as? String ?? "WorkTrack"
+        let location = timerData["location"] as? String ?? ""
+        let startTimeString = timerData["startTime"] as? String
+        
+        // Convert startTime string to Date if provided
+        var startTime = Date()
+        if let startTimeString = startTimeString {
+            let formatter = ISO8601DateFormatter()
+            startTime = formatter.date(from: startTimeString) ?? Date()
+        }
+        
+        if isActive {
+            // Save active timer data
+            let timerDataDict: [String: Any] = [
+                "isActive": true,
+                "jobName": jobName,
+                "location": location,
+                "startTime": startTime.timeIntervalSince1970,
+                "lastUpdated": Date().timeIntervalSince1970
+            ]
+            
+            sharedDefaults.set(timerDataDict, forKey: LiveActivityModule.timerDataKey)
+            print("✅ Active timer data synced to widget: \(jobName) at \(location)")
+        } else {
+            // Save inactive timer data
+            let timerDataDict: [String: Any] = [
+                "isActive": false,
+                "jobName": "WorkTrack",
+                "location": "",
+                "startTime": Date().timeIntervalSince1970,
+                "lastUpdated": Date().timeIntervalSince1970
+            ]
+            
+            sharedDefaults.set(timerDataDict, forKey: LiveActivityModule.timerDataKey)
+            print("✅ Inactive timer data synced to widget")
+        }
+        
+        // Increment data version to force widget refresh
+        let currentVersion = sharedDefaults.integer(forKey: LiveActivityModule.dataVersionKey)
+        sharedDefaults.set(currentVersion + 1, forKey: LiveActivityModule.dataVersionKey)
+        
+        // Force synchronization
+        sharedDefaults.synchronize()
+        CFPreferencesAppSynchronize(LiveActivityModule.appGroupIdentifier as CFString)
+        
+        // Force immediate widget update
+        WidgetCenter.shared.reloadAllTimelines()
+        
+        // And again with delay to ensure data is written
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+        
+        resolver(true)
+    }
+    
+    @objc
     func endAllLiveActivities(_ resolver: @escaping RCTPromiseResolveBlock,
                               rejecter: @escaping RCTPromiseRejectBlock) {
         if #available(iOS 16.2, *) {
@@ -815,4 +884,10 @@ class LiveActivityModule: NSObject {
             resolver(true)
         }
     }
+}
+
+// MARK: - React Native Bridge Support
+@available(iOS 16.2, *)
+extension LiveActivityModule {
+    // requiresMainQueueSetup() is already declared in the main class
 }

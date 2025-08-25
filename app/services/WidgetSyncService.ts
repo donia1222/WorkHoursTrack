@@ -17,6 +17,13 @@ export interface JobForWidget {
   color?: string;
 }
 
+export interface TimerForWidget {
+  isActive: boolean;
+  jobName: string;
+  location?: string;
+  startTime?: string; // ISO string
+}
+
 class WidgetSyncService {
   /**
    * Sync jobs to widget
@@ -152,13 +159,65 @@ class WidgetSyncService {
   }
 
   /**
+   * Sync active timer to widget
+   */
+  async syncActiveTimerToWidget(): Promise<void> {
+    if (Platform.OS !== 'ios' || !LiveActivityModule?.syncTimerToWidget) {
+      return;
+    }
+
+    try {
+      // Get active session from storage
+      const sessionStr = await AsyncStorage.getItem('active_session');
+      const session = sessionStr ? JSON.parse(sessionStr) : null;
+      
+      // Get jobs for job name lookup
+      const jobsStr = await AsyncStorage.getItem('jobs');
+      const jobs = jobsStr ? JSON.parse(jobsStr) : [];
+      
+      let timerData: TimerForWidget;
+      
+      if (session && session.jobId) {
+        const job = jobs.find((j: any) => j.id === session.jobId);
+        timerData = {
+          isActive: true,
+          jobName: job?.name || job?.empresa || 'Work',
+          location: job?.address || job?.direccion || job?.location,
+          startTime: session.startTime
+        };
+        console.log('📱 Syncing active timer to widget:', timerData.jobName);
+      } else {
+        timerData = {
+          isActive: false,
+          jobName: 'WorkTrack',
+          location: undefined,
+          startTime: undefined
+        };
+        console.log('📱 Syncing inactive timer to widget');
+      }
+      
+      // Send to native module
+      if (LiveActivityModule?.syncTimerToWidget) {
+        await LiveActivityModule.syncTimerToWidget(timerData);
+        console.log('✅ Timer synced to widget successfully');
+      } else {
+        console.log('⚠️ syncTimerToWidget method not available');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error syncing timer to widget:', error);
+    }
+  }
+
+  /**
    * Sync all widget data
    */
   async syncAllToWidget(): Promise<void> {
     console.log('🔄 Starting full widget sync...');
     await Promise.all([
       this.syncJobsToWidget(),
-      this.syncCalendarToWidget()
+      this.syncCalendarToWidget(),
+      this.syncActiveTimerToWidget()
     ]);
     console.log('✅ Full widget sync completed');
   }

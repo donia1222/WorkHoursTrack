@@ -9,7 +9,9 @@
     "confirm_delete": "Confirmer la suppression",
     "loading": "Synchronisation...",
     "error": "Erreur",
-    "meters": "mètres"
+    "meters": "mètres",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier"
   },
   "preferences": {
     "title": "Préférences",

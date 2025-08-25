@@ -9,7 +9,9 @@
     "confirm_delete": "Conferma eliminazione",
     "loading": "Sincronizzazione...",
     "error": "Errore",
-    "meters": "metri"
+    "meters": "metri",
+    "today": "Oggi",
+    "yesterday": "Ieri"
   },
   "preferences": {
     "title": "Preferenze",

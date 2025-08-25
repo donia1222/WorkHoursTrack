@@ -16,7 +16,7 @@ import Animated, {
   Easing,
   interpolate 
 } from 'react-native-reanimated';
-import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
+import { useAutoTimer } from '../contexts/AutoTimerContext';
 
 type TabItem = {
   id: ScreenName | 'subscription';
@@ -66,35 +66,15 @@ export default function BottomNavigation() {
   const { t } = useLanguage();
   const { currentScreen, navigateTo } = useNavigation();
   const insets = useSafeAreaInsets();
-  const [autoTimerStatus, setAutoTimerStatus] = useState<AutoTimerStatus | null>(null);
-  const [autoTimerService] = useState(() => AutoTimerService.getInstance());
+  const autoTimer = useAutoTimer();
   
   // Animation values for the red dot
   const dotPulseAnimation = useSharedValue(1);
   const dotOpacityAnimation = useSharedValue(1);
   
-  // Listen to AutoTimer status changes
-  useEffect(() => {
-    const handleAutoTimerStatusChange = (status: AutoTimerStatus) => {
-      setAutoTimerStatus(status);
-    };
-    
-    // Add listener
-    autoTimerService.addStatusListener(handleAutoTimerStatusChange);
-    
-    // Get current status
-    const currentStatus = autoTimerService.getStatus();
-    setAutoTimerStatus(currentStatus);
-    
-    // Cleanup
-    return () => {
-      autoTimerService.removeStatusListener(handleAutoTimerStatusChange);
-    };
-  }, []);
-  
   // Animate when AutoTimer is active
   useEffect(() => {
-    if (autoTimerStatus?.state === 'active') {
+    if (autoTimer.state.isActive) {
       // Start dot pulse animation
       dotPulseAnimation.value = withRepeat(
         withSequence(
@@ -119,7 +99,7 @@ export default function BottomNavigation() {
       dotPulseAnimation.value = withTiming(1, { duration: 300 });
       dotOpacityAnimation.value = withTiming(1, { duration: 300 });
     }
-  }, [autoTimerStatus?.state]);
+  }, [autoTimer.state.isActive]);
   
   // Animated styles for red dot
   const animatedDotStyle = useAnimatedStyle(() => {
@@ -185,7 +165,7 @@ export default function BottomNavigation() {
   return (
     <View style={[styles.container, { bottom: getBottomMargin(), paddingBottom: insets.bottom }]}>
       <LinearGradient
-        colors={isDark ? ['rgba(139, 92, 246, 0.03)', 'rgba(59, 130, 246, 0.03)'] : ['rgba(147, 51, 234, 0.02)', 'rgba(79, 70, 229, 0.02)']}
+        colors={isDark ? ['rgba(139, 92, 246, 0.03)', 'rgba(59, 130, 246, 0.03)'] : ['rgba(147, 51, 234, 0.02)', 'rgba(78, 70, 229, 0.11)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.gradientBackground}
@@ -201,6 +181,11 @@ export default function BottomNavigation() {
         <View style={[styles.tabsContainer, { backgroundColor: 'transparent' }]}>
           {tabs.map((tab) => {
             const isActive = currentScreen === tab.id;
+            // Ocultar completamente el botón timer cuando AutoTimer está activo
+            if (tab.id === 'timer' && autoTimer.state.isActive) {
+              return null;
+            }
+            
             return (
               <TouchableOpacity
                 key={tab.id}
@@ -222,28 +207,7 @@ export default function BottomNavigation() {
                     size={isActive ? 24 : 22}
                     color={isActive ? (isDark ? '#A78BFA' : '#6366F1') : colors.textSecondary}
                   />
-                  {/* Animated red dot for timer when AutoTimer is active */}
-                  {tab.id === 'timer' && autoTimerStatus?.state === 'active' && (
-                    <Animated.View style={[
-                      {
-                        position: 'absolute',
-                        top: 0,
-                        right: 0,
-                        width: 10,
-                        height: 10,
-                        borderRadius: 5,
-                        backgroundColor: '#FF3B30',
-                        borderWidth: 2,
-                        borderColor: 'white',
-                        shadowColor: '#FF3B30',
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.8,
-                        shadowRadius: 4,
-                        elevation: 5,
-                      },
-                      animatedDotStyle
-                    ]} />
-                  )}
+                
                 </View>
                 {/* Labels removed - icons only navigation */}
               </TouchableOpacity>

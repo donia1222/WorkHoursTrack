@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -57,11 +58,42 @@ export default function TimerSuccessModal({
   const { t } = useLanguage();
   const { triggerHaptic } = useHapticFeedback();
   const [breakMinutes, setBreakMinutes] = useState('');
+  const [useTimeFormat, setUseTimeFormat] = useState(true);
   
   const scaleAnimation = useSharedValue(0);
   const checkmarkAnimation = useSharedValue(0);
   const contentOpacity = useSharedValue(0);
   
+  // Load time format preference from AsyncStorage
+  useEffect(() => {
+    const loadTimeFormatPreference = async () => {
+      try {
+        const saved = await AsyncStorage.getItem('@time_format_preference');
+        if (saved !== null) {
+          setUseTimeFormat(saved === 'true');
+        }
+      } catch (error) {
+        console.error('Error loading time format preference:', error);
+      }
+    };
+    loadTimeFormatPreference();
+  }, []);
+
+  // Format hours for display (consistent with ReportsScreen)
+  const formatHoursForDisplay = (hours: number): string => {
+    if (useTimeFormat) {
+      // Time format: 8h 3m
+      const h = Math.floor(hours);
+      const m = Math.round((hours - h) * 60);
+      if (h === 0) return `${m}m`;
+      if (m === 0) return `${h}h`;
+      return `${h}h ${m}m`;
+    } else {
+      // Decimal format: 8.05h
+      return `${hours.toFixed(2)}h`;
+    }
+  };
+
   // Format time in HH:MM:SS format
   const formatTime = (totalSecs: number): string => {
     const hrs = Math.floor(totalSecs / 3600);
@@ -181,7 +213,7 @@ export default function TimerSuccessModal({
                     {isUpdate ? t('timer.session_hours') : t('timer.hours_worked')}
                   </Text>
                   <Text style={[styles.hoursValue, { color: '#007AFF' }]}>
-                    {seconds ? formatTime(seconds) : `${displayedHours.toFixed(2)}h`}
+                    {seconds ? formatTime(seconds) : formatHoursForDisplay(displayedHours)}
                   </Text>
                 </View>
                 
@@ -195,7 +227,7 @@ export default function TimerSuccessModal({
                         {t('timer.total_hours')}
                       </Text>
                       <Text style={[styles.hoursValue, { color: '#34C759' }]}>
-                        {totalSeconds ? formatTime(totalSeconds) : `${(displayedTotalHours || totalHours).toFixed(2)}h`}
+                        {totalSeconds ? formatTime(totalSeconds) : formatHoursForDisplay(displayedTotalHours || totalHours)}
                       </Text>
                     </View>
                   </>

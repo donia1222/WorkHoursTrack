@@ -31,7 +31,6 @@ import { Job, DEFAULT_COLORS } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import { AutoScheduleService } from '../services/AutoScheduleService';
 import AutoTimerService from '../services/SimpleAutoTimer';
-// @ts-ignore
 import { startBackgroundGeofencing } from '../services/BackgroundGeofenceTask';
 import { FreeAddressSearch } from './FreeAddressSearch';
 import AddressAutocompleteDropdown from './AddressAutocompleteDropdown';
@@ -1393,39 +1392,27 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     let interval: NodeJS.Timeout;
     
     const checkActiveTimer = async () => {
-      if (editingJob && formData.autoTimer?.enabled) {
+      if (editingJob && formData.autoTimer?.enabled && currentTab === 'auto') {
         try {
           const activeSession = await JobService.getActiveSession();
           if (activeSession && activeSession.jobId === editingJob.id) {
-            // Check if timer is paused
-            const session = activeSession as any; // Cast to avoid TS issues
-            if (session.isPaused && session.pausedElapsedTime !== undefined) {
-              // Use the saved paused time instead of calculating from startTime
-              setActiveTimerElapsed(session.pausedElapsedTime);
-            } else {
-              // Timer is running normally, calculate elapsed time
-              const startTime = new Date(activeSession.startTime);
-              const now = new Date();
-              const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-              setActiveTimerElapsed(elapsedSeconds);
-            }
+            const startTime = new Date(activeSession.startTime);
+            const now = new Date();
+            const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+            setActiveTimerElapsed(elapsedSeconds);
           } else {
             setActiveTimerElapsed(0);
           }
         } catch (error) {
           console.error('Error checking active timer:', error);
         }
-      } else {
-        setActiveTimerElapsed(0);
       }
     };
     
-    if (visible && (currentTab === 'auto' || editingJob)) {
+    if (visible && currentTab === 'auto') {
       checkActiveTimer();
-      // Update every second for real-time display when in auto tab
-      if (currentTab === 'auto') {
-        interval = setInterval(checkActiveTimer, 1000);
-      }
+      // Reduce frequency to avoid performance issues
+      interval = setInterval(checkActiveTimer, 5000);
     }
     
     return () => {
@@ -1727,38 +1714,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       onClose();
       
       // Si el auto-timer está activado, iniciar los servicios
-      // PERO solo si no hay una sesión reciente que fue parada manualmente
       if (savedJob.autoTimer?.enabled) {
         setTimeout(async () => {
           try {
-            // Verificar si hay una sesión activa o reciente que fue parada manualmente
-            const activeSession = await JobService.getActiveSession();
-            if (activeSession) {
-              console.log('⚠️ Hay una sesión activa, no iniciando AutoTimer automáticamente');
-              return;
-            }
-            
-            // Verificar si se paró manualmente en los últimos 30 segundos
-            const recentWorkDays = await JobService.getWorkDays();
-            const today = new Date().toISOString().split('T')[0];
-            const todayWorkDays = recentWorkDays.filter(wd => 
-              wd.date === today && 
-              wd.jobId === savedJob.id && 
-              wd.type === 'work'
-            );
-            
-            if (todayWorkDays.length > 0) {
-              const lastWorkDay = todayWorkDays[todayWorkDays.length - 1];
-              const lastWorkTime = new Date(lastWorkDay.updatedAt || lastWorkDay.createdAt || Date.now());
-              const timeSinceLastWork = Date.now() - lastWorkTime.getTime();
-              
-              // Si se trabajó en los últimos 2 minutos, no iniciar automáticamente
-              if (timeSinceLastWork < 2 * 60 * 1000) {
-                console.log('⚠️ Trabajo reciente detectado, no iniciando AutoTimer automáticamente');
-                return;
-              }
-            }
-            
             // Iniciar SimpleAutoTimer para monitoreo con app abierta
             const autoTimerService = AutoTimerService.getInstance();
             await autoTimerService.startSimpleMonitoring();
@@ -3237,41 +3195,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                       autoTimerService.stop();
                       
                       // Si se está activando, iniciar el monitoreo
-                      // PERO solo si no hay trabajo reciente
                       if (value) {
                         setTimeout(async () => {
-                          try {
-                            // Verificar si hay una sesión activa
-                            const activeSession = await JobService.getActiveSession();
-                            if (activeSession) {
-                              console.log('⚠️ Hay una sesión activa, no iniciando AutoTimer desde switch');
-                              return;
-                            }
-                            
-                            // Verificar trabajo reciente en los últimos 2 minutos
-                            const recentWorkDays = await JobService.getWorkDays();
-                            const today = new Date().toISOString().split('T')[0];
-                            const todayWorkDays = recentWorkDays.filter(wd => 
-                              wd.date === today && 
-                              wd.jobId === editingJob.id && 
-                              wd.type === 'work'
-                            );
-                            
-                            if (todayWorkDays.length > 0) {
-                              const lastWorkDay = todayWorkDays[todayWorkDays.length - 1];
-                              const lastWorkTime = new Date(lastWorkDay.updatedAt || lastWorkDay.createdAt || Date.now());
-                              const timeSinceLastWork = Date.now() - lastWorkTime.getTime();
-                              
-                              if (timeSinceLastWork < 2 * 60 * 1000) {
-                                console.log('⚠️ Trabajo reciente desde switch, no iniciando AutoTimer automáticamente');
-                                return;
-                              }
-                            }
-                            
-                            await autoTimerService.startSimpleMonitoring();
-                          } catch (error) {
-                            console.error('Error iniciando AutoTimer desde switch:', error);
-                          }
+                          await autoTimerService.startSimpleMonitoring();
                         }, 500);
                       }
                       
@@ -3533,6 +3459,99 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
         {formData.autoTimer?.enabled && (
           <>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.auto_timer.geofence_radius')}</Text>
+              <Text style={styles.labelDescription}>{t('job_form.auto_timer.geofence_radius_desc')}</Text>
+              <View style={styles.counterContainer}>
+                <TouchableOpacity 
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.geofenceRadius || 50;
+                    const newValue = Math.max(25, currentValue - 5);
+                    updateNestedData('autoTimer', 'geofenceRadius', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="minus" color={colors.primary} />
+                </TouchableOpacity>
+                <View style={styles.counterValue}>
+                  <Text style={styles.counterText}>{formData.autoTimer?.geofenceRadius || 50}</Text>
+                  <Text style={styles.counterUnit}>{t('common.meters')}</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.geofenceRadius || 50;
+                    const newValue = Math.min(100, currentValue + 5);
+                    updateNestedData('autoTimer', 'geofenceRadius', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="plus" color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Delay Start Control */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.auto_timer.delay_start')}</Text>
+              <Text style={styles.labelDescription}>{t('job_form.auto_timer.delay_start_desc')}</Text>
+              <View style={styles.counterContainer}>
+                <TouchableOpacity
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStart ?? 0;
+                    const newValue = Math.max(0, currentValue - 1);
+                    updateNestedData('autoTimer', 'delayStart', newValue);
+                    updateNestedData('autoTimer', 'startDelayMinutes', newValue); // También actualizar el nombre correcto
+                  }}
+                >
+                  <IconSymbol size={20} name="minus" color={colors.primary} />
+                </TouchableOpacity>
+                <Text style={styles.counterText}>{formData.autoTimer?.delayStart ?? 0} min</Text>
+                <TouchableOpacity
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStart ?? 0;
+                    const newValue = Math.min(10, currentValue + 1);
+                    updateNestedData('autoTimer', 'delayStart', newValue);
+                    updateNestedData('autoTimer', 'startDelayMinutes', newValue); // También actualizar el nombre correcto
+                  }}
+                >
+                  <IconSymbol size={20} name="plus" color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Delay Stop Control */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.auto_timer.delay_stop')}</Text>
+              <Text style={styles.labelDescription}>{t('job_form.auto_timer.delay_stop_desc')}</Text>
+              <View style={styles.counterContainer}>
+                <TouchableOpacity
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStop ?? 0;
+                    const newValue = Math.max(0, currentValue - 1);
+                    updateNestedData('autoTimer', 'delayStop', newValue);
+                    updateNestedData('autoTimer', 'stopDelayMinutes', newValue); // También actualizar el nombre correcto
+                  }}
+                >
+                  <IconSymbol size={20} name="minus" color={colors.primary} />
+                </TouchableOpacity>
+                <Text style={styles.counterText}>{formData.autoTimer?.delayStop ?? 0} min</Text>
+                <TouchableOpacity
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStop ?? 0;
+                    const newValue = Math.min(10, currentValue + 1);
+                    updateNestedData('autoTimer', 'delayStop', newValue);
+                    updateNestedData('autoTimer', 'stopDelayMinutes', newValue); // También actualizar el nombre correcto
+                  }}
+                >
+                  <IconSymbol size={20} name="plus" color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
             {/* Map showing job location and geofence radius */}
             {mapRegion && jobCoordinates && (
               <View style={styles.mapContainer}>
@@ -3631,6 +3650,16 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   thumbColor={formData.autoTimer?.notifications !== false ? colors.primary : colors.textTertiary}
                 />
               </View>
+            </View>
+   <View style={styles.previewCard}>
+   
+              <Text style={styles.previewText}>
+                           <Text style={styles.previewTitle}>📍</Text>
+                {t('job_form.auto_timer.preview', {
+                  delayStart: formData.autoTimer?.delayStart || 0,
+                  delayStop: formData.autoTimer?.delayStop || 0
+                })}
+              </Text>
             </View>
           </>
         )}
