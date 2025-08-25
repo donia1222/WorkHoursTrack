@@ -105,6 +105,16 @@
       "description": "Controla a vibração tátil em botões e interações do app",
       "enabled": "Vibração Tátil",
       "enabled_desc": "Ativa a vibração quando toca botões e controles"
+    },
+    "time_format": {
+      "title": "Formato de Tempo",
+      "description": "Escolha como exibir os horários de trabalho",
+      "time_format": "Formato de Tempo",
+      "time_format_desc": "HH:MM vs 0.00h",
+      "hour_format": "Formato de Hora",
+      "hour_format_desc": "24 horas vs 12 horas (AM/PM)",
+      "12_hour": "12 horas (AM/PM)",
+      "24_hour": "24 horas"
     }
   },
   "settings": {

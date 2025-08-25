@@ -18,6 +18,7 @@ import { AutoBackupService } from '../services/AutoBackupService';
 // globals para las funciones de los botones
 declare global {
   var reportsScreenExportHandler: (() => void) | undefined;
+  var reportsScreenFocusHandler: (() => void) | undefined;
   var calendarScreenSyncHandler: (() => void) | undefined;
   var timerScreenNotesHandler: (() => void) | undefined;
   var chatbotScreenHistoryHandler: (() => void) | undefined;
@@ -120,11 +121,12 @@ function LayoutContent() {
         <Stack screenOptions={{ 
           headerShown: true,
           headerStyle: { 
-            backgroundColor: isDark ? 'rgba(99, 102, 241, 0.05)' : 'rgba(99, 102, 241, 0.03)',
+            backgroundColor: isDark ? 'rgba(99, 102, 241, 0.05)' : 'rgba(58, 61, 255, 0.05)',
           },
           headerTintColor: colors.text || '#000000',
           headerTitleStyle: { fontWeight: '700', fontSize: 20 },
-          headerBlurEffect: isDark ? 'dark' : 'light'
+          headerBlurEffect: isDark ? 'dark' : 'light',
+      
         }}>
           <Stack.Screen 
             name="index" 
@@ -198,7 +200,7 @@ function LayoutContent() {
                   return (
                     <TouchableOpacity onPress={() => { triggerHaptic('light'); navigateTo('subscription'); }} style={styles.headerButton}>
                       <View style={[styles.headerButtonInner, styles.subscriptionButton]}>
-                        <IconSymbol size={18} name="crown.fill" color="#FFD700" />
+                        <IconSymbol size={18} name="crown.fill" color="#2f2f2fff" />
                       </View>
                     </TouchableOpacity>
                   );

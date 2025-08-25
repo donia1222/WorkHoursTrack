@@ -167,9 +167,10 @@ export default function JobSelectorModal({
     try {
       const activeSession = await JobService.getActiveSession();
       if (activeSession) {
-        const startTime = new Date(activeSession.startTime);
-        const now = new Date();
-        const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+        // Use AutoTimerService to get correct elapsed time (respects pause state)
+        const AutoTimerService = require('../services/AutoTimerService').default;
+        const autoTimerService = AutoTimerService.getInstance();
+        const elapsedSeconds = await autoTimerService.getElapsedTime();
         setActiveTimers({ [activeSession.jobId]: elapsedSeconds });
       } else {
         setActiveTimers({});

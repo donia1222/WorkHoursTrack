@@ -25,13 +25,13 @@ import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useSubscription } from '../hooks/useSubscription';
+import { useTimeFormat } from '../hooks/useTimeFormat';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Job, DEFAULT_COLORS } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import { AutoScheduleService } from '../services/AutoScheduleService';
-import AutoTimerService from '../services/SimpleAutoTimer';
-import { startBackgroundGeofencing } from '../services/BackgroundGeofenceTask';
+import AutoTimerService from '../services/AutoTimerService';
 import { FreeAddressSearch } from './FreeAddressSearch';
 import AddressAutocompleteDropdown from './AddressAutocompleteDropdown';
 import * as Updates from 'expo-updates';
@@ -1084,6 +1084,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
   const { isSubscribed } = useSubscription();
+  const { formatTimeWithPreferences, parseTimeInput, getTimePlaceholder, isValidTimeInput, autoFormatTimeInput } = useTimeFormat();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [showAutoTimerAlert, setShowAutoTimerAlert] = useState(false);
@@ -1169,6 +1170,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [hasCheckedFirstTime, setHasCheckedFirstTime] = useState(false);
   const [activeTimerElapsed, setActiveTimerElapsed] = useState<number>(0);
+  const [isAutoTimerPaused, setIsAutoTimerPaused] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState(false);
@@ -1298,8 +1300,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         autoTimer: editingJob.autoTimer || {
           enabled: false,
           geofenceRadius: 50,
-          delayStart: 0,
-          delayStop: 0,
+          delayStart: 1,
+          delayStop: 1,
           notifications: true,
         },
       });
@@ -1353,10 +1355,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         autoTimer: {
           enabled: false,
           geofenceRadius: 50,
-          startDelayMinutes: 0,  // Nombre correcto para SimpleAutoTimer
-          stopDelayMinutes: 0,   // Nombre correcto para SimpleAutoTimer
-          delayStart: 0,         // Mantener para compatibilidad
-          delayStop: 0,          // Mantener para compatibilidad
+          delayStart: 1,
+          delayStop: 1,
           notifications: true,
         },
       });
@@ -1392,16 +1392,17 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     let interval: NodeJS.Timeout;
     
     const checkActiveTimer = async () => {
-      if (editingJob && formData.autoTimer?.enabled && currentTab === 'auto') {
+      if (editingJob) {
         try {
           const activeSession = await JobService.getActiveSession();
           if (activeSession && activeSession.jobId === editingJob.id) {
-            const startTime = new Date(activeSession.startTime);
-            const now = new Date();
-            const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+            // Use AutoTimerService's getElapsedTime instead of calculating manually
+            const autoTimerService = AutoTimerService.getInstance();
+            const elapsedSeconds = await autoTimerService.getElapsedTime();
             setActiveTimerElapsed(elapsedSeconds);
           } else {
             setActiveTimerElapsed(0);
+            setIsAutoTimerPaused(false);
           }
         } catch (error) {
           console.error('Error checking active timer:', error);
@@ -1409,16 +1410,39 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       }
     };
     
-    if (visible && currentTab === 'auto') {
+    if (visible) {
       checkActiveTimer();
-      // Reduce frequency to avoid performance issues
-      interval = setInterval(checkActiveTimer, 5000);
+      // Update every second for real-time display
+      interval = setInterval(checkActiveTimer, 1000);
     }
     
     return () => {
       if (interval) clearInterval(interval);
     };
   }, [visible, currentTab, editingJob, formData.autoTimer?.enabled]);
+
+  // Listen to AutoTimer pause state changes
+  useEffect(() => {
+    const autoTimerService = AutoTimerService.getInstance();
+    
+    const handlePauseChange = (isPaused: boolean) => {
+      console.log('🔄 JobFormModal received pause change:', isPaused);
+      setIsAutoTimerPaused(isPaused);
+    };
+
+    autoTimerService.addPauseListener(handlePauseChange);
+    
+    // Get initial state
+    const initPauseState = async () => {
+      const isPaused = await autoTimerService.isActiveTimerPaused();
+      setIsAutoTimerPaused(isPaused);
+    };
+    if (visible) initPauseState();
+
+    return () => {
+      autoTimerService.removePauseListener(handlePauseChange);
+    };
+  }, [visible]);
 
   // Monitor AutoTimer status and show alert when needed
   useEffect(() => {
@@ -1432,7 +1456,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           jobCoordinates.longitude
         );
         
-        const radius = formData.autoTimer?.geofenceRadius || 50;
+        const radius = formData.autoTimer?.geofenceRadius || 100;
         const isInsideRadius = distance <= radius;
         
         // Show alert only if outside radius and haven't shown it yet
@@ -1713,25 +1737,6 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       onSave(savedJob);
       onClose();
       
-      // Si el auto-timer está activado, iniciar los servicios
-      if (savedJob.autoTimer?.enabled) {
-        setTimeout(async () => {
-          try {
-            // Iniciar SimpleAutoTimer para monitoreo con app abierta
-            const autoTimerService = AutoTimerService.getInstance();
-            await autoTimerService.startSimpleMonitoring();
-            console.log('✅ SimpleAutoTimer iniciado para', savedJob.name);
-            
-            // Iniciar background geofencing para app cerrada
-            const allJobs = await JobService.getJobs();
-            await startBackgroundGeofencing(allJobs);
-            console.log('✅ Background geofencing iniciado');
-          } catch (error) {
-            console.error('Error iniciando servicios de auto-timer:', error);
-          }
-        }, 1000);
-      }
-      
       // Only reload the app if there were actual changes
       if (hasUnsavedChanges) {
         try {
@@ -2007,6 +2012,79 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       </KeyboardAvoidingView>
     </TouchableOpacity>
   );
+
+  // Custom TimeInput component that handles format preferences
+  const TimeInput = ({ value, onChangeText, placeholder, style, ...props }: {
+    value: string;
+    onChangeText: (text: string) => void;
+    placeholder?: string;
+    style?: any;
+    [key: string]: any;
+  }) => {
+    const [displayValue, setDisplayValue] = useState(formatTimeWithPreferences(value || ''));
+    
+    useEffect(() => {
+      setDisplayValue(formatTimeWithPreferences(value || ''));
+    }, [value, formatTimeWithPreferences]);
+
+    const handleChangeText = (text: string) => {
+      setDisplayValue(text);
+      // Convert to 24-hour format for storage
+      const parsedTime = parseTimeInput(text);
+      onChangeText(parsedTime);
+    };
+
+    return (
+      <TextInput
+        style={style}
+        value={displayValue}
+        onChangeText={handleChangeText}
+        placeholder={placeholder || getTimePlaceholder()}
+        {...props}
+      />
+    );
+  };
+
+  // AutoTimer pause/resume functions
+  const handleAutoTimerPause = async () => {
+    try {
+      console.log('⏸️ Pausing AutoTimer from JobFormModal');
+      const autoTimerService = AutoTimerService.getInstance();
+      const success = await autoTimerService.pauseActiveTimer();
+      if (!success) {
+        Alert.alert(
+          t('job_form.error'),
+          'Failed to pause AutoTimer'
+        );
+      }
+    } catch (error) {
+      console.error('Error pausing AutoTimer:', error);
+      Alert.alert(
+        t('job_form.error'),
+        'Error pausing AutoTimer'
+      );
+    }
+  };
+
+  const handleAutoTimerResume = async () => {
+    try {
+      console.log('▶️ Resuming AutoTimer from JobFormModal');
+      const autoTimerService = AutoTimerService.getInstance();
+      const success = await autoTimerService.resumeActiveTimer();
+      if (!success) {
+        Alert.alert(
+          t('job_form.error'),
+          'Failed to resume AutoTimer'
+        );
+      }
+    } catch (error) {
+      console.error('Error resuming AutoTimer:', error);
+      Alert.alert(
+        t('job_form.error'),
+        'Error resuming AutoTimer'
+      );
+    }
+  };
 
   const renderBasicTab = () => (
     <>
@@ -2326,28 +2404,26 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               <View style={styles.row}>
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>{t('job_form.schedule.start_time')}</Text>
-                  <TextInput
+                  <TimeInput
                     style={styles.input}
                     value={getDaySchedule(selectedDay)?.startTime || ''}
-                    onChangeText={(value) => {
+                    onChangeText={(value: string) => {
                       const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
                       updateDaySchedule(selectedDay, { ...currentSchedule, startTime: value });
                     }}
-                    placeholder={t('job_form.schedule.start_time_placeholder')}
                     placeholderTextColor={colors.textTertiary}
                   />
                 </View>
                 
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>{t('job_form.schedule.end_time')}</Text>
-                  <TextInput
+                  <TimeInput
                     style={styles.input}
                     value={getDaySchedule(selectedDay)?.endTime || ''}
-                    onChangeText={(value) => {
+                    onChangeText={(value: string) => {
                       const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
                       updateDaySchedule(selectedDay, { ...currentSchedule, endTime: value });
                     }}
-                    placeholder={t('job_form.schedule.end_time_placeholder')}
                     placeholderTextColor={colors.textTertiary}
                   />
                 </View>
@@ -2378,28 +2454,26 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 <View style={styles.row}>
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>{t('job_form.schedule.second_start_time')}</Text>
-                    <TextInput
+                    <TimeInput
                       style={styles.input}
                       value={getDaySchedule(selectedDay)?.secondStartTime || ''}
-                      onChangeText={(value) => {
+                      onChangeText={(value: string) => {
                         const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
                         updateDaySchedule(selectedDay, { ...currentSchedule, secondStartTime: value });
                       }}
-                      placeholder={t('job_form.schedule.second_start_time_placeholder')}
                       placeholderTextColor={colors.textTertiary}
                     />
                   </View>
                   
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>{t('job_form.schedule.second_end_time')}</Text>
-                    <TextInput
+                    <TimeInput
                       style={styles.input}
                       value={getDaySchedule(selectedDay)?.secondEndTime || ''}
-                      onChangeText={(value) => {
+                      onChangeText={(value: string) => {
                         const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
                         updateDaySchedule(selectedDay, { ...currentSchedule, secondEndTime: value });
                       }}
-                      placeholder={t('job_form.schedule.second_end_time_placeholder')}
                       placeholderTextColor={colors.textTertiary}
                     />
                   </View>
@@ -3149,7 +3223,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             jobCoordinates.longitude
           );
           
-          const radius = formData.autoTimer?.geofenceRadius || 50;
+          const radius = formData.autoTimer?.geofenceRadius || 100;
           const isInsideRadius = distance <= radius;
           
           // Mostrar alerta si está fuera del radio
@@ -3189,26 +3263,24 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                         await JobService.clearActiveSession();
                       }
                       
-                      // Detener y reiniciar el servicio AutoTimer para el nuevo trabajo
+                      // También cancelar cualquier AutoTimer activo para el otro trabajo
                       const autoTimerService = AutoTimerService.getInstance();
-                      // Stop handles everything including canceling pending actions
+                      await autoTimerService.cancelPendingAction();
+                      
+                      // Detener el servicio AutoTimer
                       autoTimerService.stop();
                       
-                      // Si se está activando, iniciar el monitoreo
-                      if (value) {
-                        setTimeout(async () => {
-                          await autoTimerService.startSimpleMonitoring();
-                        }, 500);
-                      }
+                      // Poner el sistema en modo manual
+                      await autoTimerService.setManualMode();
                       
                       // Desactivar el AutoTimer del otro trabajo
                       const updatedOtherJob = {
                         ...jobWithAutoTimer,
                         autoTimer: {
                           enabled: false,
-                          geofenceRadius: jobWithAutoTimer.autoTimer?.geofenceRadius || 50,
-                          delayStart: jobWithAutoTimer.autoTimer?.delayStart || 0,
-                          delayStop: jobWithAutoTimer.autoTimer?.delayStop || 0,
+                          geofenceRadius: jobWithAutoTimer.autoTimer?.geofenceRadius || 100,
+                          delayStart: jobWithAutoTimer.autoTimer?.delayStart || 2,
+                          delayStop: jobWithAutoTimer.autoTimer?.delayStop || 2,
                           notifications: jobWithAutoTimer.autoTimer?.notifications !== false
                         }
                       };
@@ -3262,6 +3334,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                       notes: activeSession.notes || 'Auto-stopped (AutoTimer disabled)',
                       overtime: elapsedHours > 8,
                       type: 'work' as const,
+                      // Add actual start and end times for display in reports
+                      actualStartTime: sessionStart.toTimeString().substring(0, 5), // HH:MM format
+                      actualEndTime: now.toTimeString().substring(0, 5), // HH:MM format
                     };
                     await JobService.addWorkDay(workDay);
                     
@@ -3283,10 +3358,15 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     await liveActivityService.endLiveActivity(Math.floor(elapsedHours * 3600));
                   }
                   
-                  // Detener el servicio AutoTimer completamente
+                  // También cancelar cualquier AutoTimer activo para este trabajo
                   const autoTimerService = AutoTimerService.getInstance();
-                  // Stop handles everything
+                  await autoTimerService.cancelPendingAction();
+                  
+                  // Detener el servicio AutoTimer
                   autoTimerService.stop();
+                  
+                  // Poner el sistema en modo manual
+                  await autoTimerService.setManualMode();
                   
                   // Desactivar completamente el AutoTimer
                   updateNestedData('autoTimer', 'enabled', false);
@@ -3467,7 +3547,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   style={styles.counterButton}
                   onPress={() => {
                     const currentValue = formData.autoTimer?.geofenceRadius || 50;
-                    const newValue = Math.max(25, currentValue - 5);
+                    const newValue = Math.max(5, currentValue - 5);
                     updateNestedData('autoTimer', 'geofenceRadius', newValue);
                   }}
                 >
@@ -3481,70 +3561,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   style={styles.counterButton}
                   onPress={() => {
                     const currentValue = formData.autoTimer?.geofenceRadius || 50;
-                    const newValue = Math.min(100, currentValue + 5);
+                    const newValue = Math.min(200, currentValue + 5);
                     updateNestedData('autoTimer', 'geofenceRadius', newValue);
-                  }}
-                >
-                  <IconSymbol size={20} name="plus" color={colors.primary} />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Delay Start Control */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('job_form.auto_timer.delay_start')}</Text>
-              <Text style={styles.labelDescription}>{t('job_form.auto_timer.delay_start_desc')}</Text>
-              <View style={styles.counterContainer}>
-                <TouchableOpacity
-                  style={styles.counterButton}
-                  onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStart ?? 0;
-                    const newValue = Math.max(0, currentValue - 1);
-                    updateNestedData('autoTimer', 'delayStart', newValue);
-                    updateNestedData('autoTimer', 'startDelayMinutes', newValue); // También actualizar el nombre correcto
-                  }}
-                >
-                  <IconSymbol size={20} name="minus" color={colors.primary} />
-                </TouchableOpacity>
-                <Text style={styles.counterText}>{formData.autoTimer?.delayStart ?? 0} min</Text>
-                <TouchableOpacity
-                  style={styles.counterButton}
-                  onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStart ?? 0;
-                    const newValue = Math.min(10, currentValue + 1);
-                    updateNestedData('autoTimer', 'delayStart', newValue);
-                    updateNestedData('autoTimer', 'startDelayMinutes', newValue); // También actualizar el nombre correcto
-                  }}
-                >
-                  <IconSymbol size={20} name="plus" color={colors.primary} />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Delay Stop Control */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('job_form.auto_timer.delay_stop')}</Text>
-              <Text style={styles.labelDescription}>{t('job_form.auto_timer.delay_stop_desc')}</Text>
-              <View style={styles.counterContainer}>
-                <TouchableOpacity
-                  style={styles.counterButton}
-                  onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStop ?? 0;
-                    const newValue = Math.max(0, currentValue - 1);
-                    updateNestedData('autoTimer', 'delayStop', newValue);
-                    updateNestedData('autoTimer', 'stopDelayMinutes', newValue); // También actualizar el nombre correcto
-                  }}
-                >
-                  <IconSymbol size={20} name="minus" color={colors.primary} />
-                </TouchableOpacity>
-                <Text style={styles.counterText}>{formData.autoTimer?.delayStop ?? 0} min</Text>
-                <TouchableOpacity
-                  style={styles.counterButton}
-                  onPress={() => {
-                    const currentValue = formData.autoTimer?.delayStop ?? 0;
-                    const newValue = Math.min(10, currentValue + 1);
-                    updateNestedData('autoTimer', 'delayStop', newValue);
-                    updateNestedData('autoTimer', 'stopDelayMinutes', newValue); // También actualizar el nombre correcto
                   }}
                 >
                   <IconSymbol size={20} name="plus" color={colors.primary} />
@@ -3563,7 +3581,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                       top: 10,
                       right: 10,
                       zIndex: 1000,
-                      backgroundColor: 'rgba(76, 217, 100, 0.95)',
+                      backgroundColor: isAutoTimerPaused ? 'rgba(255, 193, 7, 0.95)' : 'rgba(76, 217, 100, 0.95)',
                       paddingHorizontal: 10,
                       paddingVertical: 5,
                       borderRadius: 10,
@@ -3585,6 +3603,24 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                       }}>
                         {formatTime(activeTimerElapsed)}
                       </Text>
+                      
+                      {/* Pause/Play button */}
+                      <TouchableOpacity
+                        onPress={isAutoTimerPaused ? handleAutoTimerResume : handleAutoTimerPause}
+                        style={{
+                          marginLeft: 5,
+                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                          borderRadius: 8,
+                          padding: 4,
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <IconSymbol 
+                          size={10} 
+                          name={isAutoTimerPaused ? "play.fill" : "pause.fill"} 
+                          color="#FFFFFF" 
+                        />
+                      </TouchableOpacity>
                     </View>
                   )}
                   <MapView
@@ -3656,8 +3692,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               <Text style={styles.previewText}>
                            <Text style={styles.previewTitle}>📍</Text>
                 {t('job_form.auto_timer.preview', {
-                  delayStart: formData.autoTimer?.delayStart || 0,
-                  delayStop: formData.autoTimer?.delayStop || 0
+                  delayStart: formData.autoTimer?.delayStart || 2,
+                  delayStop: formData.autoTimer?.delayStop || 2
                 })}
               </Text>
             </View>

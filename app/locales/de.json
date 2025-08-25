@@ -68,6 +68,16 @@
       "reminder_time": "Erinnerungszeit",
       "reminder_time_desc": "Konfigurieren Sie, wann Sie Erinnerungen vor Ihrem Arbeitsplan erhalten möchten"
     },
+    "time_format": {
+      "title": "Zeitformat",
+      "description": "Wählen Sie, wie Arbeitszeiten angezeigt werden sollen",
+      "time_format": "Zeitformat",
+      "time_format_desc": "HH:MM vs 0.00h",
+      "hour_format": "Stundenformat",
+      "hour_format_desc": "24-Stunden vs 12-Stunden (AM/PM)",
+      "12_hour": "12-Stunden (AM/PM)",
+      "24_hour": "24-Stunden"
+    },
     "auto_backup": {
       "title": "Automatische Sicherung",
       "description": "Erstelle automatisch Sicherungen nach konfigurierter Häufigkeit",
@@ -893,53 +903,6 @@
     },
     "support_terms": {
       "title": "Support & Bedingungen"
-    }
-  },
-  "preferences": {
-    "title": "Einstellungen",
-    "subtitle": "Passen Sie Ihre Arbeitserfahrung an",
-    "appearance": {
-      "title": "Erscheinungsbild",
-      "description": "Konfigurieren Sie das visuelle Design der App",
-      "auto": "Auto",
-      "light": "Hell",
-      "dark": "Dunkel"
-    },
-    "language": {
-      "title": "Sprache",
-      "description": "Wählen Sie Ihre bevorzugte Sprache",
-      "default": "Aktuelle Sprache",
-      "change_to": "Wechseln zu {{language}}"
-    },
-    "data_management": {
-      "title": "Datenverwaltung",
-      "description": "⚠️ WICHTIG: Diese App speichert alle Daten nur auf Ihrem Gerät. Wir verwenden keine Server oder Cloud-Datenbanken. Aus diesem Grund müssen Sie regelmäßig Backups erstellen und bei einer Neuinstallation der App importieren.",
-      "export_title": ".json-Datei erstellen",
-      "export_desc": "Backup aller Ihrer Jobs, Stunden und Einstellungen erstellen",
-      "import_title": ".json-Datei importieren",
-      "import_desc": "Daten aus einer Backup-Datei wiederherstellen",
-      "auto_backup_title": "Automatische Sicherungen",
-      "auto_backup_desc": "Tägliche, wöchentliche oder monatliche automatische Backups konfigurieren"
-    },
-    "notifications": {
-      "title": "Benachrichtigungen",
-      "description": "Arbeitserinnerungen und Warnungen konfigurieren",
-      "general": "Allgemeine Benachrichtigungen",
-      "general_notifications": "Allgemeine Benachrichtigungen",
-      "auto_timer": "Auto Timer",
-      "work_schedule_reminders": "Arbeitszeit-Erinnerungen",
-      "general_desc": "Alle Benachrichtigungen aktivieren",
-      "schedule": "Zeitplan-Erinnerungen",
-      "schedule_desc": "Ein- und Ausgangsbenachrichtigungen",
-      "work_reminders": "Arbeitserinnerungen",
-      "work_reminders_desc": "Erinnerungen vor Arbeitsbeginn erhalten",
-      "reminder_time": "Erinnerungszeit",
-      "custom_minutes": "Benutzerdefinierte Minuten",
-      "test_button": "Benachrichtigung testen",
-      "test_desc": "Eine Test-Benachrichtigung senden",
-      "permissions_denied_title": "Berechtigungen verweigert",
-      "permissions_denied_message": "Um Benachrichtigungen zu erhalten, müssen Sie die Berechtigungen in der Gerätekonfiguration zulassen",
-      "open_settings": "Konfiguration öffnen"
     }
   },
   "side_menu": {

@@ -68,6 +68,16 @@
       "reminder_time": "Tiempo de aviso",
       "reminder_time_desc": "Configura cuándo recibir el recordatorio antes de tu horario de trabajo"
     },
+    "time_format": {
+      "title": "Formato de Tiempo",
+      "description": "Elige cómo mostrar las horas de trabajo",
+      "time_format": "Formato de Tiempo",
+      "time_format_desc": "HH:MM vs 0.00h",
+      "hour_format": "Formato de Hora",
+      "hour_format_desc": "24 horas vs 12 horas (AM/PM)",
+      "12_hour": "12 horas (AM/PM)",
+      "24_hour": "24 horas"
+    },
     "auto_backup": {
       "title": "Copia de Seguridad Automática",
       "description": "Genera copias de seguridad automáticamente según la frecuencia configurada",
@@ -191,6 +201,7 @@
     "auto_timer_enabled_title": "Auto-timer activado",
     "auto_timer_enabled_message": "El auto-timer se ha activado correctamente para este trabajo.",
     "auto_timer_error": "No se pudo actualizar el auto-timer",
+    "error": "Error al pausar AutoTimer",
     "auto_timer_location_required_title": "Permisos de ubicación requeridos",
     "auto_timer_location_required_message": "Para usar el Auto Timer necesitas dar permisos de ubicación a la aplicación. Esto permite detectar automáticamente cuando llegas o sales del trabajo.",
     "auto_timer_open_settings": "Abrir Configuración",
@@ -202,6 +213,7 @@
     "delete_success": "Trabajo eliminado correctamente",
     "delete_error": "No se pudo eliminar el trabajo",
     "auto_timer_inactive": "Auto-timer inactivo",
+    "auto_timer_paused": "Auto-timer pausado",
     "per_hour": "por hora",
     "configure_schedule": "Configurar horario",
     "configure_rates": "Configurar tarifas",

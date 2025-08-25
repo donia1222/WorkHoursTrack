@@ -41,6 +41,14 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
         return [...filteredHistory, currentScreen];
       });
       setCurrentScreen(screen);
+      
+      // Call screen-specific focus handlers when navigating
+      if (screen === 'reports' && globalThis.reportsScreenFocusHandler) {
+        // Use setTimeout to call after the screen renders
+        setTimeout(() => {
+          globalThis.reportsScreenFocusHandler?.();
+        }, 100);
+      }
     }
     
     // Set selected job if provided

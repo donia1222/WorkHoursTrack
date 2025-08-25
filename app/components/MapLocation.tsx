@@ -14,17 +14,13 @@ import { JobService } from '../services/JobService';
 import JobFormModal from '../components/JobFormModal';
 import JobStatisticsModal from '../components/JobStatisticsModal';
 import JobSelectorModal from '../components/JobSelectorModal';
-import TimerSuccessModal from '../components/TimerSuccessModal';
 import { useNavigation } from '../context/NavigationContext';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
-// IMPORTANTE: Usamos SimpleAutoTimer que es el que realmente está activo
-import SimpleAutoTimer from '../services/SimpleAutoTimer';
-// Mantener AutoTimerService solo para los tipos
-import { AutoTimerStatus } from '../services/AutoTimerService';
-import LiveActivityService from '../services/LiveActivityService';
+import { useTimeFormat } from '../hooks/useTimeFormat';
+import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
 import { JobCardsSwiper } from './JobCardsSwiper';
 import { useFocusEffect } from '@react-navigation/native';
 import WidgetSyncService from '../services/WidgetSyncService';
@@ -229,17 +225,32 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean, daySize: number, dayFontSize: number, isTablet: boolean) => StyleSheet.create({
   mapContainer: {
-    
- 
+    flex: 1,
+    overflow: 'hidden',
+    backgroundColor: isDark ? '#0a0a0a' : '#f5f5f5',
   },
+  mapWrapper: {
 
+
+
+  },
+  container: {
+  
+  },
   map: {
 
   },
 
   
   overlay: {
-
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    pointerEvents: 'box-none',
   },
   centeredContent: {
     alignItems: 'center',
@@ -1164,6 +1175,16 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const { navigateTo } = useNavigation();
   const { t } = useLanguage();
   const { triggerHaptic } = useHapticFeedback();
+  const { formatTimeWithPreferences } = useTimeFormat();
+  
+  // Function to make AM/PM format more compact for widgets
+  const formatTimeCompact = (time: string): string => {
+    const formatted = formatTimeWithPreferences(time);
+    // Make AM/PM more compact: "9:00 AM" -> "9:00a", "2:30 PM" -> "2:30p"
+    return formatted
+      .replace(' AM', 'a')
+      .replace(' PM', 'p');
+  };
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showJobForm, setShowJobForm] = useState(false);
@@ -1187,8 +1208,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
     isIPadPortrait
   });
   
-
-  
   // Animation values for modal
   const modalScale = useSharedValue(0);
   const modalOpacity = useSharedValue(0);
@@ -1205,10 +1224,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [jobStatistics, setJobStatistics] = useState<Map<string, { thisMonthHours: number; thisMonthDays: number }>>(new Map());
   const [activeTimerJobId, setActiveTimerJobId] = useState<string | null>(null);
   const [autoTimerStatus, setAutoTimerStatus] = useState<AutoTimerStatus | null>(null);
-  // IMPORTANTE: Usar SimpleAutoTimer en lugar de AutoTimerService
-  const [autoTimerService] = useState(() => SimpleAutoTimer.getInstance());
+  const [autoTimerService] = useState(() => AutoTimerService.getInstance());
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isTimerPaused, setIsTimerPaused] = useState(false);
+  const [isAutoTimerPaused, setIsAutoTimerPaused] = useState(false);
   const [isAutoTimerMinimized, setIsAutoTimerMinimized] = useState(false);
   const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
   const [hasShownActivationAlert, setHasShownActivationAlert] = useState(false);
@@ -1229,18 +1248,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [selectedDaySchedule, setSelectedDaySchedule] = useState<number | null>(null);
   const [monthlyOvertime, setMonthlyOvertime] = useState<number>(0);
   const mapRef = useRef<MapView>(null);
-  const [successModalVisible, setSuccessModalVisible] = useState(false);
-  const [successModalData, setSuccessModalData] = useState<{
-    hours: number;
-    totalHours?: number;
-    seconds: number;
-    totalSeconds?: number;
-    isUpdate: boolean;
-    wasAutoTimerActive?: boolean;
-    jobId?: string;
-    startTime?: string;
-    endTime?: string;
-  }>({ hours: 0, seconds: 0, isUpdate: false });
   
   // Optimización para prevenir congelamiento durante zoom rápido
   const onRegionChangeComplete = useCallback((region: any) => {
@@ -1586,28 +1593,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
   // AutoTimer service initialization - runs only once
   useEffect(() => {
-    // Listen for status changes from SimpleAutoTimer
-    const handleStatusChanged = async (status: { state: string; jobId?: string }) => {
-      console.log('📡 MapLocation: SimpleAutoTimer emitted status change:', status);
-      
-      // Update AutoTimer status immediately
-      const updatedStatus = await autoTimerService.getStatus();
-      setAutoTimerStatus(updatedStatus);
-      
-      // If timer became active, update elapsed time immediately
-      if (status.state === 'active' && status.jobId) {
-        const elapsed = await autoTimerService.getElapsedTime();
-        setElapsedTime(elapsed);
-        console.log('⏱️ MapLocation: Timer activated, elapsed time:', elapsed);
-      } else if (status.state === 'inactive') {
-        setElapsedTime(0);
-        console.log('⏱️ MapLocation: Timer deactivated, resetting elapsed time');
-      }
-    };
-    
-    // Add listener for SimpleAutoTimer events
-    autoTimerService.on('statusChanged', handleStatusChanged);
-    
     const handleAutoTimerStatusChange = (status: AutoTimerStatus) => {
       console.log('🔄 MapLocation received AutoTimer status change:', {
         state: status.state,
@@ -1649,20 +1634,33 @@ export default function MapLocation({ location, onNavigate }: Props) {
     };
 
     // Add listeners
+    const handleAutoTimerPauseChange = (isPaused: boolean) => {
+      console.log('🔄 MapLocation received AutoTimer pause change:', isPaused);
+      setIsAutoTimerPaused(isPaused);
+    };
+
     autoTimerService.addStatusListener(handleAutoTimerStatusChange);
     autoTimerService.addAlertListener(handleAutoTimerAlert);
+    autoTimerService.addPauseListener(handleAutoTimerPauseChange);
     
     // Get current status immediately to sync with any ongoing countdown
-    autoTimerService.getStatus().then(currentStatus => {
-      setAutoTimerStatus(currentStatus);
-      console.log('🔄 MapLocation: Synced with current AutoTimer status:', currentStatus.state, currentStatus.remainingTime);
-    });
+    const currentStatus = autoTimerService.getStatus();
+    setAutoTimerStatus(currentStatus);
+    console.log('🔄 MapLocation: Synced with current AutoTimer status:', currentStatus.state, currentStatus.remainingTime);
+
+    // Get current pause state
+    const initializePauseState = async () => {
+      const isPaused = await autoTimerService.isActiveTimerPaused();
+      setIsAutoTimerPaused(isPaused);
+      console.log('🔄 MapLocation: Synced with current pause state:', isPaused);
+    };
+    initializePauseState();
 
     // Cleanup on unmount
     return () => {
       autoTimerService.removeStatusListener(handleAutoTimerStatusChange);
       autoTimerService.removeAlertListener(handleAutoTimerAlert);
-      autoTimerService.removeListener('statusChanged', handleStatusChanged);
+      autoTimerService.removePauseListener(handleAutoTimerPauseChange);
     };
   }, []); // Empty dependency array - runs only once
 
@@ -1671,10 +1669,17 @@ export default function MapLocation({ location, onNavigate }: Props) {
     useCallback(() => {
       console.log('🔄 MapLocation: Screen focused, updating AutoTimer status');
       // Immediate update
-      autoTimerService.getStatus().then(currentStatus => {
-        setAutoTimerStatus(currentStatus);
-        console.log('🔄 MapLocation: Updated status on focus:', currentStatus.state);
-      });
+      const currentStatus = autoTimerService.getStatus();
+      setAutoTimerStatus(currentStatus);
+      console.log('🔄 MapLocation: Updated status on focus:', currentStatus.state);
+      
+      // Also sync pause state on focus
+      const syncPauseState = async () => {
+        const isPaused = await autoTimerService.isActiveTimerPaused();
+        setIsAutoTimerPaused(isPaused);
+        console.log('🔄 MapLocation: Synced pause state on focus:', isPaused);
+      };
+      syncPauseState();
       
       // Reset mini calendar animations to prevent header issues
       miniCalendarOpacity.value = 0;
@@ -1683,9 +1688,14 @@ export default function MapLocation({ location, onNavigate }: Props) {
       
       // Delayed update to catch any async state changes
       const timeoutId = setTimeout(async () => {
-        const delayedStatus = await autoTimerService.getStatus();
+        const delayedStatus = autoTimerService.getStatus();
         setAutoTimerStatus(delayedStatus);
         console.log('🔄 MapLocation: Delayed status update:', delayedStatus.state);
+        
+        // Also sync pause state with delay
+        const isPaused = await autoTimerService.isActiveTimerPaused();
+        setIsAutoTimerPaused(isPaused);
+        console.log('🔄 MapLocation: Delayed pause state sync:', isPaused);
         
         // Re-animate mini calendar if needed
         if ((!delayedStatus || delayedStatus.state === 'inactive') && !showPrivacyNotice) {
@@ -1758,6 +1768,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
           
           // Use AutoTimerService's getElapsedTime method directly
           const elapsed = await autoTimerService.getElapsedTime();
+          
           console.log('⏱️ MapLocation updating elapsed time:', elapsed, 'seconds for job:', autoTimerStatus.jobId, 'isPaused:', isPaused);
           setElapsedTime(elapsed);
         }
@@ -2014,9 +2025,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
     
     if (nextShift) {
       if (nextShift.isToday) {
-        return `${t('maps.next_shift')} ${nextShift.time}`;
+        return `${t('maps.next_shift')} ${formatTimeCompact(nextShift.time)}`;
       } else {
-        return `${t('maps.next_shift')} ${getDayName(nextShift.day)} ${nextShift.time}`;
+        return `${t('maps.next_shift')} ${getDayName(nextShift.day)} ${formatTimeCompact(nextShift.time)}`;
       }
     }
 
@@ -2151,7 +2162,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
     );
     
     // Generar una posición aleatoria dentro del círculo del geofence
-    const radius = activeJob.autoTimer.geofenceRadius || 50;
+    const radius = activeJob.autoTimer.geofenceRadius || 100;
     const angle = Math.random() * 2 * Math.PI; // Ángulo aleatorio
     const distance = Math.random() * (radius * 0.6); // Dentro del 60% del radio para que se vea bien
     
@@ -2200,288 +2211,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
         return t('timer.auto_timer.cancelled');
       default:
         return status.message;
-    }
-  };
-
-  // Handle pause/resume timer
-  const handlePauseResumeTimer = async () => {
-    try {
-      const activeSession = await JobService.getActiveSession();
-      if (!activeSession) return;
-
-      if (isTimerPaused) {
-        // Resume timer
-        const now = new Date();
-        const sessionForStorage = {
-          jobId: activeSession.jobId,
-          startTime: activeSession.startTime,
-          notes: activeSession.notes || '',
-          isPaused: false,
-          pausedElapsedTime: undefined,
-        };
-        
-        await JobService.saveActiveSession(sessionForStorage);
-        setIsTimerPaused(false);
-        console.log('▶️ Timer resumed');
-      } else {
-        // Pause timer
-        const now = new Date();
-        const startTime = new Date(activeSession.startTime);
-        const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-        
-        const sessionForStorage = {
-          jobId: activeSession.jobId,
-          startTime: activeSession.startTime,
-          notes: activeSession.notes || '',
-          isPaused: true,
-          pausedElapsedTime: elapsed,
-        };
-        
-        await JobService.saveActiveSession(sessionForStorage);
-        setIsTimerPaused(true);
-        console.log(`⏸️ Timer paused with ${elapsed}s elapsed`);
-      }
-    } catch (error) {
-      console.error('Error pausing/resuming timer:', error);
-    }
-  };
-
-  // Handle stop timer
-  const handleStopTimer = async () => {
-    try {
-      const activeSession = await JobService.getActiveSession();
-      if (!activeSession) return;
-
-      // Calculate hours from elapsed time
-      const hours = elapsedTime / 3600;
-      
-      // Calculate start and end times
-      const now = new Date();
-      const sessionStartTime = new Date(activeSession.startTime);
-      const startTimeStr = sessionStartTime.toTimeString().split(' ')[0]; // HH:MM:SS
-      const endTimeStr = now.toTimeString().split(' ')[0]; // HH:MM:SS
-      
-      // Show the success modal to confirm stopping the timer
-      setSuccessModalData({
-        hours: parseFloat(hours.toFixed(2)),
-        seconds: elapsedTime,
-        isUpdate: false,
-        wasAutoTimerActive: autoTimerStatus?.state === 'active',
-        jobId: activeSession.jobId,
-        startTime: startTimeStr,
-        endTime: endTimeStr
-      });
-      
-      setSuccessModalVisible(true);
-    } catch (error) {
-      console.error('Error preparing to stop timer:', error);
-    }
-  };
-
-  // Handle success modal confirm
-  const handleSuccessModalConfirm = async () => {
-    try {
-      // Stop the timer and save the work day
-      const activeSession = await JobService.getActiveSession();
-      if (activeSession) {
-        const hours = elapsedTime / 3600;
-        const today = new Date().toISOString().split('T')[0];
-        const now = new Date();
-        
-        // Calculate actual start and end times
-        const actualEndTime = now.toTimeString().split(' ')[0]; // HH:MM:SS format
-        const sessionStartTime = new Date(activeSession.startTime);
-        const actualStartTime = sessionStartTime.toTimeString().split(' ')[0]; // HH:MM:SS format
-        
-        // Check if there's already a work day for this date and job
-        const allWorkDays = await JobService.getWorkDays();
-        const existingWorkDay = allWorkDays.find(day => 
-          day.date === today && 
-          day.jobId === activeSession.jobId && 
-          day.type === 'work'
-        );
-        
-        if (existingWorkDay) {
-          // Update existing work day
-          const updatedHours = (existingWorkDay.hours || 0) + hours;
-          await JobService.updateWorkDay(existingWorkDay.id, {
-            ...existingWorkDay,
-            hours: updatedHours,
-            notes: activeSession.notes || existingWorkDay.notes || '',
-            actualStartTime: existingWorkDay.actualStartTime || actualStartTime,
-            actualEndTime: actualEndTime
-          });
-        } else {
-          // Create new work day
-          const workDay = {
-            id: Date.now().toString(),
-            jobId: activeSession.jobId,
-            date: today,
-            hours: hours,
-            overtime: false,
-            type: 'work' as const,
-            notes: activeSession.notes || '',
-            actualStartTime: actualStartTime,
-            actualEndTime: actualEndTime
-          };
-          await JobService.addWorkDay(workDay);
-        }
-        
-        // Clear the active session
-        await JobService.clearActiveSession();
-        
-        // Disable AutoTimer if it was active (like in TimerScreen)
-        if (successModalData.wasAutoTimerActive && successModalData.jobId) {
-          console.log('🛑 Disabling AutoTimer after stop confirmed');
-          const job = jobs.find(j => j.id === successModalData.jobId);
-          if (job && job.autoTimer?.enabled) {
-            // Disable AutoTimer in job configuration
-            const updatedJob = {
-              ...job,
-              autoTimer: {
-                ...job.autoTimer,
-                enabled: false
-              }
-            };
-            await JobService.updateJob(job.id, updatedJob);
-            console.log('✅ AutoTimer disabled for job:', job.name);
-            
-            // Reload jobs to ensure the update is reflected
-            await loadJobs();
-            
-            // Stop the SimpleAutoTimer service
-            autoTimerService.stop();
-            console.log('🛑 SimpleAutoTimer service stopped');
-          }
-        }
-        
-        // Stop Live Activity
-        const liveActivityService = LiveActivityService.getInstance();
-        await liveActivityService.endLiveActivity(elapsedTime);
-        
-        // Reset states
-        setElapsedTime(0);
-        setIsTimerPaused(false);
-        setActiveTimerJobId(null);
-        
-        // Update AutoTimer status
-        const updatedStatus = await autoTimerService.getStatus();
-        setAutoTimerStatus(updatedStatus);
-        
-        // Check active timer again
-        await checkActiveTimer();
-      }
-      
-      setSuccessModalVisible(false);
-      
-      // Navigate to Reports screen after confirming
-      navigateTo('reports');
-    } catch (error) {
-      console.error('Error stopping timer:', error);
-      Alert.alert('Error', t('timer.stop_timer_error'));
-    }
-  };
-
-  // Handle success modal close - SAME AS CONFIRM (stops timer and saves)
-  const handleSuccessModalClose = async () => {
-    try {
-      // Stop the timer and save the work day (SAME AS CONFIRM)
-      const activeSession = await JobService.getActiveSession();
-      if (activeSession) {
-        const hours = elapsedTime / 3600;
-        const today = new Date().toISOString().split('T')[0];
-        const now = new Date();
-        
-        // Calculate actual start and end times
-        const actualEndTime = now.toTimeString().split(' ')[0];
-        const sessionStartTime = new Date(activeSession.startTime);
-        const actualStartTime = sessionStartTime.toTimeString().split(' ')[0];
-        
-        // Check if there's already a work day for this date and job
-        const allWorkDays = await JobService.getWorkDays();
-        const existingWorkDay = allWorkDays.find(day => 
-          day.date === today && 
-          day.jobId === activeSession.jobId && 
-          day.type === 'work'
-        );
-        
-        if (existingWorkDay) {
-          // Update existing work day
-          const updatedHours = (existingWorkDay.hours || 0) + hours;
-          await JobService.updateWorkDay(existingWorkDay.id, {
-            ...existingWorkDay,
-            hours: updatedHours,
-            notes: activeSession.notes || existingWorkDay.notes || '',
-            actualStartTime: existingWorkDay.actualStartTime || actualStartTime,
-            actualEndTime: actualEndTime
-          });
-        } else {
-          // Create new work day
-          const workDay = {
-            id: Date.now().toString(),
-            jobId: activeSession.jobId,
-            date: today,
-            hours: hours,
-            overtime: false,
-            type: 'work' as const,
-            notes: activeSession.notes || '',
-            actualStartTime: actualStartTime,
-            actualEndTime: actualEndTime
-          };
-          await JobService.addWorkDay(workDay);
-        }
-        
-        // Clear the active session
-        await JobService.clearActiveSession();
-        
-        // Disable AutoTimer if it was active
-        if (successModalData.wasAutoTimerActive && successModalData.jobId) {
-          console.log('🛑 Disabling AutoTimer after modal closed');
-          const job = jobs.find(j => j.id === successModalData.jobId);
-          if (job && job.autoTimer?.enabled) {
-            const updatedJob = {
-              ...job,
-              autoTimer: {
-                ...job.autoTimer,
-                enabled: false
-              }
-            };
-            await JobService.updateJob(job.id, updatedJob);
-            console.log('✅ AutoTimer disabled for job:', job.name);
-            
-            // Reload jobs
-            await loadJobs();
-            
-            // Stop the SimpleAutoTimer service
-            autoTimerService.stop();
-            console.log('🛑 SimpleAutoTimer service stopped');
-          }
-        }
-        
-        // Stop Live Activity
-        const liveActivityService = LiveActivityService.getInstance();
-        await liveActivityService.endLiveActivity(elapsedTime);
-        
-        // Reset states
-        setElapsedTime(0);
-        setIsTimerPaused(false);
-        setActiveTimerJobId(null);
-        
-        // Update AutoTimer status
-        const updatedStatus = await autoTimerService.getStatus();
-        setAutoTimerStatus(updatedStatus);
-        
-        // Check active timer again
-        await checkActiveTimer();
-      }
-      
-      setSuccessModalVisible(false);
-      
-      // Navigate to Reports screen
-      navigateTo('reports');
-    } catch (error) {
-      console.error('Error stopping timer on modal close:', error);
-      Alert.alert('Error', t('timer.stop_timer_error'));
     }
   };
 
@@ -2687,7 +2416,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
         autoTimer: {
           ...job.autoTimer,
           enabled: value,
-          geofenceRadius: job.autoTimer?.geofenceRadius || 50,
+          geofenceRadius: job.autoTimer?.geofenceRadius || 100,
           delayStart: job.autoTimer?.delayStart || 2,
           delayStop: job.autoTimer?.delayStop || 2,
           notifications: job.autoTimer?.notifications !== false,
@@ -2701,7 +2430,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
       const updatedJobs = await JobService.getJobs();
       if (autoTimerService.isServiceEnabled()) {
         console.log('🔄 Restarting AutoTimer service with updated jobs after toggle');
-        autoTimerService.stop();
+        await autoTimerService.stop();
         await autoTimerService.start(updatedJobs);
       } else if (value) {
         console.log('🚀 Starting AutoTimer service after enabling AutoTimer');
@@ -2725,6 +2454,80 @@ export default function MapLocation({ location, onNavigate }: Props) {
         t('maps.error'),
         t('maps.auto_timer_error')
       );
+    }
+  };
+
+  const handleAutoTimerPause = async () => {
+    try {
+      console.log('⏸️ Pausing AutoTimer from widget');
+      const success = await autoTimerService.pauseActiveTimer();
+      if (success) {
+        triggerHaptic('light');
+        // The state will be updated in the next useEffect cycle
+      } else {
+        Alert.alert(
+          t('maps.error'),
+          t('maps.error')
+        );
+      }
+    } catch (error) {
+      console.error('Error pausing AutoTimer:', error);
+      Alert.alert(
+        t('maps.error'),
+        t('maps.error')
+      );
+    }
+  };
+
+  const handleAutoTimerResume = async () => {
+    try {
+      console.log('▶️ Resuming AutoTimer from widget');
+      const success = await autoTimerService.resumeActiveTimer();
+      if (success) {
+        triggerHaptic('light');
+        // The state will be updated in the next useEffect cycle
+      } else {
+        Alert.alert(
+          t('maps.error'),
+          t('maps.error')
+        );
+      }
+    } catch (error) {
+      console.error('Error resuming AutoTimer:', error);
+      Alert.alert(
+        t('maps.error'),
+        t('maps.error')
+      );
+    }
+  };
+
+  const handleAutoTimerWidgetStop = async () => {
+    try {
+      // Find the active job for the AutoTimer
+      if (!autoTimerStatus?.jobId) {
+        console.log('❌ No active AutoTimer job found');
+        return;
+      }
+      
+      const activeJob = jobs.find(job => job.id === autoTimerStatus.jobId);
+      if (!activeJob) {
+        console.log('❌ Active job not found in jobs array');
+        return;
+      }
+      
+      console.log('📱 Opening JobFormModal for AutoTimer stop:', activeJob.name);
+      
+      // Open JobFormModal with the active job, focusing on 'auto' tab
+      setEditingJob(activeJob);
+      setSelectedEditType('location'); // This will set initialTab to 'auto' via getEditInfo
+      setShowJobForm(true);
+      
+      // Close any other modals
+      setSelectedJob(null);
+      setShowJobCardsModal(false);
+      
+    } catch (error) {
+      console.error('Error opening AutoTimer stop modal:', error);
     }
   };
 
@@ -2909,7 +2712,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     onPress={() => handleEditCategory('location')}
                     activeOpacity={0.9}
                   >
-                    <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
+                    <View style={{ 
+                      flexDirection: isTablet ? 'row' : 'column', 
+                      alignItems: 'center', 
+                      justifyContent: isTablet && autoTimerStatus?.state === 'active' ? 'center' : (isTablet ? 'space-between' : 'center'), 
+                      flex: 1 
+                    }}>
+                            {autoTimerStatus?.state !== 'active' && (
                       <Animated.View style={[animatedClockStyle, {
                         backgroundColor: isDark ? 'rgba(52, 211, 153, 0.25)' : 'rgba(16, 185, 129, 0.2)',
                         borderRadius: isTablet ? 20 : 12,
@@ -2919,16 +2728,19 @@ export default function MapLocation({ location, onNavigate }: Props) {
                       }]}>
                         <IconSymbol size={isTablet ? 36 : (isSmallScreen ? 18 : 22)} name="clock.fill" color={isDark ? '#6ee7b7' : '#059669'} />
                       </Animated.View>
+          )}
+
                       <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
-                        {/* Show "Auto Timer" text only when timer is NOT active */}
-                        {autoTimerStatus?.state !== 'active' && (
+                        {/* Show text only when AutoTimer is NOT active */}
+      
                           <Text style={{
                             fontSize: isTablet ? 16 : (isSmallScreen ? 11 : 13),
-                            fontWeight: '600',
+                            fontWeight: '700',
                             color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
-                            marginBottom: isTablet ? 6 : (isSmallScreen ? 2 : 4),
-                          }}>{t('maps.auto_timer')}</Text>
-                        )}
+                          }}>
+                            {t('maps.auto_timer')}
+                          </Text>
+                
                         <Text style={{
                           fontSize: isTablet ? 28 : (isSmallScreen ? 16 : 20),
                           fontWeight: '600',
@@ -2938,78 +2750,48 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         }}>
                           {formatTime(elapsedTime)}
                         </Text>
-            
-                        {/* Show status text only when timer is NOT active */}
-                        {autoTimerStatus?.state !== 'active' && (
-                          <Text style={{
-                            fontSize: isTablet ? 14 : (isSmallScreen ? 9 : 11),
-                            color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
-                            marginTop: isTablet ? 4 : (isSmallScreen ? 2 : 4),
-                          }}>
-                            {isSmallScreen ? 'Inactivo' : t('maps.auto_timer_inactive')}
-                          </Text>
-                        )}
+      
                         
-                        {/* Control buttons when timer is active */}
+                        {/* Pause/Play and Stop buttons - show below when AutoTimer is active */}
                         {autoTimerStatus?.state === 'active' && (
                           <View style={{
                             flexDirection: 'row',
-                            gap: 8,
-                            marginTop: isTablet ? 12 : 8,
+                            gap: isSmallScreen ? 6 : 8,
+                            alignSelf: 'center',
+                            justifyContent: 'center',
+                            marginTop: isTablet ? 12 : (isSmallScreen ? 8 : 10),
                           }}>
-                            {/* Pause/Resume button */}
                             <TouchableOpacity
+                              onPress={isAutoTimerPaused ? handleAutoTimerResume : handleAutoTimerPause}
                               style={{
-                                backgroundColor: isTimerPaused 
-                                  ? (isDark ? 'rgba(52, 199, 89, 0.25)' : 'rgba(34, 197, 94, 0.2)')
-                                  : (isDark ? 'rgba(255, 149, 0, 0.25)' : 'rgba(251, 146, 60, 0.2)'),
+                                backgroundColor: isDark ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.15)',
                                 borderRadius: 12,
-                                padding: isTablet ? 12 : 10,
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                padding: isSmallScreen ? 6 : 8,
                                 borderWidth: 1,
-                                borderColor: isTimerPaused
-                                  ? (isDark ? 'rgba(52, 199, 89, 0.4)' : 'rgba(34, 197, 94, 0.3)')
-                                  : (isDark ? 'rgba(255, 149, 0, 0.4)' : 'rgba(251, 146, 60, 0.3)'),
-                                width: isTablet ? 32 : 30,
-                                height: isTablet ? 32 : 30,
+                                borderColor: isDark ? 'rgba(52, 211, 153, 0.3)' : 'rgba(16, 185, 129, 0.3)',
                               }}
-                              onPress={() => {
-                                triggerHaptic('medium');
-                                handlePauseResumeTimer();
-                              }}
-                              activeOpacity={0.8}
+                              activeOpacity={0.7}
                             >
                               <IconSymbol 
-                                size={isTablet ? 20 : 14} 
-                                name={isTimerPaused ? "play.fill" : "pause.fill"} 
-                                color={isTimerPaused 
-                                  ? (isDark ? '#86efac' : '#16a34a')
-                                  : (isDark ? '#fbbf24' : '#f97316')} 
+                                size={isSmallScreen ? 16 : 18} 
+                                name={isAutoTimerPaused ? "play.fill" : "pause.fill"} 
+                                color={isDark ? '#6ee7b7' : '#059669'} 
                               />
                             </TouchableOpacity>
                             
-                            {/* Stop button */}
                             <TouchableOpacity
+                              onPress={handleAutoTimerWidgetStop}
                               style={{
-                                backgroundColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(220, 38, 38, 0.2)',
+                                backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.15)',
                                 borderRadius: 12,
-                                padding: isTablet ? 12 : 10,
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                padding: isSmallScreen ? 6 : 8,
                                 borderWidth: 1,
-                                borderColor: isDark ? 'rgba(239, 68, 68, 0.4)' : 'rgba(220, 38, 38, 0.3)',
-                                    width: isTablet ? 32 : 30,
-                                height: isTablet ? 32 : 30,
+                                borderColor: isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.3)',
                               }}
-                              onPress={() => {
-                                triggerHaptic('medium');
-                                handleStopTimer();
-                              }}
-                              activeOpacity={0.8}
+                              activeOpacity={0.7}
                             >
                               <IconSymbol 
-                                size={isTablet ? 20 : 14} 
+                                size={isSmallScreen ? 16 : 18} 
                                 name="stop.fill" 
                                 color={isDark ? '#fca5a5' : '#dc2626'} 
                               />
@@ -3058,7 +2840,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         borderRadius: isTablet ? 10 : 8,
                         padding: isTablet ? 6 : 4,
                       }}>
-    
+                        <IconSymbol size={isTablet ? 24 : 18} name="calendar" color={isDark ? '#60a5fa' : '#3b82f6'} />
                       </View>
                     </View>
                     
@@ -3074,25 +2856,16 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           const today = new Date();
                           const todayIndex = miniCalendarData.findIndex(d => d.isToday);
                           const daysToShow = isTablet ? 7 : 3;
-                          let nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + daysToShow) : [];
+                          const nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + daysToShow) : [];
                           
-                          // Si no hay suficientes días (fin de semana), crear días adicionales
-                          const missingDays = daysToShow - nextDays.length;
-                          if (missingDays > 0) {
-                            // Obtener la última fecha disponible o usar hoy
-                            let lastDate = today;
-                            if (nextDays.length > 0) {
-                              const lastDayData = nextDays[nextDays.length - 1];
-                              lastDate = new Date(today.getFullYear(), today.getMonth(), parseInt(lastDayData.day));
-                            }
-                            
-                            // Agregar los días que faltan
-                            for (let i = 1; i <= missingDays; i++) {
-                              const newDate = new Date(lastDate);
-                              newDate.setDate(lastDate.getDate() + i);
+                          // Si no hay días, crear días por defecto
+                          if (nextDays.length === 0) {
+                            for (let i = 0; i < daysToShow; i++) {
+                              const date = new Date();
+                              date.setDate(date.getDate() + i);
                               nextDays.push({
-                                day: newDate.getDate().toString(),
-                                isToday: false,
+                                day: date.getDate().toString(),
+                                isToday: i === 0,
                                 workDay: null
                               });
                             }
@@ -3199,25 +2972,15 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           const today = new Date();
                           const todayIndex = miniCalendarData.findIndex(d => d.isToday);
                           const daysToShow = isTablet ? 7 : 3;
-                          let nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + daysToShow) : [];
+                          const nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + daysToShow) : [];
                           
-                          // Si no hay suficientes días (fin de semana), crear días adicionales
-                          const missingDays = daysToShow - nextDays.length;
-                          if (missingDays > 0) {
-                            // Obtener la última fecha disponible o usar hoy
-                            let lastDate = today;
-                            if (nextDays.length > 0) {
-                              const lastDayData = nextDays[nextDays.length - 1];
-                              lastDate = new Date(today.getFullYear(), today.getMonth(), parseInt(lastDayData.day));
-                            }
-                            
-                            // Agregar los días que faltan
-                            for (let i = 1; i <= missingDays; i++) {
-                              const newDate = new Date(lastDate);
-                              newDate.setDate(lastDate.getDate() + i);
+                          if (nextDays.length === 0) {
+                            for (let i = 0; i < daysToShow; i++) {
+                              const date = new Date();
+                              date.setDate(date.getDate() + i);
                               nextDays.push({
-                                day: newDate.getDate().toString(),
-                                isToday: false,
+                                day: date.getDate().toString(),
+                                isToday: i === 0,
                                 workDay: null
                               });
                             }
@@ -3294,11 +3057,11 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             return (
                               <>
                                 <Text style={{
-                                  fontSize: isTablet ? 22 : (isSmallScreen ? 16 : 18),
+                                  fontSize: isTablet ? 18 : (isSmallScreen ? 14 : 16),
                                   fontWeight: '600',
                                   color: isDark ? 'white' : '#581c87',
                                 }}>
-                                  {firstSchedule.startTime} - {firstSchedule.endTime}
+                                  {formatTimeCompact(firstSchedule.startTime)} - {formatTimeCompact(firstSchedule.endTime)}
                                 </Text>
                                 <Text style={{
                                   fontSize: 11,
@@ -3317,11 +3080,11 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           return (
                             <>
                               <Text style={{
-                                fontSize: isTablet ? 22 : (isSmallScreen ? 16 : 18),
+                                fontSize: isTablet ? 18 : (isSmallScreen ? 14 : 16),
                                 fontWeight: '600',
                                 color: isDark ? 'white' : '#581c87',
                               }}>
-                                {job.schedule.startTime} - {job.schedule.endTime}
+                                {formatTimeCompact(job.schedule.startTime)} - {formatTimeCompact(job.schedule.endTime)}
                               </Text>
                               <Text style={{
                                 fontSize: 11,
@@ -3343,7 +3106,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                 fontWeight: '600',
                                 color: isDark ? 'white' : '#581c87',
                               }}>
-                                09:00 - 17:00
+                                {formatTimeCompact('09:00')} - {formatTimeCompact('17:00')}
                               </Text>
                               <Text style={{
                                 fontSize: 11,
@@ -3441,7 +3204,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             <Text style={{
                               fontSize: 14,
                               fontWeight: '500',
-                              color: isDark ?  '#eeb526ff' : '#d9941dff',
+                              color: 'white',
                               marginTop: 12,
                               opacity: 0.9,
                             }}>{t('maps.configure_rates')}</Text>
@@ -3733,6 +3496,18 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         </Text>
                       </View>
                     </View>
+                    <View style={{
+                      backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(37, 99, 235, 0.15)',
+                      borderRadius: 20,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                    }}>
+                      <Text style={{
+                        fontSize: isTablet ? 12 : 10,
+                        fontWeight: '600',
+                        color: isDark ? '#93c5fd' : '#3b82f6',
+                      }}>NUEVO</Text>
+                    </View>
                   </View>
                 </TouchableOpacity>
                 )}
@@ -4016,33 +3791,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
         visible={showJobForm}
         editingJob={editingJob}
         initialTab={editingJob && selectedEditType ? getEditInfo(selectedEditType).tab : 'basic'}
-        onClose={async () => {
+        onClose={() => {
           console.log('🟡 MapLocation: JobFormModal closing');
           setShowJobForm(false);
           setEditingJob(null);
-          
-          // Refresh AutoTimer status when modal closes
-          // This ensures timer widget updates immediately if AutoTimer was activated
-          console.log('🔄 MapLocation: Refreshing AutoTimer status after JobFormModal close');
-          
-          // Wait a bit to ensure JobFormModal has finished initializing AutoTimer
-          setTimeout(async () => {
-            try {
-              const updatedStatus = await autoTimerService.getStatus();
-              setAutoTimerStatus(updatedStatus);
-              console.log('✅ MapLocation: AutoTimer status refreshed (delayed):', updatedStatus.state);
-              
-              // If timer is active, trigger elapsed time update immediately
-              if (updatedStatus.state === 'active' && updatedStatus.jobId) {
-                const elapsed = await autoTimerService.getElapsedTime();
-                setElapsedTime(elapsed);
-                console.log('⏱️ MapLocation: Elapsed time updated:', elapsed, 'seconds');
-              }
-            } catch (error) {
-              console.error('❌ MapLocation: Error refreshing AutoTimer status:', error);
-            }
-          }, 1200); // Wait slightly longer than JobFormModal's 1000ms setTimeout
-          
           // If the modal was open before editing, reopen it (but not if coming from settings button)
           if (wasJobCardsModalOpen && shouldReopenJobCardsModal) {
             setTimeout(() => {
@@ -4069,20 +3821,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
           setSelectedJobForStats(null);
         }}
         job={selectedJobForStats}
-      />
-      
-      {/* Timer Success Modal */}
-      <TimerSuccessModal
-        visible={successModalVisible}
-        hours={successModalData.hours}
-        totalHours={successModalData.totalHours}
-        seconds={successModalData.seconds}
-        totalSeconds={successModalData.totalSeconds}
-        isUpdate={successModalData.isUpdate}
-        startTime={successModalData.startTime}
-        endTime={successModalData.endTime}
-        onConfirm={handleSuccessModalConfirm}
-        onClose={handleSuccessModalClose}
       />
     </View>
   );

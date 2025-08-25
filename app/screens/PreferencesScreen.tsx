@@ -468,15 +468,17 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
   const [permissionStatus, setPermissionStatus] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [useTimeFormat, setUseTimeFormat] = useState(true); // Time format preference
+  const [useTimeFormat, setUseTimeFormat] = useState(true); // Time format preference (HH:MM vs 0.00h)
+  const [use12HourFormat, setUse12HourFormat] = useState(true); // 12-hour format preference (AM/PM) - default to AM/PM
 
   const handleThemeChange = (mode: 'auto' | 'light' | 'dark') => {
     setThemeMode(mode);
   };
 
-  // Load time format preference
+  // Load time format preferences
   useEffect(() => {
     loadTimeFormatPreference();
+    load12HourFormatPreference();
   }, []);
 
   const loadTimeFormatPreference = async () => {
@@ -490,6 +492,17 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
     }
   };
 
+  const load12HourFormatPreference = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('@12hour_format_preference');
+      if (saved !== null) {
+        setUse12HourFormat(saved === 'true');
+      }
+    } catch (error) {
+      console.error('Error loading 12-hour format preference:', error);
+    }
+  };
+
   const toggleTimeFormat = async () => {
     const newValue = !useTimeFormat;
     setUseTimeFormat(newValue);
@@ -497,6 +510,16 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
       await AsyncStorage.setItem('@time_format_preference', newValue.toString());
     } catch (error) {
       console.error('Error saving time format preference:', error);
+    }
+  };
+
+  const toggle12HourFormat = async () => {
+    const newValue = !use12HourFormat;
+    setUse12HourFormat(newValue);
+    try {
+      await AsyncStorage.setItem('@12hour_format_preference', newValue.toString());
+    } catch (error) {
+      console.error('Error saving 12-hour format preference:', error);
     }
   };
 
@@ -826,54 +849,114 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
         )}
 
         {/* Time Format Section */}
-        <TouchableOpacity 
-          style={[{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingHorizontal: Theme.spacing.lg,
-            paddingVertical: Theme.spacing.md,
-            marginVertical: Theme.spacing.sm,
-            backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-            borderRadius: Theme.borderRadius.md,
-          }]}
-          onPress={toggleTimeFormat}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <View style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: 'rgba(52, 199, 89, 0.15)',
-              justifyContent: 'center',
+        <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>{t('preferences.time_format.title')}</Text>
+          <Text style={styles.sectionDescription}>
+            {t('preferences.time_format.description')}
+          </Text>
+          
+          {/* Time Format Toggle */}
+          <TouchableOpacity 
+            style={[{
+              flexDirection: 'row',
               alignItems: 'center',
-            }}>
-              <IconSymbol size={18} name="clock.fill" color="#34C759" />
-            </View>
-            <View>
-              <Text style={{
-                fontSize: 16,
-                fontWeight: '600',
-                color: colors.text,
+              justifyContent: 'space-between',
+              paddingHorizontal: Theme.spacing.lg,
+              paddingVertical: Theme.spacing.md,
+              marginVertical: Theme.spacing.sm,
+              backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+              borderRadius: Theme.borderRadius.md,
+            }]}
+            onPress={toggleTimeFormat}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: 'rgba(52, 199, 89, 0.15)',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}>
-                Time Format
-              </Text>
-              <Text style={{
-                fontSize: 12,
-                color: colors.textSecondary,
-                marginTop: 2,
-              }}>
-                {useTimeFormat ? 'HH:MM' : '0.00h'}
-              </Text>
+                <IconSymbol size={20} name="clock.fill" color="#34C759" />
+              </View>
+              <View>
+                <Text style={{
+                  fontSize: 16,
+                  fontWeight: '600',
+                  color: colors.text,
+                }}>
+                  {t('preferences.time_format.time_format')}
+                </Text>
+                <Text style={{
+                  fontSize: 13,
+                  color: colors.textSecondary,
+                  marginTop: 2,
+                }}>
+                  {useTimeFormat ? "HH:MM" : "0.00h"}
+                </Text>
+              </View>
             </View>
-          </View>
-          <Switch
-            value={useTimeFormat}
-            onValueChange={toggleTimeFormat}
-            trackColor={{ false: colors.separator, true: colors.primary }}
-            thumbColor={useTimeFormat ? '#FFFFFF' : colors.textSecondary}
-          />
-        </TouchableOpacity>
+            <Switch
+              value={useTimeFormat}
+              onValueChange={toggleTimeFormat}
+              trackColor={{ false: colors.separator, true: colors.primary }}
+              thumbColor={useTimeFormat ? '#FFFFFF' : colors.textSecondary}
+            />
+          </TouchableOpacity>
+
+          {/* Hour Format Toggle - Only show when Time Format is enabled */}
+          {useTimeFormat && (
+            <TouchableOpacity 
+              style={[{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingHorizontal: Theme.spacing.lg,
+                paddingVertical: Theme.spacing.md,
+                marginVertical: Theme.spacing.sm,
+                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                borderRadius: Theme.borderRadius.md,
+              }]}
+              onPress={toggle12HourFormat}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: 'rgba(255, 149, 0, 0.15)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <IconSymbol size={20} name="clock.arrow.circlepath" color="#FF9500" />
+                </View>
+                <View>
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: '600',
+                    color: colors.text,
+                  }}>
+                    {t('preferences.time_format.hour_format')}
+                  </Text>
+                  <Text style={{
+                    fontSize: 13,
+                    color: colors.textSecondary,
+                    marginTop: 2,
+                  }}>
+                    {use12HourFormat ? t('preferences.time_format.12_hour') : t('preferences.time_format.24_hour')}
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={use12HourFormat}
+                onValueChange={toggle12HourFormat}
+                trackColor={{ false: colors.separator, true: colors.primary }}
+                thumbColor={use12HourFormat ? '#FFFFFF' : colors.textSecondary}
+              />
+            </TouchableOpacity>
+          )}
+        </BlurView>
 
         {/* Notifications Section */}
         <View ref={notificationsRef}>
@@ -922,8 +1005,10 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
     <IconSymbol size={20} name="bell.fill" color={colors.primary} />
   </View>
   <View style={styles.settingContent}>
-    <Text style={styles.settingTitle}>{t('preferences.notifications.general_notifications')}</Text>
-
+    <Text style={styles.settingTitle}>{t('preferences.notifications.general')}</Text>
+    <Text style={styles.settingDescription}>
+      {t('preferences.notifications.general_desc')}
+    </Text>
   </View>
   <Switch
     value={notificationSettings.enabled}
@@ -987,8 +1072,10 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
     <IconSymbol size={20} name="clock.fill" color={colors.warning} />
   </View>
   <View style={styles.settingContent}>
-    <Text style={styles.settingTitle}>{t('preferences.notifications.work_schedule_reminders')}</Text>
- 
+    <Text style={styles.settingTitle}>{t('preferences.notifications.schedule')}</Text>
+    <Text style={styles.settingDescription}>
+      {t('preferences.notifications.schedule_desc')}
+    </Text>
   </View>
   <Switch
     value={notificationSettings.workReminders}

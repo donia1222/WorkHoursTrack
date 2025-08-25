@@ -21,6 +21,7 @@ import { useBackNavigation, useNavigation } from '../context/NavigationContext';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
+import { useTimeFormat } from '../hooks/useTimeFormat';
 import { CalendarSyncService } from '../services/CalendarSyncService';
 import { useNotifications } from '../contexts/NotificationContext';
 import NotificationService from '../services/NotificationService';
@@ -31,6 +32,7 @@ import WidgetSyncService from '../services/WidgetSyncService';
 const CustomDay = ({ date, state, marking, onPress }: any) => {
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const { formatTimeWithPreferences } = useTimeFormat();
   
   const getDayIcon = (workDay: WorkDay, job?: Job) => {
     if (!workDay) return null;
@@ -42,12 +44,12 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
     if (workDay.type === 'work' && job) {
       iconName = 'briefcase.fill'; // Maleta para trabajo
       iconColor = '#30D158'; // Verde
-      timeText = workDay.startTime || '';
+      timeText = formatTimeWithPreferences(workDay.startTime || '');
       if (workDay.endTime) {
-        timeText = `${workDay.startTime}-${workDay.endTime}`;
+        timeText = `${formatTimeWithPreferences(workDay.startTime)}-${formatTimeWithPreferences(workDay.endTime)}`;
         // Add second shift info if split shift
         if (workDay.secondStartTime && workDay.secondEndTime) {
-          timeText += `\n${workDay.secondStartTime}-${workDay.secondEndTime}`;
+          timeText += `\n${formatTimeWithPreferences(workDay.secondStartTime)}-${formatTimeWithPreferences(workDay.secondEndTime)}`;
         }
       }
     } else if (workDay.type === 'free') {
@@ -525,6 +527,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
 export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   const { colors, isDark } = useTheme();
   const { t, language } = useLanguage();
+  const { formatTimeWithPreferences } = useTimeFormat();
   const { settings: notificationSettings } = useNotifications();
   const [workDays, setWorkDays] = useState<WorkDay[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);

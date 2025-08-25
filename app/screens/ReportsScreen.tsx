@@ -25,6 +25,7 @@ import { useBackNavigation, useNavigation } from '../context/NavigationContext';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
+import { useTimeFormat as useTimeFormatHook } from '../hooks/useTimeFormat';
 import { Calendar } from 'react-native-calendars';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -161,6 +162,17 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const { colors, isDark } = useTheme();
   const { t, language } = useLanguage();
   const { triggerHaptic } = useHapticFeedback();
+  const { formatTimeWithPreferences } = useTimeFormatHook();
+  
+  // Function to format time compactly for reports
+  const formatTimeCompact = (time: string): string => {
+    if (!time) return time;
+    const formatted = formatTimeWithPreferences(time);
+    // Make AM/PM more compact: "9:00 AM" -> "9:00a", "2:30 PM" -> "2:30p"
+    return formatted
+      .replace(' AM', 'a')
+      .replace(' PM', 'p');
+  };
   const styles = getStyles(colors, isDark);
   
   // Animation values
@@ -188,10 +200,11 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       }),
     ]).start();
     
-    // Reload preference when screen comes back into focus using AppState
+    // Reload preference AND data when screen comes back into focus using AppState
     const appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
         loadTimeFormatPreference();
+        loadData(); // Add this line to reload data when app becomes active
       }
     });
     
@@ -217,6 +230,25 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     }
   }, [selectedJob]);
 
+  // Add navigation focus listener to reload data when coming back to this screen
+  useEffect(() => {
+    // Reload data when component mounts or becomes visible
+    const reloadDataOnFocus = () => {
+      console.log('📊 ReportScreen: Reloading data on focus');
+      loadData();
+    };
+
+    // Set up a global handler for when user navigates to reports
+    globalThis.reportsScreenFocusHandler = reloadDataOnFocus;
+
+    // Also reload immediately when this effect runs
+    reloadDataOnFocus();
+
+    return () => {
+      delete globalThis.reportsScreenFocusHandler;
+    };
+  }, []);
+
   // Listen for header export button press
   useEffect(() => {
     // Register the export handler globally
@@ -236,8 +268,28 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         JobService.getJobs(),
         JobService.getWorkDays(),
       ]);
-      setJobs(loadedJobs);
-      setWorkDays(loadedWorkDays);
+      console.log('📊 ReportScreen loadData - Total workDays:', loadedWorkDays.length);
+      console.log('📊 Recent workDays:', loadedWorkDays.slice(0, 5).map(d => ({ date: d.date, hours: d.hours, jobId: d.jobId, createdAt: d.createdAt })));
+      
+      // TEMPORARY: Clean future dates that shouldn't exist
+      const today = new Date().toISOString().split('T')[0];
+      const futureDays = loadedWorkDays.filter(day => day.date > today);
+      if (futureDays.length > 0) {
+        console.log('🚨 Found', futureDays.length, 'future dates, cleaning...');
+        futureDays.forEach(day => console.log(`  - Future date: ${day.date} (${day.hours}h)`));
+        
+        const cleanedWorkDays = loadedWorkDays.filter(day => day.date <= today);
+        await JobService.saveWorkDays(cleanedWorkDays);
+        console.log('✅ Future dates cleaned! Reloading data...');
+        
+        // Reload after cleaning
+        const reloadedWorkDays = await JobService.getWorkDays();
+        setJobs(loadedJobs);
+        setWorkDays(reloadedWorkDays);
+      } else {
+        setJobs(loadedJobs);
+        setWorkDays(loadedWorkDays);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     }
@@ -527,62 +579,43 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   };
 
   const getRecentWorkDays = () => {
+    console.log('🔍 getRecentWorkDays called with:', { 
+      totalWorkDays: workDays.length, 
+      selectedJobId,
+      todayDate: new Date().toISOString().split('T')[0]
+    });
+    
     // Filter only work days first (like CalendarScreen)
     let filteredWorkDays = workDays.filter(day => day.type === 'work');
+    console.log('🔍 After work type filter:', filteredWorkDays.length);
     
     // Filter by selected job if not "all"
     if (selectedJobId !== 'all') {
       filteredWorkDays = filteredWorkDays.filter(day => day.jobId === selectedJobId);
+      console.log('🔍 After job filter:', filteredWorkDays.length);
     }
     
-    // Group by date and job to consolidate multiple sessions
-    const consolidatedMap = new Map<string, WorkDay>();
-    
-    filteredWorkDays.forEach(day => {
-      const dateKey = day.date.split('T')[0]; // Get just the date part
-      const key = `${dateKey}_${day.jobId || 'no-job'}`;
-      
-      const existing = consolidatedMap.get(key);
-      if (existing) {
-        // Merge with existing day
-        const updatedDay = { ...existing };
-        
-        // Add hours (with precision)
-        const oldHours = updatedDay.hours;
-        const newHours = day.hours;
-        updatedDay.hours = oldHours + newHours;
-        
-        // Combine notes
-        if (day.notes && updatedDay.notes) {
-          updatedDay.notes = `${updatedDay.notes}\n---\n${day.notes}`;
-        } else if (day.notes) {
-          updatedDay.notes = day.notes;
-        }
-        
-        // Keep earliest start time
-        if (day.actualStartTime && (!updatedDay.actualStartTime || day.actualStartTime < updatedDay.actualStartTime)) {
-          updatedDay.actualStartTime = day.actualStartTime;
-        }
-        
-        // Keep latest end time
-        if (day.actualEndTime && (!updatedDay.actualEndTime || day.actualEndTime > updatedDay.actualEndTime)) {
-          updatedDay.actualEndTime = day.actualEndTime;
-        }
-        
-        // Update overtime status
-        updatedDay.overtime = updatedDay.hours > 8;
-        
-        consolidatedMap.set(key, updatedDay);
-      } else {
-        // First entry for this date/job
-        consolidatedMap.set(key, { ...day });
-      }
-    });
-    
-    // Convert map back to array and sort
-    return Array.from(consolidatedMap.values())
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    // DON'T consolidate sessions - show each individual session
+    // This way every timer session appears separately
+    const result = filteredWorkDays
+      .sort((a, b) => {
+        // Sort by created date descending (most recent first)
+        const aTime = new Date(a.createdAt || a.date).getTime();
+        const bTime = new Date(b.createdAt || b.date).getTime();
+        return bTime - aTime;
+      })
       .slice(0, visibleRecentDays);
+    
+    console.log('🔍 getRecentWorkDays final result (individual sessions):', result.map(d => ({ 
+      date: d.date, 
+      hours: d.hours, 
+      id: d.id,
+      createdAt: d.createdAt,
+      actualStartTime: d.actualStartTime,
+      actualEndTime: d.actualEndTime
+    })));
+    
+    return result;
   };
 
   const getAllRecentWorkDays = () => {
@@ -1179,6 +1212,14 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
               month: 'short', 
               day: 'numeric'
             });
+            // Format times for PDF
+            const actualStart = day.actualStartTime ? formatTimeCompact(day.actualStartTime.substring(0, 5)) : '';
+            const actualEnd = day.actualEndTime ? formatTimeCompact(day.actualEndTime.substring(0, 5)) : '';
+            const scheduledStart = day.startTime ? formatTimeCompact(day.startTime) : '';
+            const scheduledEnd = day.endTime ? formatTimeCompact(day.endTime) : '';
+            const secondStart = day.secondStartTime ? formatTimeCompact(day.secondStartTime) : '';
+            const secondEnd = day.secondEndTime ? formatTimeCompact(day.secondEndTime) : '';
+            
             return `
               <div class="activity-item">
                 <div>
@@ -1187,10 +1228,10 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                 </div>
                 <div>
                   <span class="activity-hours">${day.hours}h</span>
-                  ${(day.actualStartTime && day.actualEndTime) ? 
-                    `<br><span class="activity-schedule">${day.actualStartTime.substring(0, 5)}-${day.actualEndTime.substring(0, 5)}</span>` : 
-                    (day.startTime && day.endTime) ? 
-                    `<br><span class="activity-schedule">${day.startTime}-${day.endTime}${day.secondStartTime && day.secondEndTime ? `, ${day.secondStartTime}-${day.secondEndTime}` : ''}</span>` : ''}
+                  ${(actualStart && actualEnd) ? 
+                    `<br><span class="activity-schedule">${actualStart}-${actualEnd}</span>` : 
+                    (scheduledStart && scheduledEnd) ? 
+                    `<br><span class="activity-schedule">${scheduledStart}-${scheduledEnd}${secondStart && secondEnd ? `, ${secondStart}-${secondEnd}` : ''}</span>` : ''}
                   ${day.overtime ? '<span class="activity-overtime">OT</span>' : ''}
                 </div>
               </div>
@@ -1673,13 +1714,13 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                       {/* Show actual times if available, otherwise scheduled times */}
                       {(day.actualStartTime && day.actualEndTime) ? (
                         <Text style={[styles.recentSchedule, { color: colors.primary }]}>
-                          {day.actualStartTime.substring(0, 5)}-{day.actualEndTime.substring(0, 5)}
+                          {formatTimeCompact(day.actualStartTime)}-{formatTimeCompact(day.actualEndTime)}
                         </Text>
                       ) : (day.startTime && day.endTime) ? (
                         <Text style={[styles.recentSchedule, { color: colors.textSecondary }]}>
-                          {day.startTime}-{day.endTime}
+                          {formatTimeCompact(day.startTime)}-{formatTimeCompact(day.endTime)}
                           {day.secondStartTime && day.secondEndTime && (
-                            `, ${day.secondStartTime}-${day.secondEndTime}`
+                            `, ${formatTimeCompact(day.secondStartTime)}-${formatTimeCompact(day.secondEndTime)}`
                           )}
                         </Text>
                       ) : null}

@@ -68,6 +68,16 @@
       "reminder_time": "Orario Promemoria",
       "reminder_time_desc": "Configura quando ricevere promemoria prima del tuo orario di lavoro"
     },
+    "time_format": {
+      "title": "Formato Orario",
+      "description": "Scegli come visualizzare gli orari di lavoro",
+      "time_format": "Formato Orario",
+      "time_format_desc": "HH:MM vs 0.00h",
+      "hour_format": "Formato Ora",
+      "hour_format_desc": "24 ore vs 12 ore (AM/PM)",
+      "12_hour": "12 ore (AM/PM)",
+      "24_hour": "24 ore"
+    },
     "auto_backup": {
       "title": "Backup Automatico",
       "description": "Genera backup automaticamente secondo la frequenza configurata",
@@ -872,53 +882,6 @@
     },
     "support_terms": {
       "title": "Supporto e termini"
-    }
-  },
-  "preferences": {
-    "title": "Preferenze",
-    "subtitle": "Personalizza la tua esperienza lavorativa",
-    "appearance": {
-      "title": "Aspetto",
-      "description": "Configura il tema visivo dell'applicazione",
-      "auto": "Auto",
-      "light": "Chiaro",
-      "dark": "Scuro"
-    },
-    "language": {
-      "title": "Lingua",
-      "description": "Seleziona la tua lingua preferita",
-      "default": "Lingua attuale",
-      "change_to": "Cambia a {{language}}"
-    },
-    "data_management": {
-      "title": "Gestione Dati",
-      "description": "⚠️ IMPORTANTE: Questa app memorizza tutti i dati solo sul tuo dispositivo. Non utilizziamo server o database cloud. Per questo motivo, devi creare backup regolarmente e importarli se reinstalli l'applicazione.",
-      "export_title": "Crea file .json",
-      "export_desc": "Crea backup di tutti i tuoi lavori, ore e impostazioni",
-      "import_title": "Importa file .json",
-      "import_desc": "Ripristina dati da un file di backup",
-      "auto_backup_title": "Backup Automatici",
-      "auto_backup_desc": "Configura backup automatici giornalieri, settimanali o mensili"
-    },
-    "notifications": {
-      "title": "Notifiche",
-      "description": "Configura promemoria e avvisi di lavoro",
-      "general": "Notifiche generali",
-      "general_notifications": "Notifiche Generali",
-      "auto_timer": "Timer Automatico",
-      "work_schedule_reminders": "Promemoria Orario di Lavoro",
-      "general_desc": "Attiva tutte le notifiche",
-      "schedule": "Promemoria orari",
-      "schedule_desc": "Notifiche di entrata e uscita",
-      "work_reminders": "Promemoria di lavoro",
-      "work_reminders_desc": "Ricevi promemoria prima dell'inizio del lavoro",
-      "reminder_time": "Orario promemoria",
-      "custom_minutes": "Minuti personalizzati",
-      "test_button": "Testa notifica",
-      "test_desc": "Invia una notifica di test",
-      "permissions_denied_title": "Autorizzazioni negate",
-      "permissions_denied_message": "Per ricevere notifiche, devi consentire le autorizzazioni nella configurazione del dispositivo",
-      "open_settings": "Apri configurazione"
     }
   },
   "side_menu": {

@@ -68,6 +68,16 @@
       "reminder_time": "Heure de Rappel",
       "reminder_time_desc": "Configurez quand recevoir des rappels avant votre horaire de travail"
     },
+    "time_format": {
+      "title": "Format d'Heure",
+      "description": "Choisissez comment afficher les heures de travail",
+      "time_format": "Format d'Heure",
+      "time_format_desc": "HH:MM vs 0.00h",
+      "hour_format": "Format Horaire",
+      "hour_format_desc": "24 heures vs 12 heures (AM/PM)",
+      "12_hour": "12 heures (AM/PM)",
+      "24_hour": "24 heures"
+    },
     "auto_backup": {
       "title": "Sauvegarde Automatique",
       "description": "Générer des sauvegardes automatiquement selon la fréquence configurée",
@@ -872,33 +882,6 @@
     },
     "support_terms": {
       "title": "Support et conditions"
-    }
-  },
-  "preferences": {
-    "title": "Préférences",
-    "subtitle": "Personnalisez votre expérience de travail",
-    "appearance": {
-      "title": "Apparence",
-      "description": "Configurez le thème visuel de l'application",
-      "auto": "Auto",
-      "light": "Clair",
-      "dark": "Sombre"
-    },
-    "language": {
-      "title": "Langue",
-      "description": "Sélectionnez votre langue préférée",
-      "default": "Langue actuelle",
-      "change_to": "Changer vers {{language}}"
-    },
-    "data_management": {
-      "title": "Gestion des Données",
-      "description": "⚠️ IMPORTANT : Cette application stocke toutes les données uniquement sur votre appareil. Nous n'utilisons pas de serveurs ou de bases de données cloud. Pour cette raison, vous devez créer des sauvegardes régulièrement et les importer si vous réinstallez l'application.",
-      "export_title": "Créer fichier .json",
-      "export_desc": "Créer une sauvegarde de tous vos emplois, heures et paramètres",
-      "import_title": "Importer fichier .json",
-      "import_desc": "Restaurer les données à partir d'un fichier de sauvegarde",
-      "auto_backup_title": "Sauvegardes Automatiques",
-      "auto_backup_desc": "Configurer des sauvegardes automatiques quotidiennes, hebdomadaires ou mensuelles"
     }
   },
   "side_menu": {

@@ -990,7 +990,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   const { colors, isDark } = useTheme();
   const { t, language } = useLanguage();
   const { triggerHaptic } = useHapticFeedback();
-  const { formatTime: formatTimeFromHours } = useTimeFormat();
+  const { formatTime: formatTimeFromHours, formatTimeWithPreferences } = useTimeFormat();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [showAllJobs, setShowAllJobs] = useState<boolean>(false);
@@ -1335,23 +1335,38 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       if (!job) return;
       
       const endTime = new Date();
-      const totalSeconds = elapsedTime;
-      const hours = totalSeconds / 3600;
+      // Calculate actual time directly from start/end times instead of relying on elapsedTime state
+      const actualSeconds = Math.floor((endTime.getTime() - activeSession.startTime.getTime()) / 1000);
+      const hours = actualSeconds / 3600;
+      
+      console.log('🔍 Timer stop debug:', {
+        startTime: activeSession.startTime,
+        endTime: endTime.toISOString(),
+        elapsedTimeState: elapsedTime,
+        actualCalculatedSeconds: actualSeconds,
+        actualCalculatedHours: hours,
+        timeDifference: actualSeconds - elapsedTime
+      });
       
       const workDay: WorkDay = {
         id: `timer-${Date.now()}`,
         jobId: activeSession.jobId,
         date: endTime.toISOString().split('T')[0],
         type: 'work',
-        hours,
+        hours, // This is calculated from actualSeconds, not elapsedTime
         overtime: false,
         notes: notes || '',
         createdAt: endTime.toISOString(),
         updatedAt: endTime.toISOString(),
+        // Add actual start and end times for display
+        actualStartTime: activeSession.startTime.toTimeString().substring(0, 5), // HH:MM format
+        actualEndTime: endTime.toTimeString().substring(0, 5), // HH:MM format
       };
       
       await JobService.addWorkDay(workDay);
+      console.log('✅ WorkDay saved:', workDay);
       await JobService.clearActiveSession();
+      await ManualTimerService.clearManualSession(); // Add this line to clear manual session
       
       setActiveSession(null);
       setIsRunning(false);
@@ -1514,9 +1529,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                   <View style={styles.recentSessionTimeInfo}>
                     <IconSymbol size={12} name="clock" color={colors.textSecondary} />
                     <Text style={styles.recentSessionTimeNew}>
-                      {createdDate.toLocaleTimeString(
-                        language === 'es' ? 'es-ES' : 'en-US', 
-                        { hour: '2-digit', minute: '2-digit' }
+                      {formatTimeWithPreferences(
+                        `${createdDate.getHours().toString().padStart(2, '0')}:${createdDate.getMinutes().toString().padStart(2, '0')}`
                       )}
                     </Text>
                   </View>

@@ -66,6 +66,16 @@
       "reminder_time": "リマインダー時間",
       "reminder_time_desc": "勤務スケジュール前のリマインダー受信時間を設定"
     },
+    "time_format": {
+      "title": "時刻表示形式",
+      "description": "勤務時間の表示方法を選択",
+      "time_format": "時刻表示形式",
+      "time_format_desc": "HH:MM vs 0.00h",
+      "hour_format": "時間形式",
+      "hour_format_desc": "24時間 vs 12時間 (AM/PM)",
+      "12_hour": "12時間 (AM/PM)",
+      "24_hour": "24時間"
+    },
     "auto_backup": {
       "title": "自動バックアップ",
       "description": "設定された頻度に従って自動的にバックアップを生成",
@@ -1037,46 +1047,6 @@
     },
     "support_terms": {
       "title": "サポート・利用規約"
-    }
-  },
-  "preferences": {
-    "title": "設定",
-    "subtitle": "作業エクスペリエンスをカスタマイズ",
-    "appearance": {
-      "title": "外観",
-      "description": "アプリの視覚テーマを設定",
-      "auto": "自動",
-      "light": "ライト",
-      "dark": "ダーク"
-    },
-    "language": {
-      "title": "言語",
-      "description": "希望の言語を選択",
-      "default": "現在の言語",
-      "change_to": "{{language}}に変更"
-    },
-    "notifications": {
-      "title": "通知",
-      "description": "仕事のリマインダーとアラートを設定",
-      "general_notifications": "一般通知",
-      "auto_timer": "オートタイマー",
-      "work_schedule_reminders": "勤務スケジュールリマインダー",
-      "work_reminders": "仕事のリマインダー",
-      "work_reminders_desc": "勤務開始前にリマインダーを受信",
-      "reminder_time": "リマインダー時間",
-      "custom_minutes": "カスタム分",
-      "test_button": "テスト通知",
-      "test_desc": "テスト通知を送信"
-    },
-    "data_management": {
-      "title": "データ管理",
-      "description": "⚠️ 重要: このアプリはすべてのデータをデバイスにのみ保存します。サーバーやクラウドデータベースは使用しません。このため、定期的にバックアップを作成し、アプリを再インストールする場合はそれらをインポートする必要があります。",
-      "export_title": ".jsonファイルを作成",
-      "export_desc": "すべての仕事、時間、設定のバックアップを作成",
-      "import_title": ".jsonファイルをインポート",
-      "import_desc": "バックアップファイルからデータを復元",
-      "auto_backup_title": "自動バックアップ",
-      "auto_backup_desc": "毎日、毎週、または毎月の自動バックアップを設定"
     }
   },
   "side_menu": {

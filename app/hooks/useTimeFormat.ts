@@ -1,22 +1,27 @@
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState } from 'react-native';
+import { TimeFormatPreferences, formatTimeWithPreferences, parseTimeInput, getTimePlaceholder, isValidTimeInput, autoFormatTimeInput } from '../utils/timeUtils';
 
 export const useTimeFormat = () => {
   const [useTimeFormat, setUseTimeFormat] = useState(true);
+  const [use12HourFormat, setUse12HourFormat] = useState(true); // Default to AM/PM format
 
   useEffect(() => {
     loadTimeFormatPreference();
+    load12HourFormatPreference();
     
     // Refresh preferences every 2 seconds to catch changes
     const interval = setInterval(() => {
       loadTimeFormatPreference();
+      load12HourFormatPreference();
     }, 2000);
     
     // Listen for app state changes to refresh preferences
     const handleAppStateChange = (nextAppState: string) => {
       if (nextAppState === 'active') {
         loadTimeFormatPreference();
+        load12HourFormatPreference();
       }
     };
 
@@ -42,6 +47,20 @@ export const useTimeFormat = () => {
     }
   };
 
+  const load12HourFormatPreference = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('@12hour_format_preference');
+      console.log('🕐 Loading 12-hour format preference:', saved);
+      if (saved !== null) {
+        const newValue = saved === 'true';
+        console.log('🕐 Setting use12HourFormat to:', newValue);
+        setUse12HourFormat(newValue);
+      }
+    } catch (error) {
+      console.error('Error loading 12-hour format preference:', error);
+    }
+  };
+
   const formatTime = (hours: number): string => {
     console.log('🕐 Formatting time:', hours, 'useTimeFormat:', useTimeFormat);
     if (useTimeFormat) {
@@ -61,9 +80,24 @@ export const useTimeFormat = () => {
     }
   };
 
+  // Get current preferences object
+  const preferences: TimeFormatPreferences = {
+    useTimeFormat,
+    use12HourFormat,
+  };
+
+
   return {
     useTimeFormat,
+    use12HourFormat,
+    preferences,
     formatTime,
     refreshPreference: loadTimeFormatPreference,
+    // Utility functions from timeUtils
+    formatTimeWithPreferences: (time24: string) => formatTimeWithPreferences(time24, preferences),
+    parseTimeInput: (timeInput: string) => parseTimeInput(timeInput, preferences),
+    getTimePlaceholder: () => getTimePlaceholder(preferences),
+    isValidTimeInput: (timeInput: string) => isValidTimeInput(timeInput, preferences),
+    autoFormatTimeInput: (input: string, previousInput: string) => autoFormatTimeInput(input, previousInput, preferences),
   };
 };

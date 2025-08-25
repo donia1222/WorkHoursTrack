@@ -68,6 +68,16 @@
       "reminder_time": "Reminder Time",
       "reminder_time_desc": "Configure when to receive reminders before your work schedule"
     },
+    "time_format": {
+      "title": "Time Format",
+      "description": "Choose how to display working hours",
+      "time_format": "Time Format",
+      "time_format_desc": "HH:MM vs 0.00h",
+      "hour_format": "Hour Format",
+      "hour_format_desc": "24-hour vs 12-hour (AM/PM)",
+      "12_hour": "12-hour (AM/PM)",
+      "24_hour": "24-hour"
+    },
     "auto_backup": {
       "title": "Automatic Backup",
       "description": "Generate backups automatically according to configured frequency",
@@ -191,6 +201,7 @@
     "auto_timer_enabled_title": "Auto-timer enabled",
     "auto_timer_enabled_message": "Auto-timer has been successfully enabled for this job.",
     "auto_timer_error": "Could not update auto-timer",
+    "error": "Failed to pause AutoTimer",
     "auto_timer_location_required_title": "Location permissions required",
     "auto_timer_location_required_message": "To use Auto Timer you need to grant location permissions to the app. This allows automatic detection when you arrive or leave work.",
     "auto_timer_open_settings": "Open Settings",
@@ -202,6 +213,7 @@
     "delete_success": "Job deleted successfully",
     "delete_error": "Could not delete job",
     "auto_timer_inactive": "Auto-timer inactive",
+    "auto_timer_paused": "Auto-timer paused",
     "per_hour": "per hour",
     "configure_schedule": "Configure schedule",
     "configure_rates": "Configure rates",
@@ -1039,46 +1051,6 @@
     },
     "support_terms": {
       "title": "Support & Terms"
-    }
-  },
-  "preferences": {
-    "title": "Settings",
-    "subtitle": "Customize your work experience",
-    "appearance": {
-      "title": "Appearance",
-      "description": "Configure the visual theme of the app",
-      "auto": "Auto",
-      "light": "Light",
-      "dark": "Dark"
-    },
-    "language": {
-      "title": "Language",
-      "description": "Select your preferred language",
-      "default": "Current language",
-      "change_to": "Change to {{language}}"
-    },
-    "notifications": {
-      "title": "Notifications",
-      "description": "Configure work reminders and alerts",
-      "general_notifications": "General Notifications",
-      "auto_timer": "Auto Timer",
-      "work_schedule_reminders": "Work Schedule Reminders",
-      "work_reminders": "Work reminders",
-      "work_reminders_desc": "Receive reminders before work starts",
-      "reminder_time": "Reminder time",
-      "custom_minutes": "Custom minutes",
-      "test_button": "Test notification",
-      "test_desc": "Send a test notification"
-    },
-    "data_management": {
-      "title": "Data Management",
-      "description": "⚠️ IMPORTANT: This app stores all data only on your device. We don't use servers or cloud databases. For this reason, you must create backups regularly and import them if you reinstall the application.",
-      "export_title": "Create .json file",
-      "export_desc": "Create backup of all your jobs, hours and settings",
-      "import_title": "Import .json file",
-      "import_desc": "Restore data from a backup file",
-      "auto_backup_title": "Automatic Backups",
-      "auto_backup_desc": "Configure automatic daily, weekly or monthly backups"
     }
   },
   "side_menu": {

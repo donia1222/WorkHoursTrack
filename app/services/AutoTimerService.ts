@@ -46,11 +46,15 @@ class AutoTimerService {
   private jobs: Job[] = [];
   private statusCallbacks: ((status: AutoTimerStatus) => void)[] = [];
   private alertCallbacks: ((showAlert: boolean) => void)[] = [];
+  private pauseCallbacks: ((isPaused: boolean) => void)[] = [];
   private isEnabled = false;
+  private isPaused = false; // Service-level pause state
   private statusUpdateInterval: NodeJS.Timeout | null = null;
   private pausedDelayedAction: DelayedAction | null = null; // To remember paused countdown
   private sentNotifications: Set<string> = new Set(); // Track sent notifications to avoid duplicates
   private autoTimerStartTime: Date | null = null; // Track when auto timer actually started
+  private pausedAtTime: Date | null = null; // When the timer was paused
+  private totalPausedTime: number = 0; // Total time paused in milliseconds
 
   constructor() {
     this.geofenceService = GeofenceService.getInstance();
@@ -414,6 +418,10 @@ class AutoTimerService {
       this.currentJobId = job.id; // Set the current job ID
       this.currentDelayedAction = null;
       this.autoTimerStartTime = startTime; // Save the actual start time
+      // Reset pause state when starting
+      this.isPaused = false;
+      this.pausedAtTime = null;
+      this.totalPausedTime = 0;
       
       // Clear any pending action from storage
       await AsyncStorage.removeItem(`@auto_timer_pending_${job.id}`);
@@ -460,7 +468,7 @@ class AutoTimerService {
         const elapsedMs = now.getTime() - sessionStart.getTime();
         const elapsedHours = Math.max(0.01, parseFloat(((elapsedMs / (1000 * 60 * 60))).toFixed(2)));
         
-        // Create work day record
+        // Create work day record with actual start and end times
         const today = new Date().toISOString().split('T')[0];
         const workDay = {
           date: today,
@@ -469,7 +477,19 @@ class AutoTimerService {
           notes: currentSession.notes || 'Auto-stopped',
           overtime: elapsedHours > 8,
           type: 'work' as const,
+          // Add actual start and end times for display in reports
+          actualStartTime: sessionStart.toTimeString().substring(0, 5), // HH:MM format
+          actualEndTime: now.toTimeString().substring(0, 5), // HH:MM format
         };
+        
+        console.log('🔍 AutoTimer WorkDay being saved:', {
+          sessionStartTime: sessionStart.toLocaleTimeString(),
+          endTime: now.toLocaleTimeString(),
+          actualStartTime: workDay.actualStartTime,
+          actualEndTime: workDay.actualEndTime,
+          hours: workDay.hours,
+          jobId: workDay.jobId
+        });
         
         await JobService.addWorkDay(workDay);
         await JobService.clearActiveSession();
@@ -529,6 +549,10 @@ class AutoTimerService {
       this.currentJobId = null;
       this.currentDelayedAction = null;
       this.autoTimerStartTime = null; // Clear the start time
+      // Reset pause state
+      this.isPaused = false;
+      this.pausedAtTime = null;
+      this.totalPausedTime = 0;
       await this.saveState(); // Save state after clearing
       this.notifyStatusChange();
     } catch (error) {
@@ -536,6 +560,10 @@ class AutoTimerService {
       this.currentState = 'inactive';
       this.currentJobId = null;
       this.autoTimerStartTime = null;
+      // Reset pause state
+      this.isPaused = false;
+      this.pausedAtTime = null;
+      this.totalPausedTime = 0;
       this.notifyStatusChange();
     }
   }
@@ -612,21 +640,16 @@ class AutoTimerService {
    */
   async getElapsedTime(): Promise<number> {
     if (this.currentState === 'active' && this.autoTimerStartTime) {
-      // Check if the session is paused
-      const activeSession = await JobService.getActiveSession();
-      if (activeSession) {
-        const isPaused = (activeSession as any).isPaused || false;
-        const pausedElapsedTime = (activeSession as any).pausedElapsedTime || 0;
-        
-        if (isPaused && pausedElapsedTime > 0) {
-          // Return the paused elapsed time
-          return pausedElapsedTime;
-        } else {
-          // Calculate current elapsed time
-          const sessionStart = new Date(activeSession.startTime);
-          const elapsedMs = Date.now() - sessionStart.getTime();
-          return Math.floor(elapsedMs / 1000);
+      if (this.isPaused) {
+        // When paused, return the elapsed time up to the pause point
+        if (this.pausedAtTime) {
+          const elapsedUntilPause = this.pausedAtTime.getTime() - this.autoTimerStartTime.getTime() - this.totalPausedTime;
+          return Math.floor(elapsedUntilPause / 1000);
         }
+      } else {
+        // When running, calculate total time minus paused time
+        const totalElapsed = Date.now() - this.autoTimerStartTime.getTime() - this.totalPausedTime;
+        return Math.floor(totalElapsed / 1000);
       }
     }
     return 0;
@@ -738,7 +761,7 @@ class AutoTimerService {
         const elapsedMs = now.getTime() - sessionStart.getTime();
         const elapsedHours = Math.max(0.01, parseFloat(((elapsedMs / (1000 * 60 * 60))).toFixed(2)));
         
-        // Create work day record
+        // Create work day record with actual start and end times
         const today = new Date().toISOString().split('T')[0];
         const workDay = {
           date: today,
@@ -747,6 +770,9 @@ class AutoTimerService {
           notes: activeSession.notes || 'Parado manualmente desde AutoTimer',
           overtime: elapsedHours > 8,
           type: 'work' as const,
+          // Add actual start and end times for display in reports
+          actualStartTime: sessionStart.toTimeString().substring(0, 5), // HH:MM format
+          actualEndTime: now.toTimeString().substring(0, 5), // HH:MM format
         };
         
         await JobService.addWorkDay(workDay);
@@ -806,6 +832,37 @@ class AutoTimerService {
     if (index > -1) {
       this.statusCallbacks.splice(index, 1);
     }
+  }
+
+  /**
+   * Add pause state change listener
+   */
+  addPauseListener(callback: (isPaused: boolean) => void): void {
+    this.pauseCallbacks.push(callback);
+  }
+
+  /**
+   * Remove pause state change listener
+   */
+  removePauseListener(callback: (isPaused: boolean) => void): void {
+    const index = this.pauseCallbacks.indexOf(callback);
+    if (index > -1) {
+      this.pauseCallbacks.splice(index, 1);
+    }
+  }
+
+  /**
+   * Notify all listeners about pause state change
+   */
+  private notifyPauseChange(isPaused: boolean): void {
+    console.log('🔔 AutoTimer: Notifying pause state change:', isPaused);
+    this.pauseCallbacks.forEach(callback => {
+      try {
+        callback(isPaused);
+      } catch (error) {
+        console.error('Error in pause callback:', error);
+      }
+    });
   }
 
   /**
@@ -878,6 +935,9 @@ class AutoTimerService {
         isEnabled: this.isEnabled,
         currentState: this.currentState,
         currentJobId: this.currentJobId,
+        isPaused: this.isPaused,
+        pausedAtTime: this.pausedAtTime?.toISOString() || null,
+        totalPausedTime: this.totalPausedTime,
         autoTimerStartTime: this.autoTimerStartTime ? this.autoTimerStartTime.toISOString() : null,
         delayedAction: this.currentDelayedAction ? {
           jobId: this.currentDelayedAction.jobId,
@@ -908,6 +968,11 @@ class AutoTimerService {
         this.isEnabled = state.isEnabled || false;
         this.currentState = state.currentState || 'inactive';
         this.currentJobId = state.currentJobId || null;
+        
+        // Restore pause state
+        this.isPaused = state.isPaused || false;
+        this.pausedAtTime = state.pausedAtTime ? new Date(state.pausedAtTime) : null;
+        this.totalPausedTime = state.totalPausedTime || 0;
         
         // Restore auto timer start time if active
         if (state.autoTimerStartTime && this.currentState === 'active') {
@@ -1269,6 +1334,78 @@ class AutoTimerService {
         }
       }
     }
+  }
+
+  /**
+   * Pause the active AutoTimer (pause the actual service timer)
+   */
+  async pauseActiveTimer(): Promise<boolean> {
+    if (this.currentState !== 'active' || !this.currentJobId || this.isPaused) {
+      console.log('❌ AutoTimer: Cannot pause - not active or already paused');
+      return false;
+    }
+
+    try {
+      // Mark service as paused
+      this.isPaused = true;
+      this.pausedAtTime = new Date();
+      
+      // Save state to persist pause
+      await this.saveState();
+      
+      console.log(`⏸️ AutoTimer: PAUSED service-level timer for job ${this.currentJobId}`);
+      
+      // Notify all listeners about pause state change
+      this.notifyPauseChange(true);
+      
+      return true;
+    } catch (error) {
+      console.error('Error pausing AutoTimer:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Resume the paused AutoTimer
+   */
+  async resumeActiveTimer(): Promise<boolean> {
+    if (this.currentState !== 'active' || !this.currentJobId || !this.isPaused) {
+      console.log('❌ AutoTimer: Cannot resume - not active or not paused');
+      return false;
+    }
+
+    try {
+      // Add the paused time to total paused time
+      if (this.pausedAtTime) {
+        const pausedDuration = Date.now() - this.pausedAtTime.getTime();
+        this.totalPausedTime += pausedDuration;
+        console.log(`▶️ AutoTimer: Adding ${Math.floor(pausedDuration/1000)}s to total paused time`);
+      }
+      
+      // Resume service
+      this.isPaused = false;
+      this.pausedAtTime = null;
+      
+      // Save state to persist resume
+      await this.saveState();
+      
+      console.log(`▶️ AutoTimer: RESUMED service-level timer for job ${this.currentJobId}`);
+      
+      // Notify all listeners about pause state change
+      this.notifyPauseChange(false);
+      
+      return true;
+    } catch (error) {
+      console.error('Error resuming AutoTimer:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if the active timer is paused
+   */
+  async isActiveTimerPaused(): Promise<boolean> {
+    return this.isPaused;
   }
 }
 

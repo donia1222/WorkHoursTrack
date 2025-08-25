@@ -21,6 +21,7 @@ import { CalendarSyncService } from '../services/CalendarSyncService';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useTimeFormat } from '../hooks/useTimeFormat';
 import { useNavigation } from '../context/NavigationContext';
 
 interface WorkDayModalProps {
@@ -47,7 +48,34 @@ export default function WorkDayModal({
   const { t, language } = useLanguage();
   const { colors } = useTheme();
   const { settings } = useNotifications();
+  const { formatTimeWithPreferences, parseTimeInput, getTimePlaceholder } = useTimeFormat();
   const { navigateTo } = useNavigation();
+
+  // Custom TimeInput component for WorkDayModal
+  const TimeInput = ({ value, onChangeText, style, placeholder, ...props }: any) => {
+    const [displayValue, setDisplayValue] = useState(formatTimeWithPreferences(value || ''));
+    
+    useEffect(() => {
+      setDisplayValue(formatTimeWithPreferences(value || ''));
+    }, [value, formatTimeWithPreferences]);
+
+    const handleChangeText = (text: string) => {
+      setDisplayValue(text);
+      // Convert to 24-hour format for storage
+      const parsedTime = parseTimeInput(text);
+      onChangeText(parsedTime);
+    };
+
+    return (
+      <TextInput
+        style={style}
+        value={displayValue}
+        onChangeText={handleChangeText}
+        placeholder={placeholder || getTimePlaceholder()}
+        {...props}
+      />
+    );
+  };
   
   // Function to handle navigating to preferences to enable work reminders
   const handleEnableNotifications = () => {
@@ -629,7 +657,7 @@ export default function WorkDayModal({
                         </Text>
                         {scheduleMode === 'job' && (
                           <Text style={styles.scheduleTimeText}>
-                            {schedule.startTime || '09:00'} - {schedule.endTime || '17:00'}
+                            {formatTimeWithPreferences(schedule.startTime || '09:00')} - {formatTimeWithPreferences(schedule.endTime || '17:00')}
                           </Text>
                         )}
                       </TouchableOpacity>
@@ -689,40 +717,22 @@ export default function WorkDayModal({
                     <View style={styles.timeInputsContainer}>
                       <View style={styles.timeInputGroup}>
                         <Text style={styles.timeLabel}>{t('calendar.start_time')}</Text>
-                        <TextInput
+                        <TimeInput
                           style={styles.timeInput}
                           value={startTime}
-                          onChangeText={(text) => {
-                            // Format time input with colon
-                            let formatted = text.replace(/[^0-9]/g, '');
-                            if (formatted.length >= 3) {
-                              formatted = formatted.substring(0, 2) + ':' + formatted.substring(2, 4);
-                            }
-                            setStartTime(formatted);
-                          }}
-                          placeholder="00:00"
+                          onChangeText={setStartTime}
                           placeholderTextColor={Theme.colors.textTertiary}
                           keyboardType="numeric"
-                          maxLength={5}
                         />
                       </View>
                       <View style={styles.timeInputGroup}>
                         <Text style={styles.timeLabel}>{t('calendar.end_time')}</Text>
-                        <TextInput
+                        <TimeInput
                           style={styles.timeInput}
                           value={endTime}
-                          onChangeText={(text) => {
-                            // Format time input with colon
-                            let formatted = text.replace(/[^0-9]/g, '');
-                            if (formatted.length >= 3) {
-                              formatted = formatted.substring(0, 2) + ':' + formatted.substring(2, 4);
-                            }
-                            setEndTime(formatted);
-                          }}
-                          placeholder="00:00"
+                          onChangeText={setEndTime}
                           placeholderTextColor={Theme.colors.textTertiary}
                           keyboardType="numeric"
-                          maxLength={5}
                         />
                       </View>
                     </View>
@@ -746,40 +756,22 @@ export default function WorkDayModal({
                       <View style={styles.timeInputsContainer}>
                         <View style={styles.timeInputGroup}>
                           <Text style={styles.timeLabel}>{t('calendar.second_start_time')}</Text>
-                          <TextInput
+                          <TimeInput
                             style={styles.timeInput}
                             value={secondStartTime}
-                            onChangeText={(text) => {
-                              // Format time input with colon
-                              let formatted = text.replace(/[^0-9]/g, '');
-                              if (formatted.length >= 3) {
-                                formatted = formatted.substring(0, 2) + ':' + formatted.substring(2, 4);
-                              }
-                              setSecondStartTime(formatted);
-                            }}
-                            placeholder="00:00"
+                            onChangeText={setSecondStartTime}
                             placeholderTextColor={Theme.colors.textTertiary}
                             keyboardType="numeric"
-                            maxLength={5}
                           />
                         </View>
                         <View style={styles.timeInputGroup}>
                           <Text style={styles.timeLabel}>{t('calendar.second_end_time')}</Text>
-                          <TextInput
+                          <TimeInput
                             style={styles.timeInput}
                             value={secondEndTime}
-                            onChangeText={(text) => {
-                              // Format time input with colon
-                              let formatted = text.replace(/[^0-9]/g, '');
-                              if (formatted.length >= 3) {
-                                formatted = formatted.substring(0, 2) + ':' + formatted.substring(2, 4);
-                              }
-                              setSecondEndTime(formatted);
-                            }}
-                            placeholder="00:00"
+                            onChangeText={setSecondEndTime}
                             placeholderTextColor={Theme.colors.textTertiary}
                             keyboardType="numeric"
-                            maxLength={5}
                           />
                         </View>
                       </View>
@@ -919,8 +911,8 @@ export default function WorkDayModal({
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>{t('calendar.schedule_mode')}</Text>
                   <Text style={styles.summaryValue}>
-                    {startTime} - {endTime}
-                    {hasSplitShift && ` | ${secondStartTime} - ${secondEndTime}`}
+                    {formatTimeWithPreferences(startTime)} - {formatTimeWithPreferences(endTime)}
+                    {hasSplitShift && ` | ${formatTimeWithPreferences(secondStartTime)} - ${formatTimeWithPreferences(secondEndTime)}`}
                   </Text>
                 </View>
               )}

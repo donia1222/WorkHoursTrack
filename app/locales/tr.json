@@ -105,6 +105,16 @@
       "description": "Uygulamadaki düğme ve etkileşimlerde dokunsal titreşimi kontrol edin",
       "enabled": "Dokunsal Titreşim",
       "enabled_desc": "Düğmelere ve kontrollere dokunduğunuzda titreşimi etkinleştir"
+    },
+    "time_format": {
+      "title": "Zaman Formatı",
+      "description": "Çalışma saatlerinin nasıl gösterileceğini seçin",
+      "time_format": "Zaman Formatı",
+      "time_format_desc": "HH:MM vs 0.00s",
+      "hour_format": "Saat Formatı",
+      "hour_format_desc": "24 saat vs 12 saat (AM/PM)",
+      "12_hour": "12 saat (AM/PM)",
+      "24_hour": "24 saat"
     }
   },
   "settings": {

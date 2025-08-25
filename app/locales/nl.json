@@ -66,6 +66,16 @@
       "reminder_time": "Herinneringstijd",
       "reminder_time_desc": "Configureer wanneer je de herinnering voor je werkschema wilt ontvangen"
     },
+    "time_format": {
+      "title": "Tijdformaat",
+      "description": "Kies hoe werktijden worden weergegeven",
+      "time_format": "Tijdformaat",
+      "time_format_desc": "HH:MM vs 0.00h",
+      "hour_format": "Uurformaat",
+      "hour_format_desc": "24-uurs vs 12-uurs (AM/PM)",
+      "12_hour": "12-uurs (AM/PM)",
+      "24_hour": "24-uurs"
+    },
     "auto_backup": {
       "title": "Automatische Back-up",
       "description": "Genereer automatisch back-ups volgens de geconfigureerde frequentie",
