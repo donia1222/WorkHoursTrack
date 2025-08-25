@@ -284,7 +284,7 @@ export default function WelcomeMessage() {
         onPress={() => setShowInfoModal(true)}
         activeOpacity={0.7}
       >
-        <Ionicons name="information-circle" size={26} color={colors.secondary} />
+        <Ionicons name="information-circle" size={26} color={colors.textSecondary} />
       </TouchableOpacity>
       </Animated.View>
 

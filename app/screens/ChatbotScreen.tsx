@@ -114,6 +114,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     shadowOpacity: isDark ? 0.05 : 0.1,
     shadowRadius: 4,
     elevation: 5,
+    marginBottom: -30,
   },
   imageButton: {
     padding: 12,
