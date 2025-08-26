@@ -24,6 +24,13 @@ export interface TimerForWidget {
   startTime?: string; // ISO string
 }
 
+export interface WeeklyStatsForWidget {
+  totalHours: number;
+  totalDays: number;
+  avgHoursPerDay: number;
+  overtimeHours: number;
+}
+
 class WidgetSyncService {
   /**
    * Sync jobs to widget
@@ -210,6 +217,85 @@ class WidgetSyncService {
   }
 
   /**
+   * Sync weekly statistics to widget
+   */
+  async syncWeeklyStatsToWidget(): Promise<void> {
+    if (Platform.OS !== 'ios' || !LiveActivityModule?.syncWeeklyStatsToWidget) {
+      return;
+    }
+
+    try {
+      // Get work days from storage
+      const workDaysStr = await AsyncStorage.getItem('work_days_v2');
+      const workDays = workDaysStr ? JSON.parse(workDaysStr) : [];
+      
+      // Calculate stats for last 7 days
+      const now = new Date();
+      now.setHours(23, 59, 59, 999); // End of today
+      const sevenDaysAgo = new Date(now.getTime() - (6 * 24 * 60 * 60 * 1000)); // Last 7 days including today
+      sevenDaysAgo.setHours(0, 0, 0, 0); // Start of 7 days ago
+      
+      console.log('📅 Date range for stats:', {
+        sevenDaysAgo: sevenDaysAgo.toISOString().split('T')[0],
+        now: now.toISOString().split('T')[0]
+      });
+      
+      // Filter work days for last 7 days
+      const recentWorkDays = workDays.filter((day: any) => {
+        const dayDate = new Date(day.date + 'T12:00:00'); // Add time to avoid timezone issues
+        const isInRange = dayDate >= sevenDaysAgo && dayDate <= now;
+        console.log('🔍 Day check:', {
+          dayDate: dayDate.toISOString().split('T')[0],
+          isInRange,
+          dayHours: day.totalHours || day.hours
+        });
+        return isInRange;
+      });
+      
+      // Calculate statistics
+      console.log('🔍 Recent work days for stats:', recentWorkDays.map(day => ({
+        date: day.date,
+        totalHours: day.totalHours,
+        hours: day.hours,
+        type: day.type
+      })));
+      
+      const totalHours = recentWorkDays.reduce((sum: number, day: any) => sum + (day.totalHours || day.hours || 0), 0);
+      const uniqueDates = new Set(recentWorkDays.map((day: any) => day.date.split('T')[0]));
+      const totalDays = uniqueDates.size;
+      const avgHoursPerDay = totalDays > 0 ? totalHours / totalDays : 0;
+      const overtimeHours = recentWorkDays.reduce((sum: number, day: any) => {
+        const dayHours = day.totalHours || day.hours || 0;
+        return sum + (dayHours > 8 ? dayHours - 8 : 0);
+      }, 0);
+      
+      console.log('📊 Stats calculation details:', {
+        totalHours,
+        totalDays,
+        avgHoursPerDay,
+        overtimeHours,
+        uniqueDatesArray: Array.from(uniqueDates)
+      });
+      
+      const weeklyStats: WeeklyStatsForWidget = {
+        totalHours,
+        totalDays,
+        avgHoursPerDay,
+        overtimeHours
+      };
+      
+      console.log('📊 Calculated weekly stats:', weeklyStats);
+      
+      // Send to native module
+      await LiveActivityModule.syncWeeklyStatsToWidget(weeklyStats);
+      console.log('✅ Weekly stats synced to widget successfully');
+      
+    } catch (error) {
+      console.error('❌ Error syncing weekly stats to widget:', error);
+    }
+  }
+
+  /**
    * Sync all widget data
    */
   async syncAllToWidget(): Promise<void> {
@@ -217,7 +303,8 @@ class WidgetSyncService {
     await Promise.all([
       this.syncJobsToWidget(),
       this.syncCalendarToWidget(),
-      this.syncActiveTimerToWidget()
+      this.syncActiveTimerToWidget(),
+      this.syncWeeklyStatsToWidget()
     ]);
     console.log('✅ Full widget sync completed');
   }

@@ -103,10 +103,10 @@ class AutoTimerService {
         return true;
       }
 
-      // Restore state from storage FIRST (before checking sessions)
+      // Restore state from storage (after jobs are set)
       await this.restoreState();
 
-      // Check for active sessions and handle them properly (AFTER state restoration)
+      // Check for active sessions and handle them properly
       const activeSession = await JobService.getActiveSession();
       if (activeSession) {
         console.log(`🔍 Found active session:`, {
@@ -114,21 +114,12 @@ class AutoTimerService {
           startTime: activeSession.startTime,
           notes: activeSession.notes
         });
-        console.log(`🔍 Current AutoTimer state: ${this.currentState}, job: ${this.currentJobId}`);
         
-        // Keep session if it's auto-started AND matches our restored state
+        // Only clear if it's not an auto-started session or if it doesn't match our state
         if (activeSession.notes === 'Auto-started' && this.currentState === 'active' && this.currentJobId === activeSession.jobId) {
           console.log(`✅ Keeping existing auto-started session for job ${activeSession.jobId}`);
-        } 
-        // Also keep manual sessions that don't conflict
-        else if (activeSession.notes !== 'Auto-started') {
-          console.log(`✅ Keeping existing manual session for job ${activeSession.jobId}`);
-          // Update our state to match the manual session
-          this.currentState = 'manual';
-          this.currentJobId = activeSession.jobId;
-        } 
-        else {
-          console.log(`🧹 Clearing session (state mismatch: ${this.currentState} vs active session)`);
+        } else {
+          console.log(`🧹 Clearing session (not auto-started or state mismatch)`);
           await JobService.clearActiveSession();
         }
       }
@@ -982,20 +973,6 @@ class AutoTimerService {
         this.isPaused = state.isPaused || false;
         this.pausedAtTime = state.pausedAtTime ? new Date(state.pausedAtTime) : null;
         this.totalPausedTime = state.totalPausedTime || 0;
-        
-        // IMPORTANT: Check if there's an active session that should override our state
-        const activeSession = await JobService.getActiveSession();
-        if (activeSession && activeSession.notes === 'Auto-started') {
-          console.log(`🔍 Found active auto session during restore - correcting state`);
-          this.currentState = 'active';
-          this.currentJobId = activeSession.jobId;
-          
-          // Restore the start time from the session if we don't have it
-          if (!state.autoTimerStartTime && activeSession.startTime) {
-            this.autoTimerStartTime = new Date(activeSession.startTime);
-            console.log(`⏱️ Restored start time from session: ${this.autoTimerStartTime.toLocaleTimeString()}`);
-          }
-        }
         
         // Restore auto timer start time if active
         if (state.autoTimerStartTime && this.currentState === 'active') {

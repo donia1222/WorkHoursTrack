@@ -324,74 +324,268 @@ struct WorkTrackMedium: View {
         Provider().readTimerData()
     }
     
+    private var weeklyStats: WeeklyStats {
+        WeeklyStatsDataManager.readWeeklyStats()
+    }
+    
     var body: some View {
         let timer = timerData
+        let stats = weeklyStats
         
-        VStack(spacing: 8) {
-            // Top section - App header and job info
-            HStack(alignment: .center) {
-                // App icon and name
-                HStack(spacing: 8) {
+        VStack(spacing: 6) {
+            // Compact Header
+            HStack {
+                HStack(spacing: 4) {
                     if let ui = UIImage(named: "worktrack_icon") {
                         Image(uiImage: ui)
                             .resizable().scaledToFit()
-                            .frame(width: 22, height: 22)
-                            .clipShape(RoundedRectangle(cornerRadius: 5))
+                            .frame(width: 18, height: 18)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
                     } else {
                         Image(systemName: "briefcase.fill")
-                            .font(.system(size: 18))
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
                     }
                     Text("VixTime")
-                        .font(.system(size: 19, weight: .bold, design: .rounded))
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
                 }
-                .foregroundColor(.white)
                 
                 Spacer()
                 
-                // Job status
                 if timer.isActive {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 3) {
                         Circle()
                             .fill(Color.green)
-                            .frame(width: 10, height: 10)
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.white.opacity(0.4), lineWidth: 1.5)
-                            )
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(timer.jobName)
-                                .font(.system(size: 12, weight: .semibold))
-                                .lineLimit(1)
-                            Text(timer.startTime, style: .time)
-                                .font(.system(size: 11, weight: .medium, design: .monospaced))
-                                .opacity(0.85)
-                        }
-                        .foregroundColor(.white)
+                            .frame(width: 6, height: 6)
+                        Text("AutoTimer Active")
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundColor(.white)
                     }
-                } else if let firstJob = entry.jobs.first {
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(Color(hex: firstJob.color ?? "#059669") ?? Color.green)
-                            .frame(width: 10, height: 10)
-                        Text(firstJob.name)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.white.opacity(0.9))
-                            .lineLimit(1)
-                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(Color.white.opacity(0.15)))
                 }
             }
             
-            // Bottom section - Calendar (larger and centered)
-            MiniCalendarView(
-                days: MiniCalendarDataManager.readCalendarData(),
-                isCompact: true,
-                daysCount: 7
-            )
-            .frame(maxHeight: .infinity)
+            // Main Content - Simple two row layout
+            VStack(spacing: 8) {
+                // Row 1: Stats (if available) OR Timer info
+                if timer.isActive {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(timer.jobName)
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(.white)
+                                .lineLimit(1)
+                            Text("Since \(timer.startTime, style: .time)")
+                                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.7))
+                        }
+                        Spacer()
+                        if stats.totalHours > 0 {
+                            HStack(spacing: 8) {
+                                VStack(spacing: 1) {
+                                    Text("\(Int(stats.totalHours))")
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundColor(.white)
+                                    Text("hrs")
+                                        .font(.system(size: 8, weight: .medium))
+                                        .foregroundColor(.white.opacity(0.6))
+                                }
+                                
+                                VStack(spacing: 1) {
+                                    Text("\(stats.totalDays)")
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundColor(.white)
+                                    Text("days")
+                                        .font(.system(size: 8, weight: .medium))
+                                        .foregroundColor(.white.opacity(0.6))
+                                }
+                            }
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Color.white.opacity(0.12))
+                            )
+                        }
+                    }
+                    .padding(8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.white.opacity(0.1))
+                    )
+                } else if stats.totalHours > 0 {
+                    // Weekly stats summary
+                    HStack(spacing: 12) {
+                        VStack(spacing: 2) {
+                            Text("\(Int(stats.totalHours))")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.white)
+                            Text("hours")
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundColor(.white.opacity(0.6))
+                        }
+                        
+                        VStack(spacing: 2) {
+                            Text("\(stats.totalDays)")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.white)
+                            Text("days")
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundColor(.white.opacity(0.6))
+                        }
+                        
+                        VStack(spacing: 2) {
+                            Text(String(format: "%.1f", stats.avgHoursPerDay))
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.white)
+                            Text("avg/day")
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundColor(.white.opacity(0.6))
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.white.opacity(0.1))
+                    )
+                }
+                
+                // Row 2: Simple Calendar
+                MiniCalendarView(
+                    days: MiniCalendarDataManager.readCalendarData(),
+                    isCompact: true,
+                    daysCount: 7,
+                    useModernStyle: false
+                )
+            }
         }
-        .padding(14)
+        .padding(10)
         .widgetURL(URL(string: "worktrack://"))
         .modifier(BackgroundMod())
+    }
+}
+
+// MARK: - Medium Widget Components
+struct TimerStatusMedium: View {
+    let jobName: String
+    let startTime: Date
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            // Animated green dot
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [Color.green, Color.green.opacity(0.7)],
+                        center: .center,
+                        startRadius: 1,
+                        endRadius: 8
+                    )
+                )
+                .frame(width: 12, height: 12)
+                .overlay(
+                    Circle()
+                        .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                )
+                .shadow(color: Color.green.opacity(0.6), radius: 3, x: 0, y: 1)
+            
+            VStack(alignment: .leading, spacing: 1) {
+                Text(jobName)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                Text(startTime, style: .time)
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.8))
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            Capsule()
+                .fill(Color.white.opacity(0.15))
+                .overlay(
+                    Capsule()
+                        .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
+                )
+        )
+    }
+}
+
+struct JobInfoMedium: View {
+    let job: JobInfo
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(Color(hex: job.color ?? "#059669") ?? Color.green)
+                .frame(width: 10, height: 10)
+                .shadow(color: (Color(hex: job.color ?? "#059669") ?? Color.green).opacity(0.5), radius: 2, x: 0, y: 1)
+            
+            Text(job.name)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(.white.opacity(0.9))
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            Capsule()
+                .fill(Color.white.opacity(0.1))
+        )
+    }
+}
+
+// Modern Background Modifier
+struct ModernBackgroundMod: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 17.0, *) {
+            content.containerBackground(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.15, green: 0.15, blue: 0.3),  // Dark blue
+                        Color(red: 0.2, green: 0.1, blue: 0.3),   // Dark purple
+                        Color(red: 0.1, green: 0.2, blue: 0.35)   // Dark teal
+                    ],
+                    startPoint: .topLeading, 
+                    endPoint: .bottomTrailing
+                ),
+                for: .widget
+            )
+        } else {
+            ZStack {
+                // Enhanced gradient background
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.15, green: 0.15, blue: 0.3),  // Dark blue
+                        Color(red: 0.2, green: 0.1, blue: 0.3),   // Dark purple
+                        Color(red: 0.1, green: 0.2, blue: 0.35)   // Dark teal
+                    ],
+                    startPoint: .topLeading, 
+                    endPoint: .bottomTrailing
+                )
+                .overlay(
+                    // Subtle noise texture
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.1),
+                            Color.clear,
+                            Color.white.opacity(0.05)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                
+                content
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
     }
 }
 
@@ -402,72 +596,415 @@ struct WorkTrackLarge: View {
         Provider().readTimerData()
     }
     
+    private var weeklyStats: WeeklyStats {
+        WeeklyStatsDataManager.readWeeklyStats()
+    }
+    
     var body: some View {
         let timer = timerData
+        let stats = weeklyStats
         
         VStack(spacing: 8) {
-            // App name header - Larger for big widget
+            // Simple Header
             HStack {
+                HStack(spacing: 6) {
+                    if let ui = UIImage(named: "worktrack_icon") {
+                        Image(uiImage: ui)
+                            .resizable().scaledToFit()
+                            .frame(width: 22, height: 22)
+                            .clipShape(RoundedRectangle(cornerRadius: 5))
+                    } else {
+                        Image(systemName: "briefcase.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+                    Text("VixTime")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                }
+                
+                Spacer()
+                
+                if timer.isActive {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 8, height: 8)
+                        Text("AUTOTIMER ACTIVE • \(timer.jobName)")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(Color.white.opacity(0.15))
+                    )
+                } else if let firstJob = entry.jobs.first {
+                    Text(firstJob.name)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+            }
+            
+            // Main Content - Clean Two-Section Layout
+            VStack(spacing: 12) {
+                // Top Section: Timer Info + Quick Stats
+                if timer.isActive {
+                    HStack(spacing: 16) {
+                        // Timer info
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "timer")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(Color.green)
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("AutoTimer Running")
+                                        .font(.system(size: 11, weight: .bold))
+                                        .foregroundColor(Color.green)
+                                    Text("Since \(timer.startTime, style: .time)")
+                                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                                        .foregroundColor(.white.opacity(0.8))
+                                }
+                            }
+                            
+                            if let location = timer.location, !location.isEmpty {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "mappin.circle.fill")
+                                        .font(.system(size: 10))
+                                    Text(location)
+                                        .font(.system(size: 10, weight: .medium))
+                                        .lineLimit(1)
+                                }
+                                .foregroundColor(.white.opacity(0.6))
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        // Quick stats
+                        if stats.totalHours > 0 {
+                            VStack(alignment: .trailing, spacing: 2) {
+                                Text("\(Int(stats.totalHours))h")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(.white)
+                                Text("this week")
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                        }
+                    }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.green.opacity(0.15))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .strokeBorder(Color.green.opacity(0.3), lineWidth: 1)
+                            )
+                    )
+                } else if stats.totalHours > 0 {
+                    // Weekly stats when no active timer
+                    VStack(spacing: 8) {
+                        HStack {
+                            Text("This Week")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.white.opacity(0.9))
+                            Spacer()
+                            Text("Last 7 days")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(.white.opacity(0.6))
+                        }
+                        
+                        HStack(spacing: 20) {
+                            VStack(spacing: 2) {
+                                Text("\(Int(stats.totalHours))")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundColor(.white)
+                                Text("hours")
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                            
+                            VStack(spacing: 2) {
+                                Text("\(stats.totalDays)")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundColor(.white)
+                                Text("days")
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                            
+                            VStack(spacing: 2) {
+                                Text(String(format: "%.1f", stats.avgHoursPerDay))
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundColor(.white)
+                                Text("avg/day")
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                            
+                            Spacer()
+                        }
+                    }
+                    .padding(16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.white.opacity(0.1))
+                    )
+                }
+                
+                // Bottom Section: Calendar (optimized size)
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.8))
+                        Text("Work Calendar")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.8))
+                        Spacer()
+                        Text("2 Weeks")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.white.opacity(0.6))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(Color.white.opacity(0.1)))
+                    }
+                    
+                    MiniCalendarView(
+                        days: MiniCalendarDataManager.readCalendarData(),
+                        isCompact: false,
+                        daysCount: 14  // Reduced from 21 to 14 for better fit
+                    )
+                }
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.white.opacity(0.08))
+                )
+            }
+        }
+        .padding(14)
+        .widgetURL(URL(string: "worktrack://"))
+        .modifier(BackgroundMod())
+    }
+}
+
+// MARK: - Large Widget Components
+struct LargeWidgetHeader: View {
+    let timer: (isActive: Bool, jobName: String, location: String?, startTime: Date)
+    let firstJob: JobInfo?
+    
+    var body: some View {
+        HStack(alignment: .center) {
+            // Enhanced App Branding
+            HStack(spacing: 10) {
                 if let ui = UIImage(named: "worktrack_icon") {
                     Image(uiImage: ui)
                         .resizable().scaledToFit()
-                        .frame(width: 24, height: 24)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .frame(width: 28, height: 28)
+                        .clipShape(RoundedRectangle(cornerRadius: 7))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 7)
+                                .strokeBorder(Color.white.opacity(0.3), lineWidth: 1)
+                        )
+                        .shadow(color: .white.opacity(0.2), radius: 3, x: 0, y: 2)
                 } else {
                     Image(systemName: "briefcase.fill")
-                        .font(.system(size: 20))
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(.white)
                 }
-                Text("VixTime")
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                Spacer()
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("VixTime")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                    Text("Work Tracker")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.white.opacity(0.7))
+                }
             }
-            .foregroundColor(.white.opacity(0.95))
             
-            // Jobs list - only show 2 jobs to save space
-            VStack(alignment: .leading, spacing: 4) {
-                ForEach(entry.jobs.prefix(2), id: \.self) { job in
-                    HStack(spacing: 4) {
+            Spacer()
+            
+            // Status Indicator
+            if timer.isActive {
+                TimerStatusLarge(jobName: timer.jobName, startTime: timer.startTime)
+            } else if let job = firstJob {
+                JobStatusLarge(job: job)
+            }
+        }
+    }
+}
+
+struct TimerStatusLarge: View {
+    let jobName: String
+    let startTime: Date
+    
+    var body: some View {
+        HStack(spacing: 10) {
+            // Premium animated indicator
+            ZStack {
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [Color.green.opacity(0.3), Color.green.opacity(0.1)],
+                            center: .center,
+                            startRadius: 5,
+                            endRadius: 15
+                        )
+                    )
+                    .frame(width: 30, height: 30)
+                
+                Circle()
+                    .fill(Color.green)
+                    .frame(width: 14, height: 14)
+                    .overlay(
                         Circle()
-                            .fill(Color(hex: job.color ?? "#059669") ?? Color.green)
-                            .frame(width: 6, height: 6)
-                        Text(job.name)
+                            .stroke(Color.white.opacity(0.6), lineWidth: 2)
+                    )
+                    .shadow(color: Color.green.opacity(0.8), radius: 4, x: 0, y: 2)
+            }
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text("AUTOTIMER ACTIVE")
+                    .font(.system(size: 9, weight: .black, design: .rounded))
+                    .foregroundColor(Color.green)
+                    .tracking(1.0)
+                
+                Text(jobName)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                
+                Text("Since \(startTime, style: .time)")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.8))
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color.white.opacity(0.15))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .strokeBorder(Color.green.opacity(0.3), lineWidth: 2)
+                )
+        )
+    }
+}
+
+struct JobStatusLarge: View {
+    let job: JobInfo
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(Color(hex: job.color ?? "#059669") ?? Color.green)
+                .frame(width: 12, height: 12)
+                .shadow(color: (Color(hex: job.color ?? "#059669") ?? Color.green).opacity(0.6), radius: 2, x: 0, y: 1)
+            
+            VStack(alignment: .leading, spacing: 1) {
+                Text("AUTOTIMER READY")
+                    .font(.system(size: 8, weight: .bold, design: .rounded))
+                    .foregroundColor(.white.opacity(0.7))
+                    .tracking(1)
+                
+                Text(job.name)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.9))
+                    .lineLimit(1)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.white.opacity(0.1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
+                )
+        )
+    }
+}
+
+struct ActiveTimerDisplayLarge: View {
+    let jobName: String
+    let location: String?
+    let startTime: Date
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Timer icon with glow effect
+            ZStack {
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [Color.green.opacity(0.3), Color.clear],
+                            center: .center,
+                            startRadius: 10,
+                            endRadius: 25
+                        )
+                    )
+                    .frame(width: 50, height: 50)
+                
+                Image(systemName: "timer")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(Color.green)
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text("AutoTimer Running")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(Color.green)
+                    .tracking(0.5)
+                
+                Text(jobName)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                
+                if let location = location, !location.isEmpty {
+                    HStack(spacing: 4) {
+                        Image(systemName: "mappin.and.ellipse")
+                            .font(.system(size: 10, weight: .medium))
+                        Text(location)
                             .font(.system(size: 11, weight: .medium))
                             .lineLimit(1)
-                        Spacer()
                     }
+                    .foregroundColor(.white.opacity(0.8))
                 }
-            }
-            .foregroundColor(.white.opacity(0.85))
-            
-            Spacer(minLength: 2)
-            
-            // Show timer if active at the top, then smaller calendar
-            if timer.isActive {
-                ActiveTimerView(
-                    jobName: timer.jobName,
-                    location: timer.location,
-                    startTime: timer.startTime,
-                    isCompact: false
-                )
                 
-                // Show smaller calendar with only 7 days
-                MiniCalendarView(
-                    days: MiniCalendarDataManager.readCalendarData(),
-                    isCompact: true
-                )
-            } else {
-                // Calendar - Back to 2 weeks instead of full month
-                MiniCalendarView(
-                    days: MiniCalendarDataManager.readCalendarData(),
-                    isCompact: false
-                )
+                Text("Started at \(startTime, style: .time)")
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.7))
             }
             
-            Spacer(minLength: 2)
+            Spacer()
         }
-        .padding(12)
-        .widgetURL(URL(string: "worktrack://"))
-        .modifier(BackgroundMod())
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.green.opacity(0.15),
+                            Color.green.opacity(0.08)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .strokeBorder(Color.green.opacity(0.3), lineWidth: 1.5)
+                )
+        )
     }
 }
 

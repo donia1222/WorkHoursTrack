@@ -33,4 +33,12 @@ RCT_EXTERN_METHOD(syncCalendarToWidget:(NSArray *)workDays
                   resolver:(RCTPromiseResolveBlock)resolver
                   rejecter:(RCTPromiseRejectBlock)rejecter)
 
+RCT_EXTERN_METHOD(syncWeeklyStatsToWidget:(NSDictionary *)statsData
+                  resolver:(RCTPromiseResolveBlock)resolver
+                  rejecter:(RCTPromiseRejectBlock)rejecter)
+
+RCT_EXTERN_METHOD(syncTimerToWidget:(NSDictionary *)timerData
+                  resolver:(RCTPromiseResolveBlock)resolver
+                  rejecter:(RCTPromiseRejectBlock)rejecter)
+
 @end

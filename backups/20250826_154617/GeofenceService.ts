@@ -179,16 +179,23 @@ class GeofenceService {
         job.location.longitude
       );
 
-      // Use EXACT same radius as background geofencing - NO HYSTERESIS
-      // This matches BackgroundGeofenceTask.ts line 409-416 behavior
-      const configuredRadius = Number(job.autoTimer?.geofenceRadius ?? 50);
-      const baseRadius = Math.max(30, isNaN(configuredRadius) ? 50 : configuredRadius);
+      // Implement hysteresis: different radius for entry and exit
+      const baseRadius = job.autoTimer.geofenceRadius || 50; // Default to 50m
+      const entryRadius = baseRadius; // Enter at configured radius
+      const exitRadius = baseRadius * 1.6; // Exit at 60% more distance to avoid GPS noise
       
       const currentStatus = this.currentStatuses.get(job.id);
       const wasInside = currentStatus?.isInside || false;
       
-      // Use EXACT radius for both entry and exit - same as background
-      const isInside = distance <= baseRadius;
+      // Use different radius based on current state
+      let isInside: boolean;
+      if (!wasInside) {
+        // Currently outside, use entry radius
+        isInside = distance <= entryRadius;
+      } else {
+        // Currently inside, use exit radius (must go further to exit)
+        isInside = distance <= exitRadius;
+      }
 
       // Update status
       this.currentStatuses.set(job.id, {
@@ -199,9 +206,9 @@ class GeofenceService {
       });
 
       // Only log significant events or state changes to reduce noise
-      if (wasInside !== isInside || distance <= baseRadius * 1.1) {
+      if (wasInside !== isInside || distance <= exitRadius * 1.1) {
         console.log(`📍 [GeofenceService] ${job.name}:`);
-        console.log(`   Distance: ${distance.toFixed(1)}m | Radius: ${baseRadius}m (exact - same as background)`);
+        console.log(`   Distance: ${distance.toFixed(1)}m | Radius: ${entryRadius}m (entry) / ${exitRadius}m (exit)`);
         console.log(`   State: ${wasInside ? 'INSIDE' : 'OUTSIDE'} → ${isInside ? 'INSIDE' : 'OUTSIDE'} ${wasInside !== isInside ? '⚠️ CHANGED' : ''}`);
         if (wasInside !== isInside) {
           console.log(`   ✅ Triggering ${isInside ? 'ENTER' : 'EXIT'} event`);
@@ -357,9 +364,7 @@ class GeofenceService {
             job.location.longitude
           );
 
-          // Use same radius calculation as background and foreground
-          const configuredRadius = Number(job.autoTimer?.geofenceRadius ?? 50);
-          const radius = Math.max(30, isNaN(configuredRadius) ? 50 : configuredRadius);
+          const radius = job.autoTimer?.geofenceRadius || 50; // Default 50m
           const isInside = distance <= radius;
 
           return {

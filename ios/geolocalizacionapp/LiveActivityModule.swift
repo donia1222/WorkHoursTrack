@@ -739,6 +739,66 @@ class LiveActivityModule: NSObject {
     }
     
     @objc
+    func syncWeeklyStatsToWidget(_ statsData: NSDictionary,
+                                resolver: @escaping RCTPromiseResolveBlock,
+                                rejecter: @escaping RCTPromiseRejectBlock) {
+        
+        guard let sharedDefaults = UserDefaults(suiteName: LiveActivityModule.appGroupIdentifier) else {
+            rejecter("SYNC_ERROR", "Could not access shared storage", nil)
+            return
+        }
+        
+        // Extract stats from React Native
+        let totalHours = statsData["totalHours"] as? Double ?? 0
+        let totalDays = statsData["totalDays"] as? Int ?? 0
+        let avgHoursPerDay = statsData["avgHoursPerDay"] as? Double ?? 0
+        let overtimeHours = statsData["overtimeHours"] as? Double ?? 0
+        
+        // Create stats struct for encoding
+        struct WeeklyStats: Codable {
+            let totalHours: Double
+            let totalDays: Int
+            let avgHoursPerDay: Double
+            let overtimeHours: Double
+        }
+        
+        let weeklyStats = WeeklyStats(
+            totalHours: totalHours,
+            totalDays: totalDays,
+            avgHoursPerDay: avgHoursPerDay,
+            overtimeHours: overtimeHours
+        )
+        
+        do {
+            // Encode stats to JSON data
+            let encoder = JSONEncoder()
+            let encodedData = try encoder.encode(weeklyStats)
+            
+            // Save to shared storage
+            sharedDefaults.set(encodedData, forKey: "WorkTrack.WeeklyStats")
+            
+            // Increment data version to force widget refresh
+            let currentVersion = sharedDefaults.integer(forKey: LiveActivityModule.dataVersionKey)
+            sharedDefaults.set(currentVersion + 1, forKey: LiveActivityModule.dataVersionKey)
+            
+            // Force synchronization
+            sharedDefaults.synchronize()
+            
+            // Force widget update with delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+            
+            print("✅ Weekly stats synced to widget: \(totalHours)h, \(totalDays) days")
+            resolver(true)
+            
+        } catch {
+            print("❌ Failed to encode weekly stats: \(error)")
+            rejecter("SYNC_ERROR", "Failed to encode weekly stats", error)
+        }
+    }
+    
+    @objc
     func hasActiveLiveActivity(_ resolver: @escaping RCTPromiseResolveBlock,
                                rejecter: @escaping RCTPromiseRejectBlock) {
         if #available(iOS 16.2, *) {

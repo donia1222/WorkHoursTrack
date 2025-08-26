@@ -315,7 +315,34 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       if (errorCode === 'STORE_PROBLEM' || error.message?.includes('App Store')) {
         console.log('🏪 Problema con App Store detectado');
         
-        // Retry logic para errores temporales
+        // Verificar si la suscripción se activó a pesar del error
+        console.log('🔍 Verificando si la suscripción se activó a pesar del error...');
+        try {
+          const currentCustomerInfo = await Purchases.getCustomerInfo();
+          const hasActiveSubscriptions = currentCustomerInfo?.activeSubscriptions && 
+                                        Object.keys(currentCustomerInfo.activeSubscriptions).length > 0;
+          const hasPremiumEntitlement = !!currentCustomerInfo?.entitlements?.active?.['premium'];
+          const hasAnyEntitlement = currentCustomerInfo?.entitlements?.active && 
+                                    Object.keys(currentCustomerInfo.entitlements.active).length > 0;
+          
+          const isAlreadySubscribed = hasActiveSubscriptions || hasPremiumEntitlement || hasAnyEntitlement;
+          
+          if (isAlreadySubscribed) {
+            console.log('✅ La suscripción ya está activa, cancelando retry');
+            setState(prev => ({
+              ...prev,
+              isSubscribed: true,
+              customerInfo: currentCustomerInfo,
+              isLoading: false,
+            }));
+            await AsyncStorage.setItem('isSubscribed', JSON.stringify(true));
+            return { success: true, customerInfo: currentCustomerInfo };
+          }
+        } catch (verifyError) {
+          console.error('❌ Error verificando estado después del error:', verifyError);
+        }
+        
+        // Retry logic para errores temporales solo si no hay suscripción activa
         if (retryCount < 2) {
           console.log(`🔄 Reintentando compra (intento ${retryCount + 1}/2)...`);
           await new Promise(resolve => setTimeout(resolve, 2000)); // Esperar 2 segundos

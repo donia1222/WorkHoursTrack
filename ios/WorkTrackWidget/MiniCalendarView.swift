@@ -30,6 +30,7 @@ struct MiniCalendarView: View {
     let days: [WorkDayInfo]
     let isCompact: Bool // true for small/medium widget, false for large
     var daysCount: Int? = nil // Optional override for days to show
+    var useModernStyle: Bool = true // New modern styling
     
     private var monthTitle: String {
         let formatter = DateFormatter()
@@ -138,22 +139,27 @@ struct MiniCalendarView: View {
             .padding(.horizontal, 4)
             .padding(.vertical, 6)
         } else if isCompact {
-            // Medium widget: 7 days in a clean, modern layout
-            VStack(spacing: 10) {
-                // Days of week labels
-                HStack(spacing: 4) {
+            // Medium widget: 7 days in a clean, compact layout
+            VStack(spacing: useModernStyle ? 6 : 8) {
+                // Days of week labels - smaller
+                HStack(spacing: 2) {
                     ForEach(visibleDays, id: \.date) { day in
                         Text(getDayLabel(for: day.date))
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundColor(.white.opacity(0.7))
+                            .font(.system(size: useModernStyle ? 8 : 9, weight: .bold))
+                            .foregroundColor(useModernStyle ? .white.opacity(0.7) : .white.opacity(0.6))
                             .frame(maxWidth: .infinity)
                     }
                 }
+                .padding(.bottom, useModernStyle ? 2 : 0)
                 
-                // Day numbers with work indicators
-                HStack(spacing: 4) {
+                // Day numbers with work indicators - more compact
+                HStack(spacing: useModernStyle ? 3 : 2) {
                     ForEach(visibleDays, id: \.date) { day in
-                        MediumDayView(dayInfo: day)
+                        if useModernStyle {
+                            CompactMediumDayView(dayInfo: day)
+                        } else {
+                            MediumDayView(dayInfo: day)
+                        }
                     }
                 }
             }
@@ -439,6 +445,249 @@ struct MediumDayView: View {
             return Color(red: 0.3, green: 0.6, blue: 1.0)  // Blue
         case .scheduled:
             return Color.white.opacity(0.7)
+        }
+    }
+}
+
+// MARK: - Compact Medium Day View for tight spaces
+struct CompactMediumDayView: View {
+    let dayInfo: WorkDayInfo
+    
+    private var dayNumber: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d"
+        return formatter.string(from: dayInfo.date)
+    }
+    
+    private var isToday: Bool {
+        Calendar.current.isDateInToday(dayInfo.date)
+    }
+    
+    private var dayColor: Color {
+        switch dayInfo.type {
+        case .work:
+            if let hexColor = dayInfo.jobColor {
+                return Color(hex: hexColor) ?? Color(red: 0.4, green: 0.7, blue: 1.0)
+            }
+            return Color(red: 0.4, green: 0.7, blue: 1.0)
+        case .vacation:
+            return Color(red: 1.0, green: 0.6, blue: 0.2)
+        case .sick:
+            return Color(red: 0.9, green: 0.3, blue: 0.3)
+        case .free:
+            return Color.white.opacity(0.08)
+        case .scheduled:
+            return Color.white.opacity(0.20)
+        }
+    }
+    
+    var body: some View {
+        VStack(spacing: 2) {
+            // Smaller day number circle
+            ZStack {
+                // Background
+                if dayInfo.type != .free {
+                    Circle()
+                        .fill(dayColor.opacity(0.7))
+                        .frame(width: 24, height: 24)
+                        .overlay(
+                            Circle()
+                                .strokeBorder(dayColor.opacity(0.5), lineWidth: 1)
+                        )
+                } else {
+                    Circle()
+                        .fill(Color.white.opacity(0.06))
+                        .frame(width: 24, height: 24)
+                        .overlay(
+                            Circle()
+                                .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
+                        )
+                }
+                
+                // Today indicator - thinner
+                if isToday {
+                    Circle()
+                        .strokeBorder(Color.white, lineWidth: 2)
+                        .frame(width: 24, height: 24)
+                }
+                
+                // Day number - smaller
+                Text(dayNumber)
+                    .font(.system(size: 11, weight: isToday ? .bold : .semibold, design: .rounded))
+                    .foregroundColor(dayInfo.type != .free ? .white : .white.opacity(0.7))
+            }
+            
+            // Smaller icon or no icon for space
+            if dayInfo.type != .free {
+                Image(systemName: iconName)
+                    .font(.system(size: 6, weight: .bold))
+                    .foregroundColor(dayColor.opacity(0.9))
+            } else {
+                // Invisible spacer for consistent layout
+                Circle()
+                    .fill(Color.clear)
+                    .frame(width: 8, height: 8)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+    
+    private var iconName: String {
+        switch dayInfo.type {
+        case .work:
+            return "briefcase.fill"
+        case .vacation:
+            return "sun.max.fill"
+        case .sick:
+            return "cross.fill"
+        case .free:
+            return "house.fill"
+        case .scheduled:
+            return "calendar"
+        }
+    }
+}
+
+// MARK: - Modern Medium Day View with enhanced styling
+struct ModernMediumDayView: View {
+    let dayInfo: WorkDayInfo
+    
+    private var dayNumber: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d"
+        return formatter.string(from: dayInfo.date)
+    }
+    
+    private var isToday: Bool {
+        Calendar.current.isDateInToday(dayInfo.date)
+    }
+    
+    private var dayColor: Color {
+        switch dayInfo.type {
+        case .work:
+            if let hexColor = dayInfo.jobColor {
+                return Color(hex: hexColor) ?? Color(red: 0.4, green: 0.7, blue: 1.0)
+            }
+            return Color(red: 0.4, green: 0.7, blue: 1.0)
+        case .vacation:
+            return Color(red: 1.0, green: 0.6, blue: 0.2)
+        case .sick:
+            return Color(red: 0.9, green: 0.3, blue: 0.3)
+        case .free:
+            return Color.white.opacity(0.12)
+        case .scheduled:
+            return Color.white.opacity(0.25)
+        }
+    }
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            // Day number circle with enhanced design
+            ZStack {
+                // Background with gradient effect for work days
+                if dayInfo.type != .free {
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [dayColor.opacity(0.8), dayColor.opacity(0.4)],
+                                center: .center,
+                                startRadius: 1,
+                                endRadius: 18
+                            )
+                        )
+                        .frame(width: 34, height: 34)
+                        .overlay(
+                            Circle()
+                                .strokeBorder(dayColor.opacity(0.6), lineWidth: 1)
+                        )
+                } else {
+                    // Free days with subtle styling
+                    Circle()
+                        .fill(Color.white.opacity(0.08))
+                        .frame(width: 34, height: 34)
+                        .overlay(
+                            Circle()
+                                .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
+                        )
+                }
+                
+                // Today indicator
+                if isToday {
+                    Circle()
+                        .strokeBorder(Color.white, lineWidth: 2.5)
+                        .frame(width: 34, height: 34)
+                }
+                
+                // Day number
+                Text(dayNumber)
+                    .font(.system(size: 15, weight: isToday ? .bold : .semibold, design: .rounded))
+                    .foregroundColor(dayInfo.type != .free ? .white : .white.opacity(0.7))
+            }
+            
+            // Icon below with enhanced visibility
+            if dayInfo.type != .free {
+                ZStack {
+                    // Background for icon
+                    Circle()
+                        .fill(iconBackgroundColor)
+                        .frame(width: 18, height: 18)
+                    
+                    Image(systemName: iconName)
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(iconColor)
+                }
+            } else {
+                // Invisible spacer for consistent layout
+                Circle()
+                    .fill(Color.clear)
+                    .frame(width: 18, height: 18)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+    
+    private var iconName: String {
+        switch dayInfo.type {
+        case .work:
+            return "briefcase.fill"
+        case .vacation:
+            return "sun.max.fill"
+        case .sick:
+            return "cross.fill"
+        case .free:
+            return "house.fill"
+        case .scheduled:
+            return "calendar.badge.clock"
+        }
+    }
+    
+    private var iconColor: Color {
+        switch dayInfo.type {
+        case .work:
+            return Color.white
+        case .vacation:
+            return Color.white
+        case .sick:
+            return Color.white
+        case .free:
+            return Color.white.opacity(0.6)
+        case .scheduled:
+            return Color.white
+        }
+    }
+    
+    private var iconBackgroundColor: Color {
+        switch dayInfo.type {
+        case .work:
+            return Color(red: 0.2, green: 0.8, blue: 0.4).opacity(0.3)
+        case .vacation:
+            return Color(red: 1.0, green: 0.8, blue: 0.2).opacity(0.3)
+        case .sick:
+            return Color(red: 1.0, green: 0.3, blue: 0.3).opacity(0.3)
+        case .free:
+            return Color.clear
+        case .scheduled:
+            return Color.white.opacity(0.2)
         }
     }
 }
