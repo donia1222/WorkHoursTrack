@@ -104,11 +104,11 @@ struct CompactTimerView: View {
             HStack {
                 Image(systemName: "timer.circle.fill")
                     .font(.system(size: 18))
-                    .foregroundColor(.green)
+                    .foregroundColor(Color(red: 0.1, green: 0.4, blue: 0.2))  // Dark green icon
                 
                 Text("ACTIVE")
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.green)
+                    .foregroundColor(Color(red: 0.1, green: 0.4, blue: 0.2))  // Dark green text
                 
                 Spacer()
             }
@@ -116,17 +116,17 @@ struct CompactTimerView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(jobName)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color(red: 0.1, green: 0.4, blue: 0.2))  // Dark green text
                     .lineLimit(1)
                 
                 HStack(spacing: 3) {
                     Image(systemName: "clock")
                         .font(.system(size: 9))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(Color(red: 0.15, green: 0.45, blue: 0.25))  // Slightly lighter dark green
                     
                     Text("Since \(startTimeString)")
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(Color(red: 0.15, green: 0.45, blue: 0.25))  // Slightly lighter dark green
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -134,7 +134,7 @@ struct CompactTimerView: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.green.opacity(0.15))
+                .fill(Color.green.opacity(0.2))  // Soft transparent green
         )
     }
 }

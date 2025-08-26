@@ -145,21 +145,17 @@ struct MiniCalendarView: View {
                 HStack(spacing: 2) {
                     ForEach(visibleDays, id: \.date) { day in
                         Text(getDayLabel(for: day.date))
-                            .font(.system(size: useModernStyle ? 8 : 9, weight: .bold))
-                            .foregroundColor(useModernStyle ? .white.opacity(0.7) : .white.opacity(0.6))
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundColor(Color(red: 0.2, green: 0.3, blue: 0.5))
                             .frame(maxWidth: .infinity)
                     }
                 }
                 .padding(.bottom, useModernStyle ? 2 : 0)
                 
                 // Day numbers with work indicators - more compact
-                HStack(spacing: useModernStyle ? 3 : 2) {
+                HStack(spacing: 2) {
                     ForEach(visibleDays, id: \.date) { day in
-                        if useModernStyle {
-                            CompactMediumDayView(dayInfo: day)
-                        } else {
-                            MediumDayView(dayInfo: day)
-                        }
+                        CompactMediumDayView(dayInfo: day)
                     }
                 }
             }
@@ -173,10 +169,8 @@ struct MiniCalendarView: View {
                     Text(getCurrentMonthYear())
                         .font(.system(size: 12, weight: .semibold))
                     Spacer()
-                    Text("3 Weeks")
-                        .font(.system(size: 11, weight: .regular))
                 }
-                .foregroundColor(.white.opacity(0.8))
+                .foregroundColor(Color(red: 0.2, green: 0.3, blue: 0.5))
                 
                 // Three weeks grid
                 VStack(spacing: 4) {
@@ -259,24 +253,24 @@ struct DayView: View {
             // Day label (Mon, Tue, etc.)
             Text(dayLabel)
                 .font(.system(size: isSmallWidget ? 10 : (isMediumWidget ? 11 : (isLargeWidget ? 10 : 10)), weight: .medium))
-                .foregroundColor(.white.opacity(0.8))
+                .foregroundColor(Color(red: 0.2, green: 0.3, blue: 0.5))
             
             // Day number with work indicator
             ZStack {
                 // All widgets now use transparent background
                 Circle()
-                    .fill(Color.white.opacity(0.15))
+                    .fill(Color(red: 0.85, green: 0.88, blue: 0.95).opacity(0.4))
                     .frame(width: circleSize, height: circleSize)
                 
                 if isToday {
                     Circle()
-                        .strokeBorder(Color.white.opacity(0.95), lineWidth: 2.5)
+                        .strokeBorder(Color(red: 0.15, green: 0.25, blue: 0.45), lineWidth: 2.5)
                         .frame(width: circleSize, height: circleSize)
                 }
                 
                 Text(dayNumber)
                     .font(.system(size: fontSize, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color(red: 0.15, green: 0.25, blue: 0.45))
             }
             
             // Icon for all widgets - always show to maintain alignment
@@ -297,7 +291,7 @@ struct DayView: View {
     private var iconName: String {
         switch dayInfo.type {
         case .work:
-            return "briefcase.fill"  // Green briefcase for work
+            return "briefcase.fill"  // Blue briefcase for work
         case .vacation:
             return "sun.max.fill"     // Yellow sun for vacation
         case .sick:
@@ -312,9 +306,9 @@ struct DayView: View {
     private var iconColor: Color {
         switch dayInfo.type {
         case .work:
-            return Color(red: 0.2, green: 0.8, blue: 0.4)  // Green
+            return Color(red: 0.15, green: 0.25, blue: 0.5)  // Dark blue
         case .vacation:
-            return Color(red: 1.0, green: 0.8, blue: 0.2)  // Yellow/Orange
+            return Color(red: 1.0, green: 0.7, blue: 0.2)  // Orange
         case .sick:
             return Color(red: 1.0, green: 0.3, blue: 0.3)  // Red
         case .free:
@@ -385,34 +379,36 @@ struct MediumDayView: View {
     }
     
     var body: some View {
-        VStack(spacing: 3) {
-            // Day number circle - transparent background
+        VStack(spacing: 2) {
+            // Day number circle - white background for work days
             ZStack {
                 Circle()
-                    .fill(Color.white.opacity(0.15))
-                    .frame(width: 36, height: 36)
+                    .fill(dayInfo.type == .free ? 
+                          Color(red: 0.85, green: 0.88, blue: 0.95).opacity(0.5) : 
+                          Color.white.opacity(0.9))
+                    .frame(width: 28, height: 28)
                 
                 if isToday {
                     Circle()
-                        .stroke(Color.white, lineWidth: 2.5)
-                        .frame(width: 36, height: 36)
+                        .stroke(Color(red: 0.15, green: 0.25, blue: 0.45), lineWidth: 2)
+                        .frame(width: 28, height: 28)
                 }
                 
                 Text(dayNumber)
-                    .font(.system(size: 16, weight: isToday ? .bold : .semibold, design: .rounded))
-                    .foregroundColor(.white)
+                    .font(.system(size: 13, weight: isToday ? .bold : .semibold, design: .rounded))
+                    .foregroundColor(Color(red: 0.15, green: 0.25, blue: 0.45))
             }
             
-            // Icon below the number
+            // Icon below the number - larger for better visibility
             if dayInfo.type != .free {
                 Image(systemName: iconName)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(iconColor)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(iconColor.opacity(0.8))
             } else {
                 // Empty space for free days to maintain alignment
-                Image(systemName: "house.fill")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.clear)
+                Circle()
+                    .fill(Color.clear)
+                    .frame(width: 12, height: 12)
             }
         }
         .frame(maxWidth: .infinity)
@@ -421,7 +417,7 @@ struct MediumDayView: View {
     private var iconName: String {
         switch dayInfo.type {
         case .work:
-            return "briefcase.fill"  // Green briefcase for work
+            return "briefcase.fill"  // Blue briefcase for work
         case .vacation:
             return "sun.max.fill"     // Yellow sun for vacation
         case .sick:
@@ -436,9 +432,9 @@ struct MediumDayView: View {
     private var iconColor: Color {
         switch dayInfo.type {
         case .work:
-            return Color(red: 0.2, green: 0.8, blue: 0.4)  // Green
+            return Color(red: 0.15, green: 0.25, blue: 0.5)  // Dark blue
         case .vacation:
-            return Color(red: 1.0, green: 0.8, blue: 0.2)  // Yellow/Orange
+            return Color(red: 1.0, green: 0.7, blue: 0.2)  // Orange
         case .sick:
             return Color(red: 1.0, green: 0.3, blue: 0.3)  // Red
         case .free:
@@ -482,46 +478,34 @@ struct CompactMediumDayView: View {
     }
     
     var body: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 1) {
             // Smaller day number circle
             ZStack {
-                // Background
-                if dayInfo.type != .free {
-                    Circle()
-                        .fill(dayColor.opacity(0.7))
-                        .frame(width: 24, height: 24)
-                        .overlay(
-                            Circle()
-                                .strokeBorder(dayColor.opacity(0.5), lineWidth: 1)
-                        )
-                } else {
-                    Circle()
-                        .fill(Color.white.opacity(0.06))
-                        .frame(width: 24, height: 24)
-                        .overlay(
-                            Circle()
-                                .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
-                        )
-                }
+                // Background - white for all days
+                Circle()
+                    .fill(dayInfo.type == .free ? 
+                          Color(red: 0.85, green: 0.88, blue: 0.95).opacity(0.5) : 
+                          Color.white.opacity(0.9))
+                    .frame(width: 22, height: 22)
                 
                 // Today indicator - thinner
                 if isToday {
                     Circle()
-                        .strokeBorder(Color.white, lineWidth: 2)
-                        .frame(width: 24, height: 24)
+                        .strokeBorder(Color(red: 0.15, green: 0.25, blue: 0.45), lineWidth: 2)
+                        .frame(width: 22, height: 22)
                 }
                 
-                // Day number - smaller
+                // Day number - dark blue
                 Text(dayNumber)
-                    .font(.system(size: 11, weight: isToday ? .bold : .semibold, design: .rounded))
-                    .foregroundColor(dayInfo.type != .free ? .white : .white.opacity(0.7))
+                    .font(.system(size: 10, weight: isToday ? .bold : .semibold, design: .rounded))
+                    .foregroundColor(Color(red: 0.15, green: 0.25, blue: 0.45))
             }
             
-            // Smaller icon or no icon for space
+            // Icon for work types - larger for medium widget
             if dayInfo.type != .free {
                 Image(systemName: iconName)
-                    .font(.system(size: 6, weight: .bold))
-                    .foregroundColor(dayColor.opacity(0.9))
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(iconColor)
             } else {
                 // Invisible spacer for consistent layout
                 Circle()
@@ -544,6 +528,21 @@ struct CompactMediumDayView: View {
             return "house.fill"
         case .scheduled:
             return "calendar"
+        }
+    }
+    
+    private var iconColor: Color {
+        switch dayInfo.type {
+        case .work:
+            return Color(red: 0.15, green: 0.25, blue: 0.5)  // Dark blue
+        case .vacation:
+            return Color(red: 1.0, green: 0.7, blue: 0.2)  // Orange
+        case .sick:
+            return Color(red: 1.0, green: 0.3, blue: 0.3)  // Red
+        case .free:
+            return Color(red: 0.3, green: 0.5, blue: 0.8)  // Blue
+        case .scheduled:
+            return Color(red: 0.5, green: 0.5, blue: 0.7)
         }
     }
 }
@@ -679,7 +678,7 @@ struct ModernMediumDayView: View {
     private var iconBackgroundColor: Color {
         switch dayInfo.type {
         case .work:
-            return Color(red: 0.2, green: 0.8, blue: 0.4).opacity(0.3)
+            return Color(red: 0.15, green: 0.25, blue: 0.5).opacity(0.3)
         case .vacation:
             return Color(red: 1.0, green: 0.8, blue: 0.2).opacity(0.3)
         case .sick:

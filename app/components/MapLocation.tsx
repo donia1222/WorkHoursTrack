@@ -2759,23 +2759,68 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           </>
                         ) : (
                           <>
+                            {/* Title */}
                             <Text style={{
                               fontSize: isTablet ? 16 : (isSmallScreen ? 11 : 13),
                               fontWeight: '600',
                               color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
-                              marginBottom: isTablet ? 6 : (isSmallScreen ? 2 : 4),
+                              marginBottom: isTablet ? 8 : (isSmallScreen ? 4 : 6),
+                              textAlign: 'center',
                             }}>{t('maps.active_jobs')}</Text>
-                            <Text style={{
-                              fontSize: isTablet ? 42 : (isSmallScreen ? 22 : 26),
-                              fontWeight: '700',
-                              color: isDark ? 'white' : '#1e40af',
-                              marginTop: isTablet ? 0 : (isSmallScreen ? 2 : 4),
-                            }}>{jobs.length}</Text>
-                            <Text style={{
-                              fontSize: isTablet ? 14 : (isSmallScreen ? 9 : 11),
-                              color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
-                              marginTop: isTablet ? 4 : (isSmallScreen ? 1 : 2),
-                            }}>{jobs[0].name.length > (isSmallScreen ? 10 : 12) ? jobs[0].name.substring(0, isSmallScreen ? 10 : 12) + '...' : jobs[0].name}</Text>
+                            
+                            {/* Content row */}
+                            <View style={{ 
+                              flexDirection: 'row', 
+                              alignItems: 'flex-start', 
+                              justifyContent: 'flex-start',
+                              width: '100%',
+                              paddingLeft: isTablet ? 10 : 5
+                            }}>
+                              {/* Left side - Number */}
+                              <View style={{ alignItems: 'center', marginRight: isTablet ? 12 : 8 }}>
+                                <Text style={{
+                                  fontSize: isTablet ? 42 : (isSmallScreen ? 22 : 26),
+                                  fontWeight: '700',
+                                  color: isDark ? 'white' : '#1e40af',
+                                }}>{jobs.length}</Text>
+                              </View>
+                              
+                              {/* Right side - Job names */}
+                              <View style={{ flex: 1, alignItems: 'flex-start', justifyContent: 'center', minHeight: isTablet ? 42 : 26 }}>
+                                {jobs.slice(0, 3).map((job, index) => (
+                                  <View key={job.id} style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    marginBottom: index < Math.min(jobs.length - 1, 2) ? (isTablet ? 4 : 2) : 0,
+                                  }}>
+                                    <View style={{
+                                      width: isTablet ? 6 : 4,
+                                      height: isTablet ? 6 : 4,
+                                      borderRadius: isTablet ? 3 : 2,
+                                      backgroundColor: isDark ? '#93c5fd' : '#2563eb',
+                                      marginRight: isTablet ? 8 : 6,
+                                    }} />
+                                    <Text style={{
+                                      fontSize: isTablet ? 15 : (isSmallScreen ? 11 : 13),
+                                      color: isDark ? 'rgba(255, 255, 255, 0.9)' : '#374151',
+                                      fontWeight: '500',
+                                      lineHeight: isTablet ? 20 : (isSmallScreen ? 15 : 17),
+                                    }}>
+                                      {job.name.length > (isSmallScreen ? 10 : 13) 
+                                        ? job.name.substring(0, isSmallScreen ? 10 : 13) + '...' 
+                                        : job.name}
+                                    </Text>
+                                  </View>
+                                ))}
+                                {jobs.length > 3 && (
+                                  <Text style={{
+                                    fontSize: isTablet ? 13 : (isSmallScreen ? 9 : 11),
+                                    color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
+                                    fontStyle: 'italic',
+                                  }}>+{jobs.length - 3} más...</Text>
+                                )}
+                              </View>
+                            </View>
                           </>
                         )}
                       </View>
@@ -2831,7 +2876,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           }}>
                             {t('maps.auto_timer')}
                           </Text>
-                
+            
                         <Text style={{
                           fontSize: isTablet ? 28 : (isSmallScreen ? 16 : 20),
                           fontWeight: '600',
@@ -2842,7 +2887,14 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           {formatTime(elapsedTime)}
                         </Text>
       
-                        
+                                                                   <Text style={{
+                          fontSize: isTablet ? 14 : (isSmallScreen ? 9 : 11),
+                          color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
+                          marginTop: isTablet ? 4 : (isSmallScreen ? 2 : 4),
+                        }}>
+
+                                                      {t('maps.auto_timer_inactive')}
+                        </Text>
                         {/* Pause/Play and Stop buttons - show below when AutoTimer is active */}
                         {autoTimerStatus?.state !== 'inactive' && (
                           <View style={{
@@ -2887,9 +2939,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                 color={isDark ? '#fca5a5' : '#dc2626'} 
                               />
                             </TouchableOpacity>
+                            
                           </View>
+                          
                         )}
+
                       </View>
+                      
                     </View>
                   </TouchableOpacity>
                   )}

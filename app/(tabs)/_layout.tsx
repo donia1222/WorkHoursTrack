@@ -145,10 +145,10 @@ function LayoutContent() {
                 if (currentScreen === 'mapa') {
                   return (
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-start' }}>
-                      <IconSymbol size={22} name="clock.fill" color="#007AFF" />
+                    
                       <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
-                        <Text style={{ fontSize: 21, fontWeight: '700', color: '#007AFF' }}>Vix</Text>
-                        <Text style={{ fontSize: 21, fontWeight: '700', color: '#5856D6' }}>Time</Text>
+                        <Text style={{ fontSize: 22, fontWeight: '700', color: '#007AFF' }}>Vix</Text>
+                        <Text style={{ fontSize: 22, fontWeight: '700', color: '#5856D6' }}>Time</Text>
                       </View>
                     </View>
                   );
