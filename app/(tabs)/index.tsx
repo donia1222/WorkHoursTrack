@@ -13,6 +13,9 @@ declare global {
   var calendarScreenSyncHandler: (() => void) | undefined;
   var timerScreenNotesHandler: (() => void) | undefined;
   var chatbotScreenHistoryHandler: (() => void) | undefined;
+  var showFeaturesModalHandler: (() => void) | undefined;
+  var showHelpSupportHandler: (() => void) | undefined;
+  var showAutoBackupHandler: (() => void) | undefined;
 }
 
 import Loading from '../components/Loading';
@@ -78,6 +81,18 @@ function AppContent() {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
   const { isLoading: subscriptionLoading } = useSubscription();
+
+  // Exponer función para mostrar features modal, help support y auto backup
+  useEffect(() => {
+    globalThis.showFeaturesModalHandler = () => setShowFeaturesModal(true);
+    globalThis.showHelpSupportHandler = () => setShowHelpSupport(true);
+    globalThis.showAutoBackupHandler = () => setShowAutoBackupModal(true);
+    return () => {
+      globalThis.showFeaturesModalHandler = undefined;
+      globalThis.showHelpSupportHandler = undefined;
+      globalThis.showAutoBackupHandler = undefined;
+    };
+  }, []);
 
   // Carga de configuración de backup
   const loadAutoBackupConfig = useCallback(async () => {

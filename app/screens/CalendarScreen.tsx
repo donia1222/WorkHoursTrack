@@ -46,7 +46,7 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
       iconColor = '#30D158'; // Verde
       timeText = formatTimeWithPreferences(workDay.startTime || '');
       if (workDay.endTime) {
-        timeText = `${formatTimeWithPreferences(workDay.startTime)}-${formatTimeWithPreferences(workDay.endTime)}`;
+        timeText = `${formatTimeWithPreferences(workDay.startTime || '')}-${formatTimeWithPreferences(workDay.endTime)}`;
         // Add second shift info if split shift
         if (workDay.secondStartTime && workDay.secondEndTime) {
           timeText += `\n${formatTimeWithPreferences(workDay.secondStartTime)}-${formatTimeWithPreferences(workDay.secondEndTime)}`;
@@ -566,6 +566,22 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
       }),
     ]).start();
   }, [fadeAnim, scaleAnim]);
+
+  // Reload data when returning from other screens (especially ReportsScreen)
+  useEffect(() => {
+    // Set up a listener that will reload data when navigation changes
+    const reloadDataOnFocus = () => {
+      console.log('📅 CalendarScreen: Reloading data on focus');
+      loadData();
+    };
+    
+    // Set up a global handler for when user navigates to calendar
+    globalThis.calendarScreenFocusHandler = reloadDataOnFocus;
+    
+    return () => {
+      delete globalThis.calendarScreenFocusHandler;
+    };
+  }, []);
 
   // Configure calendar locale based on user language
   useEffect(() => {

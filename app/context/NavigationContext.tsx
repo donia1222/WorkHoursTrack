@@ -31,6 +31,11 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
   const [navigationHistory, setNavigationHistory] = useState<ScreenName[]>(['mapa']);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [onExportToCalendar, setOnExportToCalendar] = useState<((jobId: string, parsedData: ParsedWorkData) => void) | undefined>(undefined);
+  
+  // Initialize global current screen
+  React.useEffect(() => {
+    globalThis.currentScreen = 'mapa';
+  }, []);
 
   const navigateTo = (screen: ScreenName, job?: Job) => {
     if (screen !== currentScreen) {
@@ -42,11 +47,23 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
       });
       setCurrentScreen(screen);
       
+      // Mark the current screen globally for focus detection
+      globalThis.currentScreen = screen;
+      
       // Call screen-specific focus handlers when navigating
       if (screen === 'reports' && globalThis.reportsScreenFocusHandler) {
         // Use setTimeout to call after the screen renders
         setTimeout(() => {
           globalThis.reportsScreenFocusHandler?.();
+        }, 100);
+      }
+      
+      // Mark when navigating to calendar to help with data reload
+      if (screen === 'calendar') {
+        globalThis.lastCalendarNavigation = Date.now();
+        // Call calendar focus handler to reload data
+        setTimeout(() => {
+          globalThis.calendarScreenFocusHandler?.();
         }, 100);
       }
     }

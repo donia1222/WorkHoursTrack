@@ -271,25 +271,10 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       console.log('📊 ReportScreen loadData - Total workDays:', loadedWorkDays.length);
       console.log('📊 Recent workDays:', loadedWorkDays.slice(0, 5).map(d => ({ date: d.date, hours: d.hours, jobId: d.jobId, createdAt: d.createdAt })));
       
-      // TEMPORARY: Clean future dates that shouldn't exist
-      const today = new Date().toISOString().split('T')[0];
-      const futureDays = loadedWorkDays.filter(day => day.date > today);
-      if (futureDays.length > 0) {
-        console.log('🚨 Found', futureDays.length, 'future dates, cleaning...');
-        futureDays.forEach(day => console.log(`  - Future date: ${day.date} (${day.hours}h)`));
-        
-        const cleanedWorkDays = loadedWorkDays.filter(day => day.date <= today);
-        await JobService.saveWorkDays(cleanedWorkDays);
-        console.log('✅ Future dates cleaned! Reloading data...');
-        
-        // Reload after cleaning
-        const reloadedWorkDays = await JobService.getWorkDays();
-        setJobs(loadedJobs);
-        setWorkDays(reloadedWorkDays);
-      } else {
-        setJobs(loadedJobs);
-        setWorkDays(loadedWorkDays);
-      }
+      // NO LONGER CLEANING FUTURE DATES - Users can add future work schedules
+      // This was causing issues when users added scheduled days in CalendarScreen
+      setJobs(loadedJobs);
+      setWorkDays(loadedWorkDays);
     } catch (error) {
       console.error('Error loading data:', error);
     }

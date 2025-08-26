@@ -305,6 +305,14 @@
       "privacy_notice_short": "Il timer continua - mantieni l'app attiva per il rilevamento automatico",
       "dismiss_notice": "Capito",
       "dismiss_privacy_notice": "Non mostrare più"
+    },
+    "data_management": {
+      "title": "Gestione Dati",
+      "description": "⚠️ IMPORTANTE: Questa applicazione memorizza tutti i dati solo sul tuo dispositivo. Non usiamo server o database cloud. Per questo motivo, devi creare backup regolarmente e importarli se reinstalli l'applicazione.",
+      "export_title": "Crea file .json",
+      "export_desc": "Crea un backup di tutti i tuoi lavori, ore e impostazioni",
+      "import_title": "Importa file .json",
+      "import_desc": "Ripristina i dati da un file di backup"
     }
   },
   "reports": {

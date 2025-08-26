@@ -22,13 +22,15 @@ declare global {
   var calendarScreenSyncHandler: (() => void) | undefined;
   var timerScreenNotesHandler: (() => void) | undefined;
   var chatbotScreenHistoryHandler: (() => void) | undefined;
+  var showFeaturesModalHandler: (() => void) | undefined;
+  var showHelpSupportHandler: (() => void) | undefined;
+  var showAutoBackupHandler: (() => void) | undefined;
 }
 
 function LayoutContent() {
   const [showBanner, setShowBanner] = useState(false);
   const [hasShownThisSession, setHasShownThisSession] = useState(false);
   const [showInfoButton, setShowInfoButton] = useState(true);
-  const [showHelpSupport, setShowHelpSupport] = useState(false);
   const [showAutoBackupModal, setShowAutoBackupModal] = useState(false);
   
   const { t } = useLanguage?.() ?? { t: (k: string) => k };
@@ -43,7 +45,7 @@ function LayoutContent() {
   // Cargar estado del botón info
   useEffect(() => {
     const loadInfoButtonState = async () => {
-      const infoPressed = await AsyncStorage.getItem('infoButtonPressed');
+      const infoPressed = await AsyncStorage.getItem('headerInfoPressed');
       setShowInfoButton(infoPressed !== 'true');
     };
     loadInfoButtonState();
@@ -121,9 +123,9 @@ function LayoutContent() {
         <Stack screenOptions={{ 
           headerShown: true,
           headerStyle: { 
-            backgroundColor: isDark ? 'rgba(99, 102, 241, 0.05)' : 'rgba(58, 61, 255, 0.05)',
+            backgroundColor: isDark ? 'rgba(0, 0, 0, 1)' : 'hsla(239, 98%, 80%, 0.05)',
           },
-          headerTintColor: colors.text || '#000000',
+          headerTintColor: colors.text || '#000000ff',
           headerTitleStyle: { fontWeight: '700', fontSize: 20 },
           headerBlurEffect: isDark ? 'dark' : 'light',
       
@@ -206,9 +208,25 @@ function LayoutContent() {
                   );
                 } else if (currentScreen === 'mapa') {
                   return (
-                    <TouchableOpacity onPress={() => console.log('Info button pressed')} style={styles.headerButton}>
+                    <TouchableOpacity 
+                      onPress={async () => { 
+                        triggerHaptic('light'); 
+                        if (showInfoButton) {
+                          globalThis.showHelpSupportHandler?.();
+                          await AsyncStorage.setItem('headerInfoPressed', 'true');
+                          setShowInfoButton(false);
+                        } else {
+                          globalThis.showAutoBackupHandler?.();
+                        }
+                      }} 
+                      style={styles.headerButton}
+                    >
                       <View style={[styles.headerButtonInner, { backgroundColor: isDark ? 'rgba(142, 142, 147, 0.15)' : 'rgba(142, 142, 147, 0.1)' }]}>
-                        <IconSymbol size={20} name="info.circle.fill" color="#8E8E93" />
+                        <IconSymbol 
+                          size={20} 
+                          name={showInfoButton ? "info.circle.fill" : "arrow.counterclockwise.circle.fill"} 
+                          color="#8E8E93" 
+                        />
                       </View>
                     </TouchableOpacity>
                   );

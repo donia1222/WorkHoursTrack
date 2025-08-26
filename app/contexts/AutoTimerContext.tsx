@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import SimpleAutoTimer from '../services/SimpleAutoTimer';
+import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
 import { JobService } from '../services/JobService';
 import LiveActivityService from '../services/LiveActivityService';
 import WidgetSyncService from '../services/WidgetSyncService';
@@ -14,6 +14,7 @@ export interface AutoTimerState {
   elapsedTime: number;
   startTime: Date | null;
   isPaused: boolean;
+  autoTimerState: string; // Estado específico de AutoTimerService
 }
 
 // Interfaz del Context
@@ -45,6 +46,7 @@ const initialState: AutoTimerState = {
   elapsedTime: 0,
   startTime: null,
   isPaused: false,
+  autoTimerState: 'inactive',
 };
 
 // Crear el Context
@@ -62,53 +64,39 @@ export const useAutoTimer = () => {
 // Provider Component
 export const AutoTimerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AutoTimerState>(initialState);
-  const [autoTimerService] = useState(() => SimpleAutoTimer.getInstance());
+  const [autoTimerService] = useState(() => AutoTimerService.getInstance());
   const [liveActivityService] = useState(() => LiveActivityService.getInstance());
   const [jobs, setJobs] = useState<Job[]>([]);
 
   // Actualizar estado desde el servicio
   const updateState = async () => {
     try {
-      // Obtener sesión activa
-      const activeSession = await JobService.getActiveSession();
+      // Obtener estado del AutoTimerService
+      const autoTimerStatus = autoTimerService.getStatus();
+      const elapsedTime = await autoTimerService.getElapsedTime();
       const isServiceEnabled = autoTimerService.isServiceEnabled();
+      const isPaused = await autoTimerService.isActiveTimerPaused();
       
-      if (activeSession) {
-        // Encontrar el job actual
-        const currentJob = jobs.find(job => job.id === activeSession.jobId);
-        
-        // Calcular tiempo transcurrido
-        const isPaused = (activeSession as any).isPaused || false;
-        const pausedElapsedTime = (activeSession as any).pausedElapsedTime || 0;
-        
-        let elapsedTime = 0;
-        if (isPaused && pausedElapsedTime > 0) {
-          elapsedTime = pausedElapsedTime;
-        } else {
-          const startTime = new Date(activeSession.startTime);
-          elapsedTime = Math.floor((Date.now() - startTime.getTime()) / 1000);
-        }
-
-        setState({
-          isActive: true,
-          isMonitoring: isServiceEnabled,
-          currentJobId: activeSession.jobId,
-          currentJobName: currentJob?.name || null,
-          elapsedTime,
-          startTime: new Date(activeSession.startTime),
-          isPaused,
-        });
-      } else {
-        setState({
-          isActive: false,
-          isMonitoring: isServiceEnabled,
-          currentJobId: null,
-          currentJobName: null,
-          elapsedTime: 0,
-          startTime: null,
-          isPaused: false,
-        });
-      }
+      // Obtener sesión activa para tiempos
+      const activeSession = await JobService.getActiveSession();
+      
+      // Determinar si está activo (tanto timer manual como auto)
+      const isActive = autoTimerStatus.state === 'active' || !!activeSession;
+      
+      // Encontrar el job actual
+      const currentJobId = autoTimerStatus.jobId || activeSession?.jobId || null;
+      const currentJob = currentJobId ? jobs.find(job => job.id === currentJobId) : null;
+      
+      setState({
+        isActive,
+        isMonitoring: isServiceEnabled,
+        currentJobId,
+        currentJobName: autoTimerStatus.jobName || currentJob?.name || null,
+        elapsedTime,
+        startTime: activeSession ? new Date(activeSession.startTime) : null,
+        isPaused,
+        autoTimerState: autoTimerStatus.state,
+      });
     } catch (error) {
       console.error('Error updating AutoTimer state:', error);
     }
@@ -135,13 +123,13 @@ export const AutoTimerProvider: React.FC<{ children: ReactNode }> = ({ children 
     loadJobs();
 
     // Configurar listener para cambios de estado del servicio
-    const handleStatusChange = (status: any) => {
+    const handleStatusChange = (status: AutoTimerStatus) => {
       console.log('📡 AutoTimer Context: Status changed:', status);
       updateState();
     };
 
     // Agregar listener
-    autoTimerService.on('statusChanged', handleStatusChange);
+    autoTimerService.addStatusListener(handleStatusChange);
 
     // Actualizar estado cada segundo cuando hay timer activo
     updateInterval = setInterval(async () => {
@@ -159,7 +147,7 @@ export const AutoTimerProvider: React.FC<{ children: ReactNode }> = ({ children 
     return () => {
       if (updateInterval) clearInterval(updateInterval);
       if (jobsLoadInterval) clearInterval(jobsLoadInterval);
-      autoTimerService.off('statusChanged', handleStatusChange);
+      autoTimerService.removeStatusListener(handleStatusChange);
     };
   }, [jobs.length]); // Depend on jobs length to reload when jobs change
 
@@ -176,7 +164,7 @@ export const AutoTimerProvider: React.FC<{ children: ReactNode }> = ({ children 
       }
 
       // Iniciar el servicio de monitoreo
-      await autoTimerService.startSimpleMonitoring();
+      await autoTimerService.start(jobsList);
       
       console.log('✅ AutoTimer monitoring started successfully');
       await updateState();
@@ -187,10 +175,10 @@ export const AutoTimerProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   };
 
-  const stopMonitoring = () => {
+  const stopMonitoring = async () => {
     try {
       console.log('🛑 AutoTimerContext: Stopping monitoring');
-      autoTimerService.stop();
+      await autoTimerService.stop();
       updateState();
     } catch (error) {
       console.error('Error stopping AutoTimer monitoring:', error);
@@ -335,7 +323,7 @@ export const AutoTimerProvider: React.FC<{ children: ReactNode }> = ({ children 
   const pauseTimer = async () => {
     try {
       console.log('⏸️ AutoTimerContext: Pausing timer');
-      await autoTimerService.pauseTimer();
+      await autoTimerService.pauseActiveTimer();
       await updateState();
       return true;
     } catch (error) {
@@ -347,7 +335,7 @@ export const AutoTimerProvider: React.FC<{ children: ReactNode }> = ({ children 
   const resumeTimer = async () => {
     try {
       console.log('▶️ AutoTimerContext: Resuming timer');
-      await autoTimerService.resumeTimer();
+      await autoTimerService.resumeActiveTimer();
       await updateState();
       return true;
     } catch (error) {

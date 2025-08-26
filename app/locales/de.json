@@ -8,10 +8,7 @@
     "delete": "Löschen",
     "confirm_delete": "Löschung bestätigen",
     "loading": "Synchronisiert...",
-    "error": "Fehler",
-    "meters": "Meter",
-    "today": "Heute",
-    "yesterday": "Gestern"
+    "error": "Fehler"
   },
   "preferences": {
     "title": "Einstellungen",
@@ -27,10 +24,7 @@
       "title": "Sprache",
       "description": "Wählen Sie die Anwendungssprache",
       "default": "Standardsprache",
-      "change_to": "Wechseln zu {{language}}",
-      "autodetect": "Automatisch erkennen",
-      "autodetect_active": "Erkannt: {{language}}",
-      "autodetect_inactive": "Gerätesprache verwenden"
+      "change_to": "Wechseln zu {{language}}"
     },
     "notifications": {
       "title": "Benachrichtigungen",
@@ -55,28 +49,18 @@
       "open_settings": "Einstellungen Öffnen",
       "auto_timer": "Auto-Timer",
       "auto_timer_desc": "Benachrichtigungen wenn Auto-Timer startet oder pausiert",
-      "timer_started_title": "✅ AutoTimer Aktiviert",
-      "timer_started_body": "AutoTimer aktiviert für \"{{jobName}}\"",
-      "timer_stopped_title": "❌ AutoTimer Deaktiviert",
-      "timer_stopped_body": "AutoTimer deaktiviert für \"{{jobName}}\"",
-      "timer_will_start_title": "🚀 AutoTimer Wird Aktiviert",
-      "timer_will_start_body": "AutoTimer wird in {{minutes}} Minuten für \"{{jobName}}\"",
-      "timer_will_stop_title": "⏹ AutoTimer Wird Deaktiviert",
-      "timer_will_stop_body": "AutoTimer wird in {{minutes}} Minuten für \"{{jobName}}\"",
-      "default_notification_title": "📱 Benachrichtigung",
-      "default_notification_body": "Ereignis für \"{{jobName}}\"",
       "reminder_time": "Erinnerungszeit",
       "reminder_time_desc": "Konfigurieren Sie, wann Sie Erinnerungen vor Ihrem Arbeitsplan erhalten möchten"
     },
     "time_format": {
       "title": "Zeitformat",
-      "description": "Wählen Sie, wie Arbeitszeiten angezeigt werden sollen",
+      "description": "Wählen Sie, wie Arbeitszeiten angezeigt werden",
       "time_format": "Zeitformat",
       "time_format_desc": "HH:MM vs 0.00h",
       "hour_format": "Stundenformat",
-      "hour_format_desc": "24-Stunden vs 12-Stunden (AM/PM)",
-      "12_hour": "12-Stunden (AM/PM)",
-      "24_hour": "24-Stunden"
+      "hour_format_desc": "24 Stunden vs 12 Stunden (AM/PM)",
+      "12_hour": "12 Stunden (AM/PM)",
+      "24_hour": "24 Stunden"
     },
     "auto_backup": {
       "title": "Automatische Sicherung",
@@ -182,7 +166,6 @@
     "you_are_here": "Sie sind hier",
     "add_job": "Arbeit hinzufügen",
     "add_job_desc": "Richten Sie Ihre erste Arbeit ein, um zu beginnen",
-    "no_jobs": "Keine Arbeiten",
     "location_permission_denied_title": "Standortberechtigungen erforderlich",
     "location_permission_denied_message": "Um die Karte und automatische Standortfunktionen zu verwenden, müssen Sie Standortberechtigungen in den Einstellungen aktivieren.",
     "location_open_settings": "Einstellungen öffnen",
@@ -208,17 +191,6 @@
     "delete_confirm_button": "Löschen",
     "delete_success": "Arbeit erfolgreich gelöscht",
     "delete_error": "Arbeit konnte nicht gelöscht werden",
-    "auto_timer_inactive": "Auto-Timer inaktiv",
-    "per_hour": "pro Stunde",
-    "configure_schedule": "Zeitplan konfigurieren",
-    "configure_rates": "Tarife konfigurieren",
-    "configure_company": "Firma konfigurieren",
-    "company_configured": "Firma konfiguriert",
-    "overtime": "Überstunden",
-    "ready_to_invoice": "Bereit zur Abrechnung",
-    "active_jobs": "Aktive Jobs",
-    "my_jobs": "Meine Jobs",
-    "with_location": "Mit Standort",
     "no_job_selected": "Keine Arbeit ausgewählt",
     "working_now": "Arbeitet jetzt",
     "next_shift": "Nächste Schicht", 
@@ -229,24 +201,6 @@
     "out_of_range": "Außerhalb des Bereichs",
     "auto_timer_status": "Automatischer Timer: {{status}}",
     "view_options": "Tippen für Optionen"
-  },
-  "quickActions": {
-    "timer": {
-      "title": "Timer",
-      "subtitle": "Zeit verwalten"
-    },
-    "reports": {
-      "title": "Berichte",
-      "subtitle": "Zusammenfassung anzeigen"
-    },
-    "calendar": {
-      "title": "Kalender",
-      "subtitle": "Arbeitstage"
-    },
-    "chat": {
-      "title": "KI-Chat",
-      "subtitle": "Assistent"
-    }
   },
   "timer": {
     "title": "Timer",
@@ -279,15 +233,13 @@
     "total_hours": "Gesamtstunden",
     "session_added_successfully": "Zeit erfolgreich zum Tag hinzugefügt",
     "session_saved_successfully": "Arbeitssitzung erfolgreich gespeichert",
-    "break_time_minutes": "Pausenzeit (Minuten)",
     "view_reports": "Berichte Anzeigen",
     "session_added_to_existing": "{{sessionHours}}h zum Tag hinzugefügt. Gesamt: {{totalHours}}h",
     "save_error": "Sitzung konnte nicht gespeichert werden",
     "load_jobs_error": "Arbeiten konnten nicht geladen werden",
     "auto_timer": {
       "entering": "Ankunft am Arbeitsplatz...",
-      "will_start": "AutoTimer wird in {{minutes}} Minuten",
-      "starting_in": "Startet in {{seconds}}s",
+      "will_start": "Timer startet in {{minutes}} Minuten",
       "countdown_entering": "Der automatische Timer startet, wenn der Countdown endet",
       "started_auto": "Timer automatisch gestartet",
       "leaving": "Verlassen des Arbeitsplatzes...",
@@ -296,8 +248,6 @@
       "stopped_auto": "Timer automatisch gestoppt - {{hours}}h registriert",
       "cancelled_start": "Automatischer Start abgebrochen",
       "cancelled_stop": "Automatischer Stopp abgebrochen",
-      "activation_alert": "AutoTimer aktiviert. Der Timer startet automatisch, wenn Sie den Arbeitsbereich betreten.",
-      "activation_title": "Automatischer Timer",
       "manual_override": "Manuelle Steuerung aktiviert",
       "cancelled": "Abgebrochen - Play drücken zum Reaktivieren",
       "available_title": "Automatischer Timer Verfügbar",
@@ -308,8 +258,8 @@
       "disabled_message": "Automatischer Timer deaktiviert für \"{{jobName}}\"",
       "disable_error": "Automatischer Timer konnte nicht deaktiviert werden",
       "background_notice": "Der automatische Timer funktioniert nur, wenn die App im Hintergrund läuft. Wenn Sie die App vollständig schließen, stoppt die Zeitählung aus Datenschutzgründen.",
-      "privacy_notice": "Der Timer läuft weiter, auch wenn die App geschlossen ist, aber die Standorterkennung benötigt die App im Hintergrund. Wir empfehlen, sie aktiv zu halten oder wieder zu öffnen, damit sie automatisch stoppt, wenn Sie die Arbeit verlassen.",
-      "privacy_notice_short": "Timer läuft weiter - App für automatische Erkennung aktiv halten",
+      "privacy_notice": "Aus Datenschutzgründen funktioniert der Auto-Timer nicht, wenn die App geschlossen ist. Lassen Sie die App im Hintergrund für ordnungsgemäßen Betrieb.",
+      "privacy_notice_short": "App im Hintergrund aktiv halten",
       "dismiss_notice": "Verstanden",
       "dismiss_privacy_notice": "Nicht mehr anzeigen"
     }
@@ -377,26 +327,6 @@
     "configure_amounts_message": "Konfigurieren Sie Beträge, um die Gesamtsumme zu sehen",
     "pdf_title": "Arbeitsbericht",
     "analysis_date": "Analysedatum",
-    "invoice_title": "RECHNUNG",
-    "provider_data": "ANBIETER-DATEN",
-    "summary": "ZUSAMMENFASSUNG",
-    "banking_details": "BANKDATEN",
-    "account": "Konto",
-    "bank": "Bank",
-    "generated_on": "Generiert am",
-    "salary_calculation": "GEHALTSBERECHNUNG",
-    "calculation_details": "BERECHNUNGSDETAILS",
-    "rate": "Tarif",
-    "period": "Zeitraum",
-    "worked_hours": "Arbeitsstunden",
-    "worked_weeks": "Arbeitswochen",
-    "worked_months": "Arbeitsmonate",
-    "total_to_pay": "GESAMTBETRAG",
-    "note": "Hinweis",
-    "salary_note": "Diese Berechnung basiert auf den aufgezeichneten Stunden und der Gehaltskonfiguration des Jobs.",
-    "per_worked_hours": "pro geleistete Stunden",
-    "per_worked_weeks": "pro geleistete Wochen",
-    "proportional_month": "proportional zum Monat",
     "days": "Tage",
     "work": "Arbeit",
     "statistics_section": "Statistiken",
@@ -427,12 +357,6 @@
     "free_days": "Frei",
     "vacation_days": "Urlaub",
     "sick_days": "Krank",
-    "monthly": "Monatlich",
-    "annual": "Jährlich",
-    "days_per_week": "Tage/Woche",
-    "per_day": "pro Tag",
-    "days": "Tage",
-    "day": "Tag",
     "badge_free": "FREI",
     "badge_vacation": "URL",
     "badge_sick": "KRANK",
@@ -500,11 +424,6 @@
     "sync_to_calendar": "Mit Kalender synchronisieren",
     "delete_workday": "Eintrag löschen",
     "quick_presets": "Schnelle Presets:",
-    "standard_hours": "Standard-Arbeitszeit",
-    "full_workday": "Voller Arbeitstag",
-    "hours_extra": "{{hours}}h Überstunden",
-    "hours_remaining": "{{hours}}h verbleibend",
-    "paid_by_hour": "Stundenlohn (keine Überstunden)",
     "calendar_sync_error": "Nur Arbeitstage können synchronisiert werden",
     "short_shift": "Kurze Schicht",
     "overtime_hours": "Überstunden"
@@ -587,8 +506,7 @@
       "color": "Identifikationsfarbe",
       "active": "Aktive Arbeit",
       "detecting": "Erkennung...",
-      "auto_fill": "Auto-Ausfüllen",
-      "search_address": "Adresse suchen"
+      "auto_fill": "Auto-Ausfüllen"
     },
     "contact": {
       "title": "Kontakt",
@@ -620,16 +538,9 @@
       "enable_schedule": "Zeitplan aktivieren",
       "enable_schedule_desc": "Arbeitszeiten und Kalendersynchronisation für diesen Job aktivieren",
       "auto_schedule": "Automatische Terminplanung",
-      "sync_calendar": "Mit Kalender synchronisieren",
-      "syncing": "Synchronisiere...",
-      "sync_success": "Synchronisiert!",
       "auto_schedule_desc": "Arbeitstage automatisch zum Kalender hinzufügen",
       "select_day": "Tag auswählen",
-      "schedule_for": "Zeitplan für",
-      "sync_month": "Monat zum Synchronisieren",
-      "sync_month_helper": "Wählen Sie den Monat, den Sie mit Ihrem Kalender synchronisieren möchten",
-      "sync_months_selected": "{{count}} Monate ausgewählt - Tippen zum Auswählen/Abwählen",
-      "sync_error": "Fehler beim Synchronisieren des Kalenders"
+      "schedule_for": "Zeitplan für"
     },
     "financial": {
       "title": "Gehaltskonfiguration",
@@ -641,23 +552,9 @@
       "amount": "Betrag",
       "amount_placeholder": "0",
       "currency": "Währung",
-      "currency_label": "Währung",
-      "payment_type": "Zahlungsart",
-      "per_hour": "Pro Stunde",
-      "per_month": "Pro Monat",
-      "per_year": "Pro Jahr",
-      "amount_per_hour": "Betrag pro Stunde",
-      "amount_per_month": "Betrag pro Monat",
-      "amount_per_year": "Betrag pro Jahr",
       "currency_placeholder": "EUR",
       "hourly_rate": "Stundensatz (für Abrechnung)",
-      "hourly_rate_placeholder": "0",
-      "period_hour": "h",
-      "period_month": "Monat",
-      "period_year": "Jahr",
-      "amount_helper_hourly": "z.B.: 15€/Stunde für Freelance-Arbeit",
-      "amount_helper_monthly": "z.B.: 1800€/Monat für Festanstellung",
-      "amount_helper_annual": "z.B.: 35000€/Jahr für Jahresgehälter"
+      "hourly_rate_placeholder": "0"
     },
     "billing": {
       "title": "Abrechnungskonfiguration",
@@ -695,15 +592,7 @@
         "bank_name_placeholder": "z.B.: Deutsche Bank",
         "swift_code": "SWIFT/BIC-Code",
         "swift_code_placeholder": "z.B.: DEUTDEFF",
-        "preview_title": "Rechnungsvorschau",
-        "preview_company_name": "Firmenname",
-        "preview_tax_id": "Steuernummer",
-        "preview_user_name": "Benutzername",
-        "preview_address": "Vollständige Adresse",
-        "preview_phone": "Telefon",
-        "preview_email": "E-Mail",
-        "preview_prefix": "Präfix",
-        "preview_taxes": "Steuern"
+        "preview_title": "Rechnungsvorschau"
       }
     },
     "location": {
@@ -741,14 +630,9 @@
       "notifications": "Benachrichtigungen anzeigen",
       "notifications_desc": "Benachrichtigen wenn automatischer Timer Status ändert",
       "preview": "Vorschau: Startet nach {{delayStart}} Min am Arbeitsplatz, stoppt {{delayStop}} Min nach Verlassen",
-      "map_title": "📍 Arbeitsort und Geofencing-Bereich",
-      "map_description": "Der Kreis zeigt den {{radius}} Meter Bereich, in dem der Timer automatisch aktiviert wird",
       "address_required_title": "Adresse Erforderlich",
       "address_required_message": "Um den automatischen Timer zu aktivieren, müssen Sie zuerst eine Adresse im Tab 'Grundlagen' hinzufügen. Die Adresse ist für die automatische Standorterkennung erforderlich.",
-      "stopped_no_time": "Timer gestoppt - keine aktive Zeit lief",
-      "only_one_active": "Nur ein AutoTimer aktiv",
-      "only_one_active_message": "Die Arbeit \"{{jobName}}\" hat bereits den AutoTimer aktiviert. Nur eine Arbeit kann den AutoTimer gleichzeitig aktiv haben.",
-      "deactivate_other": "Anderen deaktivieren und diesen aktivieren"
+      "stopped_no_time": "Timer gestoppt - keine aktive Zeit lief"
     },
     "delete": {
       "title": "Arbeit Löschen",
@@ -887,10 +771,7 @@
       "whatsapp": "WhatsApp",
       "whatsapp_number": "+49 30 123 456",
       "schedule": "Support-Zeiten",
-      "schedule_hours": "Mo - Fr: 9:00 - 18:00 Uhr",
-      "share_app": "App teilen",
-      "share_app_desc": "VixTime mit Freunden teilen",
-      "share_message": "Entdecke VixTime! Die beste App zur Arbeitszeiterfassung. Download: https://vixtime.com"
+      "schedule_hours": "Mo - Fr: 9:00 - 18:00 Uhr"
     },
     "legal": {
       "title": "Rechtliches & Datenschutz",
@@ -900,9 +781,63 @@
       "privacy_description": "Wie wir mit Ihren Daten umgehen",
       "version": "Version 1.0.0",
       "last_update": "Letztes Update: Juli 2025"
+    }
+  },
+  "preferences": {
+    "title": "Einstellungen",
+    "subtitle": "Passen Sie Ihre Arbeitserfahrung an",
+    "appearance": {
+      "title": "Erscheinungsbild",
+      "description": "Konfigurieren Sie das visuelle Design der App",
+      "auto": "Auto",
+      "light": "Hell",
+      "dark": "Dunkel"
     },
-    "support_terms": {
-      "title": "Support & Bedingungen"
+    "language": {
+      "title": "Sprache",
+      "description": "Wählen Sie Ihre bevorzugte Sprache",
+      "default": "Aktuelle Sprache",
+      "change_to": "Wechseln zu {{language}}"
+    },
+    "data_management": {
+      "title": "Datenverwaltung",
+      "description": "⚠️ WICHTIG: Diese App speichert alle Daten nur auf Ihrem Gerät. Wir verwenden keine Server oder Cloud-Datenbanken. Aus diesem Grund müssen Sie regelmäßig Backups erstellen und bei einer Neuinstallation der App importieren.",
+      "export_title": ".json-Datei erstellen",
+      "export_desc": "Backup aller Ihrer Jobs, Stunden und Einstellungen erstellen",
+      "import_title": ".json-Datei importieren",
+      "import_desc": "Daten aus einer Backup-Datei wiederherstellen",
+      "auto_backup_title": "Automatische Sicherungen",
+      "auto_backup_desc": "Tägliche, wöchentliche oder monatliche automatische Backups konfigurieren"
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "description": "Arbeitserinnerungen und Warnungen konfigurieren",
+      "general": "Allgemeine Benachrichtigungen",
+      "general_notifications": "Allgemeine Benachrichtigungen",
+      "auto_timer": "Auto Timer",
+      "work_schedule_reminders": "Arbeitszeit-Erinnerungen",
+      "general_desc": "Alle Benachrichtigungen aktivieren",
+      "schedule": "Zeitplan-Erinnerungen",
+      "schedule_desc": "Ein- und Ausgangsbenachrichtigungen",
+      "work_reminders": "Arbeitserinnerungen",
+      "work_reminders_desc": "Erinnerungen vor Arbeitsbeginn erhalten",
+      "reminder_time": "Erinnerungszeit",
+      "custom_minutes": "Benutzerdefinierte Minuten",
+      "test_button": "Benachrichtigung testen",
+      "test_desc": "Eine Test-Benachrichtigung senden",
+      "permissions_denied_title": "Berechtigungen verweigert",
+      "permissions_denied_message": "Um Benachrichtigungen zu erhalten, müssen Sie die Berechtigungen in der Gerätekonfiguration zulassen",
+      "open_settings": "Konfiguration öffnen"
+    },
+    "data_management": {
+      "title": "Datenverwaltung",
+      "description": "⚠️ WICHTIG: Diese App speichert alle Daten nur auf Ihrem Gerät. Wir verwenden keine Server oder Cloud-Datenbanken. Aus diesem Grund müssen Sie regelmäßig Backups erstellen und bei einer Neuinstallation der App importieren.",
+      "export_title": ".json-Datei erstellen",
+      "export_desc": "Backup aller Ihrer Jobs, Stunden und Einstellungen erstellen",
+      "import_title": ".json-Datei importieren",
+      "import_desc": "Daten aus einer Backup-Datei wiederherstellen",
+      "auto_backup_title": "Automatische Backups",
+      "auto_backup_desc": "Backups automatisch erstellen"
     }
   },
   "side_menu": {
@@ -968,8 +903,12 @@
       "no_ads": "✓ Keine Werbung",
       "priority_support": "✓ Prioritäts-Support"
     },
+    "buttons": {
+      "restore": "Käufe Wiederherstellen",
+      "cancel": "Abbrechen",
+      "continue": "Zur App Fortfahren"
+    },
     "processing": "Kauf wird verarbeitet...",
-    "processing_note": "Dies kann einen Moment dauern...",
     "success": {
       "title": "Abonnement Erfolgreich!",
       "message": "Sie haben jetzt vollständigen Zugang zu allen Premium-Funktionen.",
@@ -981,10 +920,6 @@
       "title": "Käufe Wiederhergestellt",
       "message": "Ihre Käufe wurden erfolgreich wiederhergestellt."
     },
-    "restore_no_purchases": {
-      "title": "Keine aktiven Abonnements",
-      "message": "Keine aktiven Abonnements zum Wiederherstellen gefunden. Wenn Sie glauben, dass dies ein Fehler ist, kontaktieren Sie bitte den Support."
-    },
     "errors": {
       "purchase_failed": "Abonnement konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
       "restore_failed": "Keine vorherigen Käufe zum Wiederherstellen gefunden."
@@ -995,8 +930,6 @@
       "cancel": "Abbrechen",
       "continue": "Weiter"
     },
-    "cancellation_text": "Sie können Ihr Abonnement jederzeit kündigen",
-    "duration": "3 Monate Abonnement",
     "active": {
       "account_status": {
         "title": "Kontostatus",
@@ -1141,10 +1074,6 @@
   },
   "onboarding": {
     "steps": {
-      "location": {
-        "title": "Deine Privatsphäre ist Wichtig",
-        "description": "VixTime nutzt deinen Standort nur, um zu erkennen, wann du bei der Arbeit ankommst und gehst. Alle Daten werden lokal auf deinem Gerät gespeichert. Wir haben keine Server, sammeln keine Daten und teilen niemals deine Informationen. Du kannst diese Berechtigung jederzeit in den Systemeinstellungen ändern."
-      },
       "jobs": {
         "title": "Arbeiten",
         "description": "Arbeiten hinzufügen und bearbeiten, Zeitpläne und Tarife konfigurieren. Alle Daten werden lokal gespeichert, denken Sie an Backups."
@@ -1198,74 +1127,5 @@
   "welcome": {
     "title": "Willkommen!",
     "subtitle": "Lernen Sie, wie Sie die App in {{steps}} Schritten verwenden"
-  },
-  "privacy_policy": {
-    "title": "Datenschutzrichtlinie",
-    "subtitle": "Letzte Aktualisierung: August 2025",
-    "your_privacy_title": "Ihr Datenschutz ist unsere Priorität",
-    "your_privacy_text": "Bei VixTime nehmen wir Ihren Datenschutz ernst. Diese Datenschutzrichtlinie erklärt, wie wir Ihre Informationen sammeln, verwenden und schützen, wenn Sie unsere Arbeitszeiterfassungsanwendung verwenden.",
-    "data_storage_title": "Datenspeicherung",
-    "local_storage_text": "100% lokale Speicherung: Alle Ihre Arbeitsdaten, einschließlich Stelleninformationen, Zeitaufzeichnungen, Zeitpläne und Einstellungen werden ausschließlich auf Ihrem Gerät gespeichert. Wir haben keinen Zugriff auf diese Informationen.",
-    "no_cloud_text": "Keine Cloud-Server: Wir haben keine Datenbanken oder Cloud-Server, die Ihre persönlichen Informationen speichern. Ihre Daten verlassen Ihr Gerät nie, es sei denn, Sie wählen explizit, sie zu exportieren oder zu teilen.",
-    "no_accounts_text": "Keine Benutzerkonten: Die App funktioniert ohne die Erstellung von Benutzerkonten, was bedeutet, dass wir keine persönlichen Identifikationsinformationen wie Namen, E-Mail-Adressen oder Telefonnummern sammeln oder speichern.",
-    "data_backup_title": "Datensicherung",
-    "data_backup_text": "Da alle Daten lokal auf Ihrem Gerät gespeichert werden, sind Sie für die Erstellung regelmäßiger Backups verantwortlich. Die App bietet Exportfunktionen, um Ihnen zu helfen, Ihre Daten sicher zu speichern.",
-    "ai_chat_title": "KI-Chat-Funktionen",
-    "ai_anonymous_text": "Nachrichten, die an den KI-Chatbot gesendet werden, werden anonym über Googles Gemini API verarbeitet. Keine persönlichen Informationen werden in diese Anfragen einbezogen.",
-    "ai_no_storage_text": "Wir speichern keine Chat-Verläufe oder Unterhaltungen auf unseren Servern. Alle Chat-Daten bleiben auf Ihrem Gerät.",
-    "ai_images_text": "Von der KI analysierte Bilder werden vorübergehend verarbeitet und nicht auf externen Servern gespeichert.",
-    "subscriptions_title": "Abonnements",
-    "subscription_text": "Wenn Sie ein Premium-Abonnement kaufen, werden Zahlungsinformationen vom Apple App Store oder Google Play Store gemäß ihren jeweiligen Datenschutzrichtlinien verwaltet. Wir haben keinen Zugriff auf Ihre Zahlungsdetails.",
-    "location_data_title": "Standortdaten",
-    "location_text": "Standortdaten werden nur für die automatische Timer-Funktionalität verwendet und lokal auf Ihrem Gerät gespeichert. Standortinformationen werden niemals an unsere Server übertragen.",
-    "third_party_title": "Drittanbieter-Dienste",
-    "third_party_text": "Wir verwenden nur wesentliche Drittanbieter-Dienste: Google Gemini API für KI-Chat-Funktionalität (anonym) und plattformspezifische App-Stores für Abonnement-Management.",
-    "data_security_title": "Datensicherheit",
-    "data_security_text": "Da alle Daten lokal auf Ihrem Gerät gespeichert werden, hängt die Datensicherheit von den Sicherheitsmaßnahmen Ihres Geräts ab. Wir empfehlen die Verwendung von Geräteverschlüsselung und sicheren Sperrbildschirmen.",
-    "childrens_privacy_title": "Datenschutz für Kinder",
-    "childrens_text": "Unsere App ist nicht für Kinder unter 13 Jahren konzipiert. Wir sammeln wissentlich keine persönlichen Informationen von Kindern.",
-    "changes_title": "Änderungen an dieser Richtlinie",
-    "changes_text": "Wir können diese Datenschutzrichtlinie von Zeit zu Zeit aktualisieren. Alle Änderungen werden in der App veröffentlicht und treten sofort nach der Veröffentlichung in Kraft.",
-    "contact_us_title": "Kontaktieren Sie uns",
-    "contact_text": "Wenn Sie Fragen zu dieser Datenschutzrichtlinie haben, kontaktieren Sie uns unter support@worktrack-app.com"
-  },
-  "terms_of_service": {
-    "title": "Nutzungsbedingungen",
-    "subtitle": "Letzte Aktualisierung: August 2025",
-    "acceptance_title": "Annahme der Bedingungen",
-    "acceptance_text": "Durch das Herunterladen, Installieren oder Verwenden von VixTime stimmen Sie zu, an diese Nutzungsbedingungen gebunden zu sein. Wenn Sie diesen Bedingungen nicht zustimmen, verwenden Sie die App bitte nicht.",
-    "description_title": "App-Beschreibung",
-    "description_text": "VixTime ist eine Arbeitszeiterfassungsanwendung, die Ihnen hilft, Ihre Arbeitszeiten zu überwachen und zu verwalten, Zeitpläne zu erstellen und Berichte zu generieren. Alle Daten werden lokal auf Ihrem Gerät gespeichert.",
-    "license_title": "Lizenz",
-    "license_text": "Wir gewähren Ihnen eine begrenzte, nicht-exklusive, nicht-übertragbare Lizenz zur Nutzung von VixTime für persönliche oder geschäftliche Zwecke in Übereinstimmung mit diesen Bedingungen.",
-    "user_responsibilities_title": "Benutzerverantwortlichkeiten",
-    "user_responsibilities_text": "Sie sind verantwortlich für: (a) die Aufrechterhaltung der Sicherheit Ihres Geräts und der App-Daten, (b) die Erstellung regelmäßiger Backups Ihrer Daten, (c) die Nutzung der App in Übereinstimmung mit geltendem Recht.",
-    "data_ownership_title": "Dateneigentum",
-    "data_ownership_text": "Sie behalten das vollständige Eigentum an allen Daten, die Sie in der App erstellen oder speichern. Wir erheben keine Ansprüche auf Ihre Arbeitsdaten, Zeitpläne oder Berichte.",
-    "prohibited_uses_title": "Verbotene Nutzungen",
-    "prohibited_uses_text": "Sie dürfen nicht: (a) Reverse Engineering betreiben oder versuchen, Quellcode zu extrahieren, (b) die App für illegale Aktivitäten verwenden, (c) versuchen, Sicherheitsmaßnahmen zu umgehen.",
-    "premium_features_title": "Premium-Funktionen",
-    "premium_features_text": "Einige Funktionen erfordern ein Premium-Abonnement. Abonnementbedingungen unterliegen den App Store- oder Google Play Store-Richtlinien. Abonnements verlängern sich automatisch, es sei denn, sie werden gekündigt.",
-    "ai_features_title": "KI-Funktionen",
-    "ai_features_text": "KI-Chat-Funktionen werden 'wie besehen' bereitgestellt und sind möglicherweise nicht immer genau. Sie sollten alle von KI-Funktionen bereitgestellten Informationen überprüfen, bevor Sie geschäftliche Entscheidungen treffen.",
-    "disclaimers_title": "Haftungsausschlüsse",
-    "disclaimers_text": "Die App wird 'wie besehen' ohne Gewährleistungen bereitgestellt. Wir sind nicht haftbar für Datenverlust, verpasste Arbeitszeiten oder geschäftliche Entscheidungen basierend auf App-Daten.",
-    "limitation_liability_title": "Haftungsbeschränkung",
-    "limitation_liability_text": "Unsere Haftung ist auf den Betrag beschränkt, den Sie für die App oder das Abonnement bezahlt haben. Wir sind nicht haftbar für indirekte, zufällige oder Folgeschäden.",
-    "termination_title": "Kündigung",
-    "termination_text": "Sie können die Nutzung der App jederzeit einstellen. Wir können Ihren Zugang beenden, wenn Sie gegen diese Bedingungen verstoßen. Bei Beendigung endet Ihre Lizenz zur Nutzung der App.",
-    "changes_terms_title": "Änderungen der Bedingungen",
-    "changes_terms_text": "Wir können diese Bedingungen jederzeit ändern. Die fortgesetzte Nutzung der App nach Änderungen stellt die Annahme neuer Bedingungen dar.",
-    "governing_law_title": "Geltendes Recht",
-    "governing_law_text": "Diese Bedingungen unterliegen den Gesetzen der Gerichtsbarkeit, in der sich der App-Entwickler befindet.",
-    "contact_title": "Kontaktinformationen",
-    "contact_text": "Für Fragen zu diesen Nutzungsbedingungen kontaktieren Sie uns unter support@worktrack-app.com"
-  },
-  "address_search": {
-    "search_placeholder": "Adresse suchen...",
-    "searching": "Adressen werden gesucht...",
-    "no_results": "Keine Adressen gefunden",
-    "no_results_hint": "Versuchen Sie eine genauere Adresse",
-    "min_chars": "Geben Sie mindestens 3 Zeichen ein"
   }
 }

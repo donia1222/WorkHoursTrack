@@ -117,6 +117,14 @@
       "description": "Controla la vibración táctil en botones y interacciones de la app",
       "enabled": "Vibración Táctil",
       "enabled_desc": "Activa la vibración cuando tocas botones y controles"
+    },
+    "data_management": {
+      "title": "Gestión de Datos",
+      "description": "⚠️ IMPORTANTE: Esta aplicación almacena todos los datos únicamente en tu dispositivo. No utilizamos servidores ni bases de datos en la nube. Por este motivo, debes crear copias de seguridad regularmente e importarlas si reinstalas la aplicación.",
+      "export_title": "Crear archivo .json",
+      "export_desc": "Crear una copia de seguridad de todos tus trabajos, horas y configuraciones",
+      "import_title": "Importar archivo .json",
+      "import_desc": "Restaurar datos desde un archivo de copia de seguridad"
     }
   },
   "settings": {

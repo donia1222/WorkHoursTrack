@@ -18,12 +18,14 @@ import { useNavigation } from '../context/NavigationContext';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAutoTimer } from '../contexts/AutoTimerContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { useTimeFormat } from '../hooks/useTimeFormat';
-import AutoTimerService, { AutoTimerStatus } from '../services/AutoTimerService';
+import AutoTimerService, { AutoTimerStatus, AutoTimerState } from '../services/AutoTimerService';
 import { JobCardsSwiper } from './JobCardsSwiper';
 import { useFocusEffect } from '@react-navigation/native';
 import WidgetSyncService from '../services/WidgetSyncService';
+import MiniMapWidget from './MiniMapWidget';
 
 // Dark mode map style
 const darkMapStyle = [
@@ -238,7 +240,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
   
   },
   map: {
-
+marginTop:20
   },
 
   
@@ -1172,6 +1174,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
 
 export default function MapLocation({ location, onNavigate }: Props) {
   const { colors, isDark } = useTheme();
+  const autoTimer = useAutoTimer();
   const { navigateTo } = useNavigation();
   const { t } = useLanguage();
   const { triggerHaptic } = useHapticFeedback();
@@ -2515,19 +2518,104 @@ export default function MapLocation({ location, onNavigate }: Props) {
         return;
       }
       
-      console.log('📱 Opening JobFormModal for AutoTimer stop:', activeJob.name);
+      console.log('🛑 Stopping AutoTimer and opening JobFormModal:', activeJob.name);
       
-      // Open JobFormModal with the active job, focusing on 'auto' tab
-      setEditingJob(activeJob);
-      setSelectedEditType('location'); // This will set initialTab to 'auto' via getEditInfo
-      setShowJobForm(true);
-      
-      // Close any other modals
-      setSelectedJob(null);
-      setShowJobCardsModal(false);
+      // Mostrar alerta de confirmación igual que en JobFormModal
+      Alert.alert(
+        t('timer.auto_timer.manual_override'),
+        t('timer.auto_timer.manual_override_message'),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          { 
+            text: t('timer.stop'), 
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                // Primero verificar si hay una sesión activa para este trabajo
+                const activeSession = await JobService.getActiveSession();
+                if (activeSession && activeSession.jobId === activeJob.id) {
+                  console.log('🛑 MapLocation Widget: Stopping active timer because AutoTimer was disabled');
+                  
+                  // Calcular el tiempo transcurrido
+                  const sessionStart = new Date(activeSession.startTime);
+                  const now = new Date();
+                  const elapsedMs = now.getTime() - sessionStart.getTime();
+                  const elapsedHours = Math.max(0.01, parseFloat(((elapsedMs / (1000 * 60 * 60))).toFixed(2)));
+                  
+                  // Guardar el día de trabajo antes de limpiar la sesión
+                  const today = new Date().toISOString().split('T')[0];
+                  const workDay = {
+                    date: today,
+                    jobId: activeJob.id,
+                    hours: elapsedHours,
+                    notes: activeSession.notes || 'Auto-stopped (AutoTimer disabled)',
+                    overtime: elapsedHours > 8,
+                    type: 'work' as const,
+                    // Add actual start and end times for display in reports
+                    actualStartTime: sessionStart.toTimeString().substring(0, 5), // HH:MM format
+                    actualEndTime: now.toTimeString().substring(0, 5), // HH:MM format
+                  };
+                  await JobService.addWorkDay(workDay);
+                  
+                  // Limpiar la sesión activa
+                  await JobService.clearActiveSession();
+                  
+                  // IMPORTANTE: Enviar notificación que terminará el Live Activity
+                  const NotificationService = require('../services/NotificationService').default;
+                  const notificationService = NotificationService.getInstance();
+                  await notificationService.sendNotification('timer_stopped', activeJob.name, {
+                    hours: elapsedHours.toFixed(2),
+                    reason: 'AutoTimer was disabled'
+                  });
+                  console.log('📱 Notification sent to stop Live Activity');
+                  
+                  // También intentar terminar directamente (por si la notificación no funciona)
+                  const LiveActivityService = require('../services/LiveActivityService').default;
+                  const liveActivityService = LiveActivityService.getInstance();
+                  await liveActivityService.endLiveActivity(Math.floor(elapsedHours * 3600));
+                }
+                
+                // También cancelar cualquier AutoTimer activo para este trabajo
+                const autoTimerService = AutoTimerService.getInstance();
+                await autoTimerService.cancelPendingAction();
+                
+                // Detener el servicio AutoTimer
+                autoTimerService.stop();
+                
+                // Poner el sistema en modo manual
+                await autoTimerService.setManualMode();
+                
+                // Desactivar AutoTimer para el trabajo activo
+                const updatedJob: Job = {
+                  ...activeJob,
+                  autoTimer: {
+                    ...activeJob.autoTimer,
+                    enabled: false,
+                    geofenceRadius: activeJob.autoTimer?.geofenceRadius || 100,
+                    delayStart: activeJob.autoTimer?.delayStart || 2,
+                    delayStop: activeJob.autoTimer?.delayStop || 2,
+                    notifications: activeJob.autoTimer?.notifications !== false,
+                  }
+                };
+                
+                await JobService.updateJob(activeJob.id, updatedJob);
+                
+                // Refresh jobs list
+                const updatedJobs = await JobService.getJobs();
+                setJobs(updatedJobs);
+                
+                // Navigate to ReportsScreen instead of JobFormModal
+                navigateTo('reports');
+              } catch (error) {
+                console.error('Error stopping AutoTimer from widget:', error);
+              }
+            }
+          }
+        ]
+      );
       
     } catch (error) {
-      console.error('Error opening AutoTimer stop modal:', error);
+      console.error('Error stopping AutoTimer:', error);
     }
   };
 
@@ -2605,7 +2693,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   gap: isTablet ? 28 : (isSmallScreen ? 12 : 20),
                   height: isTablet ? 160 : (isSmallScreen ? 120 : 140),
                 }}>
-                  {/* JOBS WIDGET */}
+                  {/* JOBS WIDGET - Hide when auto-timer is active */}
+                  {autoTimerStatus?.state === 'inactive' && (
                   <TouchableOpacity
                     style={{
                       flex: 1,
@@ -2692,8 +2781,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
                       </View>
                     </View>
                   </TouchableOpacity>
+                  )}
                   
-                  {/* TIMER WIDGET */}
+                  {/* TIMER WIDGET - Hide when auto-timer is active */}
+                  {autoTimerStatus?.state === 'inactive' && (
                   <TouchableOpacity
                     style={{
                       flex: 1,
@@ -2715,10 +2806,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     <View style={{ 
                       flexDirection: isTablet ? 'row' : 'column', 
                       alignItems: 'center', 
-                      justifyContent: isTablet && autoTimerStatus?.state === 'active' ? 'center' : (isTablet ? 'space-between' : 'center'), 
+                      justifyContent: isTablet && autoTimerStatus?.state !== 'inactive' ? 'center' : (isTablet ? 'space-between' : 'center'), 
                       flex: 1 
                     }}>
-                            {autoTimerStatus?.state !== 'active' && (
+                            {autoTimerStatus?.state === 'inactive' && (
                       <Animated.View style={[animatedClockStyle, {
                         backgroundColor: isDark ? 'rgba(52, 211, 153, 0.25)' : 'rgba(16, 185, 129, 0.2)',
                         borderRadius: isTablet ? 20 : 12,
@@ -2753,7 +2844,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
       
                         
                         {/* Pause/Play and Stop buttons - show below when AutoTimer is active */}
-                        {autoTimerStatus?.state === 'active' && (
+                        {autoTimerStatus?.state !== 'inactive' && (
                           <View style={{
                             flexDirection: 'row',
                             gap: isSmallScreen ? 6 : 8,
@@ -2801,9 +2892,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
                       </View>
                     </View>
                   </TouchableOpacity>
+                  )}
                 </View>
 
                 {/* MIDDLE ROW - CALENDAR + SCHEDULES */}
+
+                  {autoTimerStatus?.state === 'inactive' && (
+
                 <View style={{
                   flexDirection: 'row',
                   gap: isTablet ? 28 : (isSmallScreen ? 12 : 20),
@@ -3153,8 +3248,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     </View>
                   </TouchableOpacity>
                 </View>
+  )}
 
                 {/* BOTTOM ROW - 2 CONFIG WIDGETS */}
+                  {autoTimerStatus?.state === 'inactive' && (
                 <View style={{
                   flexDirection: 'row',
                   gap: isTablet ? 28 : (isSmallScreen ? 12 : 20),
@@ -3415,9 +3512,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     </View>
                   </TouchableOpacity>
                 </View>
-                
-                {/* AI ASSISTANT WIDGET - NEW - Hide on iPad landscape */}
-                {(!isTablet || (isTablet && isPortrait)) && (
+                  )}
+
+                {/* AI ASSISTANT WIDGET - NEW - Hide on iPad landscape and when auto-timer is active */}
+                {(!isTablet || (isTablet && isPortrait)) && autoTimerStatus?.state === 'inactive' && (
                 <TouchableOpacity
                   style={{
                     marginTop: isTablet ? 28 : (isSmallScreen ? 6 : 20),
@@ -3506,7 +3604,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         fontSize: isTablet ? 12 : 10,
                         fontWeight: '600',
                         color: isDark ? '#93c5fd' : '#3b82f6',
-                      }}>NUEVO</Text>
+                      }}>NEW!</Text>
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -3653,9 +3751,29 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
 
 
-
-
+      {/* Mini Map Widget - shown when auto-timer is active instead of job cards modal */}
+      {autoTimerStatus?.state !== 'inactive' && autoTimerStatus?.jobId && (() => {
+        const activeJob = jobs.find(job => job.id === autoTimerStatus.jobId);
+        if (activeJob && !showJobCardsModal) {
+          return (
+            <MiniMapWidget
+              job={activeJob}
+              userLocation={currentUserLocation}
+              activeTimerElapsed={elapsedTime}
+              isAutoTimerPaused={isAutoTimerPaused}
+              startTime={autoTimer.state.startTime}
+              onPause={handleAutoTimerPause}
+              onResume={handleAutoTimerResume}
+              onStop={handleAutoTimerWidgetStop}
+              formatTime={formatTime}
+            />
+          );
+        }
+        return null;
+      })()}
       
+
+
       {/* Job cards modal swiper */}
       <JobCardsSwiper
         visible={showJobCardsModal}

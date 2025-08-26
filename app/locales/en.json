@@ -117,6 +117,16 @@
       "description": "Control tactile vibration in buttons and app interactions",
       "enabled": "Tactile Vibration",
       "enabled_desc": "Activate vibration when you touch buttons and controls"
+    },
+    "data_management": {
+      "title": "Data Management",
+      "description": "⚠️ IMPORTANT: This application stores all data only on your device. We don't use servers or cloud databases. For this reason, you must create backups regularly and import them if you reinstall the application.",
+      "export_title": "Create .json file",
+      "export_desc": "Create a backup of all your jobs, hours and settings",
+      "import_title": "Import .json file",
+      "import_desc": "Restore data from a backup file",
+      "auto_backup_title": "Automatic Backups",
+      "auto_backup_desc": "Create backups automatically"
     }
   },
   "settings": {
