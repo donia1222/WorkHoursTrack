@@ -14,6 +14,7 @@ import { NavigationProvider, useNavigation } from '../context/NavigationContext'
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { useSubscription } from '../hooks/useSubscription';
 import { AutoBackupService } from '../services/AutoBackupService';
+import { useAutoTimer } from '../contexts/AutoTimerContext';
 
 // globals para las funciones de los botones
 declare global {
@@ -40,6 +41,7 @@ function LayoutContent() {
   const { triggerHaptic } = useHapticFeedback();
   const { isSubscribed } = useSubscription();
   const navigation = useExpoNavigation();
+  const { setWaitingState } = useAutoTimer();
 
 
   // Cargar estado del botón info
@@ -97,11 +99,14 @@ function LayoutContent() {
           if (!isInside && jobWithAutoTimer.autoTimer?.enabled && !hasShownThisSession) {
             setShowBanner(true);
             setHasShownThisSession(true);
+            setWaitingState(true);
           } else if (isInside && showBanner) {
             setShowBanner(false);
+            setWaitingState(false);
           }
         } else {
           setShowBanner(false);
+          setWaitingState(false);
         }
       } catch {
         // silencioso
@@ -240,7 +245,10 @@ function LayoutContent() {
         {showBanner && (
           <AutoTimerBanner
             message={t('timer.auto_timer.activation_alert')}
-            onDismiss={() => setShowBanner(false)}
+            onDismiss={() => {
+              setShowBanner(false);
+              setWaitingState(false);
+            }}
           />
         )}
       </View>

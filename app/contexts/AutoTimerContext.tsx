@@ -15,6 +15,7 @@ export interface AutoTimerState {
   startTime: Date | null;
   isPaused: boolean;
   autoTimerState: string; // Estado específico de AutoTimerService
+  isWaiting: boolean; // Indica si está esperando a entrar en el área de trabajo
 }
 
 // Interfaz del Context
@@ -35,6 +36,7 @@ interface AutoTimerContextType {
   // Utilidades
   refresh: () => Promise<void>;
   isServiceEnabled: () => boolean;
+  setWaitingState: (isWaiting: boolean) => void;
 }
 
 // Estado inicial
@@ -47,6 +49,7 @@ const initialState: AutoTimerState = {
   startTime: null,
   isPaused: false,
   autoTimerState: 'inactive',
+  isWaiting: false,
 };
 
 // Crear el Context
@@ -353,6 +356,13 @@ export const AutoTimerProvider: React.FC<{ children: ReactNode }> = ({ children 
     return autoTimerService.isServiceEnabled();
   };
 
+  const setWaitingState = (isWaiting: boolean) => {
+    setState(prevState => ({
+      ...prevState,
+      isWaiting
+    }));
+  };
+
   const contextValue: AutoTimerContextType = {
     state,
     startMonitoring,
@@ -363,6 +373,7 @@ export const AutoTimerProvider: React.FC<{ children: ReactNode }> = ({ children 
     resumeTimer,
     refresh,
     isServiceEnabled,
+    setWaitingState,
   };
 
   return (

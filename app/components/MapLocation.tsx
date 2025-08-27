@@ -2999,7 +2999,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           width: isTablet ? 12 : 8,
                           height: isTablet ? 12 : 8,
                           borderRadius: isTablet ? 6 : 4,
-                          backgroundColor: '#34C759',
+                          backgroundColor: autoTimer.state.isWaiting ? '#34C759' : (jobs.some(job => job.autoTimer?.enabled) ? '#34C759' : '#FF3B30'),
                         }} />
                         <Text style={{
                           fontSize: isTablet ? 14 : (isSmallScreen ? 10 : 12),
@@ -3019,12 +3019,12 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             fontWeight: '700',
                             color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
                           }}>
-                            {lastAutoTimerSession ? (
+                            {autoTimer.state.isWaiting ? 'AutoTimer' : (lastAutoTimerSession ? (
                               <>
                                 <Text style={{ fontWeight: '700' }}>{t('timer.last_session')}</Text>
                                 <Text style={{ fontWeight: '400', opacity: 0.7 }}> {lastAutoTimerSession.jobName}</Text>
                               </>
-                            ) : t('maps.auto_timer')}
+                            ) : t('maps.auto_timer'))}
                           </Text>
             
                         <Text style={{
@@ -3034,9 +3034,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           marginTop: isTablet ? 0 : (isSmallScreen ? 2 : 4),
                           letterSpacing: isTablet ? 0.7 : (isSmallScreen ? 0.3 : 0.5),
                         }}>
-                          {lastAutoTimerSession && autoTimerStatus?.state === 'inactive' ? 
+                          {autoTimer.state.isWaiting ? 'Waiting' : (lastAutoTimerSession && autoTimerStatus?.state === 'inactive' ? 
                             `${lastAutoTimerSession.startTime} - ${lastAutoTimerSession.endTime}` : 
-                            formatTime(elapsedTime)}
+                            formatTime(elapsedTime))}
                         </Text>
       
                                                                    <Text style={{
