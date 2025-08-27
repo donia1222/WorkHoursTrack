@@ -304,6 +304,13 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     }
   };
 
+  // Función para calcular horas netas (descontando pausas)
+  const getNetHours = (workDay: WorkDay): number => {
+    const totalHours = workDay.hours || 0;
+    const breakHours = workDay.breakHours || 0;
+    return Math.max(0, totalHours - breakHours);
+  };
+
   const formatHoursForDisplay = (hours: number): string => {
     if (useTimeFormat) {
       // Time format: 8h 3m
@@ -347,15 +354,15 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     
     console.log('Step 3 - This month work days:', monthWorkDays.length);
     console.log('Month range:', startOfMonth.toDateString(), 'to', endOfMonth.toDateString());
-    console.log('Sample month work days:', monthWorkDays.slice(0, 3).map(d => `${d.date}: ${d.hours}h`));
+    console.log('Sample month work days:', monthWorkDays.slice(0, 3).map(d => `${d.date}: ${getNetHours(d)}h (net)`));
     
-    // Step 4: Calculate totals using the SAME data structure
-    const totalHours = monthWorkDays.reduce((sum, day) => sum + (day.hours || 0), 0);
+    // Step 4: Calculate totals using the SAME data structure (con horas netas)
+    const totalHours = monthWorkDays.reduce((sum, day) => sum + getNetHours(day), 0);
     // Count unique days only (multiple sessions on same day count as 1 day)
     const uniqueDates = new Set(monthWorkDays.map(day => day.date.split('T')[0]));
     const totalDays = uniqueDates.size;
     const overtimeHours = monthWorkDays.reduce((sum, day) => 
-      sum + (day.overtime ? Math.max(0, (day.hours || 0) - 8) : 0), 0);
+      sum + (day.overtime ? Math.max(0, getNetHours(day) - 8) : 0), 0);
     const avgHoursPerDay = totalDays > 0 ? totalHours / totalDays : 0;
     
     console.log('🎉 FINAL NUMBERS:', { 
@@ -376,7 +383,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     if (selectedJobId === 'all') {
       jobStats = jobs.map(job => {
         const jobWorkDays = monthWorkDays.filter(day => day.jobId === job.id);
-        const jobHours = jobWorkDays.reduce((sum, day) => sum + (day.hours || 0), 0);
+        const jobHours = jobWorkDays.reduce((sum, day) => sum + getNetHours(day), 0);
         // Count unique days for this job (multiple sessions same day = 1 day)
         const jobUniqueDates = new Set(jobWorkDays.map(day => day.date.split('T')[0]));
         const jobDays = jobUniqueDates.size;
@@ -484,12 +491,12 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     }
 
     // Calculate totals
-    const totalHours = filteredWorkDays.reduce((sum, day) => sum + day.hours, 0);
+    const totalHours = filteredWorkDays.reduce((sum, day) => sum + getNetHours(day), 0);
     // Count unique days only (multiple sessions on same day count as 1 day)
     const uniqueDates = new Set(filteredWorkDays.map(day => day.date.split('T')[0]));
     const totalDays = uniqueDates.size;
     const overtimeHours = filteredWorkDays.reduce((sum, day) => 
-      sum + (day.overtime ? day.hours - 8 : 0), 0);
+      sum + (day.overtime ? getNetHours(day) - 8 : 0), 0);
     const avgHoursPerDay = totalDays > 0 ? totalHours / totalDays : 0;
 
     // Job breakdown
@@ -503,7 +510,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     if (selectedJobId === 'all') {
       jobStats = jobs.map(job => {
         const jobWorkDays = periodWorkDays.filter(day => day.jobId === job.id);
-        const jobHours = jobWorkDays.reduce((sum, day) => sum + day.hours, 0);
+        const jobHours = jobWorkDays.reduce((sum, day) => sum + getNetHours(day), 0);
         // Count unique days for this job (multiple sessions same day = 1 day)
         const jobUniqueDates = new Set(jobWorkDays.map(day => day.date.split('T')[0]));
         const jobDays = jobUniqueDates.size;
@@ -626,6 +633,10 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       if (existing) {
         const updatedDay = { ...existing };
         updatedDay.hours = updatedDay.hours + day.hours;
+        // Mantener breakHours separadas para el cálculo correcto
+        if (day.breakHours) {
+          updatedDay.breakHours = (updatedDay.breakHours || 0) + day.breakHours;
+        }
         
         if (day.notes && updatedDay.notes) {
           updatedDay.notes = `${updatedDay.notes}\n---\n${day.notes}`;
@@ -641,7 +652,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           updatedDay.actualEndTime = day.actualEndTime;
         }
         
-        updatedDay.overtime = updatedDay.hours > 8;
+        updatedDay.overtime = getNetHours(updatedDay) > 8;
         consolidatedMap.set(key, updatedDay);
       } else {
         consolidatedMap.set(key, { ...day });
@@ -1227,7 +1238,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                   <div class="activity-job">${job?.name || t('reports.work')}</div>
                 </div>
                 <div>
-                  <span class="activity-hours">${day.hours}h</span>
+                  <span class="activity-hours">${formatHoursDisplay(getNetHours(day))}</span>
                   ${(actualStart && actualEnd) ? 
                     `<br><span class="activity-schedule">${actualStart}-${actualEnd}</span>` : 
                     (scheduledStart && scheduledEnd) ? 
@@ -1692,7 +1703,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                         <View style={styles.recentRight}>
                           <View style={styles.hoursContainer}>
                             <Text style={styles.recentHours}>
-                              {formatHoursForDisplay(day.hours)}
+                              {formatHoursForDisplay(getNetHours(day))}
                             </Text>
                             {day.overtime && (
                               <View style={styles.overtimeChip}>
@@ -1700,12 +1711,22 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                               </View>
                             )}
                           </View>
-                          <TouchableOpacity 
-                            style={styles.editButton}
-                            onPress={() => handleEditWorkDay(day)}
-                          >
-                            <IconSymbol size={16} name="pencil" color={colors.primary} />
-                          </TouchableOpacity>
+                          <View style={styles.actionButtons}>
+                            {day.notes && (
+                              <TouchableOpacity 
+                                style={styles.noteButton}
+                                onPress={() => handleEditWorkDay(day)}
+                              >
+                                <IconSymbol size={16} name="paperclip" color={colors.warning} />
+                              </TouchableOpacity>
+                            )}
+                            <TouchableOpacity 
+                              style={styles.editButton}
+                              onPress={() => handleEditWorkDay(day)}
+                            >
+                              <IconSymbol size={16} name="pencil" color={colors.primary} />
+                            </TouchableOpacity>
+                          </View>
                         </View>
                       </View>
                     </BlurView>
@@ -2763,6 +2784,16 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     color: colors.warning,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  noteButton: {
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: isDark ? 'rgba(255, 159, 10, 0.1)' : 'rgba(255, 159, 10, 0.08)',
   },
   editButton: {
     padding: 8,

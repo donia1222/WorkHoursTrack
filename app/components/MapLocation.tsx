@@ -1230,6 +1230,12 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [autoTimerService] = useState(() => AutoTimerService.getInstance());
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isTimerPaused, setIsTimerPaused] = useState(false);
+  const [lastAutoTimerSession, setLastAutoTimerSession] = useState<{
+    startTime: string;
+    endTime: string;
+    hours: number;
+    jobName: string;
+  } | null>(null);
   const [isAutoTimerPaused, setIsAutoTimerPaused] = useState(false);
   const [isAutoTimerMinimized, setIsAutoTimerMinimized] = useState(false);
   const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
@@ -1426,6 +1432,64 @@ export default function MapLocation({ location, onNavigate }: Props) {
     const interval = setInterval(checkActiveTimer, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Recargar datos de sesión cada vez que el componente se enfoque
+  useFocusEffect(
+    useCallback(() => {
+      console.log('🔄 MapLocation: Screen focused, reloading session data');
+      // Recargar solo los datos de la última sesión, no todo loadJobs
+      const reloadLastSession = async () => {
+        try {
+          const workDays = await JobService.getWorkDays();
+          console.log('📊 Reloading workDays for session data:', workDays.length);
+          
+          const workSessions = workDays.filter(day => {
+            return (!day.type || day.type === 'work') && day.hours > 0;
+          });
+          
+          if (workSessions.length > 0) {
+            const sortedSessions = workSessions.sort((a, b) => {
+              if (a.updatedAt && b.updatedAt) {
+                return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+              }
+              if (a.createdAt && b.createdAt) {
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+              }
+              return new Date(b.date).getTime() - new Date(a.date).getTime();
+            });
+            
+            const lastSession = sortedSessions[0];
+            const startTime = lastSession.actualStartTime || lastSession.startTime;
+            const endTime = lastSession.actualEndTime || lastSession.endTime;
+            
+            if (startTime && endTime) {
+              // Find the job name
+              const job = jobs.find(j => j.id === lastSession.jobId);
+              const jobName = job?.name || 'Trabajo';
+              
+              console.log('📊 Updated last session:', {
+                startTime,
+                endTime,
+                hours: lastSession.hours,
+                jobName,
+                date: lastSession.date
+              });
+              setLastAutoTimerSession({
+                startTime,
+                endTime,
+                hours: lastSession.hours,
+                jobName
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error reloading last session:', error);
+        }
+      };
+      
+      reloadLastSession();
+    }, [])
+  );
 
   // Animar botones cuando se abre/cierra el modal de trabajos
   useEffect(() => {
@@ -1982,6 +2046,72 @@ export default function MapLocation({ location, onNavigate }: Props) {
       
       // Reload calendar data when jobs change
       loadMiniCalendarData(undefined, isIPadPortrait);
+      
+      // Load last work session (any session, not just auto-timer)
+      try {
+        const workDays = await JobService.getWorkDays();
+        console.log('📊 All workDays loaded:', workDays.length);
+        console.log('📊 First 3 workDays:', workDays.slice(0, 3));
+        
+        // Filter for work sessions - look for ANY work day with hours > 0
+        const workSessions = workDays.filter(day => {
+          const isWork = (!day.type || day.type === 'work') && day.hours > 0;
+          console.log('📊 Checking day:', {
+            date: day.date,
+            type: day.type,
+            hours: day.hours,
+            actualStart: day.actualStartTime,
+            actualEnd: day.actualEndTime,
+            isWork
+          });
+          return isWork;
+        });
+        
+        console.log('📊 Work sessions found:', workSessions.length);
+        
+        if (workSessions.length > 0) {
+          // Sort by date AND by createdAt/updatedAt to get the most recent
+          const sortedSessions = workSessions.sort((a, b) => {
+            // First try to sort by updatedAt
+            if (a.updatedAt && b.updatedAt) {
+              return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+            }
+            // Then by createdAt
+            if (a.createdAt && b.createdAt) {
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            }
+            // Finally by date
+            return new Date(b.date).getTime() - new Date(a.date).getTime();
+          });
+          
+          const lastSession = sortedSessions[0];
+          console.log('📊 Last session found:', {
+            date: lastSession.date,
+            actualStart: lastSession.actualStartTime,
+            actualEnd: lastSession.actualEndTime,
+            hours: lastSession.hours
+          });
+          
+          // Use actualStartTime/actualEndTime if available, otherwise use startTime/endTime
+          const startTime = lastSession.actualStartTime || lastSession.startTime;
+          const endTime = lastSession.actualEndTime || lastSession.endTime;
+          
+          if (startTime && endTime) {
+            // Find the job name
+            const job = activeJobs.find(j => j.id === lastSession.jobId);
+            const jobName = job?.name || 'Trabajo';
+            
+            setLastAutoTimerSession({
+              startTime: startTime,
+              endTime: endTime,
+              hours: lastSession.hours,
+              jobName: jobName
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading last work session:', error);
+      }
     } catch (error) {
       console.error('Error loading jobs:', error);
     }
@@ -2861,8 +2991,23 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         padding: isTablet ? 16 : (isSmallScreen ? 8 : 10),
                         marginBottom: isTablet ? 0 : (isSmallScreen ? 4 : 8),
                         marginRight: isTablet ? 20 : 0,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: isTablet ? 8 : 6,
                       }]}>
-                        <IconSymbol size={isTablet ? 36 : (isSmallScreen ? 18 : 22)} name="clock.fill" color={isDark ? '#6ee7b7' : '#059669'} />
+                        <View style={{
+                          width: isTablet ? 12 : 8,
+                          height: isTablet ? 12 : 8,
+                          borderRadius: isTablet ? 6 : 4,
+                          backgroundColor: '#34C759',
+                        }} />
+                        <Text style={{
+                          fontSize: isTablet ? 14 : (isSmallScreen ? 10 : 12),
+                          fontWeight: '700',
+                          color: isDark ? '#6ee7b7' : '#059669',
+                        }}>
+                          AutoTimer
+                        </Text>
                       </Animated.View>
           )}
 
@@ -2874,17 +3019,24 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             fontWeight: '700',
                             color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
                           }}>
-                            {t('maps.auto_timer')}
+                            {lastAutoTimerSession ? (
+                              <>
+                                <Text style={{ fontWeight: '700' }}>{t('timer.last_session')}</Text>
+                                <Text style={{ fontWeight: '400', opacity: 0.7 }}> {lastAutoTimerSession.jobName}</Text>
+                              </>
+                            ) : t('maps.auto_timer')}
                           </Text>
             
                         <Text style={{
-                          fontSize: isTablet ? 28 : (isSmallScreen ? 16 : 20),
+                          fontSize: isTablet ? 24 : (isSmallScreen ? 14 : 17),
                           fontWeight: '600',
                           color: isDark ? 'white' : '#047857',
                           marginTop: isTablet ? 0 : (isSmallScreen ? 2 : 4),
                           letterSpacing: isTablet ? 0.7 : (isSmallScreen ? 0.3 : 0.5),
                         }}>
-                          {formatTime(elapsedTime)}
+                          {lastAutoTimerSession && autoTimerStatus?.state === 'inactive' ? 
+                            `${lastAutoTimerSession.startTime} - ${lastAutoTimerSession.endTime}` : 
+                            formatTime(elapsedTime)}
                         </Text>
       
                                                                    <Text style={{
@@ -2893,7 +3045,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           marginTop: isTablet ? 4 : (isSmallScreen ? 2 : 4),
                         }}>
 
-                                                      {t('maps.auto_timer_inactive')}
+                                                      {lastAutoTimerSession && autoTimerStatus?.state === 'inactive' ?
+                            `${t('reports.total_hours')}: ${lastAutoTimerSession.hours.toFixed(2)}h` :
+                            t('maps.auto_timer_inactive')}
                         </Text>
                         {/* Pause/Play and Stop buttons - show below when AutoTimer is active */}
                         {autoTimerStatus?.state !== 'inactive' && (

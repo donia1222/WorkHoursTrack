@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,9 @@ import {
   Alert,
   ScrollView,
   SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -50,7 +53,9 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
   const [endTime, setEndTime] = useState('');
   const [hours, setHours] = useState('');
   const [breakHours, setBreakHours] = useState('0');
+  const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     if (workDay) {
@@ -64,8 +69,11 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
       console.log('🔧 ALWAYS using TIME format, setting hours to:', formatTimeAlways(workHours));
       setHours(formatTimeAlways(workHours));
       
-      const breakTime = Number((workDay as any).breakHours || 0);
+      const breakTime = Number(workDay.breakHours || 0);
       setBreakHours(formatTimeAlways(breakTime));
+      
+      // Cargar las notas si existen
+      setNotes(workDay.notes || '');
     }
   }, [workDay]);
 
@@ -192,6 +200,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
         actualEndTime: formatTime(endTime),
         hours: finalHours,
         ...(finalBreakHours > 0 ? { breakHours: finalBreakHours } : {}),
+        ...(notes.trim() ? { notes: notes.trim() } : {}),
       } as any;
 
       await JobService.updateWorkDay(workDay.id, {
@@ -200,6 +209,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
         actualEndTime: formatTime(endTime),
         hours: finalHours,
         ...(finalBreakHours > 0 ? { breakHours: finalBreakHours } : {}),
+        ...(notes.trim() ? { notes: notes.trim() } : {}),
       });
       onSave(updatedWorkDay);
       onClose();
@@ -449,6 +459,21 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
       color: colors.textSecondary,
       fontStyle: 'italic',
     },
+    notesInput: {
+      backgroundColor: isDark ? 'rgba(58, 58, 60, 0.8)' : 'rgba(242, 242, 247, 0.9)',
+      borderWidth: 2,
+      borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+      borderRadius: 12,
+      padding: 12,
+      fontSize: 16,
+      color: colors.text,
+      minHeight: 100,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
     bottomActions: {
       flexDirection: 'row',
       paddingHorizontal: 20,
@@ -470,24 +495,31 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
       presentationStyle="pageSheet"
       statusBarTranslucent={false}
     >
-      <SafeAreaView style={styles.fullScreenModal}>
-        {/* Handle bar for swipe to close */}
-        <View style={styles.handleContainer}>
-          <View style={styles.handle} />
-        </View>
-        
-        {/* Close button */}
-        <View style={styles.headerActions}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <IconSymbol name="xmark" size={18} color={colors.text} />
-          </TouchableOpacity>
-        </View>
-        
-        <ScrollView 
-          style={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          bounces={true}
-        >
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <SafeAreaView style={styles.fullScreenModal}>
+          {/* Handle bar for swipe to close */}
+          <View style={styles.handleContainer}>
+            <View style={styles.handle} />
+          </View>
+          
+          {/* Close button - también guarda cambios */}
+          <View style={styles.headerActions}>
+            <TouchableOpacity onPress={handleSave} style={styles.closeButton}>
+              <IconSymbol name="xmark" size={18} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView 
+            ref={scrollViewRef}
+            style={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: 100 }}
+          >
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>{t('reports.edit_record')}</Text>
@@ -559,44 +591,57 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
               </View>
             </View>
 
-            {/* Break Hours Section */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t('reports.break_rest')}</Text>
-              <View style={styles.hoursContainer}>
-                <Text style={styles.hoursLabel}>{t('reports.break_time')}</Text>
-                <View style={styles.hoursRow}>
-                  <TouchableOpacity
-                    style={[styles.hoursButton, { backgroundColor: '#FF6B35' }]}
-                    onPress={() => adjustBreakHours(-0.25)}
-                  >
-                    <IconSymbol size={20} name="minus" color="#FFFFFF" />
-                  </TouchableOpacity>
-                  
-                  <View>
-                    <TextInput
-                      style={styles.hoursInput}
-                      value={breakHours}
-                      onChangeText={setBreakHours}
-                      keyboardType="default"
-                      placeholder="00:00:00"
-                    />
-                    <Text style={styles.hoursText}>
-                      {formatTimeAlways(parseFloat(breakHours) || 0)}
-                    </Text>
-                  </View>
+            {/* Break Hours Section - Solo mostrar si hay más de 30 minutos trabajados */}
+            {(() => {
+              // Convertir horas totales a minutos para comparar
+              let totalMinutes;
+              if (hours.includes(':')) {
+                const parts = hours.split(':').map(Number);
+                totalMinutes = parts[0] * 60 + parts[1] + (parts[2] / 60);
+              } else {
+                totalMinutes = (parseFloat(hours) || 0) * 60;
+              }
+              
+              return totalMinutes > 30;
+            })() && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{t('reports.break_rest')}</Text>
+                <View style={styles.hoursContainer}>
+                  <Text style={styles.hoursLabel}>{t('reports.break_time')}</Text>
+                  <View style={styles.hoursRow}>
+                    <TouchableOpacity
+                      style={[styles.hoursButton, { backgroundColor: '#FF6B35' }]}
+                      onPress={() => adjustBreakHours(-0.25)}
+                    >
+                      <IconSymbol size={20} name="minus" color="#FFFFFF" />
+                    </TouchableOpacity>
+                    
+                    <View>
+                      <TextInput
+                        style={styles.hoursInput}
+                        value={breakHours}
+                        onChangeText={setBreakHours}
+                        keyboardType="default"
+                        placeholder="00:00:00"
+                      />
+                      <Text style={styles.hoursText}>
+                        {formatTimeAlways(parseFloat(breakHours) || 0)}
+                      </Text>
+                    </View>
 
-                  <TouchableOpacity
-                    style={[styles.hoursButton, { backgroundColor: '#FF6B35' }]}
-                    onPress={() => adjustBreakHours(0.25)}
-                  >
-                    <IconSymbol size={20} name="plus" color="#FFFFFF" />
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.hoursButton, { backgroundColor: '#FF6B35' }]}
+                      onPress={() => adjustBreakHours(0.25)}
+                    >
+                      <IconSymbol size={20} name="plus" color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.breakNote}>
+                    {t('reports.break_note')}
+                  </Text>
                 </View>
-                <Text style={styles.breakNote}>
-                  {t('reports.break_note')}
-                </Text>
               </View>
-            </View>
+            )}
 
             {/* Net Hours Display */}
             {parseFloat(breakHours) > 0 && (
@@ -612,6 +657,27 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
                 </View>
               </View>
             )}
+
+            {/* Notes Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('timer.session_notes')}</Text>
+              <TextInput
+                style={styles.notesInput}
+                value={notes}
+                onChangeText={setNotes}
+                placeholder={t('timer.notes_placeholder')}
+                placeholderTextColor={colors.textSecondary}
+                multiline={true}
+                numberOfLines={4}
+                textAlignVertical="top"
+                onFocus={() => {
+                  // Hacer scroll automático cuando se enfoque el campo de notas
+                  setTimeout(() => {
+                    scrollViewRef.current?.scrollToEnd({ animated: true });
+                  }, 100);
+                }}
+              />
+            </View>
           </View>
         </ScrollView>
         
@@ -646,6 +712,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };

@@ -106,6 +106,8 @@ export interface WorkDay {
   // Actual work session times
   actualStartTime?: string; // HH:MM:SS format (actual start time from timer/autotimer)
   actualEndTime?: string; // HH:MM:SS format (actual end time from timer/autotimer)
+  // Break time tracking
+  breakHours?: number; // Hours spent on breaks/pauses during the work day
   createdAt: string;
   updatedAt: string;
 }

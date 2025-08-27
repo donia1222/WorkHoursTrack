@@ -265,6 +265,7 @@
     "overtime": "残業",
     "regular": "通常",
     "recent_sessions": "最近のログ",
+    "last_session": "最後のセッション",
     "view_stats": "統計を見る",
     "no_recent_sessions": "まだタイマーセッションが記録されていません",
     "all_jobs": "すべて",

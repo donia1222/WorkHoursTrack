@@ -260,6 +260,7 @@
     "overtime": "heures supplémentaires",
     "regular": "régulier",
     "recent_sessions": "Derniers enregistrements",
+    "last_session": "Dernière session",
     "view_stats": "Voir Statistiques",
     "no_recent_sessions": "Vous n'avez encore enregistré aucune session de minuteur",
     "all_jobs": "Tous",

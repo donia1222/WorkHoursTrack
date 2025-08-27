@@ -282,6 +282,7 @@
     "break_time_minutes": "Pauzetijd (minuten)",
     "view_reports": "Rapporten Bekijken",
     "recent_sessions": "Laatste registraties",
+    "last_session": "Laatste sessie",
     "view_stats": "Statistieken Bekijken", 
     "no_recent_sessions": "Je hebt nog geen tijdsessies geregistreerd met de timer",
     "all_jobs": "Alle",

@@ -294,6 +294,7 @@
     "break_time_minutes": "Tiempo de descanso (minutos)",
     "view_reports": "Ver Reportes",
     "recent_sessions": "Últimos registros",
+    "last_session": "Última sesión",
     "view_stats": "Ver Estadísticas", 
     "no_recent_sessions": "Aún no has registrado ninguna sesión de tiempo con el timer",
     "all_jobs": "Todos",

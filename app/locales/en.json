@@ -279,6 +279,7 @@
     "overtime": "overtime",
     "regular": "regular",
     "recent_sessions": "Recent logs",
+    "last_session": "Last session",
     "view_stats": "View Statistics",
     "no_recent_sessions": "You haven't recorded any timer sessions yet",
     "all_jobs": "All",

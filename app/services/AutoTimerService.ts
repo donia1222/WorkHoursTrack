@@ -449,8 +449,10 @@ class AutoTimerService {
         this.updateLiveActivityTime();
       }, 5000);
       
-      // Enviar notificación de inicio
-      await this.notificationService.sendNotification('timer_started', job.name);
+      // Enviar notificación de inicio solo si las notificaciones de auto-timer están habilitadas
+      if (await this.shouldSendAutoTimerNotification()) {
+        await this.notificationService.sendNotification('timer_started', job.name);
+      }
       
       this.notifyStatusChange();
       console.log(`✅ Auto-started timer for ${job.name} at ${startTime.toLocaleTimeString()}`);
@@ -548,8 +550,10 @@ class AutoTimerService {
           });
         }
         
-        // Enviar notificación normal
-        await this.notificationService.sendNotification('timer_stopped', job.name);
+        // Enviar notificación normal solo si las notificaciones de auto-timer están habilitadas
+        if (await this.shouldSendAutoTimerNotification()) {
+          await this.notificationService.sendNotification('timer_stopped', job.name);
+        }
         
         console.log(`✅ Auto-stopped timer for ${job.name}: ${elapsedHours}h recorded`);
       }
@@ -1429,6 +1433,26 @@ class AutoTimerService {
    */
   async isActiveTimerPaused(): Promise<boolean> {
     return this.isPaused;
+  }
+
+  /**
+   * Check if auto-timer notifications should be sent
+   * This checks both general notifications and auto-timer specific settings
+   */
+  private async shouldSendAutoTimerNotification(): Promise<boolean> {
+    try {
+      const notificationSettings = await AsyncStorage.getItem('@notification_settings');
+      if (notificationSettings) {
+        const settings = JSON.parse(notificationSettings);
+        // Check if general notifications AND auto-timer notifications are enabled
+        return settings.enabled === true && settings.autoTimer === true;
+      }
+      // Default to false if no settings found
+      return false;
+    } catch (error) {
+      console.error('Error checking auto-timer notification settings:', error);
+      return false;
+    }
   }
 }
 
