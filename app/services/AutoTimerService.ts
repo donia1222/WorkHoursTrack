@@ -1,3 +1,16 @@
+/*
+ * WorkTrack - Geolocation Work Tracking Application
+ * Copyright © 2025 Roberto Salvador. All rights reserved.
+ * 
+ * PROPRIETARY CODE - COPYING OR DISTRIBUTION PROHIBITED
+ * 
+ * This file contains confidential information and trade secrets.
+ * Unauthorized access is prohibited by law.
+ * 
+ * License required for commercial use.
+ * Contact: roberto@worktrackapp.com
+ */
+
 import { Job } from '../types/WorkTypes';
 import { JobService } from './JobService';
 import GeofenceService, { GeofenceEvent } from './GeofenceService';
