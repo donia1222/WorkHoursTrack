@@ -118,6 +118,7 @@ export const AutoTimerProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   };
 
+
   // Configurar listeners y timer de actualización
   useEffect(() => {
     let updateInterval: NodeJS.Timeout;

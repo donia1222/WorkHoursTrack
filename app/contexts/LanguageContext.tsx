@@ -32,7 +32,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const STORAGE_KEY = 'user_language';
 const AUTODETECT_KEY = 'language_autodetect';
 
-const i18n = new I18n({
+export const i18n = new I18n({
   es,
   en,
   de,

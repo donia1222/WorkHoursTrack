@@ -1185,8 +1185,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
     const formatted = formatTimeWithPreferences(time);
     // Make AM/PM more compact: "9:00 AM" -> "9:00a", "2:30 PM" -> "2:30p"
     return formatted
-      .replace(' AM', 'a')
-      .replace(' PM', 'p');
+      .replace(' AM', '')
+      .replace(' PM', '');
   };
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -3035,7 +3035,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           letterSpacing: isTablet ? 0.7 : (isSmallScreen ? 0.3 : 0.5),
                         }}>
                           {autoTimer.state.isWaiting ? 'Waiting' : (lastAutoTimerSession && autoTimerStatus?.state === 'inactive' ? 
-                            `${lastAutoTimerSession.startTime} - ${lastAutoTimerSession.endTime}` : 
+                            `${formatTimeCompact(lastAutoTimerSession.startTime)} - ${formatTimeCompact(lastAutoTimerSession.endTime)}` : 
                             formatTime(elapsedTime))}
                         </Text>
       
@@ -3432,7 +3432,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                               fontWeight: '600',
                               color: isDark ? 'white' : '#581c87',
                             }}>
-                              09:00 - 17:00
+                              {formatTimeCompact('09:00')} - {formatTimeCompact('17:00')}
                             </Text>
                             <Text style={{
                               fontSize: 11,

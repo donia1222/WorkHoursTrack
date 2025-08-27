@@ -6,6 +6,7 @@ import MapView, { Marker, Circle, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'reac
 import { Platform } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
+import { useTimeFormat } from '../hooks/useTimeFormat';
 import { Job } from '../types/WorkTypes';
 
 interface MiniMapWidgetProps {
@@ -327,6 +328,7 @@ export default function MiniMapWidget({
   },
 }: MiniMapWidgetProps) {
   const { colors, isDark } = useTheme();
+  const { formatTimeWithPreferences } = useTimeFormat();
   const styles = getStyles(colors, isDark);
   const mapRef = useRef<MapView>(null);
   
@@ -456,7 +458,7 @@ export default function MiniMapWidget({
                   />
                   <Text style={styles.timerLabel}>Start</Text>
                   <Text style={styles.timerStartTime}>
-                    {startTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                    {formatTimeWithPreferences(startTime.toTimeString().substring(0, 5))}
                   </Text>
                 </View>
               )}

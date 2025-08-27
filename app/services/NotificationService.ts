@@ -2,6 +2,18 @@ import * as Notifications from 'expo-notifications';
 import { Platform, AppState, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Import translations directly
+import esTranslations from '../locales/es.json';
+import enTranslations from '../locales/en.json';
+import deTranslations from '../locales/de.json';
+import frTranslations from '../locales/fr.json';
+import itTranslations from '../locales/it.json';
+import ptTranslations from '../locales/pt.json';
+import nlTranslations from '../locales/nl.json';
+import trTranslations from '../locales/tr.json';
+import jaTranslations from '../locales/ja.json';
+import ruTranslations from '../locales/ru.json';
+
 // Configure notification behavior to show alerts even when app is in foreground
 Notifications.setNotificationHandler({
   handleNotification: async (notification) => {
@@ -89,20 +101,6 @@ export type NotificationType =
   | 'timer_will_start'   // Timer se iniciará en X minutos
   | 'timer_will_stop';   // Timer se pausará en X minutos
 
-interface NotificationTranslations {
-  timer_started_title: string;
-  timer_started_body: string;
-  timer_stopped_title: string;
-  timer_stopped_body: string;
-  timer_will_start_title: string;
-  timer_will_start_body: string;
-  timer_will_stop_title: string;
-  timer_will_stop_body: string;
-  default_title: string;
-  default_body: string;
-  minute: string;
-  minutes: string;
-}
 
 class NotificationService {
   private static instance: NotificationService;
@@ -116,24 +114,71 @@ class NotificationService {
     reminderMinutes: 15,
   };
   private pendingBackgroundNotifications: Map<string, any> = new Map();
-  private translations: NotificationTranslations = {
-    timer_started_title: '⏰ Timer Started',
-    timer_started_body: 'Automatic timer started for',
-    timer_stopped_title: '⏹️ Timer Stopped',
-    timer_stopped_body: 'Automatic timer stopped for',
-    timer_will_start_title: '🚀 Timer Will Start',
-    timer_will_start_body: 'Timer will start in',
-    timer_will_stop_title: '⏸️ Timer Will Stop',
-    timer_will_stop_body: 'Timer will stop in',
-    default_title: '📱 Notification',
-    default_body: 'Event for',
-    minute: 'minute',
-    minutes: 'minutes',
-  };
 
   private constructor() {
     this.initializeService();
     this.setupAppStateListener();
+  }
+
+
+  // Helper method to get translation
+  private async t(key: string, options?: any): Promise<string> {
+    console.log('🔍 NotificationService t() called with key:', key);
+    
+    // Try to get current language from AsyncStorage
+    let currentLanguage = 'es'; // default
+    try {
+      const savedLanguage = await AsyncStorage.getItem('user_language');
+      if (savedLanguage) {
+        currentLanguage = savedLanguage;
+      }
+    } catch (error) {
+      console.log('🔍 Could not get language from storage, using default:', currentLanguage);
+    }
+    
+    console.log('🔍 Using language:', currentLanguage);
+    
+    // Get translations for current language
+    const getTranslations = (lang: string) => {
+      switch (lang) {
+        case 'es': return esTranslations;
+        case 'en': return enTranslations;
+        case 'de': return deTranslations;
+        case 'fr': return frTranslations;
+        case 'it': return itTranslations;
+        case 'pt': return ptTranslations;
+        case 'nl': return nlTranslations;
+        case 'tr': return trTranslations;
+        case 'ja': return jaTranslations;
+        case 'ru': return ruTranslations;
+        default: return enTranslations; // fallback to English
+      }
+    };
+    
+    const translations = getTranslations(currentLanguage);
+    
+    // Navigate through nested object using key path
+    const keyParts = key.split('.');
+    let result: any = translations;
+    
+    for (const part of keyParts) {
+      if (result && typeof result === 'object' && part in result) {
+        result = result[part];
+      } else {
+        console.log(`🔍 Translation key not found: ${key}`);
+        return key; // Return key itself if not found
+      }
+    }
+    
+    // If result is string and has template variables, replace them
+    if (typeof result === 'string' && options) {
+      let finalResult = result;
+      for (const [placeholder, value] of Object.entries(options)) {
+        finalResult = finalResult.replace(new RegExp(`{{${placeholder}}}`, 'g'), String(value));
+      }
+      return finalResult;
+    }
+    return typeof result === 'string' ? result : key;
   }
 
   static getInstance(): NotificationService {
@@ -403,7 +448,7 @@ class NotificationService {
         return;
       }
 
-      const { title, body } = this.getNotificationContent(type, jobName, extraData);
+      const { title, body } = await this.getNotificationContent(type, jobName, extraData);
       const identifier = `${type}_${Date.now()}_scheduled`;
 
       // Calculate time difference for logging
@@ -486,7 +531,7 @@ class NotificationService {
         return;
       }
 
-      const { title, body } = this.getNotificationContent(type, jobName, extraData);
+      const { title, body } = await this.getNotificationContent(type, jobName, extraData);
       const identifier = `${type}_${Date.now()}`;
 
       // Special configuration for auto-timer notifications to ensure background delivery
@@ -543,42 +588,42 @@ class NotificationService {
   /**
    * Get notification content based on type
    */
-  private getNotificationContent(
+  private async getNotificationContent(
     type: NotificationType,
     jobName: string,
     extraData?: { minutes?: number }
-  ): { title: string; body: string } {
+  ): Promise<{ title: string; body: string }> {
     const minutes = extraData?.minutes || 2;
 
     switch (type) {
       case 'timer_started':
         return {
-          title: this.translations.timer_started_title,
-          body: `${this.translations.timer_started_body} "${jobName}"`,
+          title: await this.t('preferences.notifications.timer_started_title'),
+          body: await this.t('preferences.notifications.timer_started_body', { jobName }),
         };
 
       case 'timer_stopped':
         return {
-          title: this.translations.timer_stopped_title,
-          body: `${this.translations.timer_stopped_body} "${jobName}"`,
+          title: await this.t('preferences.notifications.timer_stopped_title'),
+          body: await this.t('preferences.notifications.timer_stopped_body', { jobName }),
         };
 
       case 'timer_will_start':
         return {
-          title: this.translations.timer_will_start_title,
-          body: `${this.translations.timer_will_start_body} ${minutes} ${minutes === 1 ? this.translations.minute : this.translations.minutes} para "${jobName}"`,
+          title: await this.t('preferences.notifications.timer_will_start_title'),
+          body: await this.t('preferences.notifications.timer_will_start_body', { minutes, jobName }),
         };
 
       case 'timer_will_stop':
         return {
-          title: this.translations.timer_will_stop_title,
-          body: `${this.translations.timer_will_stop_body} ${minutes} ${minutes === 1 ? this.translations.minute : this.translations.minutes} para "${jobName}"`,
+          title: await this.t('preferences.notifications.timer_will_stop_title'),
+          body: await this.t('preferences.notifications.timer_will_stop_body', { minutes, jobName }),
         };
 
       default:
         return {
-          title: this.translations.default_title,
-          body: `${this.translations.default_body} "${jobName}"`,
+          title: await this.t('preferences.notifications.default_notification_title') || '📱 Notification',
+          body: await this.t('preferences.notifications.default_notification_body', { jobName }) || `Event for "${jobName}"`,
         };
     }
   }
