@@ -1,6 +1,6 @@
-# **PRIVATE SOFTWARE LICENSE - WorkTrack**
+# **PRIVATE SOFTWARE LICENSE - VixTime**
 
-## **WorkTrack - Geolocation Work Tracking Application**
+## **VixTime - Geolocation Work Tracking Application**
 **Copyright © 2025 Roberto Salvador. All rights reserved.**
 
 ---
@@ -50,7 +50,7 @@ Violation of this license will result in:
 
 ### **8. CONTACT AND SUPPORT**
 - Developer: Roberto Salvador
-- Email: roberto@worktrackapp.com
+- Email: roberto@vixtime.com
 - Technical support only for users with valid license
 
 ### **9. ADDITIONAL TERMS**
@@ -76,7 +76,7 @@ Violation of this license will result in:
 
 If you need access to source code for development, testing or collaboration:
 
-1. **Contact the owner**: roberto@worktrackapp.com
+1. **Contact the owner**: roberto@vixtime.com
 2. **Sign an NDA**: Mandatory confidentiality agreement
 3. **Development license**: Specific terms for collaborators
 4. **Controlled access**: Only to specific parts of the code as needed
@@ -90,7 +90,7 @@ If you need access to source code for development, testing or collaboration:
 - **Enterprise License**: For corporate use and customization
 - **Distribution License**: For authorized commercial partners
 
-To obtain a commercial license, contact: roberto@worktrackapp.com
+To obtain a commercial license, contact: roberto@vixtime.com
 
 ---
 

@@ -1,5 +1,5 @@
 /*
- * WorkTrack - Geolocation Work Tracking Application
+ * VixTime - Geolocation Work Tracking Application
  * Copyright © 2025 Roberto Salvador. All rights reserved.
  * 
  * PROPRIETARY CODE - COPYING OR DISTRIBUTION PROHIBITED
@@ -8,7 +8,7 @@
  * Unauthorized access is prohibited by law.
  * 
  * License required for commercial use.
- * Contact: roberto@worktrackapp.com
+ * Contact: roberto@vixtime.com
  */
 
 import { Job } from '../types/WorkTypes';
