@@ -2313,7 +2313,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     </>
   );
 
-  const renderScheduleTab = () => (
+    const renderScheduleTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
         <Text style={styles.sectionTitle}>{t('job_form.schedule.title')}</Text>
@@ -2404,26 +2404,30 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               <View style={styles.row}>
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>{t('job_form.schedule.start_time')}</Text>
-                  <TimeInput
+                  <TextInput
                     style={styles.input}
-                    value={getDaySchedule(selectedDay)?.startTime || ''}
-                    onChangeText={(value: string) => {
+                    value={formatTimeWithPreferences(getDaySchedule(selectedDay)?.startTime || '')}
+                    onChangeText={(value) => {
                       const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
-                      updateDaySchedule(selectedDay, { ...currentSchedule, startTime: value });
+                      const parsedTime = parseTimeInput(value);
+                      updateDaySchedule(selectedDay, { ...currentSchedule, startTime: parsedTime });
                     }}
+                    placeholder={getTimePlaceholder()}
                     placeholderTextColor={colors.textTertiary}
                   />
                 </View>
                 
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>{t('job_form.schedule.end_time')}</Text>
-                  <TimeInput
+                  <TextInput
                     style={styles.input}
-                    value={getDaySchedule(selectedDay)?.endTime || ''}
-                    onChangeText={(value: string) => {
+                    value={formatTimeWithPreferences(getDaySchedule(selectedDay)?.endTime || '')}
+                    onChangeText={(value) => {
                       const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
-                      updateDaySchedule(selectedDay, { ...currentSchedule, endTime: value });
+                      const parsedTime = parseTimeInput(value);
+                      updateDaySchedule(selectedDay, { ...currentSchedule, endTime: parsedTime });
                     }}
+                    placeholder={getTimePlaceholder()}
                     placeholderTextColor={colors.textTertiary}
                   />
                 </View>
@@ -2454,26 +2458,30 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 <View style={styles.row}>
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>{t('job_form.schedule.second_start_time')}</Text>
-                    <TimeInput
+                    <TextInput
                       style={styles.input}
-                      value={getDaySchedule(selectedDay)?.secondStartTime || ''}
-                      onChangeText={(value: string) => {
+                      value={formatTimeWithPreferences(getDaySchedule(selectedDay)?.secondStartTime || '')}
+                      onChangeText={(value) => {
                         const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
-                        updateDaySchedule(selectedDay, { ...currentSchedule, secondStartTime: value });
+                        const parsedTime = parseTimeInput(value);
+                        updateDaySchedule(selectedDay, { ...currentSchedule, secondStartTime: parsedTime });
                       }}
+                      placeholder={getTimePlaceholder()}
                       placeholderTextColor={colors.textTertiary}
                     />
                   </View>
                   
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>{t('job_form.schedule.second_end_time')}</Text>
-                    <TimeInput
+                    <TextInput
                       style={styles.input}
-                      value={getDaySchedule(selectedDay)?.secondEndTime || ''}
-                      onChangeText={(value: string) => {
+                      value={formatTimeWithPreferences(getDaySchedule(selectedDay)?.secondEndTime || '')}
+                      onChangeText={(value) => {
                         const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
-                        updateDaySchedule(selectedDay, { ...currentSchedule, secondEndTime: value });
+                        const parsedTime = parseTimeInput(value);
+                        updateDaySchedule(selectedDay, { ...currentSchedule, secondEndTime: parsedTime });
                       }}
+                      placeholder={getTimePlaceholder()}
                       placeholderTextColor={colors.textTertiary}
                     />
                   </View>
@@ -2687,6 +2695,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       </BlurView>
     </ScrollView>
   );
+
 
   const renderFinancialTab = () => (
     <ScrollView 
@@ -3547,7 +3556,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   style={styles.counterButton}
                   onPress={() => {
                     const currentValue = formData.autoTimer?.geofenceRadius || 50;
-                    const newValue = Math.max(5, currentValue - 5);
+                    const newValue = Math.max(25, currentValue - 5);
                     updateNestedData('autoTimer', 'geofenceRadius', newValue);
                   }}
                 >
@@ -3561,7 +3570,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   style={styles.counterButton}
                   onPress={() => {
                     const currentValue = formData.autoTimer?.geofenceRadius || 50;
-                    const newValue = Math.min(200, currentValue + 5);
+                    const newValue = Math.min(100, currentValue + 5);
                     updateNestedData('autoTimer', 'geofenceRadius', newValue);
                   }}
                 >

@@ -2604,8 +2604,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
                 const updatedJobs = await JobService.getJobs();
                 setJobs(updatedJobs);
                 
-                // Navigate to ReportsScreen instead of JobFormModal
-                navigateTo('reports');
+                // Navigate to ReportsScreen and open last session modal
+                navigateTo('reports', undefined, { openLastSession: true });
               } catch (error) {
                 console.error('Error stopping AutoTimer from widget:', error);
               }

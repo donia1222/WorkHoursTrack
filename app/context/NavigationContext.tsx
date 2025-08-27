@@ -9,7 +9,7 @@ interface NavigationContextType {
   currentScreen: ScreenName;
   navigationHistory: ScreenName[];
   selectedJob: Job | null;
-  navigateTo: (screen: ScreenName, job?: Job) => void;
+  navigateTo: (screen: ScreenName, job?: Job, params?: NavigationParams) => void;
   navigateBack: () => ScreenName;
   canGoBack: () => boolean;
   getPreviousScreen: () => ScreenName | null;
@@ -18,6 +18,13 @@ interface NavigationContextType {
   exportToCalendar: (jobId: string, parsedData: ParsedWorkData) => void;
   onExportToCalendar?: (jobId: string, parsedData: ParsedWorkData) => void;
   setOnExportToCalendar: (callback?: (jobId: string, parsedData: ParsedWorkData) => void) => void;
+  // Navigation parameters
+  navigationParams: NavigationParams | null;
+  clearNavigationParams: () => void;
+}
+
+export interface NavigationParams {
+  openLastSession?: boolean;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
@@ -31,13 +38,14 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
   const [navigationHistory, setNavigationHistory] = useState<ScreenName[]>(['mapa']);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [onExportToCalendar, setOnExportToCalendar] = useState<((jobId: string, parsedData: ParsedWorkData) => void) | undefined>(undefined);
+  const [navigationParams, setNavigationParams] = useState<NavigationParams | null>(null);
   
   // Initialize global current screen
   React.useEffect(() => {
     globalThis.currentScreen = 'mapa';
   }, []);
 
-  const navigateTo = (screen: ScreenName, job?: Job) => {
+  const navigateTo = (screen: ScreenName, job?: Job, params?: NavigationParams) => {
     if (screen !== currentScreen) {
       setNavigationHistory(prev => {
         // Remove the screen from history if it already exists to avoid duplicates
@@ -72,6 +80,11 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
     if (job !== undefined) {
       setSelectedJob(job);
     }
+
+    // Set navigation parameters
+    if (params !== undefined) {
+      setNavigationParams(params);
+    }
   };
 
   const navigateBack = (): ScreenName => {
@@ -103,6 +116,10 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
     }
   };
 
+  const clearNavigationParams = () => {
+    setNavigationParams(null);
+  };
+
   const value: NavigationContextType = {
     currentScreen,
     navigationHistory,
@@ -115,6 +132,8 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
     exportToCalendar,
     onExportToCalendar,
     setOnExportToCalendar,
+    navigationParams,
+    clearNavigationParams,
   };
 
   return (

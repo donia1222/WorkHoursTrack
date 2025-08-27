@@ -31,6 +31,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import JobFormModal from '../components/JobFormModal';
+import EditWorkDayModal from '../components/EditWorkDayModal';
 
 interface ReportsScreenProps {
   onNavigate: (screen: string) => void;
@@ -134,7 +135,7 @@ const AnimatedIcon: React.FC<AnimatedIconProps> = ({ name, size, color }) => {
 };
 
 export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
-  const { selectedJob, setSelectedJob } = useNavigation();
+  const { selectedJob, setSelectedJob, navigationParams, clearNavigationParams } = useNavigation();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [workDays, setWorkDays] = useState<WorkDay[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year' | 'custom'>('month');
@@ -156,6 +157,8 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const [showJobFormModal, setShowJobFormModal] = useState(false);
   const [editingJobForBilling, setEditingJobForBilling] = useState<Job | null>(null);
   const [useTimeFormat, setUseTimeFormat] = useState(true); // false = decimal (8.05h), true = time (8h 3m) - DEFAULT: HH:MM
+  const [editWorkDayModal, setEditWorkDayModal] = useState(false);
+  const [selectedWorkDay, setSelectedWorkDay] = useState<WorkDay | null>(null);
   
   const { handleBack } = useBackNavigation();
   const navigation = useNavigation();
@@ -651,6 +654,18 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
   const handleLoadMore = () => {
     setVisibleRecentDays(prev => prev + 6);
+  };
+
+  const handleEditWorkDay = (workDay: WorkDay) => {
+    setSelectedWorkDay(workDay);
+    setEditWorkDayModal(true);
+  };
+
+  const handleWorkDayUpdate = (updatedWorkDay: WorkDay) => {
+    // Reload data after updating
+    loadData();
+    setEditWorkDayModal(false);
+    setSelectedWorkDay(null);
   };
 
   const formatDate = (dateString: string) => {
@@ -1498,6 +1513,27 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     );
   };
 
+  // Handle navigation parameters - auto-open last session modal if requested
+  useEffect(() => {
+    if (navigationParams?.openLastSession && workDays.length > 0) {
+      console.log('📊 Auto-opening last session modal');
+      
+      // Get the most recent work session
+      const recentWorkDays = getRecentWorkDays();
+      if (recentWorkDays.length > 0) {
+        const lastSession = recentWorkDays[0];
+        console.log('📊 Opening modal for last session:', lastSession);
+        
+        // Open the modal with the last session
+        setSelectedWorkDay(lastSession);
+        setEditWorkDayModal(true);
+      }
+      
+      // Clear the navigation parameter after using it
+      clearNavigationParams();
+    }
+  }, [navigationParams, workDays, getRecentWorkDays, clearNavigationParams, setSelectedWorkDay, setEditWorkDayModal]);
+
   return (
     <SafeAreaView style={styles.container}>
 
@@ -1678,45 +1714,76 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           />
-          <Text style={styles.cardTitle}>{t('reports.recent_activity')}</Text>
+          <View style={styles.cardHeader}>
+            <IconSymbol size={24} name="clock.fill" color={colors.primary} />
+            <Text style={styles.cardTitle}>{t('reports.recent_activity')}</Text>
+          </View>
           {getRecentWorkDays().length > 0 ? (
             <>
               {getRecentWorkDays().map((day) => {
                 const job = jobs.find(j => j.id === day.jobId);
                 return (
-                  <View key={day.id} style={styles.recentItem}>
-                    <View style={styles.recentLeft}>
-                      <View style={[styles.recentDot, { backgroundColor: job?.color || colors.primary }]} />
-                      <View>
-                        <Text style={styles.recentDate}>{formatDate(day.date)}</Text>
-                        <Text style={styles.recentJob}>{job?.name || 'Trabajo'}</Text>
+                  <TouchableOpacity 
+                    key={day.id} 
+                    style={styles.modernRecentItem}
+                    onPress={() => handleEditWorkDay(day)}
+                    activeOpacity={0.8}
+                  >
+                    <BlurView intensity={20} tint={isDark ? 'dark' : 'light'} style={styles.recentItemBlur}>
+                      <View style={styles.recentItemContent}>
+                        <View style={styles.recentLeft}>
+                          <View style={[styles.modernJobIndicator, { backgroundColor: job?.color || colors.primary }]}>
+                            <IconSymbol size={16} name="building.2" color="white" />
+                          </View>
+                          <View style={styles.recentInfo}>
+                            <Text style={styles.recentDate}>{formatDate(day.date)}</Text>
+                            <Text style={styles.recentJob}>{job?.name || 'Trabajo'}</Text>
+                            {/* Show actual times if available, otherwise scheduled times */}
+                            {(day.actualStartTime && day.actualEndTime) ? (
+                              <Text style={[styles.recentSchedule, { color: colors.primary }]}>
+                                <IconSymbol size={12} name="clock" color={colors.primary} />
+                                {' '}{formatTimeCompact(day.actualStartTime)}-{formatTimeCompact(day.actualEndTime)}
+                              </Text>
+                            ) : (day.startTime && day.endTime) ? (
+                              <Text style={[styles.recentSchedule, { color: colors.textSecondary }]}>
+                                <IconSymbol size={12} name="clock" color={colors.textSecondary} />
+                                {' '}{formatTimeCompact(day.startTime)}-{formatTimeCompact(day.endTime)}
+                                {day.secondStartTime && day.secondEndTime && (
+                                  `, ${formatTimeCompact(day.secondStartTime)}-${formatTimeCompact(day.secondEndTime)}`
+                                )}
+                              </Text>
+                            ) : null}
+                          </View>
+                        </View>
+                        <View style={styles.recentRight}>
+                          <View style={styles.hoursContainer}>
+                            <Text style={styles.recentHours}>
+                              {formatHoursForDisplay(day.hours)}
+                            </Text>
+                            {day.overtime && (
+                              <View style={styles.overtimeChip}>
+                                <Text style={styles.overtimeChipText}>OT</Text>
+                              </View>
+                            )}
+                          </View>
+                          <TouchableOpacity 
+                            style={styles.editButton}
+                            onPress={() => handleEditWorkDay(day)}
+                          >
+                            <IconSymbol size={16} name="pencil" color={colors.primary} />
+                          </TouchableOpacity>
+                        </View>
                       </View>
-                    </View>
-                    <View style={styles.recentRight}>
-                      <Text style={styles.recentHours}>
-                        {formatHoursForDisplay(day.hours)}
-                      </Text>
-                      {/* Show actual times if available, otherwise scheduled times */}
-                      {(day.actualStartTime && day.actualEndTime) ? (
-                        <Text style={[styles.recentSchedule, { color: colors.primary }]}>
-                          {formatTimeCompact(day.actualStartTime)}-{formatTimeCompact(day.actualEndTime)}
-                        </Text>
-                      ) : (day.startTime && day.endTime) ? (
-                        <Text style={[styles.recentSchedule, { color: colors.textSecondary }]}>
-                          {formatTimeCompact(day.startTime)}-{formatTimeCompact(day.endTime)}
-                          {day.secondStartTime && day.secondEndTime && (
-                            `, ${formatTimeCompact(day.secondStartTime)}-${formatTimeCompact(day.secondEndTime)}`
-                          )}
-                        </Text>
-                      ) : null}
-                      {day.overtime && (
-                        <Text style={styles.recentOvertime}>{t('reports.ot')}</Text>
-                      )}
-                    </View>
-                  </View>
+                    </BlurView>
+                  </TouchableOpacity>
                 );
               })}
-              {getAllRecentWorkDays().length > visibleRecentDays && (
+              {(() => {
+                const totalDays = getAllRecentWorkDays().length;
+                const shouldShow = totalDays > visibleRecentDays;
+                console.log('🔍 LoadMore button check:', { totalDays, visibleRecentDays, shouldShow });
+                return shouldShow;
+              })() && (
                 <TouchableOpacity
                   style={styles.loadMoreButton}
                   onPress={handleLoadMore}
@@ -1730,12 +1797,14 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
             </>
           ) : (
             <View style={styles.emptyState}>
-              <IconSymbol size={32} name="calendar" color={colors.textSecondary} />
+              <IconSymbol size={48} name="calendar.badge.clock" color={colors.textSecondary} />
               <Text style={styles.emptyText}>{t('reports.no_records')}</Text>
+              <Text style={styles.emptySubtext}>Comienza a registrar tu tiempo de trabajo</Text>
               <TouchableOpacity
                 style={styles.addButton}
                 onPress={() => onNavigate('calendar')}
               >
+                <IconSymbol size={16} name="plus" color="white" />
                 <Text style={styles.addButtonText}>{t('reports.add_time')}</Text>
               </TouchableOpacity>
             </View>
@@ -2174,6 +2243,15 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           onNavigateToSubscription={() => onNavigate('subscription')}
         />
       )}
+      
+      {/* Edit Work Day Modal */}
+      <EditWorkDayModal
+        visible={editWorkDayModal}
+        onClose={() => setEditWorkDayModal(false)}
+        workDay={selectedWorkDay}
+        job={selectedWorkDay ? jobs.find(j => j.id === selectedWorkDay.jobId) || null : null}
+        onSave={handleWorkDayUpdate}
+      />
     </SafeAreaView>
   );
 }
@@ -2617,7 +2695,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     elevation: 10,
     borderWidth: 1,
     borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-    overflow: 'hidden',
+    // overflow: 'hidden', // Temporarily removed to debug
   },
   recentCardGradient: {
     position: 'absolute',
@@ -2692,11 +2770,84 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginBottom: 16,
     color: colors.textSecondary,
   },
-  addButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 24,
+    opacity: 0.8,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 8,
+  },
+  modernRecentItem: {
+    marginBottom: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  recentItemBlur: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+  },
+  recentItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  modernJobIndicator: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  recentInfo: {
+    flex: 1,
+  },
+  hoursContainer: {
+    alignItems: 'flex-end',
+    marginRight: 12,
+  },
+  overtimeChip: {
+    backgroundColor: 'rgba(255, 149, 0, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginTop: 2,
+  },
+  overtimeChipText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.warning,
+  },
+  editButton: {
+    padding: 8,
     borderRadius: 12,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 16,
     backgroundColor: colors.primary,
+    gap: 6,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
   },
   addButtonText: {
     fontSize: 14,
@@ -2713,6 +2864,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.separator,
     gap: 6,
+
   },
   loadMoreText: {
     fontSize: 14,
