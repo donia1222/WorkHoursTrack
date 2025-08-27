@@ -727,7 +727,7 @@ Please describe your issue below:
               <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.purchasingCard}>
                 <ActivityIndicator size="large" color={colors.primary} />
                 <Text style={[styles.purchasingText, { color: colors.text }]}>{t('subscription.processing')}</Text>
-                <Text style={[styles.purchasingSubtext, { color: colors.textSecondary, marginTop: 8, fontSize: 14, textAlign: 'center' }]}>
+                <Text style={[styles.purchasingText, { color: colors.textSecondary, marginTop: 8, fontSize: 14, textAlign: 'center' }]}>
                   {t('subscription.processing_note') || 'Conectando con App Store...'}
                 </Text>
               </BlurView>

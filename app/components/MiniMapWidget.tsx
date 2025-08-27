@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated as RNAnimated } from
 import { BlurView } from 'expo-blur';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSpring } from 'react-native-reanimated';
 import MapView, { Marker, Circle, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
+import { Platform } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { Job } from '../types/WorkTypes';
@@ -84,6 +85,57 @@ marginTop: -20,
     shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 3,
+  },
+  miniMapContainer: {
+    position: 'absolute',
+    top: 60,
+    right: 10,
+    width: 80,
+    height: 60,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(99, 102, 241, 0.15)',
+    borderWidth: 2,
+    borderColor: isDark ? 'rgba(139, 92, 246, 0.6)' : 'rgba(99, 102, 241, 0.5)',
+    shadowColor: isDark ? '#8b5cf6' : '#6366f1',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 999,
+  },
+  miniMap: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  miniMapOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    zIndex: 10,
+  },
+  centerMapButton: {
+    position: 'absolute',
+    top: 70,
+    left: 30,
+    backgroundColor: isDark ? 'rgba(139, 92, 246, 0.3)' : 'rgba(99, 102, 241, 0.2)',
+    borderRadius: 16,
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(139, 92, 246, 0.5)' : 'rgba(99, 102, 241, 0.4)',
+    shadowColor: isDark ? '#8b5cf6' : '#6366f1',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+    zIndex: 998,
   },
   controlsContainer: {
     flexDirection: 'row',
@@ -419,38 +471,13 @@ export default function MiniMapWidget({
             <Animated.View style={[styles.greenDot, animatedDotStyle]} />
           </View>
           
-          <View style={styles.headerButtons}>
-            <TouchableOpacity
-              style={styles.headerButton}
-              onPress={centerMap}
-              activeOpacity={0.8}
-            >
-              <IconSymbol 
-                size={14} 
-                name="location.fill" 
-                color={isDark ? '#a78bfa' : '#6366f1'} 
-              />
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.headerButton}
-              onPress={() => setMapType(mapType === 'standard' ? 'satellite' : 'standard')}
-              activeOpacity={0.8}
-            >
-              <IconSymbol 
-                size={14} 
-                name={mapType === 'standard' ? 'globe' : 'map'} 
-                color={isDark ? '#a78bfa' : '#6366f1'} 
-              />
-            </TouchableOpacity>
-          </View>
         </View>
         
         <MapView
           ref={mapRef}
           style={styles.map}
           region={mapRegion}
-          provider={PROVIDER_DEFAULT}
+          provider={Platform.OS === 'ios' ? PROVIDER_DEFAULT : PROVIDER_GOOGLE}
           mapType={mapType}
           showsUserLocation={true}
           showsMyLocationButton={false}
@@ -458,6 +485,10 @@ export default function MiniMapWidget({
           zoomEnabled={true}
           rotateEnabled={true}
           pitchEnabled={true}
+          toolbarEnabled={false}
+          showsCompass={false}
+          showsScale={false}
+          loadingEnabled={false}
         >
           {/* Job location marker */}
           <Marker
@@ -494,6 +525,58 @@ export default function MiniMapWidget({
             </Marker>
           )}
         </MapView>
+
+        {/* Botón de centrar mapa - esquina superior izquierda */}
+        <TouchableOpacity
+          style={styles.centerMapButton}
+          onPress={centerMap}
+          activeOpacity={0.8}
+        >
+          <IconSymbol 
+            size={16} 
+            name="location.fill" 
+            color={isDark ? '#a78bfa' : '#6366f1'} 
+          />
+        </TouchableOpacity>
+
+        {/* Mini mapa overlay */}
+        <View style={styles.miniMapContainer}>
+          <MapView
+            style={styles.miniMap}
+            region={{
+              latitude: job.location.latitude,
+              longitude: job.location.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }}
+            provider={Platform.OS === 'ios' ? PROVIDER_DEFAULT : PROVIDER_GOOGLE}
+            mapType={mapType === 'standard' ? 'satellite' : 'standard'}
+            scrollEnabled={false}
+            zoomEnabled={false}
+            rotateEnabled={false}
+            pitchEnabled={false}
+            showsUserLocation={false}
+            showsMyLocationButton={false}
+            toolbarEnabled={false}
+            showsCompass={false}
+            showsScale={false}
+            showsBuildings={false}
+            showsTraffic={false}
+            showsIndoors={false}
+            showsPointsOfInterest={false}
+            liteMode={true}
+            loadingEnabled={false}
+            cacheEnabled={false}
+            pointerEvents="none"
+          >
+          </MapView>
+          
+          <TouchableOpacity
+            style={styles.miniMapOverlay}
+            onPress={() => setMapType(mapType === 'standard' ? 'satellite' : 'standard')}
+            activeOpacity={0.8}
+          />
+        </View>
       </View>
 
       <BlurView 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { useLanguage } from '../contexts/LanguageContext';
 
 type Props = {
   message: string;
@@ -8,6 +9,8 @@ type Props = {
 };
 
 export default function AutoTimerBanner({ message, onDismiss }: Props) {
+  const { t } = useLanguage();
+  
   return (
     <View 
       style={{
@@ -16,13 +19,13 @@ export default function AutoTimerBanner({ message, onDismiss }: Props) {
         left: 12,
         right: 12,
         zIndex: 1000,
-        backgroundColor: 'rgba(255, 149, 0, 0.98)',
+        backgroundColor: 'rgba(52, 199, 89, 0.95)',
         borderRadius: 20,
         padding: 20,
         flexDirection: 'column',
         alignItems: 'stretch',
         justifyContent: 'space-between',
-        shadowColor: '#FF9500',
+        shadowColor: '#34C759',
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.3,
         shadowRadius: 16,
@@ -60,8 +63,8 @@ export default function AutoTimerBanner({ message, onDismiss }: Props) {
           }}
           onPress={onDismiss}
         >
-          <Text style={{ fontSize: 14, color: '#FF9500', fontWeight: '700' }}>
-            OK, entendido
+          <Text style={{ fontSize: 14, color: '#34C759', fontWeight: '700' }}>
+            {t('timer.auto_timer.dismiss_notice')}
           </Text>
         </TouchableOpacity>
       </View>

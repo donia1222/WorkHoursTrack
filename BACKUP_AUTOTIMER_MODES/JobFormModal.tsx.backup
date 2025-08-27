@@ -32,7 +32,6 @@ import { Job, DEFAULT_COLORS } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import { AutoScheduleService } from '../services/AutoScheduleService';
 import AutoTimerService from '../services/AutoTimerService';
-import AutoTimerModeService, { AutoTimerMode } from '../services/AutoTimerModeService';
 import { FreeAddressSearch } from './FreeAddressSearch';
 import AddressAutocompleteDropdown from './AddressAutocompleteDropdown';
 import * as Updates from 'expo-updates';
@@ -72,17 +71,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.separator,
   },
-  headerTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: 8,
-  },
-  
   headerTitle: {
     ...Theme.typography.headline,
     color: colors.text,
     fontWeight: '600',
+    flex: 1,
     textAlign: 'left',
   },
   closeButton: {
@@ -1085,115 +1078,6 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-
-  // Estilos para selección de modo AutoTimer
-  modeOption: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    marginBottom: 12,
-    backgroundColor: colors.surface,
-  },
-
-  modeOptionSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + '10',
-  },
-
-  modeOptionContent: {
-    padding: 16,
-  },
-
-  modeOptionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-
-  modeOptionIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-
-  modeOptionTitle: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-
-  radioButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  radioButtonSelected: {
-    borderColor: colors.primary,
-  },
-
-  radioButtonInner: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.primary,
-  },
-
-  modeOptionDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 4,
-    lineHeight: 18,
-  },
-
-  modeOptionDetails: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    fontStyle: 'italic',
-  },
-
-  permissionWarning: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-    padding: 8,
-    backgroundColor: colors.warning + '20',
-    borderRadius: 6,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.warning,
-  },
-
-  permissionWarningText: {
-    fontSize: 12,
-    color: colors.warning,
-    marginLeft: 6,
-    flex: 1,
-  },
-
-  // Estilos para la indicación del modo "Siempre Activo"
-  backgroundModeNotice: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginTop: 8,
-    padding: 12,
-    backgroundColor: colors.warning + '15',
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.warning,
-  },
-
-  backgroundModeNoticeText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginLeft: 8,
-    flex: 1,
-    lineHeight: 16,
-  },
 });
 
 export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true }: JobFormModalProps) {
@@ -1205,8 +1089,6 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [showAutoTimerAlert, setShowAutoTimerAlert] = useState(false);
   const [hasShownAutoTimerAlert, setHasShownAutoTimerAlert] = useState(false);
-  const [selectedAutoTimerMode, setSelectedAutoTimerMode] = useState<AutoTimerMode>('foreground-only');
-  const [hasBackgroundPermission, setHasBackgroundPermission] = useState(false);
   const [previousAutoSchedule, setPreviousAutoSchedule] = useState<boolean | undefined>(undefined);
   const [showAddressSearch, setShowAddressSearch] = useState(false);
   const [showAddressDropdown, setShowAddressDropdown] = useState(false);
@@ -1295,7 +1177,6 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [showNameError, setShowNameError] = useState(false);
   const [selectedSyncMonths, setSelectedSyncMonths] = useState<number[]>([new Date().getMonth()]); // Current month as default
   const monthScrollViewRef = useRef<ScrollView>(null);
-  const nameInputRef = useRef<TextInput>(null);
   
   const styles = getStyles(colors, isDark);
 
@@ -1341,25 +1222,6 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     };
 
     checkLocationPermission();
-  }, [visible]);
-
-  // Cargar configuración actual del modo AutoTimer
-  useEffect(() => {
-    const loadAutoTimerModeSettings = async () => {
-      if (visible) {
-        try {
-          const modeService = AutoTimerModeService.getInstance();
-          const settings = await modeService.getAutoTimerModeSettings();
-          setSelectedAutoTimerMode(settings.mode);
-          setHasBackgroundPermission(settings.hasBackgroundPermission);
-          console.log('📱 Loaded AutoTimer mode:', settings.mode);
-        } catch (error) {
-          console.error('Error loading AutoTimer mode settings:', error);
-        }
-      }
-    };
-
-    loadAutoTimerModeSettings();
   }, [visible]);
 
   // Listener para detectar cuando la app vuelve a estar activa y re-verificar permisos
@@ -1762,14 +1624,6 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         // Show error on name field and don't close
         setShowNameError(true);
         setCurrentTab('basic'); // Switch to basic tab to show the error
-        
-        // Focus on name input after a small delay to ensure tab switch completes
-        setTimeout(() => {
-          if (nameInputRef.current) {
-            nameInputRef.current.focus();
-          }
-        }, 300);
-        
         return;
       }
       
@@ -2239,34 +2093,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         <Text style={styles.sectionTitle}>{t('job_form.basic.title')}</Text>
         
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, showNameError && { color: colors.error }]}>
-            {t('job_form.basic.name')} {t('job_form.basic.name_required')}
-            {showNameError && " *"}
-          </Text>
+          <Text style={styles.label}>{t('job_form.basic.name')} {t('job_form.basic.name_required')}</Text>
           <TextInput
-            ref={nameInputRef}
-            style={[
-              styles.input,
-              showNameError && {
-                borderColor: colors.error,
-                borderWidth: 2,
-                backgroundColor: isDark ? 'rgba(255, 59, 48, 0.1)' : 'rgba(255, 59, 48, 0.05)'
-              }
-            ]}
+            style={styles.input}
             value={formData.name}
-            onChangeText={(value) => {
-              updateFormData('name', value);
-              if (showNameError && value.trim()) {
-                setShowNameError(false);
-              }
-            }}
+            onChangeText={(value) => updateFormData('name', value)}
             placeholder={t('job_form.basic.name_placeholder')}
             placeholderTextColor={colors.textTertiary}
-            onFocus={() => {
-              if (showNameError) {
-                setShowNameError(false);
-              }
-            }}
           />
         </View>
 
@@ -3563,94 +3396,6 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       Linking.openSettings();
     };
 
-    // Funciones para manejar modos de AutoTimer
-    const handleModeSelection = async (mode: AutoTimerMode) => {
-      console.log('🔧 Seleccionando modo AutoTimer:', mode);
-      
-      if (mode === 'foreground-only' || mode === 'background-allowed') {
-        // Modos que no requieren permisos adicionales
-        setSelectedAutoTimerMode(mode);
-        const modeService = AutoTimerModeService.getInstance();
-        const result = await modeService.setAutoTimerModeWithoutPermissions(mode, false);
-        
-        if (!result.success) {
-          console.error('Error configurando modo AutoTimer:', result.message);
-        }
-      } else if (mode === 'full-background') {
-        // Verificar si ya tiene permisos
-        const modeService = AutoTimerModeService.getInstance();
-        const hasPermission = await modeService.checkBackgroundPermissions();
-        
-        if (hasPermission) {
-          setSelectedAutoTimerMode(mode);
-          setHasBackgroundPermission(true);
-          await modeService.setAutoTimerModeWithoutPermissions(mode, true);
-          
-          // Ajustar radio del geofence a mínimo 50m para modo full-background
-          const currentRadius = formData.autoTimer?.geofenceRadius || 50;
-          if (currentRadius < 50) {
-            updateNestedData('autoTimer', 'geofenceRadius', 50);
-            console.log('📍 Radio del geofence ajustado a 50m para modo "Siempre Activo"');
-          }
-          
-          console.log('✅ AutoTimer configurado en modo "Siempre Activo"');
-        } else {
-          // Mostrar explicación antes de pedir permiso
-          Alert.alert(
-            t('job_form.auto_timer.permissions_required_title'),
-            t('job_form.auto_timer.permissions_required_message'),
-            [
-              { text: t('common.cancel'), style: 'cancel' },
-              { 
-                text: t('job_form.auto_timer.permissions_grant_button'), 
-                onPress: async () => await requestBackgroundPermissionForMode(mode)
-              }
-            ]
-          );
-        }
-      }
-    };
-
-    const requestBackgroundPermissionForMode = async (mode: AutoTimerMode) => {
-      try {
-        // Pedir permisos directamente aquí
-        const { status } = await Location.requestBackgroundPermissionsAsync();
-        
-        if (status === 'granted') {
-          // Éxito - configurar modo
-          setSelectedAutoTimerMode(mode);
-          setHasBackgroundPermission(true);
-          const modeService = AutoTimerModeService.getInstance();
-          await modeService.setAutoTimerModeWithoutPermissions(mode, true);
-          
-          // Ajustar radio del geofence a mínimo 50m para modo full-background
-          const currentRadius = formData.autoTimer?.geofenceRadius || 50;
-          if (currentRadius < 50) {
-            updateNestedData('autoTimer', 'geofenceRadius', 50);
-            console.log('📍 Radio del geofence ajustado a 50m para modo "Siempre Activo"');
-          }
-          
-          console.log('✅ AutoTimer configurado correctamente con permisos de background');
-        } else {
-          // Permisos denegados - mostrar alerta con botón de Ajustes
-          Alert.alert(
-            t('job_form.auto_timer.permissions_needed_title'),
-            t('job_form.auto_timer.permissions_needed_message'),
-            [
-              { text: t('common.cancel'), style: 'cancel' },
-              { 
-                text: t('job_form.auto_timer.permissions_open_settings'), 
-                onPress: () => Linking.openSettings()
-              }
-            ]
-          );
-        }
-      } catch (error) {
-        console.error('Error requesting background permission:', error);
-        Alert.alert('Error', 'Hubo un problema configurando los permisos');
-      }
-    };
-
     const handleAutoTimerToggleWithPermissionCheck = async (value: boolean) => {
       if (!hasLocationPermission && value) {
         Alert.alert(
@@ -3794,114 +3539,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   />
                 </View>
               </View>
-
-              {/* Sección de selección de modo AutoTimer */}
-              {formData.autoTimer?.enabled && (
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>{t('job_form.auto_timer.mode_section_title')}</Text>
-                  <Text style={styles.labelDescription}>
-                    {t('job_form.auto_timer.mode_section_description')}
-                  </Text>
-                  
-                  {/* Modo 1: Solo app abierta */}
-                  <TouchableOpacity 
-                    style={[
-                      styles.modeOption, 
-                      selectedAutoTimerMode === 'foreground-only' && styles.modeOptionSelected
-                    ]}
-                    onPress={() => handleModeSelection('foreground-only')}
-                  >
-                    <View style={styles.modeOptionContent}>
-                      <View style={styles.modeOptionHeader}>
-                        <Text style={styles.modeOptionIcon}>📱</Text>
-                        <Text style={styles.modeOptionTitle}>{t('job_form.auto_timer.mode_foreground_title')}</Text>
-                        <View style={[
-                          styles.radioButton,
-                          selectedAutoTimerMode === 'foreground-only' && styles.radioButtonSelected
-                        ]}>
-                          {selectedAutoTimerMode === 'foreground-only' && (
-                            <View style={styles.radioButtonInner} />
-                          )}
-                        </View>
-                      </View>
-                      <Text style={styles.modeOptionDescription}>
-                        {t('job_form.auto_timer.mode_foreground_description')}
-                      </Text>
-                      <Text style={styles.modeOptionDetails}>
-                        {t('job_form.auto_timer.mode_foreground_details')}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-
-                  {/* Modo 2: App abierta + minimizada */}
-                  <TouchableOpacity 
-                    style={[
-                      styles.modeOption, 
-                      selectedAutoTimerMode === 'background-allowed' && styles.modeOptionSelected
-                    ]}
-                    onPress={() => handleModeSelection('background-allowed')}
-                  >
-                    <View style={styles.modeOptionContent}>
-                      <View style={styles.modeOptionHeader}>
-                        <Text style={styles.modeOptionIcon}>🔄</Text>
-                        <Text style={styles.modeOptionTitle}>{t('job_form.auto_timer.mode_background_title')}</Text>
-                        <View style={[
-                          styles.radioButton,
-                          selectedAutoTimerMode === 'background-allowed' && styles.radioButtonSelected
-                        ]}>
-                          {selectedAutoTimerMode === 'background-allowed' && (
-                            <View style={styles.radioButtonInner} />
-                          )}
-                        </View>
-                      </View>
-                      <Text style={styles.modeOptionDescription}>
-                        {t('job_form.auto_timer.mode_background_description')}
-                      </Text>
-                      <Text style={styles.modeOptionDetails}>
-                        {t('job_form.auto_timer.mode_background_details')}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-
-                  {/* Modo 3: Siempre activo (requiere permisos) */}
-                  <TouchableOpacity 
-                    style={[
-                      styles.modeOption, 
-                      selectedAutoTimerMode === 'full-background' && styles.modeOptionSelected
-                    ]}
-                    onPress={() => handleModeSelection('full-background')}
-                  >
-                    <View style={styles.modeOptionContent}>
-                      <View style={styles.modeOptionHeader}>
-                        <Text style={styles.modeOptionIcon}>🌍</Text>
-                        <Text style={styles.modeOptionTitle}>{t('job_form.auto_timer.mode_full_background_title')}</Text>
-                        <View style={[
-                          styles.radioButton,
-                          selectedAutoTimerMode === 'full-background' && styles.radioButtonSelected
-                        ]}>
-                          {selectedAutoTimerMode === 'full-background' && (
-                            <View style={styles.radioButtonInner} />
-                          )}
-                        </View>
-                      </View>
-                      <Text style={styles.modeOptionDescription}>
-                        {t('job_form.auto_timer.mode_full_background_description')}
-                      </Text>
-                      <Text style={styles.modeOptionDetails}>
-                        {t('job_form.auto_timer.mode_full_background_details')}
-                      </Text>
-                      {selectedAutoTimerMode === 'full-background' && !hasBackgroundPermission && (
-                        <View style={styles.permissionWarning}>
-                          <IconSymbol size={16} name="exclamationmark.triangle" color={colors.warning} />
-                          <Text style={styles.permissionWarningText}>
-                            {t('job_form.auto_timer.permissions_pending_warning')}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                </View>
-              )}
+              
           
             </>
           )}
@@ -3915,31 +3553,14 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               <Text style={styles.labelDescription}>{t('job_form.auto_timer.geofence_radius_desc')}</Text>
               <View style={styles.counterContainer}>
                 <TouchableOpacity 
-                  style={[
-                    styles.counterButton,
-                    (selectedAutoTimerMode === 'full-background' && (formData.autoTimer?.geofenceRadius || 50) <= 50) && {
-                      opacity: 0.5,
-                      backgroundColor: colors.border
-                    }
-                  ]}
-                  disabled={selectedAutoTimerMode === 'full-background' && (formData.autoTimer?.geofenceRadius || 50) <= 50}
+                  style={styles.counterButton}
                   onPress={() => {
                     const currentValue = formData.autoTimer?.geofenceRadius || 50;
-                    // Si está en modo full-background, el mínimo es 50m, sino 25m
-                    const minValue = selectedAutoTimerMode === 'full-background' ? 50 : 25;
-                    const newValue = Math.max(minValue, currentValue - 5);
+                    const newValue = Math.max(25, currentValue - 5);
                     updateNestedData('autoTimer', 'geofenceRadius', newValue);
                   }}
                 >
-                  <IconSymbol 
-                    size={20} 
-                    name="minus" 
-                    color={
-                      (selectedAutoTimerMode === 'full-background' && (formData.autoTimer?.geofenceRadius || 50) <= 50)
-                        ? colors.textSecondary
-                        : colors.primary
-                    } 
-                  />
+                  <IconSymbol size={20} name="minus" color={colors.primary} />
                 </TouchableOpacity>
                 <View style={styles.counterValue}>
                   <Text style={styles.counterText}>{formData.autoTimer?.geofenceRadius || 50}</Text>
@@ -3956,16 +3577,6 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   <IconSymbol size={20} name="plus" color={colors.primary} />
                 </TouchableOpacity>
               </View>
-              
-              {/* Indicación para modo "Siempre Activo" */}
-              {selectedAutoTimerMode === 'full-background' && (
-                <View style={styles.backgroundModeNotice}>
-                  <IconSymbol size={16} name="info.circle" color={colors.warning} />
-                  <Text style={styles.backgroundModeNoticeText}>
-                    {t('job_form.auto_timer.background_mode_radius_notice')}
-                  </Text>
-                </View>
-              )}
             </View>
 
             {/* Map showing job location and geofence radius */}
@@ -4090,20 +3701,6 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       </BlurView>
     </ScrollView>
     );
-  };
-
-  // Función para obtener título e icono según el tab activo
-  const getTabHeaderInfo = () => {
-    const tabConfig = {
-      'basic': { title: t('job_form.tabs.basic'), icon: 'person.circle' },
-      'schedule': { title: t('job_form.tabs.schedule'), icon: 'calendar.badge.clock' },
-      'financial': { title: t('job_form.tabs.financial'), icon: 'dollarsign.circle.fill' },
-      'billing': { title: t('job_form.tabs.billing'), icon: 'doc.text.fill' },
-      'auto': { title: t('job_form.tabs.auto'), icon: 'location.fill' },
-      'delete': { title: t('job_form.tabs.delete'), icon: 'trash.fill' }
-    };
-    
-    return tabConfig[currentTab] || { title: t('job_form.title_edit'), icon: 'briefcase.fill' };
   };
 
   const renderDeleteTab = () => {
@@ -4275,12 +3872,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           <SafeAreaView style={styles.container}>
             {/* Show full form */}
             <View style={styles.header}>
-              <View style={styles.headerTitleContainer}>
-                <IconSymbol size={24} name={getTabHeaderInfo().icon as any} color={colors.primary} />
-                <Text style={styles.headerTitle}>
-                  {getTabHeaderInfo().title}
-                </Text>
-              </View>
+              <Text style={styles.headerTitle}>
+                {editingJob ? t('job_form.title_edit') : t('job_form.title_new')}
+              </Text>
               <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                 <View style={styles.closeButtonCircle}>
                   <IconSymbol size={20} name={formData.name?.trim() ? "checkmark" : "xmark"} color="#FFFFFF" />

@@ -8,7 +8,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, AppStateStatus, Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { startBackgroundGeofencing, stopBackgroundGeofencing } from './BackgroundGeofenceTask';
-import AutoTimerModeService from './AutoTimerModeService';
 
 export type AutoTimerState = 
   | 'inactive'     // Not monitoring or no jobs nearby
@@ -144,21 +143,12 @@ class AutoTimerService {
         console.log('🟢 Auto timer service started successfully');
         console.log(`📊 Current status: ${this.currentState}, Job: ${this.currentJobId}, Enabled: ${this.isEnabled}`);
         
-        // Iniciar background geofencing SOLO si el modo lo permite
-        const modeService = AutoTimerModeService.getInstance();
-        const modeSettings = await modeService.getAutoTimerModeSettings();
-        
-        console.log(`🔧 AutoTimer mode: ${modeSettings.mode}, hasBackgroundPermission: ${modeSettings.hasBackgroundPermission}`);
-        
-        if (modeSettings.mode === 'full-background' && modeSettings.hasBackgroundPermission) {
-          try {
-            await startBackgroundGeofencing(autoTimerJobs);
-            console.log('🌍 Background geofencing iniciado correctamente (modo full-background)');
-          } catch (error) {
-            console.error('❌ Error iniciando background geofencing:', error);
-          }
-        } else {
-          console.log(`📱 AutoTimer ejecutándose en modo: ${modeSettings.mode} (no background geofencing)`);
+        // Iniciar background geofencing DESPUÉS de confirmar success
+        try {
+          await startBackgroundGeofencing(autoTimerJobs);
+          console.log('🌍 Background geofencing iniciado correctamente');
+        } catch (error) {
+          console.error('❌ Error iniciando background geofencing:', error);
         }
         
         // Check if user is inside any geofence when starting
@@ -1443,14 +1433,6 @@ class AutoTimerService {
    */
   async isActiveTimerPaused(): Promise<boolean> {
     return this.isPaused;
-  }
-
-  /**
-   * Get current AutoTimer mode settings
-   */
-  async getAutoTimerModeSettings() {
-    const modeService = AutoTimerModeService.getInstance();
-    return await modeService.getAutoTimerModeSettings();
   }
 
   /**

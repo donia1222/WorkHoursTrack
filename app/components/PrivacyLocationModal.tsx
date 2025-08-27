@@ -128,11 +128,7 @@ export default function PrivacyLocationModal({ visible, onClose, onAccept }: Pri
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       
-      if (status === 'granted') {
-        // Also request background permission for auto-timer
-        const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
-        console.log('Background location permission:', bgStatus);
-      }
+      console.log('Foreground location permission:', status);
       
       // Mark as seen and close
       await AsyncStorage.setItem('privacyLocationSeen', 'true');
