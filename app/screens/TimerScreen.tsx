@@ -998,7 +998,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
   const [notes, setNotes] = useState('');
-  const { selectedJob, setSelectedJob } = useNavigation();
+  const { selectedJob, setSelectedJob, navigateTo } = useNavigation();
   const [isJobFormModalVisible, setIsJobFormModalVisible] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [successModalData] = useState<{
@@ -1375,6 +1375,9 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       
       await loadRecentTimerSessions();
       console.log('✅ Timer stopped successfully');
+      
+      // Navigate to ReportsScreen and open last session modal
+      navigateTo('reports', undefined, { openLastSession: true });
     } catch (error) {
       console.error('Error stopping timer:', error);
       Alert.alert('Error', t('timer.save_error'));
@@ -1840,6 +1843,43 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         )}
 
       
+        {/* Quick Actions - Moved below recent sessions */}
+        {!isRunning && !activeSession && (
+          <View style={styles.quickActions}>
+            <Text style={styles.quickActionsTitle}>{t('timer.quick_actions')}</Text>
+            <View style={styles.quickActionButtons}>
+              <TouchableOpacity 
+                style={styles.autoTimerQuickButton}
+                onPress={() => {
+                  triggerHaptic('light');
+                  setIsJobFormModalVisible(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={isDark ? 
+                    ['rgba(0, 122, 255, 0.2)', 'rgba(0, 122, 255, 0.05)'] : 
+                    ['rgba(0, 122, 255, 0.15)', 'rgba(0, 122, 255, 0.03)']
+                  }
+                  style={styles.autoTimerQuickButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
+                <View style={styles.autoTimerQuickButtonContent}>
+                  <View style={styles.autoTimerQuickButtonIcon}>
+                    <IconSymbol size={16} name="location.fill" color={colors.primary} />
+                  </View>
+                  <Text style={styles.autoTimerQuickButtonText}>
+                    AUTOTIMER
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              
+            </View>
+       
+          </View>
+        )}
+
           </>
         )}
       </ScrollView>

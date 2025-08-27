@@ -141,7 +141,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year' | 'custom'>('month');
   const [selectedJobId, setSelectedJobId] = useState<string | 'all'>(selectedJob?.id || 'all');
   const [periodStats, setPeriodStats] = useState<PeriodStats | null>(null);
-  const [visibleRecentDays, setVisibleRecentDays] = useState<number>(6);
+  const [visibleRecentDays, setVisibleRecentDays] = useState<number>(4);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [datePickerMode, setDatePickerMode] = useState<'from' | 'to'>('from');
   const [fromDate, setFromDate] = useState<Date>(new Date(new Date().setDate(1))); // First day of current month
@@ -653,7 +653,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   };
 
   const handleLoadMore = () => {
-    setVisibleRecentDays(prev => prev + 6);
+    setVisibleRecentDays(prev => prev + 10);
   };
 
   const handleEditWorkDay = (workDay: WorkDay) => {
@@ -1596,36 +1596,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               />
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <Text style={styles.statsTitle}>{getPeriodLabel()}</Text>
-                <TouchableOpacity 
-                  onPress={toggleTimeFormat}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    borderRadius: 16,
-                  }}
-                >
-                  <Text style={{ 
-                    color: colors.textSecondary, 
-                    fontSize: 11, 
-                    marginRight: 4,
-                    fontWeight: '600'
-                  }}>
-                    {useTimeFormat ? 'HH:MM' : '0.00h'}
-                  </Text>
-                  <Switch
-                    value={useTimeFormat}
-                    onValueChange={toggleTimeFormat}
-                    trackColor={{ false: colors.border, true: colors.primary }}
-                    thumbColor={'#FFFFFF'}
-                    style={{ transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] }}
-                  />
-                </TouchableOpacity>
-              </View>
+      
               <View style={styles.statsGrid}>
                 <View style={styles.modernStatItem}>
                   <View style={styles.statIconContainer}>
@@ -1667,43 +1638,6 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
               )}
             </BlurView>
           </Animated.View>
-        )}
-
-        {/* Job breakdown */}
-        {periodStats && periodStats.jobBreakdown.length > 0 && (
-          <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.jobBreakdownCard}>
-            <LinearGradient
-              colors={isDark ? ['rgba(255, 149, 0, 0.12)', 'rgba(255, 149, 0, 0.04)'] : ['rgba(255, 149, 0, 0.08)', 'rgba(255, 149, 0, 0.02)']}
-              style={styles.jobBreakdownCardGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            />
-            <Text style={styles.cardTitle}>{t('reports.job_distribution')}</Text>
-            {periodStats.jobBreakdown.map((stat) => (
-              <View key={stat.job.id} style={styles.jobStatRow}>
-                <View style={styles.jobStatInfo}>
-                  <View style={[styles.jobColorBar, { backgroundColor: stat.job.color }]} />
-                  <View style={styles.jobStatDetails}>
-                    <Text style={styles.jobStatName}>{stat.job.name}</Text>
-                    <Text style={styles.jobStatHours}>
-                      {formatHoursDisplay(stat.hours)} • {stat.percentage.toFixed(1)}%
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.progressBarContainer}>
-                  <View 
-                    style={[
-                      styles.progressBar, 
-                      { 
-                        width: `${stat.percentage}%`,
-                        backgroundColor: stat.job.color,
-                      }
-                    ]} 
-                  />
-                </View>
-              </View>
-            ))}
-          </BlurView>
         )}
 
         {/* Recent activity */}
@@ -3186,7 +3120,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderRadius: 16,
   },
   primaryExportButtonText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',

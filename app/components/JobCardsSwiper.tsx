@@ -222,96 +222,7 @@ export const JobCardsSwiper: React.FC<JobCardsSwiperProps> = ({
                             </View>
                           )}
                         </View>
-                        {showAutoTimer && onAutoTimerToggle && job.autoTimer?.enabled && (
-                            <View style={styles.autoTimerContainer}>
-                              <Text style={styles.autoTimerLabel}>
-                                {t('maps.auto_timer')}
-                              </Text>
-                              <Switch
-                                value={job.autoTimer?.enabled || false}
-                                onValueChange={async (value) => {
-                                  // Si está tratando de desactivar
-                                  if (!value && job.autoTimer?.enabled) {
-                                    // Verificar si hay timer activo para este trabajo
-                                    const isActive = isJobCurrentlyActive(job);
-                                    
-                                    if (isActive) {
-                                      // Mostrar alerta similar a TimerScreen
-                                      Alert.alert(
-                                        t('timer.auto_timer.manual_override'),
-                                        t('timer.auto_timer.manual_override_message'),
-                                        [
-                                          { text: t('common.cancel'), style: 'cancel' },
-                                          { 
-                                            text: t('timer.stop'), 
-                                            style: 'destructive',
-                                            onPress: async () => {
-                                              // Parar el timer si está activo
-                                              if (onTimerToggle) {
-                                                onTimerToggle(job);
-                                              }
-                                              
-                                              // Desactivar AutoTimer
-                                              await onAutoTimerToggle(job, false);
-                                              
-                                              // Poner AutoTimer en modo manual
-                                              const autoTimerService = AutoTimerService.getInstance();
-                                              await autoTimerService.setManualMode();
-                                            }
-                                          }
-                                        ]
-                                      );
-                                      return;
-                                    } else {
-                                      // Si no hay timer activo, solo desactivar AutoTimer
-                                      await onAutoTimerToggle(job, false);
-                                      return;
-                                    }
-                                  }
-                                  
-                                  // Solo permitir activar si no está ya activado
-                                  if (!value) {
-                                    return;
-                                  }
-                                  
-                                  // Verificar suscripción al activar
-                                  if (value && !isSubscribed) {
-                                    // Mostrar modal de suscripción
-                                    setShowPremiumModal(true);
-                                    return;
-                                  }
-                                  
-                                  // Verificar si tiene dirección al activar
-                                  const hasAddress = job.address?.trim() || job.street?.trim() || job.city?.trim() || job.postalCode?.trim();
-                                  // Verificar si tiene ubicación/coordenadas
-                                  const hasLocation = job.location?.latitude && job.location?.longitude;
-                                  
-                                  if (!hasAddress) {
-                                    if (hasLocation) {
-                                      // Si no tiene dirección pero sí coordenadas, navegar al mapa y centrar en el trabajo
-                                      if (onAction) {
-                                        onAction('map', job);
-                                      }
-                                    } else {
-                                      // Si no tiene dirección ni coordenadas, abrir modal en pestaña auto
-                                      if (onAction) {
-                                        onAction('edit-auto', job);
-                                      }
-                                    }
-                                  } else {
-                                    // Si tiene dirección, activar normalmente
-                                    onAutoTimerToggle(job, value);
-                                  }
-                                }}
-                                trackColor={{ 
-                                  false: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)', 
-                                  true: 'rgba(255, 215, 0, 0.4)'
-                                }}
-                                thumbColor={job.autoTimer?.enabled ? 'rgba(255, 215, 0, 0.8)' : (isDark ? '#f4f3f4' : '#f4f3f4')}
-                                style={styles.autoTimerSwitch}
-                              />
-                            </View>
-                          )}
+                       
 
                           {/* Statistics */}
                           {jobStats && (
@@ -571,7 +482,7 @@ const createStyles = (colors: any, isDark: boolean) => {
     backgroundColor: colors.surfaces,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    height: 460,
+    height: 380,
     paddingTop: 8,
     paddingBottom: 20,
     shadowColor: '#000',

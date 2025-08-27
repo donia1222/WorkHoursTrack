@@ -34,7 +34,17 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
   onSave,
 }) => {
   const { colors, isDark } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  // No longer using useTimeFormat hook - always display time format in modal
+
+  // Función que siempre muestra formato HH:MM:SS independiente de la configuración
+  const formatTimeAlways = (hours: number): string => {
+    const totalSeconds = Math.round(hours * 3600);
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
@@ -46,8 +56,16 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
     if (workDay) {
       setStartTime(workDay.actualStartTime || workDay.startTime || '09:00');
       setEndTime(workDay.actualEndTime || workDay.endTime || '17:00');
-      setHours(workDay.hours.toString());
-      setBreakHours((workDay as any).breakHours?.toString() || '0');
+      
+      const workHours = Number(workDay.hours);
+      console.log('🔧 EditModal: Always using time format, workHours:', workHours);
+      
+      // SIEMPRE mostrar formato de tiempo (segundos) en el modal
+      console.log('🔧 ALWAYS using TIME format, setting hours to:', formatTimeAlways(workHours));
+      setHours(formatTimeAlways(workHours));
+      
+      const breakTime = Number((workDay as any).breakHours || 0);
+      setBreakHours(formatTimeAlways(breakTime));
     }
   }, [workDay]);
 
@@ -67,15 +85,17 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
       let diffMinutes = endTotalMinutes - startTotalMinutes;
       if (diffMinutes < 0) diffMinutes += 24 * 60; // Handle overnight
       
-      return (diffMinutes / 60).toFixed(2);
+      const hours = Math.round((diffMinutes / 60) * 100) / 100;
+      return hours.toFixed(2);
     } catch {
       return '8.00';
     }
   };
 
   const handleTimeChange = (newStartTime: string, newEndTime: string) => {
-    const calculatedHours = calculateHours(newStartTime, newEndTime);
-    setHours(calculatedHours);
+    const calculatedHours = parseFloat(calculateHours(newStartTime, newEndTime));
+    // SIEMPRE mostrar formato tiempo
+    setHours(formatTimeAlways(calculatedHours));
   };
 
   const handleStartTimeChange = (time: string) => {
@@ -89,21 +109,58 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
   };
 
   const adjustHours = (increment: number) => {
-    const currentHours = parseFloat(hours) || 0;
-    const newHours = Math.max(0, currentHours + increment);
-    setHours(newHours.toFixed(2));
+    let currentHours;
+    
+    if (hours.includes(':')) {
+      // Convertir HH:MM:SS a horas decimales
+      const parts = hours.split(':').map(Number);
+      currentHours = parts[0] + (parts[1] / 60) + (parts[2] / 3600);
+    } else {
+      currentHours = parseFloat(hours) || 0;
+    }
+    
+    const newHours = Math.max(0, Math.round((currentHours + increment) * 100) / 100);
+    
+    // SIEMPRE mostrar formato tiempo
+    setHours(formatTimeAlways(newHours));
   };
 
   const adjustBreakHours = (increment: number) => {
-    const currentBreakHours = parseFloat(breakHours) || 0;
-    const newBreakHours = Math.max(0, currentBreakHours + increment);
-    setBreakHours(newBreakHours.toFixed(2));
+    let currentBreakHours;
+    
+    if (breakHours.includes(':')) {
+      // Convertir HH:MM:SS a horas decimales
+      const parts = breakHours.split(':').map(Number);
+      currentBreakHours = parts[0] + (parts[1] / 60) + (parts[2] / 3600);
+    } else {
+      currentBreakHours = parseFloat(breakHours) || 0;
+    }
+    
+    const newBreakHours = Math.max(0, Math.round((currentBreakHours + increment) * 100) / 100);
+    
+    // SIEMPRE mostrar formato tiempo
+    setBreakHours(formatTimeAlways(newBreakHours));
   };
 
   const getNetHours = () => {
-    const totalHours = parseFloat(hours) || 0;
-    const breakTime = parseFloat(breakHours) || 0;
-    const netHours = Math.max(0, totalHours - breakTime);
+    let totalHours, breakTime;
+    
+    // Convertir horas a decimal (siempre están en formato HH:MM:SS)
+    if (hours.includes(':')) {
+      const parts = hours.split(':').map(Number);
+      totalHours = parts[0] + (parts[1] / 60) + (parts[2] / 3600);
+    } else {
+      totalHours = parseFloat(hours) || 0;
+    }
+    
+    if (breakHours.includes(':')) {
+      const parts = breakHours.split(':').map(Number);
+      breakTime = parts[0] + (parts[1] / 60) + (parts[2] / 3600);
+    } else {
+      breakTime = parseFloat(breakHours) || 0;
+    }
+    
+    const netHours = Math.max(0, Math.round((totalHours - breakTime) * 100) / 100);
     return netHours.toFixed(2);
   };
 
@@ -112,19 +169,42 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
 
     setIsLoading(true);
     try {
+      // Convertir a horas decimales para guardar (siempre están en formato HH:MM:SS)
+      let finalHours, finalBreakHours;
+      
+      if (hours.includes(':')) {
+        const parts = hours.split(':').map(Number);
+        finalHours = parts[0] + (parts[1] / 60) + (parts[2] / 3600);
+      } else {
+        finalHours = parseFloat(hours);
+      }
+      
+      if (breakHours.includes(':')) {
+        const parts = breakHours.split(':').map(Number);
+        finalBreakHours = parts[0] + (parts[1] / 60) + (parts[2] / 3600);
+      } else {
+        finalBreakHours = parseFloat(breakHours);
+      }
+
       const updatedWorkDay: WorkDay = {
         ...workDay,
         actualStartTime: formatTime(startTime),
         actualEndTime: formatTime(endTime),
-        hours: parseFloat(hours),
-        ...(breakHours !== '0' ? { breakHours: parseFloat(breakHours) } : {}),
+        hours: finalHours,
+        ...(finalBreakHours > 0 ? { breakHours: finalBreakHours } : {}),
       } as any;
 
-      await JobService.updateWorkDay(updatedWorkDay);
+      await JobService.updateWorkDay(workDay.id, {
+        ...workDay,
+        actualStartTime: formatTime(startTime),
+        actualEndTime: formatTime(endTime),
+        hours: finalHours,
+        ...(finalBreakHours > 0 ? { breakHours: finalBreakHours } : {}),
+      });
       onSave(updatedWorkDay);
       onClose();
     } catch (error) {
-      Alert.alert('Error', 'No se pudo guardar los cambios');
+      Alert.alert(t('common.error'), t('common.save_error'));
     } finally {
       setIsLoading(false);
     }
@@ -132,7 +212,19 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
+    const locale = 
+      language === 'es' ? 'es-ES' : 
+      language === 'en' ? 'en-US' : 
+      language === 'de' ? 'de-DE' : 
+      language === 'fr' ? 'fr-FR' : 
+      language === 'it' ? 'it-IT' :
+      language === 'ja' ? 'ja-JP' :
+      language === 'nl' ? 'nl-NL' :
+      language === 'pt' ? 'pt-PT' :
+      language === 'ru' ? 'ru-RU' :
+      language === 'tr' ? 'tr-TR' : 'en-US';
+    
+    return date.toLocaleDateString(locale, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -398,7 +490,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
         >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Editar Registro</Text>
+            <Text style={styles.title}>{t('reports.edit_record')}</Text>
             <Text style={styles.subtitle}>{formatDate(workDay.date)}</Text>
             <Text style={styles.jobName}>{job.name}</Text>
           </View>
@@ -407,10 +499,10 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
           <View style={styles.content}>
             {/* Time Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Horario</Text>
+              <Text style={styles.sectionTitle}>{t('reports.schedule')}</Text>
               <View style={styles.timeRow}>
                 <View style={styles.timeInputContainer}>
-                  <Text style={styles.timeLabel}>Entrada</Text>
+                  <Text style={styles.timeLabel}>{t('reports.entry')}</Text>
                   <TextInput
                     style={styles.timeInput}
                     value={startTime}
@@ -421,7 +513,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
                 </View>
                 <IconSymbol size={20} name="arrow.right" color={colors.textSecondary} />
                 <View style={styles.timeInputContainer}>
-                  <Text style={styles.timeLabel}>Salida</Text>
+                  <Text style={styles.timeLabel}>{t('reports.exit')}</Text>
                   <TextInput
                     style={styles.timeInput}
                     value={endTime}
@@ -435,9 +527,9 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
 
             {/* Hours Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Horas Registradas</Text>
+              <Text style={styles.sectionTitle}>{t('reports.recorded_hours')}</Text>
               <View style={styles.hoursContainer}>
-                <Text style={styles.hoursLabel}>Total de horas</Text>
+                <Text style={styles.hoursLabel}>{t('reports.total_hours_label')}</Text>
                 <View style={styles.hoursRow}>
                   <TouchableOpacity
                     style={styles.hoursButton}
@@ -451,9 +543,10 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
                       style={styles.hoursInput}
                       value={hours}
                       onChangeText={setHours}
-                      keyboardType="decimal-pad"
+                      keyboardType="default"
+                      placeholder="00:00:00"
                     />
-                    <Text style={styles.hoursText}>horas</Text>
+                  
                   </View>
 
                   <TouchableOpacity
@@ -468,9 +561,9 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
 
             {/* Break Hours Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Pausas/Descansos</Text>
+              <Text style={styles.sectionTitle}>{t('reports.break_rest')}</Text>
               <View style={styles.hoursContainer}>
-                <Text style={styles.hoursLabel}>Tiempo de descanso</Text>
+                <Text style={styles.hoursLabel}>{t('reports.break_time')}</Text>
                 <View style={styles.hoursRow}>
                   <TouchableOpacity
                     style={[styles.hoursButton, { backgroundColor: '#FF6B35' }]}
@@ -484,9 +577,12 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
                       style={styles.hoursInput}
                       value={breakHours}
                       onChangeText={setBreakHours}
-                      keyboardType="decimal-pad"
+                      keyboardType="default"
+                      placeholder="00:00:00"
                     />
-                    <Text style={styles.hoursText}>horas de pausa</Text>
+                    <Text style={styles.hoursText}>
+                      {formatTimeAlways(parseFloat(breakHours) || 0)}
+                    </Text>
                   </View>
 
                   <TouchableOpacity
@@ -497,7 +593,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.breakNote}>
-                  Se restará del tiempo total trabajado
+                  {t('reports.break_note')}
                 </Text>
               </View>
             </View>
@@ -506,10 +602,12 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
             {parseFloat(breakHours) > 0 && (
               <View style={styles.section}>
                 <View style={styles.netHoursContainer}>
-                  <Text style={styles.netHoursLabel}>Tiempo neto trabajado:</Text>
-                  <Text style={styles.netHoursValue}>{getNetHours()}h</Text>
+                  <Text style={styles.netHoursLabel}>{t('reports.net_worked_time')}</Text>
+                  <Text style={styles.netHoursValue}>
+                    {formatTimeAlways(parseFloat(getNetHours()))}
+                  </Text>
                   <Text style={styles.netHoursNote}>
-                    ({hours}h - {breakHours}h pausas)
+                    ({hours} - {breakHours} pausas)
                   </Text>
                 </View>
               </View>
@@ -525,7 +623,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
           >
             <View style={styles.buttonContent}>
               <Text style={[styles.buttonText, styles.cancelButtonText]}>
-                Cancelar
+                {t('common.cancel')}
               </Text>
             </View>
           </TouchableOpacity>
@@ -542,7 +640,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
               end={{ x: 1, y: 1 }}
             >
               <Text style={[styles.buttonText, styles.saveButtonText]}>
-                {isLoading ? 'Guardando...' : 'Guardar'}
+                {isLoading ? t('reports.saving') : t('job_form.save')}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
