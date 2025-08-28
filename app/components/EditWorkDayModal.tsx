@@ -199,7 +199,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
         actualStartTime: formatTime(startTime),
         actualEndTime: formatTime(endTime),
         hours: finalHours,
-        ...(finalBreakHours > 0 ? { breakHours: finalBreakHours } : {}),
+        breakHours: finalBreakHours, // Always include breakHours, even if 0
         ...(notes.trim() ? { notes: notes.trim() } : {}),
       } as any;
 
@@ -208,7 +208,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
         actualStartTime: formatTime(startTime),
         actualEndTime: formatTime(endTime),
         hours: finalHours,
-        ...(finalBreakHours > 0 ? { breakHours: finalBreakHours } : {}),
+        breakHours: finalBreakHours, // Always include breakHours, even if 0
         ...(notes.trim() ? { notes: notes.trim() } : {}),
       });
       onSave(updatedWorkDay);

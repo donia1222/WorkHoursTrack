@@ -1747,7 +1747,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           style={styles.timerCard}
         >
           <LinearGradient
-            colors={isDark ? ['rgba(0, 122, 255, 0.12)', 'rgba(0, 122, 255, 0.04)'] : ['rgba(0, 122, 255, 0.08)', 'rgba(0, 122, 255, 0.02)']}
+            colors={isDark ? ['rgba(0, 122, 255, 0.12)', 'rgba(0, 122, 255, 0.04)'] : ['rgba(0, 255, 76, 0.08)', 'rgba(0, 255, 76, 0.08)']}
             style={styles.timerCardGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -1905,8 +1905,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
               >
                 <LinearGradient
                   colors={isDark ? 
-                    ['rgba(0, 122, 255, 0.2)', 'rgba(0, 122, 255, 0.05)'] : 
-                    ['rgba(0, 122, 255, 0.15)', 'rgba(0, 122, 255, 0.03)']
+                    ['rgba(0, 255, 76, 0.08)', 'rgba(0, 255, 76, 0.08)'] : 
+                    ['rgba(0, 255, 76, 0.08)', 'rgba(0, 255, 76, 0.08)']
                   }
                   style={styles.autoTimerQuickButtonGradient}
                   start={{ x: 0, y: 0 }}

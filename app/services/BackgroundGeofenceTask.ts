@@ -373,6 +373,11 @@ async function saveBackgroundEvent(eventType: 'enter' | 'exit', job: any, timest
 export async function startBackgroundGeofencing(jobs: any[]): Promise<boolean> {
   try {
     console.log('🚀 Iniciando background geofencing...');
+    console.log('📍 Jobs recibidos:', jobs.map((j: any) => ({ 
+      name: j.name, 
+      autoTimerEnabled: j.autoTimer?.enabled,
+      hasLocation: !!(j.location?.latitude && j.location?.longitude)
+    })));
 
     // Verificar permisos de notificaciones primero
     const notificationStatus = await Notifications.getPermissionsAsync();
@@ -385,10 +390,19 @@ export async function startBackgroundGeofencing(jobs: any[]): Promise<boolean> {
     }
 
     // Verificar permisos de ubicación
-    const { status } = await Location.requestBackgroundPermissionsAsync();
-    if (status !== 'granted') {
-      console.error('❌ Permisos de ubicación en background no otorgados');
+    const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
+    if (foregroundStatus !== 'granted') {
+      console.error('❌ Permisos de ubicación no otorgados');
       return false;
+    }
+    console.log('✅ Permisos de ubicación otorgados');
+    
+    // Verificar si tenemos permisos Always (opcional, mejor experiencia)
+    const { status: backgroundStatus } = await Location.getBackgroundPermissionsAsync();
+    if (backgroundStatus === 'granted') {
+      console.log('✅ Permisos Always disponibles - funcionará con app cerrada');
+    } else {
+      console.log('⚠️ Sin permisos Always - funcionará solo con app abierta/minimizada');
     }
 
     // Filtrar trabajos con AutoTimer habilitado y ubicación válida
@@ -445,10 +459,22 @@ export async function startBackgroundGeofencing(jobs: any[]): Promise<boolean> {
     // Iniciar monitoreo
     await Location.startGeofencingAsync(BACKGROUND_GEOFENCE_TASK, regions);
     
-    console.log('✅ Background geofencing iniciado exitosamente');
+    // Verificar que realmente se inició
+    const hasStarted = await Location.hasStartedGeofencingAsync(BACKGROUND_GEOFENCE_TASK);
+    if (!hasStarted) {
+      console.error('❌ Geofencing no se inició correctamente');
+      return false;
+    }
     
-    // NO enviar notificación de confirmación al activar - es molesto
+    console.log('✅ Background geofencing iniciado exitosamente');
     console.log(`🌍 Monitoreando ${regions.length} ubicación(es) de trabajo`);
+    
+    // Guardar estado de que el background geofencing está activo
+    await AsyncStorage.setItem('@background_geofencing_active', JSON.stringify({
+      active: true,
+      regions: regions.length,
+      timestamp: new Date().toISOString()
+    }));
     
     return true;
 

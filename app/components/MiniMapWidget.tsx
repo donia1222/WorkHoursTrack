@@ -160,7 +160,6 @@ marginTop: -20,
     backgroundColor: isDark ? 'rgba(0, 0, 0, 0.75)' : 'rgba(255, 255, 255, 0.55)',
     paddingHorizontal: 16,
     paddingVertical: 10,
-
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -168,10 +167,21 @@ marginTop: -20,
     borderBottomWidth: 1,
     borderBottomColor: isDark ? 'rgba(34, 197, 94, 0.3)' : 'rgba(16, 185, 129, 0.2)',
   },
-  autoTimerLeft: {
+  autoTimerChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    backgroundColor: isDark ? 'rgba(34, 197, 94, 0.2)' : 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(34, 197, 94, 0.4)' : 'rgba(16, 185, 129, 0.3)',
+    shadowColor: '#10b981',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+    gap: 6,
   },
   headerButtons: {
     flexDirection: 'row',
@@ -179,7 +189,7 @@ marginTop: -20,
     gap: 8,
   },
   autoTimerText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '800',
     color: isDark ? '#FFFFFF' : '#1e293b',
     letterSpacing: 0.8,
@@ -468,9 +478,9 @@ export default function MiniMapWidget({
         
         {/* Header AutoTimer */}
         <View style={styles.autoTimerHeader}>
-          <View style={styles.autoTimerLeft}>
-            <Text style={styles.autoTimerText}>AutoTimer</Text>
+          <View style={styles.autoTimerChip}>
             <Animated.View style={[styles.greenDot, animatedDotStyle]} />
+            <Text style={styles.autoTimerText}>AutoTimer</Text>
           </View>
           
         </View>

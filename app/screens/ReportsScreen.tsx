@@ -672,11 +672,15 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     setEditWorkDayModal(true);
   };
 
-  const handleWorkDayUpdate = (updatedWorkDay: WorkDay) => {
-    // Reload data after updating
-    loadData();
+  const handleWorkDayUpdate = async (updatedWorkDay: WorkDay) => {
+    // Close modal first
     setEditWorkDayModal(false);
     setSelectedWorkDay(null);
+    
+    // Force reload data after a small delay to ensure storage is updated
+    setTimeout(() => {
+      loadData();
+    }, 100);
   };
 
   const formatDate = (dateString: string) => {
@@ -1602,7 +1606,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           <Animated.View style={[{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
             <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.modernStatsCard}>
               <LinearGradient
-                colors={isDark ? ['rgba(0, 122, 255, 0.15)', 'rgba(0, 122, 255, 0.05)'] : ['rgba(0, 122, 255, 0.1)', 'rgba(0, 122, 255, 0.03)']}
+                colors={isDark ? ['rgba(0, 122, 255, 0.15)', 'rgba(0, 122, 255, 0.05)'] : ['rgba(255, 162, 0, 0.1)', 'rgba(255, 162, 0, 0.1)']}
                 style={styles.modernStatsCardGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -1734,9 +1738,17 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                 );
               })}
               {(() => {
-                const totalDays = getAllRecentWorkDays().length;
-                const shouldShow = totalDays > visibleRecentDays;
-                console.log('🔍 LoadMore button check:', { totalDays, visibleRecentDays, shouldShow });
+                const allRecentDays = getAllRecentWorkDays();
+                const totalDays = allRecentDays.length;
+                const currentlyShowing = getRecentWorkDays().length;
+                const shouldShow = totalDays > currentlyShowing;
+                console.log('🔍 LoadMore button check:', { 
+                  totalDays, 
+                  currentlyShowing, 
+                  visibleRecentDays, 
+                  shouldShow,
+                  selectedJobId 
+                });
                 return shouldShow;
               })() && (
                 <TouchableOpacity
@@ -1744,7 +1756,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                   onPress={handleLoadMore}
                 >
                   <Text style={styles.loadMoreText}>
-                    {t('reports.load_more', { remaining: getAllRecentWorkDays().length - visibleRecentDays })}
+                    {t('reports.load_more', { remaining: getAllRecentWorkDays().length - getRecentWorkDays().length })}
                   </Text>
                   <IconSymbol size={16} name="chevron.down" color={colors.primary} />
                 </TouchableOpacity>
@@ -2490,8 +2502,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 16,
     elevation: 12,
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+
     overflow: 'hidden',
   },
   modernStatsCardGradient: {

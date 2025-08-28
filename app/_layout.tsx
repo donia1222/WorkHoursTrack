@@ -20,8 +20,9 @@ import WidgetSyncService from './services/WidgetSyncService';
 import { forceWidgetSync } from './services/ManualWidgetSync';
 import { verifyLiveActivityModule } from './services/VerifyNativeModule';
 import SimpleQuickActionsManager from './services/SimpleQuickActionsManager';
-// Importar BackgroundGeofenceTask para registrar la tarea
+// Importar tareas de background para registrarlas
 import './services/BackgroundGeofenceTask';
+import './services/BackgroundLocationService';
 
 
 // Configure notifications to show when app is in foreground

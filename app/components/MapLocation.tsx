@@ -1317,6 +1317,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const noLocationButtonsOpacity = useSharedValue(1);
   const noLocationButtonsTranslateY = useSharedValue(0);
   
+  // Animaciones para cuando no hay trabajos
+  const noJobsIconPulse = useSharedValue(1);
+  const noJobsTextPulse = useSharedValue(1);
+  
   const styles = getStyles(colors, isDark, isSmallScreen, daySize, dayFontSize, isTablet);
 
   // Gestión del arrastre para AutoTimer (funciona para ambos estados)
@@ -1346,6 +1350,42 @@ export default function MapLocation({ location, onNavigate }: Props) {
       true
     );
   }, []);
+  
+  // Animaciones para cuando no hay trabajos (pulso suave)
+  useEffect(() => {
+    if (jobs.length === 0) {
+      // Iniciar animación de pulso para el ícono
+      noJobsIconPulse.value = withRepeat(
+        withTiming(1.1, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+        -1,
+        true
+      );
+      
+      // Iniciar animación de pulso para el texto (más sutil)
+      noJobsTextPulse.value = withRepeat(
+        withTiming(1.05, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
+        -1,
+        true
+      );
+    } else {
+      // Detener animaciones cuando hay trabajos
+      noJobsIconPulse.value = withTiming(1, { duration: 300 });
+      noJobsTextPulse.value = withTiming(1, { duration: 300 });
+    }
+  }, [jobs.length]);
+  
+  // Estilos animados para no jobs
+  const animatedNoJobsIconStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: noJobsIconPulse.value }],
+    };
+  });
+  
+  const animatedNoJobsTextStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: noJobsTextPulse.value }],
+    };
+  });
   
   const animatedAITextStyle = useAnimatedStyle(() => {
     return {
@@ -2851,25 +2891,25 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   >
                     <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
 
-                      <View style={{
+                      <Animated.View style={[{
                         backgroundColor: isDark ? 'rgba(96, 165, 250, 0.25)' : 'rgba(59, 130, 246, 0.2)',
                         borderRadius: isTablet ? 20 : 12,
                         padding: isTablet ? 16 : (isSmallScreen ? 8 : 10),
                         marginBottom: isTablet ? 0 : (isSmallScreen ? 4 : 8),
                         marginRight: isTablet ? 20 : 0,
-                      }}>
-                        <IconSymbol size={isTablet ? 36 : (isSmallScreen ? 18 : 22)} name="briefcase.fill" color={isDark ? '#93c5fd' : '#2563eb'} />
-                      </View>
+                      }, jobs.length === 0 ? animatedNoJobsIconStyle : {}]}>
+                        <IconSymbol size={isTablet ? 36 : (isSmallScreen ? 18 : 22)} name={jobs.length === 0 ? "plus.circle.fill" : "briefcase.fill"} color={isDark ? '#93c5fd' : '#2563eb'} />
+                      </Animated.View>
                       <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
                         {jobs.length === 0 ? (
                           <>
-                            <Text style={{
+                            <Animated.Text style={[{
                               fontSize: isTablet ? 16 : (isSmallScreen ? 11 : 13),
                               fontWeight: '600',
                               color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
                               marginBottom: isTablet ? 6 : (isSmallScreen ? 2 : 4),
-                            }}>{t('maps.no_jobs')}</Text>
-                            <View style={{
+                            }, animatedNoJobsTextStyle]}>{t('maps.no_jobs')}</Animated.Text>
+                            <Animated.View style={[{
                               flexDirection: 'row',
                               alignItems: 'center',
                               gap: 6,
@@ -2878,14 +2918,14 @@ export default function MapLocation({ location, onNavigate }: Props) {
                               paddingVertical: isTablet ? 10 : 8,
                               borderRadius: isTablet ? 14 : 10,
                               marginTop: 4,
-                            }}>
+                            }, animatedNoJobsTextStyle]}>
                               <IconSymbol size={isTablet ? 20 : 16} name="plus.circle.fill" color={isDark ? '#93c5fd' : '#2563eb'} />
                               <Text style={{
                                 fontSize: isTablet ? 15 : (isSmallScreen ? 11 : 13),
                                 fontWeight: '600',
                                 color: isDark ? '#93c5fd' : '#2563eb',
                               }}>{t('maps.add_job')}</Text>
-                            </View>
+                            </Animated.View>
                           </>
                         ) : (
                           <>

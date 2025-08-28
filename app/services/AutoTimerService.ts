@@ -21,6 +21,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, AppStateStatus, Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { startBackgroundGeofencing, stopBackgroundGeofencing } from './BackgroundGeofenceTask';
+import { startBackgroundLocationTracking, stopBackgroundLocationTracking } from './BackgroundLocationService';
 import AutoTimerModeService from './AutoTimerModeService';
 
 export type AutoTimerState = 
@@ -157,21 +158,27 @@ class AutoTimerService {
         console.log('🟢 Auto timer service started successfully');
         console.log(`📊 Current status: ${this.currentState}, Job: ${this.currentJobId}, Enabled: ${this.isEnabled}`);
         
-        // Iniciar background geofencing SOLO si el modo lo permite
-        const modeService = AutoTimerModeService.getInstance();
-        const modeSettings = await modeService.getAutoTimerModeSettings();
+        // Para iOS, usar dos estrategias en paralelo para mejor confiabilidad
+        console.log('📱 iOS: Iniciando servicios de background...');
         
-        console.log(`🔧 AutoTimer mode: ${modeSettings.mode}, hasBackgroundPermission: ${modeSettings.hasBackgroundPermission}`);
-        
-        if (modeSettings.mode === 'full-background' && modeSettings.hasBackgroundPermission) {
-          try {
-            await startBackgroundGeofencing(autoTimerJobs);
-            console.log('🌍 Background geofencing iniciado correctamente (modo full-background)');
-          } catch (error) {
-            console.error('❌ Error iniciando background geofencing:', error);
+        // Estrategia 1: Background Location Tracking (funciona con permisos When In Use)
+        try {
+          const trackingStarted = await startBackgroundLocationTracking(autoTimerJobs);
+          if (trackingStarted) {
+            console.log('✅ Background location tracking iniciado (funciona con app minimizada)');
           }
-        } else {
-          console.log(`📱 AutoTimer ejecutándose en modo: ${modeSettings.mode} (no background geofencing)`);
+        } catch (error) {
+          console.error('❌ Error iniciando background location tracking:', error);
+        }
+        
+        // Estrategia 2: Geofencing nativo (mejor batería, requiere permisos Always para app cerrada)
+        try {
+          const geofencingStarted = await startBackgroundGeofencing(autoTimerJobs);
+          if (geofencingStarted) {
+            console.log('✅ Background geofencing iniciado (funciona con app cerrada si hay permisos Always)');
+          }
+        } catch (error) {
+          console.error('❌ Error iniciando background geofencing:', error);
         }
         
         // Check if user is inside any geofence when starting
@@ -218,7 +225,14 @@ class AutoTimerService {
     // End all Live Activities when stopping the service
     await this.liveActivityService.endAllLiveActivities();
     
-    // Detener background geofencing
+    // Detener servicios de background
+    try {
+      await stopBackgroundLocationTracking();
+      console.log('🛑 Background location tracking detenido');
+    } catch (error) {
+      console.error('❌ Error deteniendo background location tracking:', error);
+    }
+    
     try {
       await stopBackgroundGeofencing();
       console.log('🛑 Background geofencing detenido');

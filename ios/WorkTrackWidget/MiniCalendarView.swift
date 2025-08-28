@@ -501,16 +501,16 @@ struct CompactMediumDayView: View {
                     .foregroundColor(Color(red: 0.15, green: 0.25, blue: 0.45))
             }
             
-            // Icon for work types - larger for medium widget
+            // Icon for work types - larger for medium widget (increased by 2px)
             if dayInfo.type != .free {
                 Image(systemName: iconName)
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundColor(iconColor)
             } else {
                 // Invisible spacer for consistent layout
                 Circle()
                     .fill(Color.clear)
-                    .frame(width: 8, height: 8)
+                    .frame(width: 10, height: 10)
             }
         }
         .frame(maxWidth: .infinity)

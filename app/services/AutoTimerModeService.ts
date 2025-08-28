@@ -31,15 +31,27 @@ class AutoTimerModeService {
     try {
       const settings = await AsyncStorage.getItem(AUTOTIMER_MODE_KEY);
       if (settings) {
-        return JSON.parse(settings);
+        const parsed = JSON.parse(settings);
+        // Si el usuario tenía 'foreground-only' antiguo, actualizar a 'background-allowed'
+        if (parsed.mode === 'foreground-only' && parsed.userChoice === 'not-selected') {
+          console.log('🔄 Actualizando modo antiguo foreground-only a background-allowed');
+          const updated = {
+            mode: 'background-allowed' as AutoTimerMode,
+            hasBackgroundPermission: false,
+            userChoice: 'not-selected' as const
+          };
+          await this.saveAutoTimerModeSettings(updated);
+          return updated;
+        }
+        return parsed;
       }
     } catch (error) {
       console.error('Error reading AutoTimer mode settings:', error);
     }
 
-    // Configuración por defecto
+    // Configuración por defecto: background-allowed para que funcione con app minimizada
     return {
-      mode: 'foreground-only',
+      mode: 'background-allowed',
       hasBackgroundPermission: false,
       userChoice: 'not-selected'
     };

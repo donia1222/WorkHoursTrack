@@ -1268,7 +1268,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         <BlurView 
           intensity={isDark ? 98 : 96} 
           tint={isDark ? "dark" : "light"} 
-          style={[styles.calendar, { backgroundColor: isDark ? 'rgba(0, 122, 255, 0.05)' : 'rgba(0, 122, 255, 0.03)' }]}
+          style={[styles.calendar, { backgroundColor: isDark ? 'rgba(0, 123, 255, 0.13)' : 'rgba(64, 0, 255, 0.07)' }]}
         >
           <Calendar
           onDayPress={handleDayPress}
@@ -1375,7 +1375,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         </Animated.View>
                             <BlurView intensity={isDark ? 95 : 92} tint={isDark ? "dark" : "light"} style={{ padding: 24, borderRadius: 20 }}>
             <LinearGradient
-              colors={isDark ? ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.02)'] : ['rgba(142, 142, 147, 0.05)', 'rgba(142, 142, 147, 0.01)']}
+              colors={isDark ? ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.11)'] : ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.01)']}
               style={[styles.legendCardGradient, { borderRadius: 20 }]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}

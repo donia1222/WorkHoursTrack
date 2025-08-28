@@ -7,6 +7,7 @@ import JobsManagementScreen from './JobsManagementScreen';
 import PreferencesScreen from './PreferencesScreen';
 import HelpSupportScreen from './HelpSupportScreen';
 import SupportTermsScreen from './SupportTermsScreen';
+import DebugScreen from './DebugScreen';
 import { Job } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import JobFormModal from '../components/JobFormModal';
@@ -247,6 +248,7 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
   const [showPreferences, setShowPreferences] = useState(false);
   const [showHelpSupport, setShowHelpSupport] = useState(false);
   const [showSupportTerms, setShowSupportTerms] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
   const [showJobSelector, setShowJobSelector] = useState(false);
   const [showJobForm, setShowJobForm] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -480,6 +482,21 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
             <View style={styles.settingContent}>
               <Text style={styles.settingTitle}>{t('settings.app_config.help')}</Text>
               <Text style={styles.settingDescription}>{t('settings.app_config.help_desc')}</Text>
+            </View>
+            <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
+          </TouchableOpacity>
+          
+          {/* Debug Button - Solo visible durante desarrollo */}
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => setShowDebug(true)}
+          >
+            <View style={[styles.settingIcon, { backgroundColor: isDark ? 'rgba(255, 149, 0, 0.2)' : 'rgba(255, 149, 0, 0.12)' }]}>
+              <IconSymbol size={24} name="wrench.and.screwdriver" color="#FF9500" />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>Debug AutoTimer</Text>
+              <Text style={styles.settingDescription}>Ver logs y estado del AutoTimer en tiempo real</Text>
             </View>
             <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
           </TouchableOpacity>
@@ -804,6 +821,16 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
         onRequestClose={() => setShowSupportTerms(false)}
       >
         <SupportTermsScreen onClose={() => setShowSupportTerms(false)} />
+      </Modal>
+
+      {/* Debug Modal */}
+      <Modal
+        visible={showDebug}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => setShowDebug(false)}
+      >
+        <DebugScreen onBack={() => setShowDebug(false)} />
       </Modal>
 
     </SafeAreaView>
