@@ -2590,8 +2590,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
           ...job.autoTimer,
           enabled: value,
           geofenceRadius: job.autoTimer?.geofenceRadius || 100,
-          delayStart: job.autoTimer?.delayStart || 2,
-          delayStop: job.autoTimer?.delayStop || 2,
+          delayStart: job.autoTimer?.delayStart ?? 0,
+          delayStop: job.autoTimer?.delayStop ?? 0,
           notifications: job.autoTimer?.notifications !== false,
         }
       };
@@ -2762,8 +2762,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     ...activeJob.autoTimer,
                     enabled: false,
                     geofenceRadius: activeJob.autoTimer?.geofenceRadius || 100,
-                    delayStart: activeJob.autoTimer?.delayStart || 2,
-                    delayStop: activeJob.autoTimer?.delayStop || 2,
+                    delayStart: activeJob.autoTimer?.delayStart ?? 0,
+                    delayStop: activeJob.autoTimer?.delayStop ?? 0,
                     notifications: activeJob.autoTimer?.notifications !== false,
                   }
                 };

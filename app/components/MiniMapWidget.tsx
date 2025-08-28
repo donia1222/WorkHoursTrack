@@ -385,6 +385,13 @@ export default function MiniMapWidget({
   autoTimerState = 'inactive',
   remainingDelayTime = 0,
 }: MiniMapWidgetProps) {
+  console.log('🔧 MiniMapWidget props:', {
+    jobName: job?.name,
+    autoTimerState,
+    remainingDelayTime,
+    activeTimerElapsed,
+    isAutoTimerPaused
+  });
   const { colors, isDark } = useTheme();
   const { formatTimeWithPreferences } = useTimeFormat();
   const styles = getStyles(colors, isDark);

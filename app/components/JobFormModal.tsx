@@ -1454,6 +1454,23 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         autoSchedule: editingJob.schedule?.autoSchedule || false,
       };
       
+      console.log('🔧 JobFormModal: Setting formData from editingJob');
+      console.log('🔧 EditingJob autoTimer original:', editingJob.autoTimer);
+      console.log('🔧 EditingJob delayStart original:', editingJob.autoTimer?.delayStart);
+      console.log('🔧 EditingJob delayStop original:', editingJob.autoTimer?.delayStop);
+      
+      const autoTimerToUse = editingJob.autoTimer || {
+        enabled: false,
+        geofenceRadius: 50,
+        delayStart: 0,
+        delayStop: 0,
+        notifications: true,
+      };
+      
+      console.log('🔧 AutoTimer after || fallback:', autoTimerToUse);
+      console.log('🔧 DelayStart after || fallback:', autoTimerToUse.delayStart);
+      console.log('🔧 DelayStop after || fallback:', autoTimerToUse.delayStop);
+      
       setFormData({
         ...editingJob,
         street: editingJob.street || '',
@@ -1489,13 +1506,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           address: editingJob.address || '',
           radius: 100,
         },
-        autoTimer: editingJob.autoTimer || {
-          enabled: false,
-          geofenceRadius: 50,
-          delayStart: 0,
-          delayStop: 0,
-          notifications: true,
-        },
+        autoTimer: autoTimerToUse,
       });
     } else {
       setFormData({
@@ -1556,6 +1567,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     
     // Initialize previous autoSchedule value
     setPreviousAutoSchedule(scheduleToUse?.autoSchedule || false);
+    
+    console.log('🔧 JobFormModal useEffect completed, current formData.autoTimer:', formData.autoTimer);
   }, [editingJob, visible]);
 
   // Get user location when auto-timer is enabled
@@ -1958,15 +1971,19 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   };
 
   const updateNestedData = (section: string, field: string, value: any) => {
+    console.log('🔧 UpdateNestedData called:', section, field, value);
     setFormData(prev => {
       const sectionData = prev[section as keyof typeof prev] || {};
-      return {
+      console.log('🔧 UpdateNestedData prev sectionData:', sectionData);
+      const newData = {
         ...prev,
         [section]: {
           ...(typeof sectionData === 'object' ? sectionData : {}),
           [field]: value,
         },
       };
+      console.log('🔧 UpdateNestedData new sectionData:', newData[section as keyof typeof newData]);
+      return newData;
     });
     setHasUnsavedChanges(true);
   };
@@ -3980,17 +3997,25 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                       onPress={() => {
                         const currentValue = formData.autoTimer?.delayStart ?? 0;
                         const newValue = Math.max(0, currentValue - 1);
+                        console.log('🔧 DelayStart MINUS: currentValue=', currentValue, 'newValue=', newValue);
+                        console.log('🔧 FormData.autoTimer before update:', formData.autoTimer);
                         updateNestedData('autoTimer', 'delayStart', newValue);
                       }}
                     >
                       <IconSymbol size={20} name="minus" color={colors.primary} />
                     </TouchableOpacity>
-                    <Text style={styles.counterText}>{formData.autoTimer?.delayStart ?? 0} min</Text>
+                    <Text style={styles.counterText}>{(() => {
+                      const value = formData.autoTimer?.delayStart;
+                      console.log('🔧 UI DelayStart display value:', value, 'type:', typeof value, 'formData.autoTimer:', formData.autoTimer);
+                      return value ?? 0;
+                    })()} min</Text>
                     <TouchableOpacity
                       style={styles.counterButton}
                       onPress={() => {
                         const currentValue = formData.autoTimer?.delayStart ?? 0;
                         const newValue = Math.min(10, currentValue + 1);
+                        console.log('🔧 DelayStart PLUS: currentValue=', currentValue, 'newValue=', newValue);
+                        console.log('🔧 FormData.autoTimer before update:', formData.autoTimer);
                         updateNestedData('autoTimer', 'delayStart', newValue);
                       }}
                     >
