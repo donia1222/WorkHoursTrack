@@ -144,8 +144,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   screenTitle: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
-    marginTop: 20
+    marginTop: 20,
+    width: '100%',
+    marginLeft: 6,
   },
   screenTitleText: {
     fontSize: 18,
@@ -254,8 +257,8 @@ Please describe your issue below:
           </View>
         }
         onProfilePress={() => {}}
-        showCloseButton={true}
-        onClosePress={onClose}
+        showBackButton={true}
+        onBackPress={onClose}
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>

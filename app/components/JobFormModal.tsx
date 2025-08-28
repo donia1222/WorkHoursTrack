@@ -16,6 +16,7 @@ import {
   AppState,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '../context/NavigationContext';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'react-native';
@@ -1194,12 +1195,65 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flex: 1,
     lineHeight: 16,
   },
+
+  // Navigation button styles
+  navigationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 4,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.separator,
+  },
+
+  navigationContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+
+  navigationIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Theme.spacing.md,
+  },
+
+  navigationTextContainer: {
+    flex: 1,
+  },
+
+  navigationLabel: {
+    ...Theme.typography.callout,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+
+  navigationDescription: {
+    ...Theme.typography.footnote,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+
+  navigationArrowContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: Theme.spacing.sm,
+  },
 });
 
 export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true }: JobFormModalProps) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
   const { isSubscribed } = useSubscription();
+  const { navigateTo } = useNavigation();
   const { formatTimeWithPreferences, parseTimeInput, getTimePlaceholder, isValidTimeInput, autoFormatTimeInput } = useTimeFormat();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
@@ -3794,6 +3848,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   />
                 </View>
               </View>
+ 
 
               {/* Sección de selección de modo AutoTimer */}
               {formData.autoTimer?.enabled && (
@@ -3911,6 +3966,64 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         {formData.autoTimer?.enabled && (
           <>
             <View style={styles.inputGroup}>
+                          {/* Delay Start Control */}
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.auto_timer.delay_start')}</Text>
+              <Text style={styles.labelDescription}>{t('job_form.auto_timer.delay_start_desc')}</Text>
+              <View style={styles.counterContainer}>
+                <TouchableOpacity
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStart ?? 0;
+                    const newValue = Math.max(0, currentValue - 1);
+                    updateNestedData('autoTimer', 'delayStart', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="minus" color={colors.primary} />
+                </TouchableOpacity>
+                <Text style={styles.counterText}>{formData.autoTimer?.delayStart ?? 0} min</Text>
+                <TouchableOpacity
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStart ?? 0;
+                    const newValue = Math.min(10, currentValue + 1);
+                    updateNestedData('autoTimer', 'delayStart', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="plus" color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Delay Stop Control */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('job_form.auto_timer.delay_stop')}</Text>
+              <Text style={styles.labelDescription}>{t('job_form.auto_timer.delay_stop_desc')}</Text>
+              <View style={styles.counterContainer}>
+                <TouchableOpacity
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStop ?? 0;
+                    const newValue = Math.max(0, currentValue - 1);
+                    updateNestedData('autoTimer', 'delayStop', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="minus" color={colors.primary} />
+                </TouchableOpacity>
+                <Text style={styles.counterText}>{formData.autoTimer?.delayStop ?? 0} min</Text>
+                <TouchableOpacity
+                  style={styles.counterButton}
+                  onPress={() => {
+                    const currentValue = formData.autoTimer?.delayStop ?? 0;
+                    const newValue = Math.min(10, currentValue + 1);
+                    updateNestedData('autoTimer', 'delayStop', newValue);
+                  }}
+                >
+                  <IconSymbol size={20} name="plus" color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+            </View>
               <Text style={styles.label}>{t('job_form.auto_timer.geofence_radius')}</Text>
               <Text style={styles.labelDescription}>{t('job_form.auto_timer.geofence_radius_desc')}</Text>
               <View style={styles.counterContainer}>
@@ -4072,18 +4185,36 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
             
             <View style={styles.inputGroup}>
-              <View style={styles.switchRow}>
-                <View style={styles.switchContent}>
-                  <Text style={styles.label}>{t('job_form.auto_timer.notifications')}</Text>
-                  <Text style={styles.labelDescription}>{t('job_form.auto_timer.notifications_desc')}</Text>
+              <TouchableOpacity 
+                style={styles.navigationRow}
+                onPress={() => {
+                  onClose();
+                  // Set global flag like WorkDayModal does
+                  (global as any).scrollToNotifications = true;
+                  navigateTo('settings');
+                }}
+              >
+                <View style={styles.navigationContent}>
+                  <View style={styles.navigationIconContainer}>
+                    <IconSymbol
+                      name="bell.fill"
+                      size={18}
+                      color={colors.primary}
+                    />
+                  </View>
+                  <View style={styles.navigationTextContainer}>
+                    <Text style={styles.navigationLabel}>{t('job_form.auto_timer.notifications')}</Text>
+                    <Text style={styles.navigationDescription}>{t('job_form.auto_timer.notifications_desc')}</Text>
+                  </View>
                 </View>
-                <Switch
-                  value={formData.autoTimer?.notifications !== false}
-                  onValueChange={(value) => updateNestedData('autoTimer', 'notifications', value)}
-                  trackColor={{ false: colors.separator, true: colors.primary + '40' }}
-                  thumbColor={formData.autoTimer?.notifications !== false ? colors.primary : colors.textTertiary}
-                />
-              </View>
+                <View style={styles.navigationArrowContainer}>
+                  <IconSymbol
+                    name="chevron.right"
+                    size={16}
+                    color={colors.textSecondary}
+                  />
+                </View>
+              </TouchableOpacity>
             </View>
           </>
         )}

@@ -191,8 +191,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   screenTitle: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
-    marginTop:20
+    marginTop: 20,
+    width: '100%',
+    marginLeft: 6,
   },
   screenTitleText: {
     fontSize: 18,
@@ -423,8 +426,8 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
           </View>
         }
         onProfilePress={() => {}}
-        showCloseButton={true}
-        onClosePress={() => { triggerHaptic('light'); handleClose(); }}
+        showBackButton={true}
+        onBackPress={() => { triggerHaptic('light'); handleClose(); }}
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>

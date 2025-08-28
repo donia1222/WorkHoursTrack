@@ -74,6 +74,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   backButton: {
     padding: 6,
     marginRight: 16,
+    marginTop: 20,
   },
   backButtonInner: {
     width: 38,
@@ -304,15 +305,7 @@ export default function Header({ title, onProfilePress, onBackPress, showBackBut
         <View style={styles.container}>
           {showBackButton && onBackPress ? (
             <TouchableOpacity onPress={() => { triggerHaptic('light'); onBackPress(); }} style={styles.backButton}>
-              <View style={styles.backButtonInner}>
-                <LinearGradient
-                  colors={['#FF9500', '#E6820C', '#CC7300']}
-                  style={styles.backButtonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                />
-                <IconSymbol size={20} name="chevron.left" color="#FFFFFF" />
-              </View>
+              <IconSymbol size={24} name="chevron.left" color="#007AFF" />
             </TouchableOpacity>
           ) : (
             <View style={styles.spacer} />

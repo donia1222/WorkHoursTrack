@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Modal, Animated } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -236,6 +237,7 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
   const { isSubscribed } = useSubscription();
+  const searchParams = useLocalSearchParams();
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -261,6 +263,26 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
   const [availableBackups, setAvailableBackups] = useState<any[]>([]);
   const [lastBackupDate, setLastBackupDate] = useState<string | null>(null);
   const [showAutoBackupModal, setShowAutoBackupModal] = useState(false);
+  const [shouldScrollToNotifications, setShouldScrollToNotifications] = useState(false);
+  
+  // Check for navigation to notifications
+  useEffect(() => {
+    if (searchParams.scrollTo === 'notifications' || (global as any).scrollToNotifications) {
+      setShowPreferences(true);
+      setShouldScrollToNotifications(true);
+      // Clear the global flag to avoid repeated triggers
+      (global as any).scrollToNotifications = false;
+    }
+  }, [searchParams.scrollTo]);
+
+  // Check global flag on component mount and re-renders
+  useEffect(() => {
+    if ((global as any).scrollToNotifications) {
+      setShowPreferences(true);
+      setShouldScrollToNotifications(true);
+      (global as any).scrollToNotifications = false;
+    }
+  });
   
   // Entrance animations
   useEffect(() => {
@@ -495,8 +517,8 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
               <IconSymbol size={24} name="wrench.and.screwdriver" color="#FF9500" />
             </View>
             <View style={styles.settingContent}>
-              <Text style={styles.settingTitle}>Debug AutoTimer</Text>
-              <Text style={styles.settingDescription}>Ver logs y estado del AutoTimer en tiempo real</Text>
+              <Text style={styles.settingTitle}>{t('debug.title')}</Text>
+              <Text style={styles.settingDescription}>{t('debug.subtitle')}</Text>
             </View>
             <IconSymbol size={16} name="chevron.right" color={colors.textSecondary} />
           </TouchableOpacity>
@@ -764,7 +786,11 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
         onRequestClose={() => setShowPreferences(false)}
       >
         <PreferencesScreen 
-          onClose={() => setShowPreferences(false)} 
+          onClose={() => {
+            setShowPreferences(false);
+            setShouldScrollToNotifications(false);
+          }} 
+          scrollToNotifications={shouldScrollToNotifications}
           onNavigateToSubscription={() => {
             setShowPreferences(false);
             onNavigate('subscription');

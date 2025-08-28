@@ -15,6 +15,7 @@ interface SubscriptionContextType extends SubscriptionState {
   restorePurchases: () => Promise<{ success: boolean; customerInfo?: CustomerInfo; error?: string }>;
   checkSubscriptionStatus: () => Promise<void>;
   getSubscriptionStatus: () => Promise<boolean>;
+  resetSandboxSubscription: () => Promise<void>;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -256,6 +257,34 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     }
   };
 
+  // Función para resetear sandbox (solo para testing)
+  const resetSandboxSubscription = async () => {
+    try {
+      console.log('🔄 Reseteando suscripción de sandbox...');
+      
+      // 1. Borrar cache local
+      await AsyncStorage.removeItem('isSubscribed');
+      await AsyncStorage.removeItem('revenueCatUserId');
+      
+      // 2. Generar nuevo usuario ID
+      const newUserId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+      
+      // 3. Logout del usuario actual
+      await Purchases.logOut();
+      
+      // 4. Login con nuevo usuario
+      await Purchases.logIn(newUserId);
+      
+      console.log('✅ Usuario de sandbox reseteado:', newUserId);
+      
+      // 5. Verificar estado
+      await checkSubscriptionStatus();
+      
+    } catch (error) {
+      console.error('❌ Error reseteando sandbox:', error);
+    }
+  };
+
   const purchaseSubscription = async (packageToPurchase: any, retryCount = 0) => {
     try {
       setState(prev => ({ ...prev, isLoading: true }));
@@ -440,6 +469,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     restorePurchases,
     checkSubscriptionStatus,
     getSubscriptionStatus,
+    resetSandboxSubscription,
   };
 
   return (

@@ -14,11 +14,13 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import * as Location from 'expo-location';
 
 export default function DebugScreen({ onBack }: { onBack?: () => void }) {
   const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
   const [logs, setLogs] = useState<any[]>([]);
   const [geofenceState, setGeofenceState] = useState<any>(null);
   const [backgroundActive, setBackgroundActive] = useState(false);
@@ -117,19 +119,19 @@ export default function DebugScreen({ onBack }: { onBack?: () => void }) {
 
   const clearLogs = async () => {
     Alert.alert(
-      'Limpiar Logs',
-      '¿Seguro que quieres limpiar todos los logs?',
+      t('debug.clear_logs'),
+      t('debug.clear_logs_confirmation'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Limpiar',
+          text: t('debug.clear'),
           style: 'destructive',
           onPress: async () => {
             await AsyncStorage.removeItem('@location_debug_log');
             await AsyncStorage.removeItem('@background_location_state');
             setLogs([]);
             setGeofenceState(null);
-            Alert.alert('Logs limpiados');
+            Alert.alert(t('debug.logs_cleared'));
           }
         }
       ]
@@ -175,19 +177,19 @@ ${logs.map((log, i) => {
 
       // Mostrar opciones para compartir
       Alert.alert(
-        'Compartir Logs',
-        '¿Cómo quieres enviar los logs?',
+        t('debug.share_logs'),
+        t('debug.share_method_question'),
         [
-          { text: 'Cancelar', style: 'cancel' },
+          { text: t('common.cancel'), style: 'cancel' },
           {
-            text: 'Copiar al Portapapeles',
+            text: t('debug.copy_to_clipboard'),
             onPress: async () => {
               Clipboard.setString(report);
-              Alert.alert('¡Copiado!', 'Los logs se han copiado al portapapeles. Ahora puedes pegarlos donde quieras.');
+              Alert.alert(t('debug.copied'), t('debug.copied_message'));
             }
           },
           {
-            text: 'Enviar por Email',
+            text: t('debug.send_by_email'),
             onPress: async () => {
               try {
                 const subject = encodeURIComponent('AutoTimer Debug Report - VixTime');
@@ -198,15 +200,15 @@ ${logs.map((log, i) => {
                 if (supported) {
                   await Linking.openURL(mailUrl);
                 } else {
-                  Alert.alert('Error', 'No se pudo abrir el cliente de correo. Usa la opción "Copiar" y envía manualmente a report@vixtime.com');
+                  Alert.alert(t('common.error'), t('debug.email_client_error'));
                 }
               } catch (error) {
-                Alert.alert('Error', 'No se pudo abrir el email');
+                Alert.alert(t('common.error'), t('debug.email_open_error'));
               }
             }
           },
           {
-            text: 'Compartir',
+            text: t('debug.share'),
             onPress: async () => {
               try {
                 await Share.share({
@@ -214,14 +216,14 @@ ${logs.map((log, i) => {
                   title: 'AutoTimer Debug Report'
                 });
               } catch (error) {
-                Alert.alert('Error', 'No se pudo compartir el reporte');
+                Alert.alert(t('common.error'), t('debug.share_error'));
               }
             }
           }
         ]
       );
     } catch (error) {
-      Alert.alert('Error', 'No se pudo generar el reporte de logs');
+      Alert.alert(t('common.error'), t('debug.report_generation_error'));
     }
   };
 
@@ -380,7 +382,7 @@ ${logs.map((log, i) => {
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
           <IconSymbol name="chevron.left" size={24} color={colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Debug AutoTimer</Text>
+        <Text style={styles.headerTitle}>{t('debug.title')}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity onPress={shareLogs} style={styles.shareButton}>
             <IconSymbol name="square.and.arrow.up" size={20} color={colors.primary} />
@@ -402,17 +404,17 @@ ${logs.map((log, i) => {
       >
         {/* Estado actual */}
         <View style={styles.statusSection}>
-          <Text style={styles.statusTitle}>Estado Actual</Text>
+          <Text style={styles.statusTitle}>{t('debug.current_status')}</Text>
           
           <View style={styles.statusRow}>
-            <Text style={styles.statusLabel}>Modo AutoTimer:</Text>
-            <Text style={styles.statusValue}>{autoTimerMode?.mode || 'No configurado'}</Text>
+            <Text style={styles.statusLabel}>{t('debug.autotimer_mode')}:</Text>
+            <Text style={styles.statusValue}>{autoTimerMode?.mode || t('debug.not_configured')}</Text>
           </View>
 
           <View style={styles.statusRow}>
-            <Text style={styles.statusLabel}>Background Tracking:</Text>
+            <Text style={styles.statusLabel}>{t('debug.background_tracking')}:</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={styles.statusValue}>{backgroundActive ? 'Activo' : 'Inactivo'}</Text>
+              <Text style={styles.statusValue}>{backgroundActive ? t('debug.active') : t('debug.inactive')}</Text>
               <View style={[
                 styles.activeIndicator,
                 { backgroundColor: backgroundActive ? '#34c759' : '#ff3b30' }
@@ -423,17 +425,17 @@ ${logs.map((log, i) => {
           {/* Información de debugging */}
           <View style={[styles.statusRow, { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.separator }]}>
             <Text style={[styles.statusLabel, { fontSize: 12, fontStyle: 'italic' }]}>
-              💡 Los logs aparecen cuando:
+              💡 {t('debug.logs_appear_when')}:
             </Text>
           </View>
           <Text style={[styles.statusLabel, { fontSize: 11, marginLeft: 10, marginTop: 2 }]}>
-            • AutoTimer está activado
+            • {t('debug.autotimer_enabled')}
           </Text>
           <Text style={[styles.statusLabel, { fontSize: 11, marginLeft: 10 }]}>
-            • Background Tracking está activo
+            • {t('debug.background_tracking_active')}
           </Text>
           <Text style={[styles.statusLabel, { fontSize: 11, marginLeft: 10 }]}>
-            • Te mueves entrando/saliendo del círculo
+            • {t('debug.entering_exiting_circle')}
           </Text>
 
           <TouchableOpacity
@@ -467,23 +469,24 @@ ${logs.map((log, i) => {
               
               await AsyncStorage.setItem('@location_debug_log', JSON.stringify(testLogs));
               await loadDebugInfo();
-              Alert.alert('Logs de prueba generados', 'Ahora puedes ver cómo se verían los logs reales');
+              Alert.alert(t('debug.test_logs_generated'), t('debug.test_logs_message'));
             }}
           >
             <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>
-              🧪 Generar Logs de Prueba
+              🧪 {t('debug.generate_test_logs')}
             </Text>
           </TouchableOpacity>
+
 
           {currentLocation && (
             <>
               <View style={styles.statusRow}>
-                <Text style={styles.statusLabel}>Ubicación:</Text>
+                <Text style={styles.statusLabel}>{t('debug.location')}:</Text>
                 <Text style={styles.statusValue}>{currentLocation.lat}, {currentLocation.lng}</Text>
               </View>
               {currentLocation.accuracy && (
                 <View style={styles.statusRow}>
-                  <Text style={styles.statusLabel}>Precisión:</Text>
+                  <Text style={styles.statusLabel}>{t('debug.accuracy')}:</Text>
                   <Text style={styles.statusValue}>{currentLocation.accuracy}m</Text>
                 </View>
               )}
@@ -492,7 +495,7 @@ ${logs.map((log, i) => {
 
           {currentLocation?.jobDistances && (
             <>
-              <Text style={[styles.statusLabel, { marginTop: 10 }]}>Distancias a trabajos:</Text>
+              <Text style={[styles.statusLabel, { marginTop: 10 }]}>{t('debug.job_distances')}:</Text>
               {currentLocation.jobDistances.map((job: any, idx: number) => (
                 <View key={idx} style={styles.distanceItem}>
                   <Text style={styles.statusLabel}>{job.name}:</Text>
@@ -509,11 +512,11 @@ ${logs.map((log, i) => {
 
           {geofenceState && (
             <>
-              <Text style={[styles.statusLabel, { marginTop: 10 }]}>Estados Geofence:</Text>
+              <Text style={[styles.statusLabel, { marginTop: 10 }]}>{t('debug.geofence_states')}:</Text>
               {Object.entries(geofenceState.insideByJobId || {}).map(([jobId, inside]) => (
                 <View key={jobId} style={styles.distanceItem}>
                   <Text style={styles.statusLabel}>Job {jobId}:</Text>
-                  <Text style={styles.statusValue}>{inside ? 'DENTRO 🟢' : 'FUERA 🔴'}</Text>
+                  <Text style={styles.statusValue}>{inside ? t('debug.inside') + ' 🟢' : t('debug.outside') + ' 🔴'}</Text>
                 </View>
               ))}
             </>
@@ -522,7 +525,7 @@ ${logs.map((log, i) => {
 
         {/* Logs */}
         <View style={styles.logSection}>
-          <Text style={styles.logTitle}>Últimos Eventos ({logs.length})</Text>
+          <Text style={styles.logTitle}>{t('debug.recent_events')} ({logs.length})</Text>
           
           {logs.length > 0 ? (
             logs.map((log, index) => (
@@ -545,11 +548,11 @@ ${logs.map((log, i) => {
                   <Text style={styles.logTime}>{formatTime(log.timestamp)}</Text>
                 </View>
                 {log.jobName && (
-                  <Text style={styles.logDetails}>Trabajo: {log.jobName}</Text>
+                  <Text style={styles.logDetails}>{t('debug.job')}: {log.jobName}</Text>
                 )}
                 {log.distance !== undefined && (
                   <Text style={styles.logDetails}>
-                    Distancia: {log.distance}m (Radio: {log.radius}m)
+                    {t('debug.distance')}: {log.distance}m ({t('debug.radius')}: {log.radius}m)
                   </Text>
                 )}
                 {log.error && (
@@ -558,10 +561,10 @@ ${logs.map((log, i) => {
               </View>
             ))
           ) : (
-            <Text style={styles.emptyText}>No hay eventos registrados</Text>
+            <Text style={styles.emptyText}>{t('debug.no_events')}</Text>
           )}
           
-          <Text style={styles.refreshHint}>Desliza hacia abajo para actualizar</Text>
+          <Text style={styles.refreshHint}>{t('debug.pull_to_refresh')}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

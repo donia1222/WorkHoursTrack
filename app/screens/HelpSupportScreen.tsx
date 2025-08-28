@@ -235,8 +235,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   screenTitle: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
-    marginTop:20
+    marginTop: 20,
+    width: '100%',
+    marginLeft: 6,
   },
   screenTitleText: {
     fontSize: 18,
@@ -368,8 +371,8 @@ export default function HelpSupportScreen({ onClose }: HelpSupportScreenProps) {
           </View>
         }
         onProfilePress={() => {}}
-        showCloseButton={true}
-        onClosePress={handleClose}
+        showBackButton={true}
+        onBackPress={handleClose}
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
