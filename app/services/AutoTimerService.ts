@@ -403,9 +403,10 @@ class AutoTimerService {
       return;
     }
 
-    // Start timer immediately without delay
-    console.log(`🚀 Starting timer immediately for ${job.name}`);
-    await this.startAutoTimer(job);
+    // Apply delayStart (0 by default = immediate)
+    const delayStartMin = job.autoTimer?.delayStart ?? 0;
+    console.log(`⏳ ENTER ${job.name}: delayStart=${delayStartMin} min`);
+    await this.scheduleDelayedAction(job, 'start', delayStartMin);
   }
 
   /**
@@ -429,9 +430,10 @@ class AutoTimerService {
       return;
     }
 
-    // Stop timer immediately without delay
-    console.log(`🛑 Stopping timer immediately for ${job.name}`);
-    await this.stopAutoTimer(job);
+    // Apply delayStop (0 by default = immediate)
+    const delayStopMin = job.autoTimer?.delayStop ?? 0;
+    console.log(`⏳ EXIT ${job.name}: delayStop=${delayStopMin} min`);
+    await this.scheduleDelayedAction(job, 'stop', delayStopMin);
   }
 
   /**
@@ -619,6 +621,54 @@ class AutoTimerService {
   }
 
   /**
+   * Schedule a delayed action (start/stop) respecting delayStart/delayStop (minutes)
+   */
+  private async scheduleDelayedAction(job: Job, action: 'start' | 'stop', delayMinutes?: number): Promise<void> {
+    const normalized = Number.isFinite(delayMinutes) && (delayMinutes as number) > 0 ? (delayMinutes as number) : 0;
+    const delaySeconds = Math.floor(normalized * 60);
+
+    // Cancel any pending action first
+    await this.cancelDelayedAction();
+
+    if (delaySeconds <= 0) {
+      // Action immediately by default (0 minutes)
+      if (action === 'start') {
+        await this.startAutoTimer(job);
+      } else {
+        await this.stopAutoTimer(job);
+      }
+      return;
+    }
+
+    // Schedule delayed action
+    this.currentState = action === 'start' ? 'entering' : 'leaving';
+    this.currentJobId = job.id;
+
+    const targetTime = new Date(Date.now() + delaySeconds * 1000).toISOString();
+    await AsyncStorage.setItem(
+      `@auto_timer_pending_${job.id}`,
+      JSON.stringify({ jobId: job.id, action, targetTime })
+    );
+
+    const timeout = setTimeout(async () => {
+      await AsyncStorage.removeItem(`@auto_timer_pending_${job.id}`);
+      // Execute only if not cancelled or replaced
+      if (this.currentDelayedAction?.jobId === job.id && this.currentDelayedAction?.action === action) {
+        if (action === 'start') {
+          await this.startAutoTimer(job);
+        } else {
+          await this.stopAutoTimer(job);
+        }
+        this.currentDelayedAction = null;
+      }
+    }, delaySeconds * 1000);
+
+    this.currentDelayedAction = { jobId: job.id, action, timeout, startTime: new Date(), delaySeconds };
+    this.startStatusUpdateInterval();
+    this.notifyStatusChange();
+  }
+
+  /**
    * Cancel any pending delayed action
    */
   private async cancelDelayedAction(): Promise<void> {
@@ -629,7 +679,6 @@ class AutoTimerService {
       // Cancel any scheduled notifications for this job
       const job = this.jobs.find(j => j.id === this.currentDelayedAction?.jobId);
       if (job) {
-        // No scheduled notifications to cancel - timer actions are immediate
         // Clean up pending action from storage
         await AsyncStorage.removeItem(`@auto_timer_pending_${job.id}`);
       }

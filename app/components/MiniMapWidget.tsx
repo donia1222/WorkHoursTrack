@@ -19,6 +19,9 @@ interface MiniMapWidgetProps {
   onResume?: () => void;
   onStop?: () => void;
   formatTime?: (seconds: number) => string;
+  // AutoTimer delay status
+  autoTimerState?: 'pre-start' | 'inactive' | 'entering' | 'leaving' | 'active' | 'manual' | 'cancelled';
+  remainingDelayTime?: number;
 }
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
@@ -319,6 +322,49 @@ marginTop: -20,
     borderRadius: 10,
     backgroundColor: '#4A90E2',
   },
+  delayOverlay: {
+    position: 'absolute',
+    bottom: 160,
+    right: 8,
+    zIndex: 1001,
+    backgroundColor: isDark ? 'rgba(245, 158, 11, 0.9)' : 'rgba(251, 191, 36, 0.9)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    shadowColor: '#f59e0b',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
+    borderWidth: 2,
+    borderColor: isDark ? 'rgba(245, 158, 11, 0.8)' : 'rgba(245, 158, 11, 0.6)',
+  },
+  delayText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: isDark ? '#fef3c7' : '#92400e',
+    letterSpacing: 0.8,
+    fontFamily: 'monospace',
+  },
+  delayIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: isDark ? 'rgba(245, 158, 11, 0.3)' : 'rgba(245, 158, 11, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  delayLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: isDark ? '#fbbf24' : '#a16207',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginTop: 2,
+  },
 });
 
 export default function MiniMapWidget({
@@ -336,6 +382,8 @@ export default function MiniMapWidget({
     const secs = seconds % 60;
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   },
+  autoTimerState = 'inactive',
+  remainingDelayTime = 0,
 }: MiniMapWidgetProps) {
   const { colors, isDark } = useTheme();
   const { formatTimeWithPreferences } = useTimeFormat();
@@ -474,6 +522,27 @@ export default function MiniMapWidget({
               )}
             </View>
           </View>
+        )}
+
+        {/* Delay countdown overlay */}
+        {(autoTimerState === 'entering' || autoTimerState === 'leaving') && remainingDelayTime > 0 && (
+          <Animated.View style={[styles.delayOverlay, animatedTimerStyle]}>
+            <View style={styles.delayIcon}>
+              <IconSymbol 
+                size={14} 
+                name={autoTimerState === 'entering' ? 'play.circle' : 'stop.circle'} 
+                color={isDark ? '#f59e0b' : '#d97706'} 
+              />
+            </View>
+            <View>
+              <Animated.Text style={[styles.delayText, animatedTimerStyle]}>
+                {Math.ceil(remainingDelayTime)}s
+              </Animated.Text>
+              <Text style={styles.delayLabel}>
+                {autoTimerState === 'entering' ? 'Starting in' : 'Stopping in'}
+              </Text>
+            </View>
+          </Animated.View>
         )}
         
         {/* Header AutoTimer */}

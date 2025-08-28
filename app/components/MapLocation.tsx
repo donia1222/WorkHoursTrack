@@ -4016,6 +4016,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
               onResume={handleAutoTimerResume}
               onStop={handleAutoTimerWidgetStop}
               formatTime={formatTime}
+              autoTimerState={autoTimerStatus.state}
+              remainingDelayTime={autoTimerStatus.remainingTime}
             />
           );
         }
