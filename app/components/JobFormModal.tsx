@@ -3638,8 +3638,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     const handleModeSelection = async (mode: AutoTimerMode) => {
       console.log('🔧 Seleccionando modo AutoTimer:', mode);
       
-      if (mode === 'foreground-only' || mode === 'background-allowed') {
-        // Modos que no requieren permisos adicionales
+      if (mode === 'foreground-only') {
+        // Modo que no requiere permisos adicionales
         setSelectedAutoTimerMode(mode);
         const modeService = AutoTimerModeService.getInstance();
         const result = await modeService.setAutoTimerModeWithoutPermissions(mode, false);
@@ -3647,6 +3647,32 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         if (!result.success) {
           console.error('Error configurando modo AutoTimer:', result.message);
         }
+      } else if (mode === 'background-allowed') {
+        // EXACTAMENTE LA MISMA LÓGICA QUE full-background - necesita permisos "Always"
+        const modeService = AutoTimerModeService.getInstance();
+        const hasPermission = await modeService.checkBackgroundPermissions();
+        
+        if (hasPermission) {
+          // Ya tiene permisos Always - configurar directamente
+          setSelectedAutoTimerMode(mode);
+          setHasBackgroundPermission(true);
+          await modeService.setAutoTimerModeWithoutPermissions(mode, true);
+          console.log('✅ AutoTimer configurado en modo "App Abierta + Minimizada"');
+        } else {
+          // Mostrar explicación antes de pedir permiso Always
+          Alert.alert(
+            t('job_form.auto_timer.permissions_required_title'),
+            t('job_form.auto_timer.background_permissions_explanation'),
+            [
+              { text: t('common.cancel'), style: 'cancel' },
+              { 
+                text: t('job_form.auto_timer.permissions_grant_button'), 
+                onPress: async () => await requestBackgroundPermissionForBackgroundAllowed(mode)
+              }
+            ]
+          );
+        }
+        return;
       } else if (mode === 'full-background') {
         // Verificar si ya tiene permisos
         const modeService = AutoTimerModeService.getInstance();
@@ -3679,6 +3705,42 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             ]
           );
         }
+      }
+    };
+
+    const requestBackgroundPermissionForBackgroundAllowed = async (mode: AutoTimerMode) => {
+      try {
+        // EXACTAMENTE LA MISMA LÓGICA QUE full-background - pedir permisos "Always"
+        const { status } = await Location.requestBackgroundPermissionsAsync();
+        
+        if (status === 'granted') {
+          // Éxito - configurar modo
+          setSelectedAutoTimerMode(mode);
+          setHasBackgroundPermission(true);
+          const modeService = AutoTimerModeService.getInstance();
+          await modeService.setAutoTimerModeWithoutPermissions(mode, true);
+          console.log('✅ AutoTimer configurado en modo "App Abierta + Minimizada" con permisos Always');
+        } else {
+          // Permisos denegados - mostrar alerta con botón de Ajustes (IGUAL QUE full-background)
+          Alert.alert(
+            t('job_form.auto_timer.permissions_needed_title'),
+            t('job_form.auto_timer.permissions_needed_message'),
+            [
+              { text: t('common.cancel'), style: 'cancel' },
+              { 
+                text: t('job_form.auto_timer.permissions_open_settings'), 
+                onPress: () => Linking.openSettings()
+              }
+            ]
+          );
+        }
+      } catch (error) {
+        console.error('❌ Error en requestBackgroundPermissionForBackgroundAllowed:', error);
+        Alert.alert(
+          t('common.error'),
+          t('job_form.auto_timer.permission_error'),
+          [{ text: t('common.ok') }]
+        );
       }
     };
 

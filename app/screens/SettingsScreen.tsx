@@ -38,7 +38,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    marginBottom: 68,
+
     marginTop: 10,
   },
   header: {
@@ -652,8 +652,8 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
           intensity={98} 
           tint={isDark ? "dark" : "light"} 
           style={[styles.sectionCard, { 
-            marginTop: 20,
-            marginBottom: 24,
+            marginTop: 14,
+            marginBottom: 68,
             padding: 24,
             backgroundColor: isSubscribed 
               ? (isDark ? 'rgba(34, 197, 94, 0.08)' : 'rgba(34, 197, 94, 0.06)')

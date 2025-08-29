@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
+  Animated,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,6 +21,7 @@ import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { WorkDay, Job } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
+import * as Haptics from 'expo-haptics';
 
 interface EditWorkDayModalProps {
   visible: boolean;
@@ -56,6 +58,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+
 
   useEffect(() => {
     if (workDay) {
@@ -117,6 +120,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
   };
 
   const adjustHours = (increment: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     let currentHours;
     
     if (hours.includes(':')) {
@@ -134,6 +138,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
   };
 
   const adjustBreakHours = (increment: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     let currentBreakHours;
     
     if (breakHours.includes(':')) {
@@ -174,7 +179,8 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
 
   const handleSave = async () => {
     if (!workDay) return;
-
+    
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsLoading(true);
     try {
       // Convertir a horas decimales para guardar (siempre están en formato HH:MM:SS)
@@ -245,7 +251,15 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
   const styles = StyleSheet.create({
     fullScreenModal: {
       flex: 1,
-      backgroundColor: colors.background,
+
+    },
+    backgroundGradient: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 300,
+      opacity: 0.15,
     },
     handleContainer: {
       alignItems: 'center',
@@ -268,7 +282,20 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
     closeButton: {
       padding: 8,
       borderRadius: 20,
-      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      backgroundColor: '#34C759',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      shadowColor: '#34C759',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      elevation: 4,
+    },
+    closeButtonText: {
+      color: '#FFFFFF',
+      fontSize: 14,
+      fontWeight: '600',
     },
     scrollContent: {
       flex: 1,
@@ -280,6 +307,16 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
       marginBottom: 8,
       borderBottomWidth: 1,
       borderBottomColor: colors.separator,
+      position: 'relative',
+    },
+    headerBackground: {
+      position: 'absolute',
+      top: -20,
+      left: -20,
+      right: -20,
+      bottom: 0,
+      backgroundColor: isDark ? 'rgba(52, 199, 89, 0.03)' : 'rgba(52, 199, 89, 0.02)',
+      borderRadius: 20,
     },
     title: {
       fontSize: 22,
@@ -306,12 +343,25 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
     },
     section: {
       marginBottom: 24,
+      borderRadius: 16,
+      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.01)',
+      padding: 16,
+      borderWidth: 1,
+      borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
     },
     sectionTitle: {
       fontSize: 16,
       fontWeight: '600',
       color: colors.text,
       marginBottom: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    sectionIcon: {
+      marginRight: 8,
+      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      padding: 6,
+      borderRadius: 8,
     },
     timeRow: {
       flexDirection: 'row',
@@ -347,12 +397,17 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
       elevation: 3,
     },
     hoursContainer: {
-      backgroundColor: isDark ? 'rgba(58, 58, 60, 0.6)' : 'rgba(242, 242, 247, 0.7)',
+      backgroundColor: isDark ? 'rgba(58, 58, 60, 0.4)' : 'rgba(242, 242, 247, 0.5)',
       borderRadius: 16,
       padding: 20,
       alignItems: 'center',
       borderWidth: 1,
-      borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+      borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      elevation: 2,
     },
     hoursLabel: {
       fontSize: 14,
@@ -372,6 +427,11 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
       backgroundColor: colors.primary,
       justifyContent: 'center',
       alignItems: 'center',
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 5,
     },
     hoursInput: {
       backgroundColor: isDark ? 'rgba(28, 28, 30, 0.8)' : 'rgba(255, 255, 255, 0.9)',
@@ -435,12 +495,17 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
       fontWeight: '500',
     },
     netHoursContainer: {
-      backgroundColor: isDark ? 'rgba(52, 199, 89, 0.1)' : 'rgba(52, 199, 89, 0.06)',
-      borderRadius: 12,
-      padding: 16,
+      backgroundColor: isDark ? 'rgba(52, 199, 89, 0.15)' : 'rgba(52, 199, 89, 0.08)',
+      borderRadius: 16,
+      padding: 20,
       alignItems: 'center',
       borderWidth: 1,
-      borderColor: isDark ? 'rgba(52, 199, 89, 0.2)' : 'rgba(52, 199, 89, 0.15)',
+      borderColor: isDark ? 'rgba(52, 199, 89, 0.25)' : 'rgba(52, 199, 89, 0.2)',
+      shadowColor: '#34C759',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 3,
     },
     netHoursLabel: {
       fontSize: 14,
@@ -494,21 +559,30 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
       animationType="slide"
       presentationStyle="pageSheet"
       statusBarTranslucent={false}
+      onRequestClose={handleSave}
     >
+      
       <KeyboardAvoidingView 
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+        
         <SafeAreaView style={styles.fullScreenModal}>
+
           {/* Handle bar for swipe to close */}
-          <View style={styles.handleContainer}>
+          <TouchableOpacity 
+            style={styles.handleContainer}
+            onPress={handleSave}
+            activeOpacity={0.7}
+          >
             <View style={styles.handle} />
-          </View>
+          </TouchableOpacity>
           
           {/* Close button - también guarda cambios */}
           <View style={styles.headerActions}>
             <TouchableOpacity onPress={handleSave} style={styles.closeButton}>
-              <IconSymbol name="xmark" size={18} color={colors.text} />
+              <IconSymbol name="checkmark" size={18} color="#FFFFFF" />
+     
             </TouchableOpacity>
           </View>
           
@@ -522,16 +596,27 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
           >
           {/* Header */}
           <View style={styles.header}>
+            <View style={styles.headerBackground} />
             <Text style={styles.title}>{t('reports.edit_record')}</Text>
             <Text style={styles.subtitle}>{formatDate(workDay.date)}</Text>
-            <Text style={styles.jobName}>{job.name}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
+              <View style={[styles.sectionIcon, { marginRight: 8, backgroundColor: job.color + '20' }]}>
+                <IconSymbol name="briefcase" size={16} color={job.color} />
+              </View>
+              <Text style={[styles.jobName, { color: job.color }]}>{job.name}</Text>
+            </View>
           </View>
 
           {/* Content */}
           <View style={styles.content}>
             {/* Time Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t('reports.schedule')}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                <View style={styles.sectionIcon}>
+                  <IconSymbol name="clock" size={16} color={colors.primary} />
+                </View>
+                <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>{t('reports.schedule')}</Text>
+              </View>
               <View style={styles.timeRow}>
                 <View style={styles.timeInputContainer}>
                   <Text style={styles.timeLabel}>{t('reports.entry')}</Text>
@@ -559,15 +644,21 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
 
             {/* Hours Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t('reports.recorded_hours')}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                <View style={styles.sectionIcon}>
+                  <IconSymbol name="timer" size={16} color={colors.primary} />
+                </View>
+                <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>{t('reports.recorded_hours')}</Text>
+              </View>
               <View style={styles.hoursContainer}>
                 <Text style={styles.hoursLabel}>{t('reports.total_hours_label')}</Text>
                 <View style={styles.hoursRow}>
                   <TouchableOpacity
                     style={styles.hoursButton}
                     onPress={() => adjustHours(-0.5)}
+                    activeOpacity={0.7}
                   >
-                    <IconSymbol size={20} name="minus" color="#FFFFFF" />
+                    <IconSymbol size={22} name="minus" color="#FFFFFF" />
                   </TouchableOpacity>
                   
                   <View>
@@ -584,8 +675,9 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
                   <TouchableOpacity
                     style={styles.hoursButton}
                     onPress={() => adjustHours(0.5)}
+                    activeOpacity={0.7}
                   >
-                    <IconSymbol size={20} name="plus" color="#FFFFFF" />
+                    <IconSymbol size={22} name="plus" color="#FFFFFF" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -605,15 +697,21 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
               return totalMinutes > 30;
             })() && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t('reports.break_rest')}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                  <View style={[styles.sectionIcon, { backgroundColor: 'rgba(255, 107, 53, 0.1)' }]}>
+                    <IconSymbol name="pause.circle" size={16} color="#FF6B35" />
+                  </View>
+                  <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>{t('reports.break_rest')}</Text>
+                </View>
                 <View style={styles.hoursContainer}>
                   <Text style={styles.hoursLabel}>{t('reports.break_time')}</Text>
                   <View style={styles.hoursRow}>
                     <TouchableOpacity
-                      style={[styles.hoursButton, { backgroundColor: '#FF6B35' }]}
+                      style={[styles.hoursButton, { backgroundColor: '#FF6B35', shadowColor: '#FF6B35' }]}
                       onPress={() => adjustBreakHours(-0.25)}
+                      activeOpacity={0.7}
                     >
-                      <IconSymbol size={20} name="minus" color="#FFFFFF" />
+                      <IconSymbol size={22} name="minus" color="#FFFFFF" />
                     </TouchableOpacity>
                     
                     <View>
@@ -630,10 +728,11 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
                     </View>
 
                     <TouchableOpacity
-                      style={[styles.hoursButton, { backgroundColor: '#FF6B35' }]}
+                      style={[styles.hoursButton, { backgroundColor: '#FF6B35', shadowColor: '#FF6B35' }]}
                       onPress={() => adjustBreakHours(0.25)}
+                      activeOpacity={0.7}
                     >
-                      <IconSymbol size={20} name="plus" color="#FFFFFF" />
+                      <IconSymbol size={22} name="plus" color="#FFFFFF" />
                     </TouchableOpacity>
                   </View>
                   <Text style={styles.breakNote}>
@@ -660,7 +759,12 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
 
             {/* Notes Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t('timer.session_notes')}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                <View style={styles.sectionIcon}>
+                  <IconSymbol name="note.text" size={16} color={colors.primary} />
+                </View>
+                <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>{t('timer.session_notes')}</Text>
+              </View>
               <TextInput
                 style={styles.notesInput}
                 value={notes}
@@ -680,38 +784,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
             </View>
           </View>
         </ScrollView>
-        
-        {/* Fixed bottom buttons */}
-        <View style={styles.bottomActions}>
-          <TouchableOpacity 
-            style={[styles.button, styles.cancelButton]} 
-            onPress={onClose}
-          >
-            <View style={styles.buttonContent}>
-              <Text style={[styles.buttonText, styles.cancelButtonText]}>
-                {t('common.cancel')}
-              </Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.button} 
-            onPress={handleSave} 
-            disabled={isLoading}
-          >
-            <LinearGradient
-              colors={['#007AFF', '#0056CC']}
-              style={styles.buttonContent}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Text style={[styles.buttonText, styles.saveButtonText]}>
-                {isLoading ? t('reports.saving') : t('job_form.save')}
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
       </KeyboardAvoidingView>
     </Modal>
   );

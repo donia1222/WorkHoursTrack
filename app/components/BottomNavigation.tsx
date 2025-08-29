@@ -165,7 +165,7 @@ export default function BottomNavigation() {
   return (
     <View style={[styles.container, { bottom: getBottomMargin(), paddingBottom: insets.bottom }]}>
       <LinearGradient
-        colors={isDark ? ['rgba(139, 92, 246, 0.03)', 'rgba(59, 130, 246, 0.03)'] : ['rgba(147, 51, 234, 0.02)', 'rgba(78, 70, 229, 0.11)']}
+        colors={isDark ? ['rgba(138, 92, 246, 0)', 'rgba(59, 131, 246, 0)'] : ['rgba(146, 51, 234, 0)', 'rgba(78, 70, 229, 0)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.gradientBackground}

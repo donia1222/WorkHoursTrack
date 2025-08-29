@@ -757,4 +757,3 @@ function JobCard({ job, onEdit, onDelete, onToggleActive, isInactive }: JobCardP
     </BlurView>
   );
 }
-

@@ -54,6 +54,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: isDark ? 'rgba(59, 130, 246, 0.08)' : 'rgba(59, 130, 246, 0.04)', // Azul suave
+
   },
   header: {
     borderBottomWidth: 1,
@@ -82,6 +83,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   headerText: {
     alignItems: 'center',
+    
   },
   titleContainer: {
     flexDirection: 'row',
@@ -96,6 +98,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: colors.text,
     letterSpacing: -0.3,
     textAlign: 'center',
+    
   },
   headerSubtitle: {
     fontSize: 15,
@@ -103,6 +106,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontWeight: '500',
     letterSpacing: -0.1,
     textAlign: 'center',
+    
   },
   content: {
     flex: 1,
@@ -203,6 +207,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 16,
+    
     backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
     borderWidth: 1,
     borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
@@ -645,6 +650,7 @@ marginTop: -4,
     color: colors.textSecondary,
     marginBottom: 12,
     textAlign: 'center',
+        marginTop:10,
   },
   compactJobTabs: {
     flexDirection: 'row',

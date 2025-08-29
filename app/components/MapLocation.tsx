@@ -229,7 +229,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean, isSmallScreen: boolean,
   mapContainer: {
     flex: 1,
     overflow: 'hidden',
-    backgroundColor: isDark ? '#0a0a0a' : '#f5f5f5',
+
   },
   mapWrapper: {
 
@@ -1820,15 +1820,25 @@ export default function MapLocation({ location, onNavigate }: Props) {
   useEffect(() => {
     const updateAutoTimerJobs = async () => {
       if (jobs.length > 0) {
-        console.log('🔄 MapLocation: Updating AutoTimer with jobs:', jobs.length);
+        // Check if any job has AutoTimer enabled
+        const jobsWithAutoTimer = jobs.filter(job => job.autoTimer?.enabled);
+        console.log('🔄 MapLocation: Jobs with AutoTimer enabled:', jobsWithAutoTimer.length, 'of', jobs.length);
         
-        // If service is not enabled, start it; otherwise just update jobs
-        if (!autoTimerService.isServiceEnabled()) {
-          console.log('🚀 MapLocation: Starting AutoTimer service');
-          autoTimerService.start(jobs);
+        if (jobsWithAutoTimer.length > 0) {
+          // Only start or update service if there are jobs with AutoTimer enabled
+          if (!autoTimerService.isServiceEnabled()) {
+            console.log('🚀 MapLocation: Starting AutoTimer service with enabled jobs');
+            autoTimerService.start(jobs);
+          } else {
+            console.log('🔄 MapLocation: Service already running, updating jobs');
+            await autoTimerService.updateJobs(jobs);
+          }
         } else {
-          console.log('🔄 MapLocation: Service already running, just updating jobs');
-          await autoTimerService.updateJobs(jobs);
+          // No jobs with AutoTimer enabled, stop the service if it's running
+          if (autoTimerService.isServiceEnabled()) {
+            console.log('🛑 MapLocation: No jobs with AutoTimer enabled, stopping service');
+            await autoTimerService.stop();
+          }
         }
       }
     };
@@ -3551,7 +3561,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             <Text style={{
                               fontSize: 14,
                               fontWeight: '500',
-                              color: 'white',
+                              color: '#f59e0b',
                               marginTop: 12,
                               opacity: 0.9,
                             }}>{t('maps.configure_rates')}</Text>
@@ -3604,7 +3614,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                               </Text>
                               <Text style={{
                                 fontSize: 12,
-                                color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
+                                color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#416ebbff',
                                 marginTop: 4,
                               }}>{period}</Text>
                             </>
@@ -3616,7 +3626,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             <Text style={{
                                fontSize: isTablet ? 18 : 12,
                               fontWeight: '500',
-                              color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#d97706',
+                              color: isDark ? '#d97706' : '#d97706',
                               textAlign: 'center',
                             }}>{t('maps.configure_rates')}</Text>
                           </View>

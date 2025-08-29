@@ -1268,7 +1268,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         <BlurView 
           intensity={isDark ? 98 : 96} 
           tint={isDark ? "dark" : "light"} 
-          style={[styles.calendar, { backgroundColor: isDark ? 'rgba(0, 123, 255, 0.13)' : 'rgba(64, 0, 255, 0.07)' }]}
+          style={[styles.calendar, { backgroundColor: isDark ? 'rgba(0, 123, 255, 0.13)' : 'rgba(64, 0, 255, 0.05)' }]}
         >
           <Calendar
           onDayPress={handleDayPress}

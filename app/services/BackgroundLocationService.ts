@@ -48,8 +48,8 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
     return;
   }
 
-  if ('locations' in data) {
-    const { locations } = data as any;
+  if (data && typeof data === 'object' && 'locations' in data) {
+    const { locations } = data as { locations: Location.LocationObject[] };
     const location = locations[0];
     
     if (location) {
@@ -207,6 +207,7 @@ async function handleGeofenceExit(job: any) {
         type: 'work' as const,
         actualStartTime: sessionStart.toTimeString().substring(0, 5),
         actualEndTime: now.toTimeString().substring(0, 5),
+        overtime: false,
       };
       
       await JobService.addWorkDay(workDay);
@@ -283,7 +284,7 @@ export async function startBackgroundLocationTracking(jobs: any[]): Promise<bool
       distanceInterval: distanceInterval, // Actualizar según distancia
       pausesUpdatesAutomatically: false, // No pausar automáticamente
       activityType: Location.ActivityType.AutomotiveNavigation, // Optimizado para movimiento
-      showsBackgroundLocationIndicator: true, // Mostrar indicador en iOS
+      showsBackgroundLocationIndicator: false, // NUNCA mostrar indicador en iOS
       foregroundService: {
         notificationTitle: "VixTime",
         notificationBody: "AutoTimer está monitoreando tu ubicación",
@@ -311,10 +312,22 @@ export async function stopBackgroundLocationTracking(): Promise<void> {
     const hasStarted = await Location.hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
     if (hasStarted) {
       await Location.stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
-      console.log('🛑 Background location tracking detenido');
+      console.log('🛑 Background location tracking detenido completamente');
+      
+      // Limpiar el estado almacenado
+      await AsyncStorage.removeItem('background_location_jobs');
+      console.log('🧹 Estado de background location limpiado');
+    } else {
+      console.log('ℹ️ Background location tracking no estaba activo');
     }
   } catch (error) {
     console.error('❌ Error deteniendo background location tracking:', error);
+    // Intentar limpiar el estado de todas formas
+    try {
+      await AsyncStorage.removeItem('background_location_jobs');
+    } catch (e) {
+      // Ignorar error secundario
+    }
   }
 }
 

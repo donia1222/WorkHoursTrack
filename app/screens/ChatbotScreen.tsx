@@ -40,7 +40,7 @@ const MAX_SESSIONS = 10;
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+
     marginBottom: 75,
   },
   header: {
@@ -102,19 +102,9 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: colors.background,
-    borderTopWidth: 1,
-    borderTopColor: colors.separator,
-    shadowColor: isDark ? '#FFFFFF' : '#000000',
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: isDark ? 0.05 : 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-    marginBottom: -30,
+    paddingVertical: 8,
+
+    marginBottom: -10,
   },
   imageButton: {
     padding: 12,
@@ -1106,7 +1096,7 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
             onChangeText={setInputText}
             placeholder={
               waitingForPersonSelection ? t('chatbot.placeholder_waiting') : 
-              waitingForClarification ? 'Explícame qué significa...' : 
+              waitingForClarification ? 'Explain to me what it means...' : 
               t('chatbot.placeholder_default')
             }
             placeholderTextColor={colors.textSecondary}

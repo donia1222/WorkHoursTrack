@@ -31,10 +31,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
 marginTop: -20,
 
 
+
   },
   mapContainer: {
 
-    height: '97%',
+    height: '110%',
 
   },
   map: {
@@ -43,7 +44,7 @@ marginTop: -20,
   },
   timerOverlay: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 400,
     right: 8,
     zIndex: 1000,
     backgroundColor: isDark ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.95)',
@@ -148,7 +149,7 @@ marginTop: -20,
     padding: 18,
     paddingVertical: 14,
     position: 'absolute',
-    bottom: 0,
+    bottom: 190,
     left: 0,
     right: 0,
     borderRadius: 12,
@@ -324,7 +325,8 @@ marginTop: -20,
   },
   delayOverlay: {
     position: 'absolute',
-    bottom: 160,
+
+    bottom:400,
     right: 8,
     zIndex: 1001,
     backgroundColor: isDark ? 'rgba(245, 158, 11, 0.9)' : 'rgba(251, 191, 36, 0.9)',
