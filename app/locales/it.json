@@ -215,6 +215,7 @@
     "configure_company": "Configura azienda",
     "company_configured": "Azienda configurata",
     "overtime": "Straordinario",
+    "total_hours": "Ore totali",
     "ready_to_invoice": "Pronto per fatturare",
     "no_job_selected": "Nessun lavoro selezionato",
     "success": "Successo",

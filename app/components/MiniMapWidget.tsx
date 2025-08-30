@@ -28,7 +28,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
 
 
-marginTop: -20,
+marginTop: -10,
 
 
 

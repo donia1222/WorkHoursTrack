@@ -215,6 +215,7 @@
     "configure_company": "Configurer l'entreprise",
     "company_configured": "Entreprise configurée",
     "overtime": "Heures supp.",
+    "total_hours": "Heures totales",
     "ready_to_invoice": "Prêt à facturer",
     "no_job_selected": "Aucun emploi sélectionné",
     "success": "Succès",

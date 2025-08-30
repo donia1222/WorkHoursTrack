@@ -230,6 +230,7 @@
     "configure_company": "Configure company",
     "company_configured": "Company configured",
     "overtime": "Overtime",
+    "total_hours": "Total hours",
     "ready_to_invoice": "Ready to invoice",
     "my_jobs": "My Jobs",
     "active_jobs": "Active jobs",
