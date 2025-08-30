@@ -1240,6 +1240,8 @@
     "feature_organize": "Organizar la información de forma clara y estructurada",
     "feature_export": "Exportar horarios directamente al calendario de la app",
     "feature_sync": "Sincronizar datos con el calendario nativo del dispositivo",
+    "feature_web_search": "Buscar automáticamente información laboral de cualquier país",
+    "feature_context_intelligence": "Entender preguntas de seguimiento por contexto conversacional",
     "get_started": "¿Cómo empezar?",
     "action_photo": "Envía una foto de tu plan de trabajo",
     "action_document": "Sube un documento PDF de horarios",
@@ -1295,6 +1297,9 @@
     "sources_consulted": "Fuentes consultadas:",
     "selected_image": "Imagen seleccionada",
     "image_load_error": "Error al cargar imagen",
+    "copy_button": "Copiar",
+    "copy_success": "✅ Copiado al portapapeles",
+    "copy_error": "Error al copiar",
     "export_calendar": {
       "export_button": "Exportar al Calendario",
       "modal_title": "Exportar al Calendario",

@@ -1226,6 +1226,8 @@
     "feature_organize": "Organizar a informação de forma clara e estruturada",
     "feature_export": "Exportar horários diretamente para o calendário do app",
     "feature_sync": "Sincronizar dados com o calendário nativo do dispositivo",
+    "feature_web_search": "Buscar automaticamente informações trabalhistas de qualquer país",
+    "feature_context_intelligence": "Entender perguntas de seguimento por contexto conversacional",
     "get_started": "Como começar?",
     "action_photo": "Envie uma foto do seu plano de trabalho",
     "action_document": "Suba um documento PDF de horários",

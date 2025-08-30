@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, ToastAndroid, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -148,6 +149,24 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderRadius: 4,
     backgroundColor: colors.textSecondary,
   },
+  messageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  copyButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: 'transparent',
+    minWidth: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  copyButtonBot: {
+    backgroundColor: isDark ? colors.primary + '15' : colors.primary + '08',
+  },
 });
 
 export default function ChatMessage({ message, jobs = [], onExportToCalendar, onSelectPerson }: ChatMessageProps) {
@@ -165,6 +184,8 @@ export default function ChatMessage({ message, jobs = [], onExportToCalendar, on
 
   // Detectar si el mensaje contiene datos de horarios (solo para mensajes del bot)
   const hasWorkScheduleData = !message.isUser && ChatDataParser.hasWorkScheduleData(message.text);
+
+
   
   // Detectar si el mensaje contiene selección interactiva estructurada
   const detectInteractiveSelection = (text: string): SelectionData | null => {
@@ -399,12 +420,17 @@ export default function ChatMessage({ message, jobs = [], onExportToCalendar, on
       )}
       
       {message.text ? (
-        <Text style={[
-          styles.messageText,
-          message.isUser ? styles.userText : styles.botText
-        ]}>
-          {message.text}
-        </Text>
+        <View style={styles.messageHeader}>
+          <Text style={[
+            styles.messageText,
+            message.isUser ? styles.userText : styles.botText,
+            { flex: 1, marginRight: !message.isUser ? 8 : 0 }
+          ]}>
+            {message.text}
+          </Text>
+          
+
+        </View>
       ) : null}
       
       <Text style={[

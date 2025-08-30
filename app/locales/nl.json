@@ -1226,6 +1226,8 @@
     "feature_organize": "Organiseer informatie duidelijk en gestructureerd",
     "feature_export": "Exporteer schema's direct naar de app kalender",
     "feature_sync": "Synchroniseer gegevens met de standaard apparaat kalender",
+    "feature_web_search": "Automatisch zoeken naar werkinformatie uit elk land",
+    "feature_context_intelligence": "Vervolgvragen begrijpen door gesprekscontext",
     "get_started": "Hoe te beginnen?",
     "action_photo": "Stuur een foto van je werkplan",
     "action_document": "Upload een PDF document van schema's",

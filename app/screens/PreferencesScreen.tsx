@@ -27,6 +27,7 @@ import NotificationService from '../services/NotificationService';
 import { forceCompleteWidgetSync } from '../services/ForceWidgetSync';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Localization from 'expo-localization';
 
 interface PreferencesScreenProps {
   onClose?: () => void;
@@ -472,7 +473,7 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [useTimeFormat, setUseTimeFormat] = useState(true); // Time format preference (HH:MM vs 0.00h)
-  const [use12HourFormat, setUse12HourFormat] = useState(true); // 12-hour format preference (AM/PM) - default to AM/PM
+  const [use12HourFormat, setUse12HourFormat] = useState(false); // 12-hour format preference - default to 24h (will be set by locale)
 
   const handleThemeChange = (mode: 'auto' | 'light' | 'dark') => {
     setThemeMode(mode);
@@ -500,9 +501,25 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
       const saved = await AsyncStorage.getItem('@12hour_format_preference');
       if (saved !== null) {
         setUse12HourFormat(saved === 'true');
+      } else {
+        // No hay preferencia guardada, detectar según la región del usuario
+        const locales = Localization.getLocales();
+        const uses24Hour = locales[0]?.uses24HourClock ?? true; // Por defecto 24h si no se puede detectar
+        
+        // Si el sistema usa 24h, use12HourFormat debe ser false
+        // Si el sistema usa 12h, use12HourFormat debe ser true
+        const use12Hour = !uses24Hour;
+        setUse12HourFormat(use12Hour);
+        
+        // Guardar la preferencia detectada
+        await AsyncStorage.setItem('@12hour_format_preference', use12Hour.toString());
+        
+        console.log(`📱 Formato de hora detectado automáticamente: ${uses24Hour ? '24h' : '12h AM/PM'}`);
       }
     } catch (error) {
       console.error('Error loading 12-hour format preference:', error);
+      // En caso de error, usar 24h por defecto
+      setUse12HourFormat(false);
     }
   };
 

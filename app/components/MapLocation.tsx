@@ -1562,7 +1562,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
       const shouldShow14Days = forceIPadPortrait !== undefined ? forceIPadPortrait : isIPadPortrait;
       
       // Crear array de días (7 para normal, 14 para iPad vertical)
-      const daysToShow = shouldShow14Days ? 14 : 7;
+      // Agregar 7 días extras para garantizar que siempre tengamos datos de la próxima semana
+      const daysToShow = shouldShow14Days ? 21 : 14;
       
       console.log('📅 Calendar days to show:', daysToShow, 'isIPadPortrait:', shouldShow14Days);
       const startOfWeek = new Date(baseDate);
@@ -1605,7 +1606,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
         
         calendarDays.push({
           day: dayNum,
-          dayOfWeek: i, // 0 = lunes, 6 = domingo
+          dayOfWeek: dayDate.getDay() === 0 ? 6 : dayDate.getDay() - 1, // Ajustar para lunes = 0
           isToday: dayYear === today.getFullYear() && dayMonth === (today.getMonth() + 1) && dayNum === today.getDate(),
           workDay,
           job,
@@ -3168,34 +3169,34 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   <TouchableOpacity
                     style={{
                       flex: 1,
-                      backgroundColor: isDark ? 'rgba(156, 163, 175, 0.12)' : 'rgba(229, 231, 235, 0.45)',
+                      backgroundColor: isDark ? 'rgba(30, 30, 40, 0.92)' : 'rgba(255, 255, 255, 0.98)',
                       borderWidth: 1.5,
-                      borderColor: isDark ? 'rgba(156, 163, 175, 0.25)' : 'rgba(107, 114, 128, 0.2)',
+                      borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.06)',
                       borderRadius: isTablet ? 28 : (isSmallScreen ? 20 : 24),
-                      padding: isTablet ? 18 : 16,
-                      shadowColor: '#6b7280',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 20,
-                      elevation: 5,
-                      backdropFilter: 'blur(20px)',
+                      padding: isTablet ? 20 : 16,
+                      shadowColor: isDark ? '#000' : '#6b7280',
+                      shadowOffset: { width: 0, height: isDark ? 8 : 4 },
+                      shadowOpacity: isDark ? 0.4 : 0.12,
+                      shadowRadius: isDark ? 25 : 20,
+                      elevation: isDark ? 8 : 5,
+                      backdropFilter: 'blur(25px)',
                     }}
                     onPress={() => onNavigate?.('calendar')}
                     activeOpacity={0.8}
                   >
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: isTablet ? 10 : 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: isTablet ? 14 : 10 }}>
                       <Text style={{
-                        fontSize: isTablet ? 16 : 14,
-                        fontWeight: '600',
-                        color: isDark ? 'rgba(255, 255, 255, 0.9)' : '#1f2937',
-                        opacity: 0.9,
+                        fontSize: isTablet ? 18 : 15,
+                        fontWeight: '700',
+                        color: isDark ? 'rgba(255, 255, 255, 0.95)' : '#1f2937',
+                        letterSpacing: -0.4,
                       }}>{t('calendar.title')}</Text>
                       <View style={{
-                        backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.15)',
-                        borderRadius: isTablet ? 10 : 8,
-                        padding: isTablet ? 6 : 4,
+                        backgroundColor: isDark ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.12)',
+                        borderRadius: isTablet ? 12 : 10,
+                        padding: isTablet ? 8 : 6,
                       }}>
-                        <IconSymbol size={isTablet ? 24 : 18} name="calendar" color={isDark ? '#60a5fa' : '#3b82f6'} />
+                        <IconSymbol size={isTablet ? 22 : 20} name="calendar" color={isDark ? '#60a5fa' : '#3b82f6'} />
                       </View>
                     </View>
                     
@@ -3204,22 +3205,55 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     <View style={{ flex: 1, justifyContent: 'center' }}>
                       <View style={{ 
                         flexDirection: 'row', 
-                        gap: isTablet ? 8 : 10,
-                        justifyContent: isTablet ? 'space-between' : 'space-around',
+                        gap: isTablet ? 10 : 8,
+                        justifyContent: 'space-between',
                       }}>
                         {(() => {
                           const today = new Date();
                           const todayIndex = miniCalendarData.findIndex(d => d.isToday);
                           const daysToShow = isTablet ? 7 : 3;
-                          const nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + daysToShow) : [];
+                          let nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + daysToShow) : [];
                           
-                          // Si no hay días, crear días por defecto
+                          // Si no hay suficientes días (fin de semana), buscar días adicionales
+                          if (nextDays.length < daysToShow) {
+                            const missingDays = daysToShow - nextDays.length;
+                            // Buscar los días que faltan del array completo de miniCalendarData
+                            const lastDayIndex = todayIndex + nextDays.length;
+                            const additionalDays = miniCalendarData.slice(lastDayIndex, lastDayIndex + missingDays);
+                            
+                            if (additionalDays.length > 0) {
+                              nextDays = [...nextDays, ...additionalDays];
+                            }
+                            
+                            // Si aún faltan días, crear días vacíos
+                            if (nextDays.length < daysToShow) {
+                              const stillMissing = daysToShow - nextDays.length;
+                              const lastDay = nextDays[nextDays.length - 1];
+                              const startDate = lastDay?.date ? new Date(lastDay.date) : new Date();
+                              
+                              for (let i = 1; i <= stillMissing; i++) {
+                                const date = new Date(startDate);
+                                date.setDate(startDate.getDate() + i);
+                                nextDays.push({
+                                  day: date.getDate(),
+                                  dayOfWeek: date.getDay() === 0 ? 6 : date.getDay() - 1,
+                                  isToday: false,
+                                  workDay: null,
+                                  job: null,
+                                  isCurrentMonth: date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear(),
+                                  date: date
+                                });
+                              }
+                            }
+                          }
+                          
+                          // Si aún no hay días (array vacío), crear días por defecto
                           if (nextDays.length === 0) {
                             for (let i = 0; i < daysToShow; i++) {
                               const date = new Date();
                               date.setDate(date.getDate() + i);
                               nextDays.push({
-                                day: date.getDate().toString(),
+                                day: date.getDate(),
                                 isToday: i === 0,
                                 workDay: null
                               });
@@ -3255,12 +3289,16 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                 key={i}
                                 style={{
                                   flex: 1,
-                                  height: isTablet ? 75 : 70,
-                                  maxWidth: isTablet ? 60 : 50,
-                                  backgroundColor: i === 0
-                                    ? (isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(96, 165, 250, 0.15)')
-                                    : (badgeColor ? `${badgeColor}20` : 'transparent'),
-                                  borderRadius: 12,
+                                  height: isTablet ? 76 : 70,
+                                  maxWidth: isTablet ? 64 : 50,
+                                  backgroundColor: dayData.isToday
+                                    ? (isDark ? 'rgba(59, 130, 246, 0.18)' : 'rgba(59, 130, 246, 0.12)')
+                                    : (badgeColor ? (isDark ? `${badgeColor}15` : `${badgeColor}10`) : (isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)')),
+                                  borderRadius: 14,
+                                  borderWidth: dayData.isToday ? 1.5 : 1,
+                                  borderColor: dayData.isToday
+                                    ? (isDark ? 'rgba(59, 130, 246, 0.4)' : 'rgba(59, 130, 246, 0.25)')
+                                    : (isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'),
                                   justifyContent: 'center',
                                   alignItems: 'center',
                                 }}
@@ -3269,10 +3307,11 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                   
                                   <Text style={{
                                     fontSize: isTablet ? 11 : 10,
-                                    color: i === 0 ? '#3b82f6' : (isDark ? 'rgba(255, 255, 255, 0.6)' : '#6b7280'),
-                                    fontWeight: '600',
-                                    marginBottom: 2,
+                                    color: dayData.isToday ? '#3b82f6' : (isDark ? 'rgba(255, 255, 255, 0.65)' : '#6b7280'),
+                                    fontWeight: '700',
+                                    marginBottom: 3,
                                     textTransform: 'uppercase',
+                                    letterSpacing: 0.5,
                                   }}>
                                     {(() => {
                                       const date = new Date();
@@ -3283,25 +3322,31 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                   </Text>
                                   
                                   <Text style={{
-                                    fontSize: isTablet ? 22 : 20,
-                                    color: i === 0 ? '#3b82f6' : (isDark ? 'rgba(255, 255, 255, 0.9)' : '#1f2937'),
-                                    fontWeight: i === 0 ? '700' : '600',
+                                    fontSize: isTablet ? 22 : 19,
+                                    color: dayData.isToday ? '#3b82f6' : (isDark ? 'rgba(255, 255, 255, 0.95)' : '#1f2937'),
+                                    fontWeight: dayData.isToday ? '800' : '700',
+                                    letterSpacing: -0.3,
                                   }}>
                                     {dayData.day}
                                   </Text>
                             {badgeIcon && badgeColor && (
                                     <View style={{
                                       backgroundColor: badgeColor,
-                                      borderRadius: 10,
-                                      width: isTablet ? 20 : 16,
-                                      height: isTablet ? 20 : 16,
+                                      borderRadius: 8,
+                                      width: isTablet ? 16 : 14,
+                                      height: isTablet ? 16 : 14,
                                       justifyContent: 'center',
+                                      shadowColor: badgeColor,
+                                      shadowOffset: { width: 0, height: 1 },
+                                      shadowOpacity: 0.2,
+                                      shadowRadius: 2,
+                                      elevation: 2,
                                       alignItems: 'center',
-                                      marginTop: 2,
+                                      marginTop: 3,
                                     }}>
                                       <Ionicons 
                                         name={badgeIcon as any} 
-                                        size={isTablet ? 14 : 12} 
+                                        size={isTablet ? 10 : 9} 
                                         color="#ffffff"
                                       />
                                     </View>
@@ -3319,22 +3364,56 @@ export default function MapLocation({ location, onNavigate }: Props) {
                       {/* Work indicators below days */}
                       <View style={{ 
                         flexDirection: 'row', 
-                        gap: isTablet ? 8 : 10,
-                        justifyContent: isTablet ? 'space-between' : 'space-around',
-                        marginTop: isTablet ? 6 : 8,
+                        gap: isTablet ? 10 : 8,
+                        justifyContent: 'space-between',
+                        marginTop: isTablet ? 8 : 10,
                       }}>
                         {(() => {
                           const today = new Date();
                           const todayIndex = miniCalendarData.findIndex(d => d.isToday);
                           const daysToShow = isTablet ? 7 : 3;
-                          const nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + daysToShow) : [];
+                          let nextDays = todayIndex >= 0 ? miniCalendarData.slice(todayIndex, todayIndex + daysToShow) : [];
                           
+                          // Si no hay suficientes días (fin de semana), buscar días adicionales
+                          if (nextDays.length < daysToShow) {
+                            const missingDays = daysToShow - nextDays.length;
+                            // Buscar los días que faltan del array completo de miniCalendarData
+                            const lastDayIndex = todayIndex + nextDays.length;
+                            const additionalDays = miniCalendarData.slice(lastDayIndex, lastDayIndex + missingDays);
+                            
+                            if (additionalDays.length > 0) {
+                              nextDays = [...nextDays, ...additionalDays];
+                            }
+                            
+                            // Si aún faltan días, crear días vacíos
+                            if (nextDays.length < daysToShow) {
+                              const stillMissing = daysToShow - nextDays.length;
+                              const lastDay = nextDays[nextDays.length - 1];
+                              const startDate = lastDay?.date ? new Date(lastDay.date) : new Date();
+                              
+                              for (let i = 1; i <= stillMissing; i++) {
+                                const date = new Date(startDate);
+                                date.setDate(startDate.getDate() + i);
+                                nextDays.push({
+                                  day: date.getDate(),
+                                  dayOfWeek: date.getDay() === 0 ? 6 : date.getDay() - 1,
+                                  isToday: false,
+                                  workDay: null,
+                                  job: null,
+                                  isCurrentMonth: date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear(),
+                                  date: date
+                                });
+                              }
+                            }
+                          }
+                          
+                          // Si aún no hay días (array vacío), crear días por defecto
                           if (nextDays.length === 0) {
                             for (let i = 0; i < daysToShow; i++) {
                               const date = new Date();
                               date.setDate(date.getDate() + i);
                               nextDays.push({
-                                day: date.getDate().toString(),
+                                day: date.getDate(),
                                 isToday: i === 0,
                                 workDay: null
                               });

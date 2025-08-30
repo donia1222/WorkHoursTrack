@@ -1213,6 +1213,8 @@
     "feature_organize": "Organize information clearly and structured",
     "feature_export": "Export schedules directly to the app calendar",
     "feature_sync": "Sync data with the device's native calendar",
+    "feature_web_search": "Automatically search labor information from any country",
+    "feature_context_intelligence": "Understand follow-up questions through conversational context",
     "get_started": "How to get started?",
     "action_photo": "Send a photo of your work plan",
     "action_document": "Upload a PDF document of schedules",
@@ -1268,6 +1270,9 @@
     "sources_consulted": "Sources consulted:",
     "selected_image": "Selected image",
     "image_load_error": "Error loading image",
+    "copy_button": "Copy",
+    "copy_success": "✅ Copied to clipboard",
+    "copy_error": "Error copying",
     "export_calendar": {
       "export_button": "Export to Calendar",
       "modal_title": "Export to Calendar",

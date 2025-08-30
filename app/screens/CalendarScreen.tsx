@@ -485,7 +485,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: colors.textSecondary,
   },
   dayTypeBreakdown: {
-    marginTop: 16,
+    marginTop: 20,
     paddingTop: 16,
     borderTopWidth: 1,
     borderTopColor: colors.separator,
@@ -1398,7 +1398,34 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
             <Text style={styles.legendText}>{t('calendar.sick_day')}</Text>
           </View>
     
-        
+             
+            <View style={styles.dayTypeBreakdown}>
+
+              <View style={styles.dayTypeGrid}>
+
+                  <View style={styles.dayTypeItem}>
+                    <IconSymbol size={26} name="house.fill" color={DAY_TYPES.free.color} />
+                    <Text style={styles.dayTypeNumber}>{stats.freeDays}</Text>
+                    <Text style={styles.dayTypeLabel}>{t('calendar.free_days')}</Text>
+                  </View>
+      
+
+                  <View style={styles.dayTypeItem}>
+                    <IconSymbol size={26} name="sun.max.fill" color={DAY_TYPES.vacation.color} />
+                    <Text style={styles.dayTypeNumber}>{stats.vacationDays}</Text>
+                    <Text style={styles.dayTypeLabel}>{t('calendar.vacation_days')}</Text>
+                  </View>
+      
+ 
+                  <View style={styles.dayTypeItem}>
+                    <IconSymbol size={26} name="cross.fill" color={DAY_TYPES.sick.color} />
+                    <Text style={styles.dayTypeNumber}>{stats.sickDays}</Text>
+                    <Text style={styles.dayTypeLabel}>{t('calendar.sick_days')}</Text>
+                  </View>
+       
+              </View>
+            </View>
+            
           </BlurView>
         <TouchableOpacity
           style={styles.actionButton}
@@ -1425,35 +1452,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
    
 
 
-          {/* Day type breakdown */}
-          {(stats.freeDays > 0 || stats.vacationDays > 0 || stats.sickDays > 0) && (
-            <View style={styles.dayTypeBreakdown}>
-              <Text style={styles.breakdownTitle}>{t('calendar.other_days')}</Text>
-              <View style={styles.dayTypeGrid}>
-                {stats.freeDays > 0 && (
-                  <View style={styles.dayTypeItem}>
-                    <IconSymbol size={16} name="calendar" color={DAY_TYPES.free.color} />
-                    <Text style={styles.dayTypeNumber}>{stats.freeDays}</Text>
-                    <Text style={styles.dayTypeLabel}>{t('calendar.free_days')}</Text>
-                  </View>
-                )}
-                {stats.vacationDays > 0 && (
-                  <View style={styles.dayTypeItem}>
-                    <IconSymbol size={16} name="sun.max.fill" color={DAY_TYPES.vacation.color} />
-                    <Text style={styles.dayTypeNumber}>{stats.vacationDays}</Text>
-                    <Text style={styles.dayTypeLabel}>{t('calendar.vacation_days')}</Text>
-                  </View>
-                )}
-                {stats.sickDays > 0 && (
-                  <View style={styles.dayTypeItem}>
-                    <IconSymbol size={16} name="cross.fill" color={DAY_TYPES.sick.color} />
-                    <Text style={styles.dayTypeNumber}>{stats.sickDays}</Text>
-                    <Text style={styles.dayTypeLabel}>{t('calendar.sick_days')}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          )}
+
   
 
         <View style={styles.legendCard}>

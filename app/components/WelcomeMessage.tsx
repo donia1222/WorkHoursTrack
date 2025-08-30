@@ -227,10 +227,6 @@ export default function WelcomeMessage() {
           <Text style={styles.title}>{t('chatbot.welcome_title')}</Text>
         </View>
       
-      <Text style={styles.subtitle}>
-        {t('chatbot.welcome_subtitle')}
-      </Text>
-
       <View style={styles.featuresList}>
         <View style={styles.featureItem}>
           <View style={styles.featureIcon}>
@@ -272,6 +268,20 @@ export default function WelcomeMessage() {
             <Ionicons name="sync" size={16} color={colors.primary} />
           </View>
           <Text style={styles.featureText}>{t('chatbot.feature_sync')}</Text>
+        </View>
+
+        <View style={styles.featureItem}>
+          <View style={styles.featureIcon}>
+            <Ionicons name="globe" size={16} color={colors.primary} />
+          </View>
+          <Text style={styles.featureText}>{t('chatbot.feature_web_search')}</Text>
+        </View>
+
+        <View style={styles.featureItem}>
+          <View style={styles.featureIcon}>
+            <Ionicons name="flash" size={16} color={colors.primary} />
+          </View>
+          <Text style={styles.featureText}>{t('chatbot.feature_context_intelligence')}</Text>
         </View>
       </View>
 

@@ -1197,6 +1197,8 @@
     "feature_organize": "情報を明確で構造化された形で整理",
     "feature_export": "スケジュールを直接アプリカレンダーにエクスポート",
     "feature_sync": "デバイスのネイティブカレンダーとデータを同期",
+    "feature_web_search": "どの国の労働情報も自動的に検索",
+    "feature_context_intelligence": "会話コンテキストでフォローアップ質問を理解",
     "get_started": "開始方法は？",
     "action_photo": "勤務計画の写真を送信",
     "action_document": "スケジュールのPDF文書をアップロード",

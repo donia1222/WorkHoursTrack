@@ -1029,6 +1029,8 @@
     "feature_organize": "Informationen klar und strukturiert organisieren",
     "feature_export": "Arbeitszeiten direkt in den App-Kalender exportieren",
     "feature_sync": "Daten mit dem nativen Gerät-Kalender synchronisieren",
+    "feature_web_search": "Automatisch Arbeitsinformationen aus jedem Land suchen",
+    "feature_context_intelligence": "Nachfolgefragen durch Gesprächskontext verstehen",
     "get_started": "Wie fange ich an?",
     "action_photo": "Senden Sie ein Foto Ihres Arbeitsplans",
     "action_document": "Laden Sie ein PDF-Dokument mit Zeitplänen hoch",

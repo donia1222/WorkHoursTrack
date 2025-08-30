@@ -1226,6 +1226,8 @@
     "feature_organize": "Bilgileri net ve yapılandırılmış şekilde organize etmek",
     "feature_export": "Saatleri doğrudan uygulamanın takvimine aktarmak",
     "feature_sync": "Verileri cihazın yerel takvimiyle senkronize etmek",
+    "feature_web_search": "Herhangi bir ülkenin çalışma bilgilerini otomatik olarak arama",
+    "feature_context_intelligence": "Konuşma bağlamı ile takip sorularını anlama",
     "get_started": "Nasıl başlanır?",
     "action_photo": "Çalışma planınızın fotoğrafını gönderin",
     "action_document": "Saat planının PDF belgesini yükleyin",
