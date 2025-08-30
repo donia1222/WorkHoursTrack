@@ -411,16 +411,6 @@ ${logs.map((log, i) => {
             <Text style={styles.statusValue}>{autoTimerMode?.mode || t('debug.not_configured')}</Text>
           </View>
 
-          <View style={styles.statusRow}>
-            <Text style={styles.statusLabel}>{t('debug.background_tracking')}:</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={styles.statusValue}>{backgroundActive ? t('debug.active') : t('debug.inactive')}</Text>
-              <View style={[
-                styles.activeIndicator,
-                { backgroundColor: backgroundActive ? '#34c759' : '#ff3b30' }
-              ]} />
-            </View>
-          </View>
 
           {/* Información de debugging */}
           <View style={[styles.statusRow, { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.separator }]}>
