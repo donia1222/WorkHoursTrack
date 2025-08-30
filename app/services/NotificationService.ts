@@ -126,11 +126,15 @@ class NotificationService {
     console.log('🔍 NotificationService t() called with key:', key);
     
     // Try to get current language from AsyncStorage
-    let currentLanguage = 'es'; // default
+    let currentLanguage = 'en'; // default fallback
     try {
       const savedLanguage = await AsyncStorage.getItem('user_language');
       if (savedLanguage) {
         currentLanguage = savedLanguage;
+      } else {
+        // If no saved language, try to detect system language
+        const systemLanguage = require('expo-localization').locale?.split('-')[0] || 'en';
+        currentLanguage = ['es', 'en', 'de', 'fr', 'it', 'pt', 'nl', 'tr', 'ja', 'ru'].includes(systemLanguage) ? systemLanguage : 'en';
       }
     } catch (error) {
       console.log('🔍 Could not get language from storage, using default:', currentLanguage);
@@ -161,11 +165,16 @@ class NotificationService {
     const keyParts = key.split('.');
     let result: any = translations;
     
+    console.log('🔍 Looking for key parts:', keyParts, 'in language:', currentLanguage);
+    console.log('🔍 Available translations structure:', Object.keys(translations));
+    
     for (const part of keyParts) {
       if (result && typeof result === 'object' && part in result) {
         result = result[part];
+        console.log(`🔍 Found part "${part}":`, typeof result === 'object' ? Object.keys(result) : result);
       } else {
-        console.log(`🔍 Translation key not found: ${key}`);
+        console.log(`🔍 Translation key not found: ${key} at part "${part}"`);
+        console.log('🔍 Available keys at this level:', result && typeof result === 'object' ? Object.keys(result) : 'Not an object');
         return key; // Return key itself if not found
       }
     }
@@ -817,20 +826,20 @@ class NotificationService {
     identifier: string
   ): Promise<void> {
     try {
-      let title = '⏰ Work Reminder';
+      const title = await this.t('preferences.notifications.work_reminder_title');
       let body = '';
       
       if (minutesBefore === 0) {
-        body = `Time to start work at ${jobName} (${startTime})`;
+        body = await this.t('preferences.notifications.work_reminder_now_body', { jobName, startTime });
       } else if (minutesBefore === 1) {
-        body = `Your shift at ${jobName} starts in 1 minute (${startTime})`;
+        body = await this.t('preferences.notifications.work_reminder_1min_body', { jobName, startTime });
       } else if (minutesBefore < 60) {
-        body = `Your shift at ${jobName} starts in ${minutesBefore} minutes (${startTime})`;
+        body = await this.t('preferences.notifications.work_reminder_minutes_body', { jobName, startTime, minutes: minutesBefore });
       } else {
         const hours = Math.floor(minutesBefore / 60);
         const mins = minutesBefore % 60;
         const timeText = mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-        body = `Your shift at ${jobName} starts in ${timeText} (${startTime})`;
+        body = await this.t('preferences.notifications.work_reminder_hours_body', { jobName, startTime, timeText });
       }
 
       console.log('📝 Scheduling notification:');

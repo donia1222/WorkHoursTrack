@@ -57,6 +57,11 @@
       "timer_will_start_body": "AutoTimer wird in {{minutes}} Minuten für \"{{jobName}}\" aktiviert",
       "timer_will_stop_title": "⏹ AutoTimer Wird Deaktiviert",
       "timer_will_stop_body": "AutoTimer wird in {{minutes}} Minuten für \"{{jobName}}\" deaktiviert",
+      "work_reminder_title": "⏰ Arbeitserinnerung",
+      "work_reminder_now_body": "Zeit, mit der Arbeit bei {{jobName}} zu beginnen ({{startTime}})",
+      "work_reminder_1min_body": "Ihre Schicht bei {{jobName}} beginnt in 1 Minute ({{startTime}})",
+      "work_reminder_minutes_body": "Ihre Schicht bei {{jobName}} beginnt in {{minutes}} Minuten ({{startTime}})",
+      "work_reminder_hours_body": "Ihre Schicht bei {{jobName}} beginnt in {{timeText}} ({{startTime}})",
       "default_notification_title": "📱 Benachrichtigung",
       "default_notification_body": "Ereignis für \"{{jobName}}\"",
       "reminder_time": "Erinnerungszeit",
@@ -829,63 +834,6 @@
       "privacy_description": "Wie wir mit Ihren Daten umgehen",
       "version": "Version 1.0.0",
       "last_update": "Letztes Update: Juli 2025"
-    }
-  },
-  "preferences": {
-    "title": "Einstellungen",
-    "subtitle": "Passen Sie Ihre Arbeitserfahrung an",
-    "appearance": {
-      "title": "Erscheinungsbild",
-      "description": "Konfigurieren Sie das visuelle Design der App",
-      "auto": "Auto",
-      "light": "Hell",
-      "dark": "Dunkel"
-    },
-    "language": {
-      "title": "Sprache",
-      "description": "Wählen Sie Ihre bevorzugte Sprache",
-      "default": "Aktuelle Sprache",
-      "change_to": "Wechseln zu {{language}}"
-    },
-    "data_management": {
-      "title": "Datenverwaltung",
-      "description": "⚠️ WICHTIG: Diese App speichert alle Daten nur auf Ihrem Gerät. Wir verwenden keine Server oder Cloud-Datenbanken. Aus diesem Grund müssen Sie regelmäßig Backups erstellen und bei einer Neuinstallation der App importieren.",
-      "export_title": ".json-Datei erstellen",
-      "export_desc": "Backup aller Ihrer Jobs, Stunden und Einstellungen erstellen",
-      "import_title": ".json-Datei importieren",
-      "import_desc": "Daten aus einer Backup-Datei wiederherstellen",
-      "auto_backup_title": "Automatische Sicherungen",
-      "auto_backup_desc": "Tägliche, wöchentliche oder monatliche automatische Backups konfigurieren"
-    },
-    "notifications": {
-      "title": "Benachrichtigungen",
-      "description": "Arbeitserinnerungen und Warnungen konfigurieren",
-      "general": "Allgemeine Benachrichtigungen",
-      "general_notifications": "Allgemeine Benachrichtigungen",
-      "auto_timer": "Auto Timer",
-      "work_schedule_reminders": "Arbeitszeit-Erinnerungen",
-      "general_desc": "Alle Benachrichtigungen aktivieren",
-      "schedule": "Zeitplan-Erinnerungen",
-      "schedule_desc": "Ein- und Ausgangsbenachrichtigungen",
-      "work_reminders": "Arbeitserinnerungen",
-      "work_reminders_desc": "Erinnerungen vor Arbeitsbeginn erhalten",
-      "reminder_time": "Erinnerungszeit",
-      "custom_minutes": "Benutzerdefinierte Minuten",
-      "test_button": "Benachrichtigung testen",
-      "test_desc": "Eine Test-Benachrichtigung senden",
-      "permissions_denied_title": "Berechtigungen verweigert",
-      "permissions_denied_message": "Um Benachrichtigungen zu erhalten, müssen Sie die Berechtigungen in der Gerätekonfiguration zulassen",
-      "open_settings": "Konfiguration öffnen"
-    },
-    "data_management": {
-      "title": "Datenverwaltung",
-      "description": "⚠️ WICHTIG: Diese App speichert alle Daten nur auf Ihrem Gerät. Wir verwenden keine Server oder Cloud-Datenbanken. Aus diesem Grund müssen Sie regelmäßig Backups erstellen und bei einer Neuinstallation der App importieren.",
-      "export_title": ".json-Datei erstellen",
-      "export_desc": "Backup aller Ihrer Jobs, Stunden und Einstellungen erstellen",
-      "import_title": ".json-Datei importieren",
-      "import_desc": "Daten aus einer Backup-Datei wiederherstellen",
-      "auto_backup_title": "Automatische Backups",
-      "auto_backup_desc": "Backups automatisch erstellen"
     }
   },
   "side_menu": {

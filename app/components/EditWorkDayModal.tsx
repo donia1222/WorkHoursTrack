@@ -251,7 +251,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
   const styles = StyleSheet.create({
     fullScreenModal: {
       flex: 1,
-
+ backgroundColor: isDark ? 'rgba(24, 24, 24, 1)' : 'rgba(242, 242, 247, 0.5)',
     },
     backgroundGradient: {
       position: 'absolute',
@@ -305,8 +305,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
       paddingHorizontal: 0,
       paddingBottom: 24,
       marginBottom: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.separator,
+
       position: 'relative',
     },
     headerBackground: {
@@ -315,7 +314,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
       left: -20,
       right: -20,
       bottom: 0,
-      backgroundColor: isDark ? 'rgba(52, 199, 89, 0.03)' : 'rgba(52, 199, 89, 0.02)',
+
       borderRadius: 20,
     },
     title: {

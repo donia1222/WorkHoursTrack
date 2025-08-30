@@ -296,7 +296,11 @@ class SimpleAutoTimer extends EventEmitter {
         notes: 'Auto-started (SimpleAutoTimer)',
       }));
       
-      await this.notificationService.sendNotification('timer_started', job.name);
+      // Send notification only if auto-timer notifications are enabled
+      const settings = this.notificationService.getSettings();
+      if (settings.autoTimer) {
+        await this.notificationService.sendNotification('timer_started', job.name);
+      }
       console.log(`✅ Timer iniciado para ${job.name} a las ${startTime.toLocaleTimeString()}`);
       
       // Emit event for listeners (like MapLocation)
@@ -344,7 +348,11 @@ class SimpleAutoTimer extends EventEmitter {
       const redundantSessionKey = `@bg_session_${activeSession.jobId ?? job.id}`;
       await AsyncStorage.removeItem(redundantSessionKey);
       
-      await this.notificationService.sendNotification('timer_stopped', job?.name ?? 'Trabajo');
+      // Send notification only if auto-timer notifications are enabled
+      const settings = this.notificationService.getSettings();
+      if (settings.autoTimer) {
+        await this.notificationService.sendNotification('timer_stopped', job?.name ?? 'Trabajo');
+      }
 
       console.log(`🛑 Timer parado: ${elapsedHours}h`);
       

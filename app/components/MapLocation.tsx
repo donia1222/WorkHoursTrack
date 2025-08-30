@@ -1178,7 +1178,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const { navigateTo } = useNavigation();
   const { t } = useLanguage();
   const { triggerHaptic } = useHapticFeedback();
-  const { formatTimeWithPreferences } = useTimeFormat();
+  const { formatTimeWithPreferences, useTimeFormat: isTimeFormat } = useTimeFormat();
   
   // Function to make AM/PM format more compact for widgets
   const formatTimeCompact = (time: string): string => {
@@ -1187,6 +1187,21 @@ export default function MapLocation({ location, onNavigate }: Props) {
     return formatted
       .replace(' AM', '')
       .replace(' PM', '');
+  };
+
+  // Format hours for display - same logic as ReportsScreen
+  const formatHoursForDisplay = (hours: number): string => {
+    if (isTimeFormat) {
+      // Time format: 8h 3m
+      const h = Math.floor(hours);
+      const m = Math.round((hours - h) * 60);
+      if (h === 0) return `${m}m`;
+      if (m === 0) return `${h}h`;
+      return `${h}h ${m}m`;
+    } else {
+      // Decimal format: 8.05h
+      return `${hours.toFixed(2)}h`;
+    }
   };
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -1274,7 +1289,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
         if (dayDate.getMonth() + 1 === currentMonth && 
             dayDate.getFullYear() === currentYear && 
             day.type === 'work') {
-          totalHours += day.hours || 0;
+          // Use net hours calculation (same as ReportsScreen)
+          const netHours = Math.max(0, (day.hours || 0) - (day.breakHours || 0));
+          totalHours += netHours;
         }
       });
       
@@ -1892,6 +1909,20 @@ export default function MapLocation({ location, onNavigate }: Props) {
     
     return () => clearInterval(interval);
   }, [autoTimerStatus?.state]);
+
+  // Reload monthly stats when screen gains focus to sync with ReportsScreen edits
+  useFocusEffect(
+    useCallback(() => {
+      console.log('🔄 MapLocation: Screen focused, reloading monthly stats');
+      const loadMonthlyStats = async () => {
+        const overtime = await calculateMonthlyOvertime();
+        const totalHours = await calculateMonthlyTotalHours();
+        setMonthlyOvertime(overtime);
+        setMonthlyTotalHours(totalHours);
+      };
+      loadMonthlyStats();
+    }, [])
+  );
 
   // Calculate elapsed time for active AutoTimer
   useEffect(() => {
@@ -3759,8 +3790,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
        <View style={{
             
                   gap: isTablet ? 8 : (isSmallScreen ? 12 : 8),
-                  height: isTablet ? 160 : (isSmallScreen ? 120 : 140),
-                  width: isTablet ?360 :(isSmallScreen ? 120 : 165),
+                  height: isTablet ? 160 : (isSmallScreen ? 80 : 140),
+                  width: isTablet ?360 :(isSmallScreen ? 80 : 165),
                 }}>
 
                <TouchableOpacity
@@ -3841,7 +3872,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                     height: '100%',
                                     borderRadius: 100,
                                     borderWidth: isTablet ? 8 : 6,
-                                   borderColor: isDark ? 'rgba(34, 197, 94, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                                   borderColor: isDark ?  'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
                                   }} />
                                   {/* Progress arc - simplified approach */}
                                   <View style={{
@@ -3851,10 +3882,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                     borderRadius: 100,
                                     borderWidth: isTablet ? 8 : 6,
                                     borderColor: 'transparent',
-                           borderTopColor: percentage > 0 ? (isDark ? '#4ade80' : '#22c55e') : 'transparent',
-                                    borderRightColor: percentage > 25 ? (isDark ? '#4ade80' : '#22c55e') : 'transparent',
-                                    borderBottomColor: percentage > 50 ? (isDark ? '#4ade80' : '#22c55e') : 'transparent',
-                                    borderLeftColor: percentage > 75 ? (isDark ? '#4ade80' : '#22c55e') : 'transparent',
+                           borderTopColor: percentage > 0 ? (isDark ? '#ef4444' : '#ef4444') : 'transparent',
+                                    borderRightColor: percentage > 25 ? (isDark ? '#ef4444' : '#ef4444') : 'transparent',
+                                    borderBottomColor: percentage > 50 ? (isDark ?'#ef4444' : '#ef4444') : 'transparent',
+                                    borderLeftColor: percentage > 75 ? (isDark ?'#ef4444' : '#ef4444') : 'transparent',
                                     transform: [{ rotate: `${rotation}deg` }],
                                   }} />
                                   {/* Center text - simplified */}
@@ -3936,7 +3967,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                               fontWeight: '700',
                              color: isDark ? '#c0b9b98e' : '#7e7e7e8a',
                               marginTop: isTablet ? 2 : 1,
-                            }}>{monthlyTotalHours.toFixed(1)} hrs</Text>
+                            }}>{formatHoursForDisplay(monthlyTotalHours)}</Text>
                           </View>
                           
                           {/* Circular Progress Chart on the right */}
@@ -3970,7 +4001,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                     height: '100%',
                                     borderRadius: 100,
                                     borderWidth: isTablet ? 8 : 6,
-                                    borderColor: isDark ? 'rgba(34, 197, 94, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                                    borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
                                   }} />
                                   {/* Progress arc - simplified approach */}
                                   <View style={{
@@ -3980,10 +4011,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                     borderRadius: 100,
                                     borderWidth: isTablet ? 8 : 6,
                                     borderColor: 'transparent',
-                                    borderTopColor: percentage > 0 ? (isDark ? '#4ade80' : '#22c55e') : 'transparent',
-                                    borderRightColor: percentage > 25 ? (isDark ? '#4ade80' : '#22c55e') : 'transparent',
-                                    borderBottomColor: percentage > 50 ? (isDark ? '#4ade80' : '#22c55e') : 'transparent',
-                                    borderLeftColor: percentage > 75 ? (isDark ? '#4ade80' : '#22c55e') : 'transparent',
+                                    borderTopColor: percentage > 0 ? (isDark ? '#ef4444' : '#ef4444') : 'transparent',
+                                    borderRightColor: percentage > 25 ? (isDark ? '#ef4444' : '#ef4444') : 'transparent',
+                                    borderBottomColor: percentage > 50 ? (isDark ? '#ef4444' : '#ef4444') : 'transparent',
+                                    borderLeftColor: percentage > 75 ? (isDark ? '#ef4444' : '#ef4444') : 'transparent',
                                     transform: [{ rotate: `${rotation}deg` }],
                                   }} />
                                   {/* Center text - simplified */}
@@ -3992,12 +4023,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                       fontSize: isTablet ? 12 : 9,
                                       fontWeight: '700',
                                       color: isDark ? '#4ade80' : '#16a34a',
-                                    }}>{totalHours.toFixed(1)}</Text>
-                                    <Text style={{
-                                      fontSize: isTablet ? 7 : 6,
-                                      color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#15803d',
-                                      fontWeight: '600',
-                                    }}>hrs</Text>
+                                    }}>{formatHoursForDisplay(totalHours)}</Text>
                                   </View>
                                   {/* Max indicator */}
                                   <View style={{

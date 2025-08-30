@@ -47,7 +47,7 @@ struct WorkTrackWidgetLiveActivity: Widget {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(context.attributes.jobName)
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.primary)
+                            .foregroundColor(.blue)
                             .lineLimit(1)
                         
                         HStack(spacing: 4) {
@@ -104,6 +104,7 @@ struct WorkTrackWidgetLiveActivity: Widget {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(context.attributes.jobName)
                                 .font(.caption)
+                                .foregroundColor(.blue)
                                 .lineLimit(1)
                             Text(context.attributes.location)
                                 .font(.caption2)

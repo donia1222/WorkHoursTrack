@@ -498,7 +498,7 @@ export default function MiniMapWidget({
       }
     ]}>
       <View style={styles.mapContainer}>
-        {activeTimerElapsed > 0 && (
+        {(activeTimerElapsed > 0 || autoTimerState === 'active' || startTime || autoTimerState !== 'inactive') && (
           <View style={styles.timerOverlay}>
             <View style={styles.timerContent}>
               {/* Main timer display */}
@@ -511,7 +511,7 @@ export default function MiniMapWidget({
                   />
                 </Animated.View>
                 <Animated.Text style={[styles.timerText, animatedTimerStyle]}>
-                  {formatTime(activeTimerElapsed)}
+                  {formatTime(activeTimerElapsed || 0)}
                 </Animated.Text>
               </View>
               
