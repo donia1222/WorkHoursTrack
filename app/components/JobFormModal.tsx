@@ -58,7 +58,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    maxHeight: Platform.OS === 'ios' && Platform.isPad ? '85%' : '100%',
+    maxHeight: '100%',
   },
   transparentContainer: {
     flex: 1,
@@ -806,7 +806,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   simplifiedCard: {
     width: Platform.OS === 'ios' && Platform.isPad ? '70%' : '90%',
     maxWidth: Platform.OS === 'ios' && Platform.isPad ? 600 : 400,
-    maxHeight: Platform.OS === 'ios' && Platform.isPad ? '80%' : undefined,
+    maxHeight: Platform.OS === 'ios' && Platform.isPad ? '85%' : undefined,
     borderRadius: Theme.borderRadius.xl,
     overflow: 'hidden',
     shadowColor: '#000',
@@ -4487,7 +4487,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       <Modal 
         visible={visible} 
         animationType="slide" 
-        presentationStyle={Platform.OS === 'ios' && Platform.isPad ? "pageSheet" : "formSheet"}
+        presentationStyle={Platform.OS === 'ios' && Platform.isPad ? "fullScreen" : "formSheet"}
         onRequestClose={onClose}
       >
       {isFirstTimeUser && !editingJob ? (
@@ -4554,9 +4554,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         </View>
 
         <KeyboardAvoidingView 
-          style={[styles.content, Platform.OS === 'ios' && Platform.isPad && { maxHeight: '100%' }]}
+          style={styles.content}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? (Platform.OS === 'ios' && Platform.isPad ? 120 : 100) : 0}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? (Platform.OS === 'ios' && Platform.isPad ? 80 : 100) : 0}
         >
           {currentTab === 'basic' && renderBasicTab()}
           {currentTab === 'schedule' && renderScheduleTab()}
