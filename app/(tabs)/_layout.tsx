@@ -26,6 +26,8 @@ declare global {
   var showFeaturesModalHandler: (() => void) | undefined;
   var showHelpSupportHandler: (() => void) | undefined;
   var showAutoBackupHandler: (() => void) | undefined;
+  var calendarViewMode: 'month' | 'year';
+  var calendarViewToggleHandler: ((mode: 'month' | 'year') => void) | undefined;
 }
 
 function LayoutContent() {
@@ -33,10 +35,23 @@ function LayoutContent() {
   const [hasShownThisSession, setHasShownThisSession] = useState(false);
   const [showInfoButton, setShowInfoButton] = useState(true);
   const [showAutoBackupModal, setShowAutoBackupModal] = useState(false);
+  const [calendarViewMode, setCalendarViewMode] = useState<'month' | 'year'>('month');
   
   const { t } = useLanguage?.() ?? { t: (k: string) => k };
   const { colors, isDark } = useTheme?.() ?? { colors: {}, isDark: false };
   const { currentScreen, navigateTo } = useNavigation();
+  
+  // Expose calendar view toggle globally
+  useEffect(() => {
+    globalThis.calendarViewMode = calendarViewMode;
+    globalThis.calendarViewToggleHandler = (mode: 'month' | 'year') => {
+      console.log('🗓️ Setting calendar view mode to:', mode);
+      setCalendarViewMode(mode);
+    };
+    return () => {
+      globalThis.calendarViewToggleHandler = undefined;
+    };
+  }, [calendarViewMode]);
   const [headerTitle, setHeaderTitle] = useState('VixTime');
   const { triggerHaptic } = useHapticFeedback();
   const { isSubscribed } = useSubscription();
@@ -189,11 +204,69 @@ function LayoutContent() {
                   );
                 } else if (currentScreen === 'calendar') {
                   return (
-                    <TouchableOpacity onPress={() => { triggerHaptic('light'); globalThis.calendarScreenSyncHandler?.(); }} style={styles.headerButton}>
-                      <View style={[styles.headerButtonInner, { backgroundColor: isDark ? 'rgba(167, 139, 250, 0.15)' : 'rgba(167, 139, 250, 0.1)' }]}>
-                        <IconSymbol size={20} name="calendar.badge.plus" color="#A78BFA" />
-                      </View>
-                    </TouchableOpacity>
+                    <View style={{ flexDirection: 'row', gap: 6 }}>
+                      <TouchableOpacity 
+                        onPress={() => { 
+                          triggerHaptic('light'); 
+                          console.log('🗓️ Header: Setting to month view'); 
+                          setCalendarViewMode('month');
+                          if (globalThis.calendarViewToggleHandler) {
+                            globalThis.calendarViewToggleHandler('month');
+                          }
+                        }} 
+                        style={styles.headerButton}
+                      >
+                        <View style={[styles.headerButtonInner, {
+                          backgroundColor: calendarViewMode === 'month' 
+                            ? (isDark ? 'rgba(0, 122, 255, 0.25)' : 'rgba(0, 122, 255, 0.2)')
+                            : (isDark ? 'rgba(0, 122, 255, 0.15)' : 'rgba(0, 122, 255, 0.1)'),
+                          borderWidth: calendarViewMode === 'month' ? 1 : 0,
+                          borderColor: calendarViewMode === 'month' ? '#007AFF' : 'transparent',
+                          shadowColor: calendarViewMode === 'month' ? '#007AFF' : 'transparent',
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: calendarViewMode === 'month' ? 0.25 : 0,
+                          shadowRadius: 4,
+                          elevation: calendarViewMode === 'month' ? 3 : 0,
+                        }]}>
+                          <IconSymbol 
+                            size={16} 
+                            name="calendar" 
+                            color={calendarViewMode === 'month' ? '#007AFF' : (isDark ? '#007AFF' : '#007AFF')} 
+                          />
+                        </View>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity 
+                        onPress={() => { 
+                          triggerHaptic('light'); 
+                          console.log('🗓️ Header: Setting to year view'); 
+                          setCalendarViewMode('year');
+                          if (globalThis.calendarViewToggleHandler) {
+                            globalThis.calendarViewToggleHandler('year');
+                          }
+                        }} 
+                        style={styles.headerButton}
+                      >
+                        <View style={[styles.headerButtonInner, {
+                          backgroundColor: calendarViewMode === 'year' 
+                            ? (isDark ? 'rgba(255, 149, 0, 0.25)' : 'rgba(255, 149, 0, 0.2)')
+                            : (isDark ? 'rgba(255, 149, 0, 0.15)' : 'rgba(255, 149, 0, 0.1)'),
+                          borderWidth: calendarViewMode === 'year' ? 1 : 0,
+                          borderColor: calendarViewMode === 'year' ? '#FF9500' : 'transparent',
+                          shadowColor: calendarViewMode === 'year' ? '#FF9500' : 'transparent',
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: calendarViewMode === 'year' ? 0.25 : 0,
+                          shadowRadius: 4,
+                          elevation: calendarViewMode === 'year' ? 3 : 0,
+                        }]}>
+                          <IconSymbol 
+                            size={18} 
+                            name="calendar.day.timeline.leading" 
+                            color={calendarViewMode === 'year' ? '#FF9500' : (isDark ? '#FF9500' : '#FF9500')} 
+                          />
+                        </View>
+                      </TouchableOpacity>
+                    </View>
                   );
                 } else if (currentScreen === 'chatbot') {
                   return (

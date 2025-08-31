@@ -4193,6 +4193,17 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 </View>
               )}
             </View>
+   <View style={styles.previewCard}>
+   
+              <Text style={styles.previewText}>
+                           <Text style={styles.previewTitle}>🕑 </Text>
+                {t('job_form.auto_timer.preview', {
+                  delayStart: formData.autoTimer?.delayStart ?? 2,
+                  delayStop: formData.autoTimer?.delayStop ?? 2
+                })}
+              </Text>
+            </View>
+
 
             {/* Map showing job location and geofence radius */}
             {mapRegion && jobCoordinates && (

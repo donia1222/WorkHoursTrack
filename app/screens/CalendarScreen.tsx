@@ -15,7 +15,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import WorkDayModal from '../components/WorkDayModal';
 import NoJobsWarning from '../components/NoJobsWarning';
-import { Job, WorkDay, WorkDayWithJob, DAY_TYPES } from '../types/WorkTypes';
+import { Job, WorkDay, DAY_TYPES } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import { useBackNavigation, useNavigation } from '../context/NavigationContext';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
@@ -25,7 +25,6 @@ import { useTimeFormat } from '../hooks/useTimeFormat';
 import { CalendarSyncService } from '../services/CalendarSyncService';
 import { useNotifications } from '../contexts/NotificationContext';
 import NotificationService from '../services/NotificationService';
-import { ChatDataParser, ParsedWorkData } from '../services/ChatDataParser';
 import WidgetSyncService from '../services/WidgetSyncService';
 
 // Custom Day Component
@@ -59,7 +58,7 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
       iconName = 'sun.max.fill'; // Sol para vacaciones
       iconColor = '#F59E0B'; // Amarillo
     } else if (workDay.type === 'sick') {
-      iconName = 'cross.circle.fill'; // Cruz para enfermedad
+      iconName = 'cross.case.fill'; // Cruz médica para enfermedad
       iconColor = '#EF4444'; // Rojo
     }
     
@@ -121,7 +120,7 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
           >
             <IconSymbol
               name={iconStyle.iconName}
-              size={iconStyle.iconName === 'sun.max.fill' ? 20 : 16}
+              size={iconStyle.iconName === 'sun.max.fill' ? 20 : iconStyle.iconName === 'cross.case.fill' ? 18 : 16}
               color={iconStyle.iconColor}
             />
           </View>
@@ -147,6 +146,8 @@ const CustomDay = ({ date, state, marking, onPress }: any) => {
 
 interface CalendarScreenProps {
   onNavigate?: (screen: string, options?: any) => void;
+  viewMode?: 'month' | 'year';
+  onViewToggle?: (mode: 'month' | 'year') => void;
 }
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
@@ -430,15 +431,185 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
   },
+  actionButtonsContainer: {
+    marginBottom: 20,
+    gap: 12,
+    marginTop: 12,
+  },
   actionButton: {
-   
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 6,
   },
   actionButtonInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 18,
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    overflow: 'hidden',
+  },
+  actionButtonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 20,
+  },
+  actionButtonIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  syncButton: {
+    backgroundColor: isDark ? 'rgba(52, 199, 89, 0.05)' : 'rgba(52, 199, 89, 0.03)',
+  },
+  clearButton: {
+    backgroundColor: isDark ? 'rgba(255, 59, 48, 0.05)' : 'rgba(255, 59, 48, 0.03)',
+  },
+  viewToggle: {
+    flexDirection: 'row',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
     borderRadius: 16,
+    padding: 4,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+  },
+  viewToggleButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  viewToggleButtonActive: {
+    backgroundColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  viewToggleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  viewToggleTextActive: {
+    color: '#FFFFFF',
+  },
+  yearView: {
+    marginVertical: 12,
+    borderRadius: 20,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+    overflow: 'hidden',
+    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.03)' : 'rgba(0, 122, 255, 0.02)',
+  },
+  yearViewGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 20,
+  },
+  yearHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.separator,
+  },
+  yearTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  yearNavButton: {
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+  },
+  monthsGrid: {
+    padding: 16,
+    gap: 12,
+  },
+  monthsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  miniMonth: {
+    flex: 1,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.5)',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+  },
+  miniMonthHeader: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  miniMonthDays: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 2,
+  },
+  miniDay: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+  },
+  miniDayText: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  miniDayWork: {
+    backgroundColor: '#30D158',
+  },
+  miniDayFree: {
+    backgroundColor: '#3B82F6',
+  },
+  miniDayVacation: {
+    backgroundColor: '#F59E0B',
+  },
+  miniDaySick: {
+    backgroundColor: '#EF4444',
+  },
+  miniDayTextActive: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '600',
   },
   actionButtonText: {
     fontSize: 16,
@@ -446,6 +617,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: colors.text,
     flex: 1,
     marginLeft: 16,
+    marginRight: 8,
   },
   jobsStatsCard: {
     marginVertical: 16,
@@ -485,37 +657,53 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: colors.textSecondary,
   },
   dayTypeBreakdown: {
-    marginTop: 20,
-    paddingTop: 16,
+    marginTop: 30,
+    paddingTop: 20,
     borderTopWidth: 1,
     borderTopColor: colors.separator,
   },
   breakdownTitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 8,
+    fontSize: 16,
+    color: colors.text,
+    marginBottom: 16,
     textAlign: 'center',
     fontWeight: '600',
   },
   dayTypeGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
   },
   dayTypeItem: {
     alignItems: 'center',
     flex: 1,
+    paddingHorizontal: 8,
+  },
+  dayTypeIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   dayTypeNumber: {
-    fontSize: 16,
+    fontSize: 20,
     color: colors.text,
-    marginTop: 4,
-    marginBottom: 2,
-    fontWeight: '600',
+    marginBottom: 4,
+    fontWeight: '700',
   },
   dayTypeLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textSecondary,
     textAlign: 'center',
+    fontWeight: '500',
+    letterSpacing: -0.2,
   },
   legendSeparator: {
     height: 1,
@@ -524,7 +712,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
 });
 
-export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
+export default function CalendarScreen({ onNavigate, viewMode: externalViewMode, onViewToggle: externalOnViewToggle }: CalendarScreenProps) {
   const { colors, isDark } = useTheme();
   const { t, language } = useLanguage();
   const { formatTimeWithPreferences } = useTimeFormat();
@@ -538,6 +726,12 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   const [preselectedJobId, setPreselectedJobId] = useState<string | undefined>();
   const [selectedJobId, setSelectedJobId] = useState<string | 'all'>('all');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [internalViewMode, setInternalViewMode] = useState<'month' | 'year'>('month');
+  
+  // Use external viewMode if provided, otherwise use internal
+  const viewMode = externalViewMode ?? internalViewMode;
+  const setViewMode = externalOnViewToggle ?? setInternalViewMode;
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const { handleBack } = useBackNavigation();
   const { selectedJob, setSelectedJob, setOnExportToCalendar } = useNavigation();
   const { triggerHaptic } = useHapticFeedback();
@@ -647,20 +841,6 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
     LocaleConfig.defaultLocale = language;
   }, [language]);
 
-  // Registrar el handler de exportación desde chat
-  useEffect(() => {
-    const handleChatExport = async (jobId: string, parsedData: ParsedWorkData) => {
-      // Ya no necesitamos hacer nada aquí porque la exportación se hace directamente desde ChatMessage
-      console.log('📤 [CALENDAR] Handler registrado, pero exportación se hace directamente desde chat');
-    };
-
-    setOnExportToCalendar(handleChatExport);
-    
-    // Cleanup: deregister handler when component unmounts
-    return () => {
-      setOnExportToCalendar(undefined);
-    };
-  }, [setOnExportToCalendar]);
 
   // Register header sync button handler
   useEffect(() => {
@@ -1079,8 +1259,147 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
     return marked;
   };
 
+
+  const getMiniMonthData = (year: number, month: number) => {
+    const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+    
+    const filteredWorkDays = selectedJobId !== 'all'
+      ? workDays.filter(wd => {
+          if (wd.type === 'work') {
+            return wd.jobId === selectedJobId;
+          }
+          return wd.jobId === selectedJobId || wd.jobId === undefined;
+        })
+      : workDays;
+    
+    const monthWorkDays = filteredWorkDays.filter(day => 
+      day.date.startsWith(monthKey)
+    );
+    
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay();
+    
+    return { monthWorkDays, daysInMonth, firstDay };
+  };
+
+  const renderYearView = () => {
+    const monthNames: Record<string, string[]> = {
+      es: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+      en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      de: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+      fr: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
+      it: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'],
+      pt: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+      nl: ['Jan', 'Feb', 'Mrt', 'Apr', 'Mei', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'],
+      tr: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
+      ja: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+      ru: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
+    };
+    
+    const months = monthNames[language] || monthNames['es'];
+    
+    return (
+      <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
+        <BlurView 
+          intensity={isDark ? 98 : 96} 
+          tint={isDark ? "dark" : "light"} 
+          style={[styles.yearView]}
+        >
+          <LinearGradient
+            colors={isDark ? ['rgba(0, 122, 255, 0.08)', 'rgba(0, 122, 255, 0.03)'] : ['rgba(64, 0, 255, 0.04)', 'rgba(0, 122, 255, 0.02)']}
+            style={styles.yearViewGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
+          <View style={styles.yearHeader}>
+            <TouchableOpacity 
+              style={styles.yearNavButton} 
+              onPress={() => setSelectedYear(prev => prev - 1)}
+            >
+              <IconSymbol size={20} name="chevron.left" color={colors.text} />
+            </TouchableOpacity>
+            <Text style={styles.yearTitle}>{selectedYear}</Text>
+            <TouchableOpacity 
+              style={styles.yearNavButton} 
+              onPress={() => setSelectedYear(prev => prev + 1)}
+            >
+              <IconSymbol size={20} name="chevron.right" color={colors.text} />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.monthsGrid}>
+            {Array.from({ length: 6 }, (_, rowIndex) => (
+              <View key={rowIndex} style={styles.monthsRow}>
+                {Array.from({ length: 2 }, (_, colIndex) => {
+                  const monthIndex = rowIndex * 2 + colIndex;
+                  if (monthIndex >= 12) return null;
+                  const { monthWorkDays, daysInMonth, firstDay } = getMiniMonthData(selectedYear, monthIndex);
+                  
+                  return (
+                    <TouchableOpacity 
+                      key={monthIndex} 
+                      style={styles.miniMonth}
+                      onPress={() => {
+                        setCurrentMonth(new Date(selectedYear, monthIndex, 1));
+                        setViewMode('month');
+                      }}
+                    >
+                      <Text style={styles.miniMonthHeader}>{months[monthIndex]}</Text>
+                      <View style={styles.miniMonthDays}>
+                        {/* Días vacíos al inicio del mes */}
+                        {Array.from({ length: firstDay }, (_, i) => (
+                          <View key={`empty-${i}`} style={styles.miniDay} />
+                        ))}
+                        
+                        {/* Días del mes */}
+                        {Array.from({ length: daysInMonth }, (_, dayIndex) => {
+                          const day = dayIndex + 1;
+                          const dateString = `${selectedYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                          const workDay = monthWorkDays.find(wd => wd.date === dateString);
+                          
+                          let dayStyle: any = styles.miniDay;
+                          let textStyle: any = styles.miniDayText;
+                          
+                          if (workDay) {
+                            textStyle = styles.miniDayTextActive;
+                            switch (workDay.type) {
+                              case 'work':
+                                dayStyle = [styles.miniDay, styles.miniDayWork];
+                                break;
+                              case 'free':
+                                dayStyle = [styles.miniDay, styles.miniDayFree];
+                                break;
+                              case 'vacation':
+                                dayStyle = [styles.miniDay, styles.miniDayVacation];
+                                break;
+                              case 'sick':
+                                dayStyle = [styles.miniDay, styles.miniDaySick];
+                                break;
+                            }
+                          }
+                          
+                          return (
+                            <View key={day} style={dayStyle}>
+                              <Text style={textStyle}>{day}</Text>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ))}
+          </View>
+        </BlurView>
+      </Animated.View>
+    );
+  };
+
   const getMonthStats = () => {
-    const monthKey = currentMonth.toISOString().slice(0, 7);
+    const monthKey = viewMode === 'month' 
+      ? currentMonth.toISOString().slice(0, 7)
+      : `${selectedYear}`;
     
     // Filter workDays by selected job if not "all"
     // When filtering, show only days from selected job (both work and non-work days)
@@ -1094,9 +1413,9 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         })
       : workDays;
     
-    const monthWorkDays = filteredWorkDays.filter(day => 
-      day.date.startsWith(monthKey)
-    );
+    const monthWorkDays = viewMode === 'month'
+      ? filteredWorkDays.filter(day => day.date.startsWith(monthKey))
+      : filteredWorkDays.filter(day => day.date.startsWith(monthKey));
 
     const workDaysOnly = monthWorkDays.filter(day => day.type === 'work');
     const freeDays = monthWorkDays.filter(day => day.type === 'free');
@@ -1129,6 +1448,7 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
       freeDays: freeDays.length,
       vacationDays: vacationDays.length,
       sickDays: sickDays.length,
+      period: viewMode === 'month' ? t('calendar.month') : t('calendar.year'),
     };
   };
 
@@ -1264,7 +1584,9 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         {/* Job selector */}
         {renderCompactJobSelector()}
 
-        <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
+        {/* Calendar Views */}
+        {viewMode === 'month' ? (
+          <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
         <BlurView 
           intensity={isDark ? 98 : 96} 
           tint={isDark ? "dark" : "light"} 
@@ -1372,7 +1694,10 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
           }}
             />
         </BlurView>
-        </Animated.View>
+          </Animated.View>
+        ) : (
+          renderYearView()
+        )}
                             <BlurView intensity={isDark ? 95 : 92} tint={isDark ? "dark" : "light"} style={{ padding: 24, borderRadius: 20 }}>
             <LinearGradient
               colors={isDark ? ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.11)'] : ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.01)']}
@@ -1400,25 +1725,32 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
     
              
             <View style={styles.dayTypeBreakdown}>
+          
 
               <View style={styles.dayTypeGrid}>
 
                   <View style={styles.dayTypeItem}>
-                    <IconSymbol size={26} name="house.fill" color={DAY_TYPES.free.color} />
+                    <View style={[styles.dayTypeIconContainer, { backgroundColor: DAY_TYPES.free.color + '20' }]}>
+                      <IconSymbol size={28} name="house.fill" color={DAY_TYPES.free.color} />
+                    </View>
                     <Text style={styles.dayTypeNumber}>{stats.freeDays}</Text>
                     <Text style={styles.dayTypeLabel}>{t('calendar.free_days')}</Text>
                   </View>
       
 
                   <View style={styles.dayTypeItem}>
-                    <IconSymbol size={26} name="sun.max.fill" color={DAY_TYPES.vacation.color} />
+                    <View style={[styles.dayTypeIconContainer, { backgroundColor: DAY_TYPES.vacation.color + '20' }]}>
+                      <IconSymbol size={28} name="sun.max.fill" color={DAY_TYPES.vacation.color} />
+                    </View>
                     <Text style={styles.dayTypeNumber}>{stats.vacationDays}</Text>
                     <Text style={styles.dayTypeLabel}>{t('calendar.vacation_days')}</Text>
                   </View>
       
  
                   <View style={styles.dayTypeItem}>
-                    <IconSymbol size={26} name="cross.fill" color={DAY_TYPES.sick.color} />
+                    <View style={[styles.dayTypeIconContainer, { backgroundColor: DAY_TYPES.sick.color + '20' }]}>
+                      <IconSymbol size={28} name="cross.case.fill" color={DAY_TYPES.sick.color} />
+                    </View>
                     <Text style={styles.dayTypeNumber}>{stats.sickDays}</Text>
                     <Text style={styles.dayTypeLabel}>{t('calendar.sick_days')}</Text>
                   </View>
@@ -1427,27 +1759,45 @@ export default function CalendarScreen({ onNavigate }: CalendarScreenProps) {
             </View>
             
           </BlurView>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleSyncCalendar}
-        >
-          <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.actionButtonInner}>
-            <IconSymbol size={24} name="calendar.badge.plus" color={colors.success} />
-            <Text style={styles.actionButtonText}>{t('calendar.sync_to_phone')}</Text>
-            <IconSymbol size={16} name="arrow.right" color={colors.success} />
-          </BlurView>
-        </TouchableOpacity>
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleSyncCalendar}
+          >
+            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.syncButton]}>
+              <LinearGradient
+                colors={['rgba(52, 199, 89, 0.1)', 'rgba(52, 199, 89, 0.05)']}
+                style={styles.actionButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+              <View style={[styles.actionButtonIconContainer, { backgroundColor: colors.success + '20' }]}>
+                <IconSymbol size={24} name="calendar.badge.plus" color={colors.success} />
+              </View>
+              <Text style={[styles.actionButtonText, { color: colors.success }]}>{t('calendar.sync_to_phone')}</Text>
+              <IconSymbol size={16} name="arrow.right" color={colors.success} />
+            </BlurView>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleClearMonth}
-        >
-          <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.actionButtonInner}>
-            <IconSymbol size={24} name="trash" color={colors.error} />
-            <Text style={[styles.actionButtonText, { color: colors.error }]}>{t('calendar.clear_month')}</Text>
-            <IconSymbol size={16} name="arrow.right" color={colors.error} />
-          </BlurView>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleClearMonth}
+          >
+            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.clearButton]}>
+              <LinearGradient
+                colors={['rgba(255, 59, 48, 0.1)', 'rgba(255, 59, 48, 0.05)']}
+                style={styles.actionButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+              <View style={[styles.actionButtonIconContainer, { backgroundColor: colors.error + '20' }]}>
+                <IconSymbol size={24} name="trash" color={colors.error} />
+              </View>
+              <Text style={[styles.actionButtonText, { color: colors.error }]}>{t('calendar.clear_month')}</Text>
+              <IconSymbol size={16} name="arrow.right" color={colors.error} />
+            </BlurView>
+          </TouchableOpacity>
+        </View>
 
    
 

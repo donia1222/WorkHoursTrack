@@ -26,6 +26,7 @@ import { JobCardsSwiper } from './JobCardsSwiper';
 import { useFocusEffect } from '@react-navigation/native';
 import WidgetSyncService from '../services/WidgetSyncService';
 import MiniMapWidget from './MiniMapWidget';
+import { logScreenDetection } from '../config/logging';
 
 // Dark mode map style
 const darkMapStyle = [
@@ -1218,7 +1219,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const daySize = isTablet ? 60 : (isSmallScreen ? 40 : 48);
   const dayFontSize = isTablet ? 16 : (isSmallScreen ? 11 : 13);
   
-  console.log('🔍 Screen detection:', {
+  logScreenDetection('Screen detection:', {
     screenWidth,
     screenHeight,
     isTablet,
@@ -1226,7 +1227,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
     isIPadPortrait
   });
   
-  // Animation values for modal
+  // Animation perpvalues for modal
   const modalScale = useSharedValue(0);
   const modalOpacity = useSharedValue(0);
   

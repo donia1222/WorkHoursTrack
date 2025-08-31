@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState } from 'react-native';
 import { TimeFormatPreferences, formatTimeWithPreferences, parseTimeInput, getTimePlaceholder, isValidTimeInput, autoFormatTimeInput } from '../utils/timeUtils';
+import { logTimeFormat } from '../config/logging';
 
 export const useTimeFormat = () => {
   const [useTimeFormat, setUseTimeFormat] = useState(true);
@@ -36,7 +37,7 @@ export const useTimeFormat = () => {
   const loadTimeFormatPreference = async () => {
     try {
       const saved = await AsyncStorage.getItem('@time_format_preference');
-      console.log('🕐 Loading time format preference:', saved);
+      logTimeFormat('Loading time format preference:', saved);
       if (saved !== null) {
         const newValue = saved === 'true';
         console.log('🕐 Setting useTimeFormat to:', newValue);
@@ -50,7 +51,7 @@ export const useTimeFormat = () => {
   const load12HourFormatPreference = async () => {
     try {
       const saved = await AsyncStorage.getItem('@12hour_format_preference');
-      console.log('🕐 Loading 12-hour format preference:', saved);
+      logTimeFormat('Loading 12-hour format preference:', saved);
       if (saved !== null) {
         const newValue = saved === 'true';
         console.log('🕐 Setting use12HourFormat to:', newValue);

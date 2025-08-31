@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated as RNAnimated, Dimensions } from 'react-native';
+import { logMiniMapWidget } from '../config/logging';
 import { BlurView } from 'expo-blur';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSpring } from 'react-native-reanimated';
 import MapView, { Marker, Circle, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -392,7 +393,7 @@ export default function MiniMapWidget({
   autoTimerState = 'inactive',
   remainingDelayTime = 0,
 }: MiniMapWidgetProps) {
-  console.log('🔧 MiniMapWidget props:', {
+  logMiniMapWidget('MiniMapWidget props:', {
     jobName: job?.name,
     autoTimerState,
     remainingDelayTime,

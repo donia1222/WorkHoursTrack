@@ -23,6 +23,9 @@ interface HeaderProps {
   onNotesPress?: () => void;
   onInfoPress?: () => void;
   onBackupPress?: () => void;
+  // Calendar view toggle props
+  viewMode?: 'month' | 'year';
+  onViewToggle?: (mode: 'month' | 'year') => void;
 }
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
@@ -220,18 +223,46 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderWidth: 1,
     borderColor: isDark ? 'rgba(255, 149, 0, 0.3)' : 'rgba(255, 149, 0, 0.2)',
   },
-  syncButton: {
+  viewToggleContainer: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  viewToggleButton: {
     padding: 4,
   },
-  syncButtonInner: {
+  viewToggleButtonInner: {
     width: 32,
     height: 32,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: isDark ? 'rgba(167, 139, 250, 0.15)' : 'rgba(167, 139, 250, 0.1)',
     borderWidth: 1,
-    borderColor: isDark ? 'rgba(167, 139, 250, 0.3)' : 'rgba(167, 139, 250, 0.2)',
+  },
+  monthViewButton: {
+    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.15)' : 'rgba(0, 122, 255, 0.1)',
+    borderColor: isDark ? 'rgba(0, 122, 255, 0.3)' : 'rgba(0, 122, 255, 0.2)',
+  },
+  monthViewButtonActive: {
+    backgroundColor: isDark ? 'rgba(0, 122, 255, 0.25)' : 'rgba(0, 122, 255, 0.2)',
+    borderColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  yearViewButton: {
+    backgroundColor: isDark ? 'rgba(255, 149, 0, 0.15)' : 'rgba(255, 149, 0, 0.1)',
+    borderColor: isDark ? 'rgba(255, 149, 0, 0.3)' : 'rgba(255, 149, 0, 0.2)',
+  },
+  yearViewButtonActive: {
+    backgroundColor: isDark ? 'rgba(255, 149, 0, 0.25)' : 'rgba(255, 149, 0, 0.2)',
+    borderColor: colors.warning,
+    shadowColor: colors.warning,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
   },
   notesButton: {
     padding: 4,
@@ -286,7 +317,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
 });
 
-export default function Header({ title, onProfilePress, onBackPress, showBackButton, showCloseButton, onClosePress, isSettingsActive, currentScreen, onExportPress, onSyncPress, onNotesPress, onInfoPress, onBackupPress }: HeaderProps) {
+export default function Header({ title, onProfilePress, onBackPress, showBackButton, showCloseButton, onClosePress, isSettingsActive, currentScreen, onExportPress, onSyncPress, onNotesPress, onInfoPress, onBackupPress, viewMode, onViewToggle }: HeaderProps) {
   const { colors, isDark } = useTheme();
   const { triggerHaptic } = useHapticFeedback();
   const { isSubscribed } = useSubscription();
@@ -335,15 +366,48 @@ export default function Header({ title, onProfilePress, onBackPress, showBackBut
                 <IconSymbol size={18} name="square.and.arrow.up" color={colors.warning} />
               </View>
             </TouchableOpacity>
-          ) : currentScreen === 'calendar' && onSyncPress ? (
-            <TouchableOpacity 
-              onPress={() => { triggerHaptic('light'); onSyncPress(); }} 
-              style={styles.syncButton}
-            >
-              <View style={styles.syncButtonInner}>
-                <IconSymbol size={20} name="calendar.badge.plus" color="#A78BFA" />
-              </View>
-            </TouchableOpacity>
+          ) : currentScreen === 'calendar' && viewMode && onViewToggle ? (
+            <View style={styles.viewToggleContainer}>
+              <TouchableOpacity 
+                onPress={() => { 
+                  triggerHaptic('light'); 
+                  onViewToggle('month'); 
+                }} 
+                style={styles.viewToggleButton}
+              >
+                <View style={[
+                  styles.viewToggleButtonInner,
+                  styles.monthViewButton,
+                  viewMode === 'month' && styles.monthViewButtonActive
+                ]}>
+                  <IconSymbol 
+                    size={16} 
+                    name="calendar" 
+                    color={viewMode === 'month' ? colors.primary : (isDark ? '#007AFF' : '#007AFF')} 
+                  />
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                onPress={() => { 
+                  triggerHaptic('light'); 
+                  onViewToggle('year'); 
+                }} 
+                style={styles.viewToggleButton}
+              >
+                <View style={[
+                  styles.viewToggleButtonInner,
+                  styles.yearViewButton,
+                  viewMode === 'year' && styles.yearViewButtonActive
+                ]}>
+                  <IconSymbol 
+                    size={16} 
+                    name="calendar.day.timeline.leading" 
+                    color={viewMode === 'year' ? colors.warning : (isDark ? '#FF9500' : '#FF9500')} 
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
           ) : currentScreen === 'timer' && onNotesPress ? (
             <TouchableOpacity 
               onPress={() => { triggerHaptic('light'); onNotesPress(); }} 

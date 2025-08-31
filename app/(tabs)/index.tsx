@@ -76,6 +76,31 @@ function AppContent() {
   const [lastBackupDate, setLastBackupDate] = useState<string | null>(null);
 
   const [navigationOptions, setNavigationOptions] = useState<any>(null);
+  const [calendarViewMode, setCalendarViewMode] = useState<'month' | 'year'>('month');
+  
+  // Sync with global calendar view mode
+  useEffect(() => {
+    if (typeof globalThis.calendarViewMode !== 'undefined') {
+      console.log('🔄 Index: Syncing with global view mode:', globalThis.calendarViewMode);
+      setCalendarViewMode(globalThis.calendarViewMode);
+    }
+    
+    // Listen for changes from header
+    const checkForUpdates = setInterval(() => {
+      if (globalThis.calendarViewMode !== calendarViewMode) {
+        console.log('🔄 Index: Detected view mode change:', globalThis.calendarViewMode);
+        setCalendarViewMode(globalThis.calendarViewMode);
+      }
+    }, 100);
+    
+    return () => clearInterval(checkForUpdates);
+  }, [calendarViewMode]);
+  
+  // Update global when local changes
+  useEffect(() => {
+    globalThis.calendarViewMode = calendarViewMode;
+    console.log('🔄 Index: Updated global view mode to:', calendarViewMode);
+  }, [calendarViewMode]);
 
   const { currentScreen, navigateTo } = useNavigation();
   const { colors, isDark } = useTheme();
@@ -303,7 +328,14 @@ function AppContent() {
       case 'calendar':
         return (
           <ScreenWrapper screenKey="calendar">
-            <CalendarScreen onNavigate={handleNavigate} />
+            <CalendarScreen 
+              onNavigate={handleNavigate} 
+              viewMode={calendarViewMode}
+              onViewToggle={(mode) => {
+                setCalendarViewMode(mode);
+                globalThis.calendarViewMode = mode;
+              }}
+            />
           </ScreenWrapper>
         );
       case 'settings':
