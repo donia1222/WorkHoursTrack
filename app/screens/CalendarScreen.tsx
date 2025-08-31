@@ -9,6 +9,14 @@ import {
   Alert,
   Animated,
 } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Reanimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  runOnJS,
+} from 'react-native-reanimated';
 import { Calendar, DateData, LocaleConfig } from 'react-native-calendars';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BlurView } from 'expo-blur';
@@ -741,6 +749,10 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   
+  // Reanimated values for smooth pinch gesture
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+  
   const styles = getStyles(colors, isDark);
 
   useEffect(() => {
@@ -1052,6 +1064,64 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
     
     setShowWorkDayModal(true);
   };
+
+  // Handle view mode change with animation
+  const changeViewMode = (newMode: 'month' | 'year') => {
+    // Animate scale and opacity for smooth transition
+    scale.value = withSpring(0.95, { damping: 15, stiffness: 200 });
+    opacity.value = withTiming(0.7, { duration: 150 });
+    
+    // Change view mode after a slight delay for smoother transition
+    setTimeout(() => {
+      setViewMode(newMode);
+      if (globalThis.calendarViewToggleHandler) {
+        globalThis.calendarViewToggleHandler(newMode);
+      }
+      
+      // Animate back to normal
+      scale.value = withSpring(1, { damping: 15, stiffness: 300 });
+      opacity.value = withTiming(1, { duration: 200 });
+    }, 100);
+  };
+
+  // Elegant pinch gesture using modern Gesture API
+  const pinchGesture = Gesture.Pinch()
+    .onStart(() => {
+      'worklet';
+      // Subtle feedback on start - could add haptic here
+    })
+    .onUpdate((event) => {
+      'worklet';
+      // Real-time scale feedback during gesture
+      const gestureScale = Math.max(0.8, Math.min(1.2, event.scale));
+      scale.value = gestureScale;
+      
+      // Subtle opacity change based on scale for visual feedback
+      if (viewMode === 'month') {
+        opacity.value = event.scale < 0.9 ? 0.8 + (event.scale * 0.2) : 1;
+      } else {
+        opacity.value = event.scale > 1.1 ? 0.8 + ((2 - event.scale) * 0.2) : 1;
+      }
+    })
+    .onEnd((event) => {
+      'worklet';
+      // Reset visual feedback
+      scale.value = withSpring(1, { damping: 15, stiffness: 300 });
+      opacity.value = withTiming(1, { duration: 200 });
+      
+      // Determine if threshold was met for view change
+      if (event.scale < 0.75 && viewMode === 'month') {
+        runOnJS(changeViewMode)('year');
+      } else if (event.scale > 1.25 && viewMode === 'year') {
+        runOnJS(changeViewMode)('month');
+      }
+    });
+
+  // Animated style for smooth transitions
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
 
   const handleSaveWorkDay = async (workDayData: Omit<WorkDay, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
@@ -1570,14 +1640,16 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
         {/* Job selector */}
         {!isLoadingJobs && renderCompactJobSelector()}
 
-        {/* Calendar Views */}
-        {viewMode === 'month' ? (
-          <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
-        <BlurView 
-          intensity={isDark ? 98 : 96} 
-          tint={isDark ? "dark" : "light"} 
-          style={[styles.calendar, { backgroundColor: isDark ? 'rgba(0, 123, 255, 0.13)' : 'rgba(64, 0, 255, 0.05)' }]}
-        >
+        {/* Calendar Views with Pinch Gesture */}
+        <GestureDetector gesture={pinchGesture}>
+          <Reanimated.View style={animatedStyle}>
+            {viewMode === 'month' ? (
+              <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
+            <BlurView 
+              intensity={isDark ? 98 : 96} 
+              tint={isDark ? "dark" : "light"} 
+              style={[styles.calendar, { backgroundColor: isDark ? 'rgba(0, 123, 255, 0.13)' : 'rgba(64, 0, 255, 0.05)' }]}
+            >
           <Calendar
           onDayPress={handleDayPress}
           onMonthChange={(month: any) => setCurrentMonth(new Date(month.timestamp))}
@@ -1680,10 +1752,12 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
           }}
             />
         </BlurView>
-          </Animated.View>
-        ) : (
-          renderYearView()
-        )}
+              </Animated.View>
+            ) : (
+              renderYearView()
+            )}
+          </Reanimated.View>
+        </GestureDetector>
         {!isLoadingJobs && (
                             <BlurView intensity={isDark ? 95 : 92} tint={isDark ? "dark" : "light"} style={{ padding: 24, borderRadius: 20 }}>
             <LinearGradient
