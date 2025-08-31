@@ -494,14 +494,22 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
         onClose={() => {
           setShowAddModal(false);
           setEditingJob(null);
+          // Delay navigation to ensure modal closes properly
+          setTimeout(() => {
+            onNavigate?.('mapa');
+          }, 200);
         }}
         onSave={async () => {
           await loadJobs();
           setShowAddModal(false);
           setEditingJob(null);
+          // Delay navigation to ensure modal closes properly
+          setTimeout(() => {
+            onNavigate?.('mapa');
+          }, 200);
         }}
         onNavigateToCalendar={() => onNavigate?.('calendar')}
-        onNavigateToSubscription={() => onNavigate?.('subscription')}
+        disableSubscriptionModal={true}
       />
 
       {/* Premium Modal */}

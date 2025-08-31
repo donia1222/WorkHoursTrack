@@ -1648,7 +1648,7 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
             <BlurView 
               intensity={isDark ? 98 : 96} 
               tint={isDark ? "dark" : "light"} 
-              style={[styles.calendar, { backgroundColor: isDark ? 'rgba(0, 123, 255, 0.13)' : 'rgba(64, 0, 255, 0.05)' }]}
+              style={[styles.calendar, { backgroundColor: isDark ? 'rgba(0, 123, 255, 0.04)' : 'rgba(64, 0, 255, 0.03)' }]}
             >
           <Calendar
           onDayPress={handleDayPress}

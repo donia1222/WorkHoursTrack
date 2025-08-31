@@ -47,6 +47,7 @@ interface JobFormModalProps {
   onNavigateToCalendar?: () => void; // Optional callback to navigate to calendar
   onNavigateToSubscription?: () => void; // Callback to navigate to subscription screen
   isLocationEnabled?: boolean; // Para detectar si hay permisos de ubicación
+  disableSubscriptionModal?: boolean; // Disable subscription modal when opened from JobsManagementScreen
 }
 
 
@@ -1250,7 +1251,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
 });
 
-export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true }: JobFormModalProps) {
+export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true, disableSubscriptionModal = false }: JobFormModalProps) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
   const { isSubscribed } = useSubscription();
@@ -4701,20 +4702,22 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                  style={styles.premiumSubscribeButton}
-                  onPress={() => {
-                    setShowPremiumModal(false);
-                    onClose();
-                    if (onNavigateToSubscription) {
-                      onNavigateToSubscription();
-                    }
-                  }}
-                >
-                  <Text style={styles.premiumSubscribeButtonText}>
-                    {t('job_form.premium.subscribe')}
-                  </Text>
-                </TouchableOpacity>
+                {!disableSubscriptionModal && (
+                  <TouchableOpacity 
+                    style={styles.premiumSubscribeButton}
+                    onPress={() => {
+                      setShowPremiumModal(false);
+                      onClose();
+                      if (onNavigateToSubscription) {
+                        onNavigateToSubscription();
+                      }
+                    }}
+                  >
+                    <Text style={styles.premiumSubscribeButtonText}>
+                      {t('job_form.premium.subscribe')}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           </BlurView>

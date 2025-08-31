@@ -358,7 +358,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     padding: 16,
     backgroundColor: colors.surface,
     shadowColor: '#000',
-       paddingBottom: 44,
+
     shadowOffset: {
       width: 0,
       height: 1,
@@ -992,6 +992,74 @@ marginTop: -4,
     fontStyle: 'italic',
     flex: 1,
   },
+  actionButton: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 6,
+    marginBottom: 16,
+  },
+  actionButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    overflow: 'hidden',
+
+
+  },
+  actionButtonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 20,
+  },
+  actionButtonIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  syncButton: {
+    backgroundColor: isDark ? 'rgba(52, 199, 89, 0.05)' : 'rgba(52, 199, 89, 0.03)',
+  },
+  clearButton: {
+    backgroundColor: isDark ? 'rgba(255, 59, 48, 0.05)' : 'rgba(255, 59, 48, 0.03)',
+  },
+    actionButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    flex: 1,
+    marginLeft: 16,
+    marginRight: 8,
+  },
+    
+    actionButtonTextsub: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: colors.text,
+    flex: 1,
+    marginLeft: 16,
+    marginRight: 8,
+
+  },
+
+
 });
 
 export default function TimerScreen({ onNavigate }: TimerScreenProps) {
@@ -1900,36 +1968,64 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
         {!isRunning && !activeSession && (
           <View style={styles.quickActions}>
             <Text style={styles.quickActionsTitle}>{t('timer.quick_actions')}</Text>
-            <View style={styles.quickActionButtons}>
-              <TouchableOpacity 
-                style={styles.autoTimerQuickButton}
-                onPress={() => {
+
+                           <TouchableOpacity
+                          style={styles.actionButton}
+                                 onPress={() => {
                   triggerHaptic('light');
                   setIsJobFormModalVisible(true);
                 }}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={isDark ? 
-                    ['rgba(0, 255, 76, 0.08)', 'rgba(0, 255, 76, 0.08)'] : 
-                    ['rgba(0, 255, 76, 0.08)', 'rgba(0, 255, 76, 0.08)']
-                  }
-                  style={styles.autoTimerQuickButtonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                />
-                <View style={styles.autoTimerQuickButtonContent}>
-                  <View style={styles.autoTimerQuickButtonIcon}>
-                    <IconSymbol size={16} name="location.fill" color={colors.primary} />
-                  </View>
-                  <Text style={styles.autoTimerQuickButtonText}>
-                    AUTOTIMER
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              
-            </View>
-       
+                        >
+                          <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.syncButton]}>
+                            <LinearGradient
+                              colors={['rgba(52, 199, 89, 0.1)', 'rgba(52, 199, 89, 0.05)']}
+                              style={styles.actionButtonGradient}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                            />
+                            <View style={[styles.actionButtonIconContainer, { backgroundColor: colors.success + '20' }]}>
+                              <IconSymbol size={24} name="timer" color={colors.success} />  
+                            </View>
+                            <View style={{ flex: 1, marginLeft: 12, marginRight: 12 }}>
+                              <Text style={[styles.actionButtonText, { color: colors.success, marginBottom: 2 }]}>{t('job_form.auto_timer.title')}</Text>
+                              <Text style={[styles.actionButtonTextsub, { color: colors.success, opacity: 0.8 }]}>{t('job_form.auto_timer.subtitle')}</Text>
+                            </View>
+                            <IconSymbol size={16} name="arrow.right" color={colors.success} />
+                          </BlurView>
+                        </TouchableOpacity>
+
+
+
+                                   <TouchableOpacity
+                          style={styles.actionButton}
+                                 onPress={() => {
+                  triggerHaptic('light');
+                  setNotesModalVisible(true);
+                }}
+                        >
+                          <BlurView intensity={99} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.syncButton]}>
+                            <LinearGradient
+                              colors={['rgba(255, 140, 0, 0.15)', 'rgba(255, 165, 0, 0.12)']}
+                              style={styles.actionButtonGradient}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                            />
+                            <View style={[styles.actionButtonIconContainer, { backgroundColor: '#FF8C00' + '20' }]}>
+                              <IconSymbol size={24} name="pencil" color="#FF8C00" />
+                            </View>
+                            <View style={{ flex: 1, marginLeft: 12, marginRight: 12 }}>
+                              <Text style={[styles.actionButtonText, { color: '#FF8C00', marginBottom: 2 }]}>{t('timer.session_notes')}</Text>
+                              <Text style={[styles.actionButtonTextsub, { color: '#FF8C00', opacity: 0.8 }]}>{t('timer.notes_placeholder')}</Text>
+                            </View>
+                            <IconSymbol size={16} name="arrow.right" color="#FF8C00" />
+                          </BlurView>
+                        </TouchableOpacity>
+
+
+
+
+
+                       
           </View>
         )}
 

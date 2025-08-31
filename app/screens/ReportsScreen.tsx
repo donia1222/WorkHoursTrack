@@ -1796,7 +1796,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           >
             <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.exportButton]}>
               <LinearGradient
-                colors={['rgba(255, 149, 0, 0.03)', 'rgba(255, 149, 0, 0.01)']}
+                colors={['rgba(255, 149, 0, 0.1)', 'rgba(255, 149, 0, 0.12)']}
                 style={styles.actionButtonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -1815,7 +1815,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           >
             <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.calendarButton]}>
               <LinearGradient
-                colors={['rgba(0, 122, 255, 0.03)', 'rgba(0, 122, 255, 0.01)']}
+                colors={['rgba(0, 123, 255, 0.14)', 'rgba(0, 123, 255, 0.21)']}
                 style={styles.actionButtonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -1834,7 +1834,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           >
             <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.timerButton]}>
               <LinearGradient
-                colors={['rgba(52, 199, 89, 0.03)', 'rgba(52, 199, 89, 0.01)']}
+                colors={['rgba(52, 199, 89, 0.17)', 'rgba(52, 199, 89, 0.21)']}
                 style={styles.actionButtonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}

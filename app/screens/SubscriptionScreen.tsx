@@ -21,14 +21,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  interpolate,
-  runOnJS,
-} from 'react-native-reanimated';
+// Removed animations to prevent freezing
 import PrivacyPolicyScreen from './PrivacyPolicyScreen';
 import TermsOfServiceScreen from './TermsOfServiceScreen';
 
@@ -44,45 +37,7 @@ export default function SubscriptionScreen() {
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTermsOfService, setShowTermsOfService] = useState(false);
   
-  // Animation values
-  const fadeInValue = useSharedValue(0);
-  const slideInValue = useSharedValue(50);
-  const scaleValue = useSharedValue(0.9);
-  const crownRotation = useSharedValue(0);
-  
-  useEffect(() => {
-    // Entrance animations
-    fadeInValue.value = withTiming(1, { duration: 800 });
-    slideInValue.value = withSpring(0, { damping: 15, stiffness: 100 });
-    scaleValue.value = withSpring(1, { damping: 12, stiffness: 120 });
-    
-    // Crown rotation animation - solo para usuarios suscritos
-    if (isSubscribed) {
-      const rotateCrown = () => {
-        crownRotation.value = withTiming(360, { duration: 2500 }, () => {
-          crownRotation.value = 0;
-          runOnJS(rotateCrown)();
-        });
-      };
-      rotateCrown();
-    }
-  }, []);
-  
-  const containerAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: fadeInValue.value,
-      transform: [
-        { translateY: slideInValue.value },
-        { scale: scaleValue.value },
-      ],
-    };
-  });
-  
-  const crownAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ rotate: `${crownRotation.value}deg` }],
-    };
-  });
+  // Removed all animations to prevent freezing
 
   const handlePurchase = async (packageToPurchase: any) => {
     console.log('🛍️ Iniciando handlePurchase');
@@ -279,7 +234,7 @@ Please describe your issue below:
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         />
-        <Animated.View style={[styles.loadingContainer, containerAnimatedStyle]}>
+        <View style={styles.loadingContainer}>
           <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.loadingCard}>
             <LinearGradient
               colors={isDark 
@@ -295,7 +250,7 @@ Please describe your issue below:
             </View>
             <Text style={[styles.loadingText, { color: colors.text }]}>{t('subscription.loading')}</Text>
           </BlurView>
-        </Animated.View>
+        </View>
       </SafeAreaView>
     );
   }
@@ -312,7 +267,7 @@ Please describe your issue below:
           showsVerticalScrollIndicator={false}
         >
           {/* Enhanced Premium Header */}
-          <Animated.View style={containerAnimatedStyle}>
+          <View>
             <LinearGradient
               colors={isDark 
                 ? ['#667eea', '#764ba2', '#f093fb', '#f5576c'] 
@@ -325,9 +280,9 @@ Please describe your issue below:
               <View style={styles.headerContent}>
                 <View style={styles.premiumBadgeContainer}>
                   <BlurView intensity={80} tint={"light"} style={styles.premiumBadge}>
-                    <Animated.View style={crownAnimatedStyle}>
+                    <View>
                       <IconSymbol size={28} name="crown.fill" color="#FFD700" />
-                    </Animated.View>
+                    </View>
                     <Text style={styles.premiumBadgeText}>{t('subscription.success.premium_badge')}</Text>
                   </BlurView>
                 </View>
@@ -349,7 +304,7 @@ Please describe your issue below:
                 
               </View>
             </LinearGradient>
-          </Animated.View>
+          </View>
           {/* Tarjetas de información con diseño moderno */}
           {customerInfo && (
             <>
@@ -526,7 +481,7 @@ Please describe your issue below:
         showsVerticalScrollIndicator={false}
         bounces={true}
       >
-        <Animated.View style={containerAnimatedStyle}>
+        <View>
           {/* Enhanced Hero Section */}
           <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.heroCard}>
             <LinearGradient
@@ -733,7 +688,7 @@ Please describe your issue below:
               </BlurView>
             </View>
         )}
-      </Animated.View>
+      </View>
     </ScrollView>
 
     {/* Privacy Policy Modal */}

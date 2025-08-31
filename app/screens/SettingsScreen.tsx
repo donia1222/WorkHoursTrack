@@ -815,12 +815,25 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
           }} 
           onNavigate={(screen) => {
             if (screen === 'subscription') {
+              // Close all modals and reset states
               setShowJobsManagement(false);
               setOpenAddJobModal(false);
-              // Delay to ensure modal closes before navigation
+              setShowWelcomeModal(false);
+              setShowAutoBackupModal(false);
+              // Longer delay to ensure all modals close properly before navigation
               setTimeout(() => {
                 onNavigate('subscription');
-              }, 100);
+              }, 300);
+            } else if (screen === 'mapa') {
+              // Close all modals and reset states
+              setShowJobsManagement(false);
+              setOpenAddJobModal(false);
+              setShowWelcomeModal(false);
+              setShowAutoBackupModal(false);
+              // Longer delay to ensure all modals close properly before navigation
+              setTimeout(() => {
+                onNavigate('mapa');
+              }, 300);
             }
           }}
           openAddModal={openAddJobModal}
