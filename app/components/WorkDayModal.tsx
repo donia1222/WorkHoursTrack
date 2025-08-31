@@ -170,8 +170,8 @@ export default function WorkDayModal({
   // Función para cambiar el tipo de día
   const setDayType = (type: 'work' | 'free' | 'vacation' | 'sick') => {
     setDayTypeState(type);
-    // Si cambia a trabajo y no hay trabajo seleccionado, seleccionar el primero
-    if (type === 'work' && !selectedJobId && jobs.length > 0) {
+    // Always ensure we have a job selected for any day type to enable proper filtering
+    if (!selectedJobId && jobs.length > 0) {
       setSelectedJobId(jobs[0].id);
     }
   };
@@ -284,6 +284,7 @@ export default function WorkDayModal({
 
   useEffect(() => {
     if (existingWorkDay) {
+      // For existing work days, ALWAYS use the original jobId, ignore preselectedJobId
       setSelectedJobId(existingWorkDay.jobId || '');
       setHours(existingWorkDay.hours);
       setNotes(existingWorkDay.notes || '');
@@ -361,20 +362,20 @@ export default function WorkDayModal({
   }, [existingWorkDay, jobs, visible, preselectedJobId]);
 
   const handleSave = () => {
-    // Si es tipo trabajo y no hay trabajo seleccionado, seleccionar el primer trabajo disponible
+    // Always ensure we have a jobId selected
     let finalJobId = selectedJobId;
-    if (dayType === 'work' && !selectedJobId && jobs.length > 0) {
+    if (!selectedJobId && jobs.length > 0) {
       finalJobId = jobs[0].id;
     }
     
-    if (dayType === 'work' && !finalJobId) {
-      // Solo si no hay trabajos disponibles, no guardar
+    if (!finalJobId) {
+      // Only prevent saving if no jobs are available at all
       return;
     }
 
     const workDay: Omit<WorkDay, 'id' | 'createdAt' | 'updatedAt'> = {
       date,
-      jobId: dayType === 'work' ? finalJobId : undefined,
+      jobId: finalJobId, // Always save jobId for all day types to enable proper filtering
       hours: dayType === 'work' ? hours : 0,
       notes: notes.trim(),
       overtime: dayType === 'work' && !isPaidByHour && hours > customStandardHours,
@@ -495,19 +496,22 @@ export default function WorkDayModal({
         </BlurView>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                 {/* Preselected job display - when job is preselected from calendar filter */}
-          {dayType === 'work' && preselectedJobId && jobs.length > 1 && (
+                 {/* Job display - when editing existing workday or job is preselected from calendar filter */}
+          {(existingWorkDay || preselectedJobId) && jobs.length > 1 && (
         
             <View style={styles.section}>
                           
               <BlurView intensity={95} tint="light" style={styles.singleJobDisplay}>
                 <View style={styles.singleJobContent}>
                   {(() => {
-                    const preselectedJob = jobs.find(job => job.id === preselectedJobId);
-                    return preselectedJob ? (
+                    // For existing workdays, show the original job; for new ones, show preselected job
+                    const displayJob = existingWorkDay 
+                      ? jobs.find(job => job.id === existingWorkDay.jobId)
+                      : jobs.find(job => job.id === preselectedJobId);
+                    return displayJob ? (
                       <>
-                        <View style={[styles.jobTabDot, { backgroundColor: preselectedJob.color }]} />
-                        <Text style={styles.singleJobText}>{preselectedJob.name}</Text>
+                        <View style={[styles.jobTabDot, { backgroundColor: displayJob.color }]} />
+                        <Text style={styles.singleJobText}>{displayJob.name}</Text>
                         <IconSymbol size={16} name="checkmark.circle.fill" color={colors.success} />
                       </>
                     ) : null;
@@ -571,8 +575,8 @@ export default function WorkDayModal({
 
    
 
-          {/* Compact job selector - only for work days and when no job is preselected */}
-          {dayType === 'work' && jobs.length > 1 && !preselectedJobId && (
+          {/* Compact job selector - when there are multiple jobs, no job is preselected and not editing existing workday */}
+          {jobs.length > 1 && !preselectedJobId && !existingWorkDay && (
             <View style={styles.section}>
               <BlurView intensity={95} tint="light" style={styles.compactJobSelector}>
                 <Text style={styles.compactJobTitle}>{t('job_selector.title')}</Text>
@@ -606,8 +610,8 @@ export default function WorkDayModal({
 
 
           
-          {/* Single job display - when only one job exists and no job is preselected */}
-          {dayType === 'work' && jobs.length === 1 && !preselectedJobId && (
+          {/* Single job display - when only one job exists, no job is preselected and not editing existing workday */}
+          {jobs.length === 1 && !preselectedJobId && !existingWorkDay && (
             <View style={styles.section}>
               <BlurView intensity={95} tint="light" style={styles.singleJobDisplay}>
                 <View style={styles.singleJobContent}>

@@ -386,11 +386,14 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
           style: 'destructive',
           onPress: async () => {
             try {
+              console.log(`🗑️ JobsManagement: Starting deletion of job ${job.id} (${job.name})`);
               await JobService.deleteJob(job.id);
+              console.log(`✅ JobsManagement: Job deleted successfully`);
               await loadJobs();
+              console.log(`🔄 JobsManagement: Jobs reloaded after deletion`);
               Alert.alert(t('maps.success'), t('jobs_management.delete.success'));
             } catch (error) {
-              console.error('Error deleting job:', error);
+              console.error('❌ JobsManagement: Error deleting job:', error);
               Alert.alert(t('job_form.errors.error_title'), t('jobs_management.delete.error'));
             }
           },

@@ -55,14 +55,32 @@ export class JobService {
   }
 
   static async deleteJob(jobId: string): Promise<void> {
+    console.log(`🗑️ Deleting job ${jobId}`);
+    
     const jobs = await this.getJobs();
     const updatedJobs = jobs.filter(job => job.id !== jobId);
     await this.saveJobs(updatedJobs);
+    console.log(`📊 Jobs after deletion: ${updatedJobs.length}`);
     
-    // Also delete all work days for this job
+    // Delete all work days for this job
     const workDays = await this.getWorkDays();
-    const updatedWorkDays = workDays.filter(day => day.jobId !== jobId);
+    console.log(`📅 Total work days before deletion: ${workDays.length}`);
+    
+    let updatedWorkDays = workDays.filter(day => day.jobId !== jobId);
+    console.log(`📅 Work days after filtering job: ${updatedWorkDays.length}`);
+    
+    // Always clear all non-work days (free, vacation, sick) when deleting any job
+    // because non-work days don't belong to specific jobs and should be cleared
+    // to allow fresh start
+    console.log(`🧹 Clearing all non-work days after job deletion`);
+    const beforeClear = updatedWorkDays.length;
+    updatedWorkDays = updatedWorkDays.filter(day => 
+      day.type !== 'free' && day.type !== 'vacation' && day.type !== 'sick'
+    );
+    console.log(`📅 Work days after clearing non-work days: ${updatedWorkDays.length} (was ${beforeClear})`);
+    
     await this.saveWorkDays(updatedWorkDays);
+    console.log(`✅ Job deletion completed. Final work days: ${updatedWorkDays.length}`);
   }
 
   static async getWorkDays(): Promise<WorkDay[]> {

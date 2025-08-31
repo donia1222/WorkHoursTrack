@@ -1037,7 +1037,10 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
     const dateString = day.dateString;
     setSelectedDate(dateString);
     
-    const existingWorkDay = workDays.find(wd => wd.date === dateString);
+    // Find existing work day for the specific job (if filtered) or any work day for that date
+    const existingWorkDay = selectedJobId !== 'all' 
+      ? workDays.find(wd => wd.date === dateString && wd.jobId === selectedJobId)
+      : workDays.find(wd => wd.date === dateString);
     setEditingWorkDay(existingWorkDay);
     
     // Pre-select the job if a specific job is filtered
@@ -1229,14 +1232,8 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
     // Filter workDays by selected job if not "all"
     // When filtering, show only days from selected job (both work and non-work days)
     const filteredWorkDays = selectedJobId !== 'all'
-      ? workDays.filter(wd => {
-          if (wd.type === 'work') {
-            return wd.jobId === selectedJobId;
-          }
-          // Show non-work days from the selected job OR legacy days without jobId
-          return wd.jobId === selectedJobId || wd.jobId === undefined;
-        })
-      : workDays;
+      ? workDays.filter(wd => wd.jobId === selectedJobId)
+      : workDays.filter(wd => wd.jobId); // Exclude legacy days without jobId
 
     filteredWorkDays.forEach(workDay => {
       const job = jobs.find(j => j.id === workDay.jobId);
@@ -1270,13 +1267,8 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
     const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
     
     const filteredWorkDays = selectedJobId !== 'all'
-      ? workDays.filter(wd => {
-          if (wd.type === 'work') {
-            return wd.jobId === selectedJobId;
-          }
-          return wd.jobId === selectedJobId || wd.jobId === undefined;
-        })
-      : workDays;
+      ? workDays.filter(wd => wd.jobId === selectedJobId)
+      : workDays.filter(wd => wd.jobId); // Exclude legacy days without jobId
     
     const monthWorkDays = filteredWorkDays.filter(day => 
       day.date.startsWith(monthKey)
@@ -1410,14 +1402,8 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
     // Filter workDays by selected job if not "all"
     // When filtering, show only days from selected job (both work and non-work days)
     const filteredWorkDays = selectedJobId !== 'all'
-      ? workDays.filter(wd => {
-          if (wd.type === 'work') {
-            return wd.jobId === selectedJobId;
-          }
-          // Show non-work days from the selected job OR legacy days without jobId
-          return wd.jobId === selectedJobId || wd.jobId === undefined;
-        })
-      : workDays;
+      ? workDays.filter(wd => wd.jobId === selectedJobId)
+      : workDays.filter(wd => wd.jobId); // Exclude legacy days without jobId
     
     const monthWorkDays = viewMode === 'month'
       ? filteredWorkDays.filter(day => day.date.startsWith(monthKey))
@@ -1503,14 +1489,7 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
       
       // Filter by selected job if not "all"
       if (selectedJobId !== 'all') {
-        monthDays = monthDays.filter(day => {
-          if (day.type === 'work') {
-            return day.jobId === selectedJobId;
-          }
-          // Include all non-work days (free, vacation, sick) regardless of job selection
-          // because they apply to all jobs
-          return true;
-        });
+        monthDays = monthDays.filter(day => day.jobId === selectedJobId);
       }
 
       if (monthDays.length === 0) {
@@ -1776,7 +1755,7 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
           >
             <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.syncButton]}>
               <LinearGradient
-                colors={['rgba(52, 199, 89, 0)', 'rgba(52, 199, 89, 0.04)']}
+                colors={['rgba(52, 199, 89, 0.1)', 'rgba(52, 199, 89, 0.05)']}
                 style={styles.actionButtonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -1796,7 +1775,7 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
           >
             <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.clearButton]}>
               <LinearGradient
-                colors={['rgba(255, 58, 48, 0.03)', 'rgba(255, 58, 48, 0)']}
+                colors={['rgba(255, 59, 48, 0.1)', 'rgba(255, 59, 48, 0.05)']}
                 style={styles.actionButtonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
