@@ -503,8 +503,8 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
         setUse12HourFormat(saved === 'true');
       } else {
         // No hay preferencia guardada, detectar según la región del usuario
-        const locales = Localization.getLocales();
-        const uses24Hour = locales[0]?.uses24HourClock ?? true; // Por defecto 24h si no se puede detectar
+        const calendars = Localization.getCalendars();
+        const uses24Hour = calendars[0]?.uses24hourClock ?? true; // Por defecto 24h si no se puede detectar
         
         // Si el sistema usa 24h, use12HourFormat debe ser false
         // Si el sistema usa 12h, use12HourFormat debe ser true

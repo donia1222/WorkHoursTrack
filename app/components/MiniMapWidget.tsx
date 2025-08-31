@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated as RNAnimated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated as RNAnimated, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSpring } from 'react-native-reanimated';
 import MapView, { Marker, Circle, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -24,7 +24,11 @@ interface MiniMapWidgetProps {
   remainingDelayTime?: number;
 }
 
-const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
+const getStyles = (colors: ThemeColors, isDark: boolean) => {
+  const { width, height } = Dimensions.get('window');
+  const isTablet = width >= 768;
+  
+  return StyleSheet.create({
   container: {
 
 
@@ -149,7 +153,7 @@ marginTop: -10,
     padding: 18,
     paddingVertical: 14,
     position: 'absolute',
-    bottom: 190,
+    bottom: isTablet ? 365 : 190,
     left: 0,
     right: 0,
     borderRadius: 12,
@@ -368,6 +372,7 @@ marginTop: -10,
     marginTop: 2,
   },
 });
+};
 
 export default function MiniMapWidget({
   job,
@@ -498,7 +503,7 @@ export default function MiniMapWidget({
       }
     ]}>
       <View style={styles.mapContainer}>
-        {(activeTimerElapsed > 0 || autoTimerState === 'active' || startTime || autoTimerState !== 'inactive') && (
+        {activeTimerElapsed > 0 && (
           <View style={styles.timerOverlay}>
             <View style={styles.timerContent}>
               {/* Main timer display */}
@@ -511,7 +516,7 @@ export default function MiniMapWidget({
                   />
                 </Animated.View>
                 <Animated.Text style={[styles.timerText, animatedTimerStyle]}>
-                  {formatTime(activeTimerElapsed || 0)}
+                  {formatTime(activeTimerElapsed)}
                 </Animated.Text>
               </View>
               

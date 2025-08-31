@@ -326,9 +326,6 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   };
 
   const calculateStatsFromRecentActivity = () => {
-    console.log('🎯 Using getRecentWorkDays logic that WORKS!');
-    console.log('Raw workDays loaded:', workDays.length);
-    console.log('Sample raw workDays:', workDays.slice(0, 2).map(d => ({ date: d.date, hours: d.hours, type: d.type, jobId: d.jobId })));
     
     // Step 1: Get the EXACT same data that getRecentWorkDays gets
     // BUT: if type doesn't exist, treat as 'work' (for old data)
@@ -348,8 +345,14 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Last day of month
     
     const monthWorkDays = baseWorkDays.filter(day => {
+      // Use same logic as MapLocation - compare month and year directly
       const dayDate = new Date(day.date);
-      return dayDate >= startOfMonth && dayDate <= endOfMonth;
+      const dayMonth = dayDate.getMonth() + 1;
+      const dayYear = dayDate.getFullYear();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      
+      return dayMonth === currentMonth && dayYear === currentYear;
     });
     
     console.log('Step 3 - This month work days:', monthWorkDays.length);
@@ -580,8 +583,8 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       todayDate: new Date().toISOString().split('T')[0]
     });
     
-    // Filter only work days first (like CalendarScreen)
-    let filteredWorkDays = workDays.filter(day => day.type === 'work');
+    // Filter only work days first (include days without type for legacy data)
+    let filteredWorkDays = workDays.filter(day => day.type === 'work' || !day.type);
     console.log('🔍 After work type filter:', filteredWorkDays.length);
     
     // Filter by selected job if not "all"
@@ -614,8 +617,8 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   };
 
   const getAllRecentWorkDays = () => {
-    // Filter only work days first (like CalendarScreen)
-    let filteredWorkDays = workDays.filter(day => day.type === 'work');
+    // Filter only work days first (include days without type for legacy data)
+    let filteredWorkDays = workDays.filter(day => day.type === 'work' || !day.type);
     
     // Filter by selected job if not "all"
     if (selectedJobId !== 'all') {

@@ -730,8 +730,8 @@ class NotificationService {
       await Notifications.scheduleNotificationAsync({
         identifier,
         content: {
-          title: '🧪 Test Notification',
-          body: 'If you see this, notifications are working correctly',
+          title: await this.t('preferences.notifications.test_notification_title'),
+          body: await this.t('preferences.notifications.test_notification_body'),
           sound: 'default',
           priority: Notifications.AndroidNotificationPriority.HIGH,
         },
@@ -745,8 +745,8 @@ class NotificationService {
       
       // Also try to present it manually for foreground
       await Notifications.presentNotificationAsync({
-        title: '🧪 Foreground Test',
-        body: 'This should show as alert in foreground',
+        title: await this.t('preferences.notifications.test_notification_title'),
+        body: await this.t('preferences.notifications.test_notification_body'),
         sound: 'default',
         priority: Notifications.AndroidNotificationPriority.HIGH,
       });
@@ -771,8 +771,8 @@ class NotificationService {
       await Notifications.scheduleNotificationAsync({
         identifier,
         content: {
-          title: '🧪 Background Test',
-          body: `This notification was scheduled ${delaySeconds} seconds ago. If you see this, background notifications work!`,
+          title: await this.t('preferences.notifications.test_background_title'),
+          body: await this.t('preferences.notifications.test_background_body', { delaySeconds }),
           sound: 'default',
           priority: Notifications.AndroidNotificationPriority.HIGH,
         },

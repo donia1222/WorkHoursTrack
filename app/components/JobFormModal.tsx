@@ -818,6 +818,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   simplifiedBlurCard: {
     padding: Theme.spacing.lg,
+    paddingBottom: Platform.OS === 'ios' && Platform.isPad ? Theme.spacing.xl * 2 : Theme.spacing.lg,
     alignItems: 'center',
   },
   simplifiedCloseButton: {
@@ -1265,6 +1266,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [showAddressSearch, setShowAddressSearch] = useState(false);
   const [showAddressDropdown, setShowAddressDropdown] = useState(false);
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(isLocationEnabled);
+  const [notificationSettings, setNotificationSettings] = useState({ enabled: false, autoTimer: false });
   const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
   const [jobCoordinates, setJobCoordinates] = useState<{latitude: number; longitude: number} | null>(null);
   const [mapRegion, setMapRegion] = useState<{
@@ -1414,6 +1416,24 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     };
 
     loadAutoTimerModeSettings();
+  }, [visible]);
+
+  // Cargar configuración de notificaciones
+  useEffect(() => {
+    const loadNotificationSettings = async () => {
+      if (!visible) return;
+      try {
+        const settings = await AsyncStorage.getItem('notification_settings');
+        if (settings) {
+          const parsed = JSON.parse(settings);
+          setNotificationSettings(parsed);
+          console.log('🔔 Loaded notification settings:', parsed);
+        }
+      } catch (error) {
+        console.error('Error loading notification settings:', error);
+      }
+    };
+    loadNotificationSettings();
   }, [visible]);
 
   // Listener para detectar cuando la app vuelve a estar activa y re-verificar permisos
@@ -3804,7 +3824,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       }
       
       // Verificar suscripción premium antes de activar
-      if (value && !isSubscribed) {
+      if (value && isSubscribed) {
         setShowPremiumModal(true);
       } else {
         handleAutoTimerToggle(value);
@@ -4084,6 +4104,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                       <IconSymbol size={20} name="plus" color={colors.primary} />
                     </TouchableOpacity>
                   </View>
+                  
                 </View>
 
                 {/* Delay Stop Control */}
@@ -4277,15 +4298,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
             
             <View style={styles.inputGroup}>
-              <TouchableOpacity 
-                style={styles.navigationRow}
-                onPress={() => {
-                  onClose();
-                  // Set global flag like WorkDayModal does
-                  (global as any).scrollToNotifications = true;
-                  navigateTo('settings');
-                }}
-              >
+              <View style={styles.navigationRow}>
                 <View style={styles.navigationContent}>
                   <View style={styles.navigationIconContainer}>
                     <IconSymbol
@@ -4296,17 +4309,55 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   </View>
                   <View style={styles.navigationTextContainer}>
                     <Text style={styles.navigationLabel}>{t('job_form.auto_timer.notifications')}</Text>
-                    <Text style={styles.navigationDescription}>{t('job_form.auto_timer.notifications_desc')}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      {notificationSettings.enabled && notificationSettings.autoTimer ? (
+                        <>
+                          <View style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: 4,
+                            backgroundColor: colors.success
+                          }} />
+                          <Text style={[styles.navigationDescription, { color: colors.success }]}>
+                            {t('job_form.auto_timer.notifications_enabled')}
+                          </Text>
+                        </>
+                      ) : (
+                        <Text style={[styles.navigationDescription, { color: colors.textSecondary }]}>
+                          {t('job_form.auto_timer.notifications_disabled')}
+                        </Text>
+                      )}
+                    </View>
                   </View>
                 </View>
                 <View style={styles.navigationArrowContainer}>
-                  <IconSymbol
-                    name="chevron.right"
-                    size={16}
-                    color={colors.textSecondary}
-                  />
+                  {notificationSettings.enabled && notificationSettings.autoTimer ? (
+                    <IconSymbol
+                      name="checkmark.circle.fill"
+                      size={20}
+                      color={colors.success}
+                    />
+                  ) : (
+                    <TouchableOpacity 
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        backgroundColor: colors.primary,
+                        borderRadius: 12
+                      }}
+                      onPress={() => {
+                        onClose();
+                        (global as any).scrollToNotifications = true;
+                        navigateTo('settings');
+                      }}
+                    >
+                      <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '600' }}>
+                        {t('job_form.auto_timer.activate_button')}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
-              </TouchableOpacity>
+              </View>
             </View>
           </>
         )}

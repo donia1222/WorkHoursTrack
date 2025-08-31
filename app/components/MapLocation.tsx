@@ -1288,13 +1288,12 @@ export default function MapLocation({ location, onNavigate }: Props) {
         
         if (dayDate.getMonth() + 1 === currentMonth && 
             dayDate.getFullYear() === currentYear && 
-            day.type === 'work') {
+            (day.type === 'work' || !day.type)) {
           // Use net hours calculation (same as ReportsScreen)
           const netHours = Math.max(0, (day.hours || 0) - (day.breakHours || 0));
           totalHours += netHours;
         }
       });
-      
       return totalHours;
     } catch (error) {
       console.error('Error calculating monthly total hours:', error);
@@ -2084,7 +2083,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
         
         if (dayDate.getMonth() + 1 === currentMonth && 
             dayDate.getFullYear() === currentYear && 
-            day.type === 'work' && 
+            (day.type === 'work' || !day.type) && 
             day.overtime) {
           // Overtime is hours over 8
           totalOvertime += Math.max(0, (day.hours || 0) - 8);
@@ -3789,17 +3788,18 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
        <View style={{
             
-                  gap: isTablet ? 8 : (isSmallScreen ? 12 : 8),
-                  height: isTablet ? 160 : (isSmallScreen ? 80 : 140),
-                  width: isTablet ?360 :(isSmallScreen ? 80 : 165),
+                  gap: isTablet ? 8 : (isSmallScreen ? 6 : 8),
+                  height: isTablet ? 160 : (isSmallScreen ? 110 : 140),
+                  width: isTablet ?360 :(isSmallScreen ? 165 : 165),
+                  marginTop: isTablet ? 0 : (isSmallScreen ?  5 : 0),
                 }}>
 
                <TouchableOpacity
                        style={{
                       flex: 1,
-                      height: isTablet ? 90 : (isSmallScreen ? 70 : 80),
-                      borderRadius: isTablet ? 32 : (isSmallScreen ? 24 : 28),
-                      padding: isTablet ? 20 : (isSmallScreen ? 14 : 16),
+                  height: isTablet ? 90 : (isSmallScreen ? 90 : 80),
+                          borderRadius: isTablet ? 32 : (isSmallScreen ? 24 : 28),
+                          padding: isTablet ? 20 : (isSmallScreen ? 18 : 16),
               backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(248, 113, 113, 0.18)',
                       borderWidth: 1.5,
                     borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
@@ -3820,7 +3820,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           {/* Text content on the left */}
                           <View style={{ flex: 1, alignItems: 'flex-start', justifyContent: 'center' }}>
                             <Text style={{
-                              fontSize: isTablet ? 14 : (isSmallScreen ? 11 : 12),
+                              fontSize: isTablet ? 14 : (isSmallScreen ? 11 : 14),
                               fontWeight: '700',
                         color: isDark ? '#a7303092' : '#a7303092',
                               marginBottom: isTablet ? 2 : 1,
@@ -3834,12 +3834,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                               opacity: 0.9,
                             }}>{getMonthName(new Date())}</Text>
                             
-                            <Text style={{
-                              fontSize: isTablet ? 16 : (isSmallScreen ? 12 : 14),
-                              fontWeight: '700',
-                             color: isDark ? '#c0b9b98e' : '#7e7e7e8a',
-                              marginTop: isTablet ? 2 : 1,
-                            }}>{monthlyOvertime.toFixed(1)} hrs</Text>
+                        
                           </View>
                           
                           {/* Circular Progress Chart on the right */}
@@ -3865,15 +3860,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                   justifyContent: 'center',
                                   alignItems: 'center',
                                 }}>
-                                  {/* Background circle */}
-                                  <View style={{
-                                    position: 'absolute',
-                                    width: '100%',
-                                    height: '100%',
-                                    borderRadius: 100,
-                                    borderWidth: isTablet ? 8 : 6,
-                                   borderColor: isDark ?  'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
-                                  }} />
+                   
                                   {/* Progress arc - simplified approach */}
                                   <View style={{
                                     position: 'absolute',
@@ -3882,21 +3869,18 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                     borderRadius: 100,
                                     borderWidth: isTablet ? 8 : 6,
                                     borderColor: 'transparent',
-                           borderTopColor: percentage > 0 ? (isDark ? '#ef4444' : '#ef4444') : 'transparent',
-                                    borderRightColor: percentage > 25 ? (isDark ? '#ef4444' : '#ef4444') : 'transparent',
-                                    borderBottomColor: percentage > 50 ? (isDark ?'#ef4444' : '#ef4444') : 'transparent',
-                                    borderLeftColor: percentage > 75 ? (isDark ?'#ef4444' : '#ef4444') : 'transparent',
+                
                                     transform: [{ rotate: `${rotation}deg` }],
                                   }} />
                                   {/* Center text - simplified */}
                                   <View style={{ alignItems: 'center' }}>
                                     <Text style={{
-                                      fontSize: isTablet ? 12 : 9,
+                                       fontSize: isTablet ? 16 :14,
                                       fontWeight: '700',
                                      color: isDark ? '#4ade80' : '#16a34a',
                                     }}>{monthlyOvertime.toFixed(1)}</Text>
                                     <Text style={{
-                                      fontSize: isTablet ? 7 : 6,
+                                      fontSize: isTablet ? 14 : 10,
                                       color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#15803d',
                                       fontWeight: '600',
                                     }}>hrs</Text>
@@ -3925,9 +3909,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
  <TouchableOpacity
                         style={{
                           flex: 1,
-                          height: isTablet ? 90 : (isSmallScreen ? 70 : 80),
+                          height: isTablet ? 90 : (isSmallScreen ? 90 : 80),
                           borderRadius: isTablet ? 32 : (isSmallScreen ? 24 : 28),
-                          padding: isTablet ? 20 : (isSmallScreen ? 14 : 16),
+                          padding: isTablet ? 20 : (isSmallScreen ? 18 : 16),
                      backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(248, 113, 113, 0.18)',
                       borderWidth: 1.5,
                     borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
@@ -3962,12 +3946,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                               opacity: 0.9,
                             }}>{getMonthName(new Date())}</Text>
                             
-                            <Text style={{
-                              fontSize: isTablet ? 16 : (isSmallScreen ? 12 : 14),
-                              fontWeight: '700',
-                             color: isDark ? '#c0b9b98e' : '#7e7e7e8a',
-                              marginTop: isTablet ? 2 : 1,
-                            }}>{formatHoursForDisplay(monthlyTotalHours)}</Text>
+                  
                           </View>
                           
                           {/* Circular Progress Chart on the right */}
@@ -3994,15 +3973,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                   justifyContent: 'center',
                                   alignItems: 'center',
                                 }}>
-                                  {/* Background circle */}
-                                  <View style={{
-                                    position: 'absolute',
-                                    width: '100%',
-                                    height: '100%',
-                                    borderRadius: 100,
-                                    borderWidth: isTablet ? 8 : 6,
-                                    borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
-                                  }} />
+             
+                  
                                   {/* Progress arc - simplified approach */}
                                   <View style={{
                                     position: 'absolute',
@@ -4011,16 +3983,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                     borderRadius: 100,
                                     borderWidth: isTablet ? 8 : 6,
                                     borderColor: 'transparent',
-                                    borderTopColor: percentage > 0 ? (isDark ? '#ef4444' : '#ef4444') : 'transparent',
-                                    borderRightColor: percentage > 25 ? (isDark ? '#ef4444' : '#ef4444') : 'transparent',
-                                    borderBottomColor: percentage > 50 ? (isDark ? '#ef4444' : '#ef4444') : 'transparent',
-                                    borderLeftColor: percentage > 75 ? (isDark ? '#ef4444' : '#ef4444') : 'transparent',
+                           
                                     transform: [{ rotate: `${rotation}deg` }],
                                   }} />
                                   {/* Center text - simplified */}
                                   <View style={{ alignItems: 'center' }}>
                                     <Text style={{
-                                      fontSize: isTablet ? 12 : 9,
+                                      fontSize: isTablet ? 16 :14,
                                       fontWeight: '700',
                                       color: isDark ? '#4ade80' : '#16a34a',
                                     }}>{formatHoursForDisplay(totalHours)}</Text>
