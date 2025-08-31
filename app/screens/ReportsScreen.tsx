@@ -138,6 +138,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const { selectedJob, setSelectedJob, navigationParams, clearNavigationParams } = useNavigation();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [workDays, setWorkDays] = useState<WorkDay[]>([]);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year' | 'custom'>('month');
   const [selectedJobId, setSelectedJobId] = useState<string | 'all'>(selectedJob?.id || 'all');
   const [periodStats, setPeriodStats] = useState<PeriodStats | null>(null);
@@ -267,6 +268,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
   const loadData = async () => {
     try {
+      setIsLoadingJobs(true);
       const [loadedJobs, loadedWorkDays] = await Promise.all([
         JobService.getJobs(),
         JobService.getWorkDays(),
@@ -278,8 +280,12 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       // This was causing issues when users added scheduled days in CalendarScreen
       setJobs(loadedJobs);
       setWorkDays(loadedWorkDays);
+      
+      // Mark loading as complete immediately after data is set
+      setIsLoadingJobs(false);
     } catch (error) {
       console.error('Error loading data:', error);
+      setIsLoadingJobs(false);
     }
   };
 
@@ -1557,11 +1563,11 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Job selector */}
-        {renderCompactJobSelector()}
+        {!isLoadingJobs && renderCompactJobSelector()}
 
         {/* Period selector */}
         <Animated.View style={[{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
-          {renderCompactPeriodSelector()}
+          {!isLoadingJobs && renderCompactPeriodSelector()}
           
           {/* Custom Date Range Picker - SOLO cuando Custom range está seleccionado */}
           {selectedPeriod === 'custom' && (
@@ -1670,7 +1676,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
             <IconSymbol size={24} name="clock.fill" color={colors.primary} />
             <Text style={styles.cardTitle}>{t('reports.recent_activity')}</Text>
           </View>
-          {getRecentWorkDays().length > 0 ? (
+          {!isLoadingJobs && getRecentWorkDays().length > 0 ? (
             <>
               {getRecentWorkDays().map((day) => {
                 const job = jobs.find(j => j.id === day.jobId);
@@ -1765,7 +1771,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                 </TouchableOpacity>
               )}
             </>
-          ) : (
+          ) : !isLoadingJobs ? (
             <View style={styles.emptyState}>
               <IconSymbol size={48} name="calendar.badge.clock" color={colors.textSecondary} />
               <Text style={styles.emptyText}>{t('reports.no_records')}</Text>
@@ -1778,51 +1784,46 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                 <Text style={styles.addButtonText}>{t('reports.add_time')}</Text>
               </TouchableOpacity>
             </View>
-          )}
+          ) : null}
         </BlurView>
 
-        {/* PDF Export Button - Main Action */}
-        {periodStats && (
+        {/* Action Buttons */}
+        {!isLoadingJobs && (
+        <View style={styles.actionButtonsContainer}>
           <TouchableOpacity
-            style={[styles.primaryExportButton, isGeneratingPDF && styles.exportButtonDisabled]}
+            style={styles.actionButton}
             onPress={showBillingDataModal}
-            disabled={isGeneratingPDF}
           >
-            <LinearGradient
-              colors={isGeneratingPDF ? [colors.textSecondary, colors.textSecondary] : ['#007AFF', '#0056CC']}
-              style={styles.primaryExportButtonInner}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 1}}
-            >
-              {isGeneratingPDF ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <IconSymbol size={28} name="square.and.arrow.up" color="#FFFFFF" />
-              )}
-              <Text style={[styles.primaryExportButtonText, isGeneratingPDF && styles.exportButtonTextDisabled]}>
-                {isGeneratingPDF 
-                  ? t('reports.generating_pdf')
-                  : selectedJobId === 'all'
-                    ? t('reports.export_all_jobs') 
-                    : t('reports.export_job', { jobName: jobs.find(j => j.id === selectedJobId)?.name || '' })
-                }
-              </Text>
-              {!isGeneratingPDF && (
-                <IconSymbol size={18} name="arrow.right" color="#FFFFFF" />
-              )}
-            </LinearGradient>
+            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.exportButton]}>
+              <LinearGradient
+                colors={['rgba(255, 149, 0, 0.03)', 'rgba(255, 149, 0, 0.01)']}
+                style={styles.actionButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+              <View style={[styles.actionButtonIconContainer, { backgroundColor: colors.warning + '20' }]}>
+                <IconSymbol size={24} name="square.and.arrow.up" color={colors.warning} />
+              </View>
+              <Text style={[styles.actionButtonText, { color: colors.warning }]}>{t('reports.export_pdf')}</Text>
+              <IconSymbol size={16} name="arrow.right" color={colors.warning} />
+            </BlurView>
           </TouchableOpacity>
-        )}
 
-        {/* Quick actions */}
-        <View style={styles.actionsContainer}>
           <TouchableOpacity
             style={styles.actionButton}
             onPress={() => onNavigate('calendar')}
           >
-            <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.actionButtonInner}>
-              <IconSymbol size={24} name="calendar" color={colors.primary} />
-              <Text style={styles.actionButtonText}>{t('reports.view_calendar')}</Text>
+            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.calendarButton]}>
+              <LinearGradient
+                colors={['rgba(0, 122, 255, 0.03)', 'rgba(0, 122, 255, 0.01)']}
+                style={styles.actionButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+              <View style={[styles.actionButtonIconContainer, { backgroundColor: colors.primary + '20' }]}>
+                <IconSymbol size={24} name="calendar" color={colors.primary} />
+              </View>
+              <Text style={[styles.actionButtonText, { color: colors.primary }]}>{t('reports.view_calendar')}</Text>
               <IconSymbol size={16} name="arrow.right" color={colors.primary} />
             </BlurView>
           </TouchableOpacity>
@@ -1831,13 +1832,22 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
             style={styles.actionButton}
             onPress={() => onNavigate('timer')}
           >
-            <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={styles.actionButtonInner}>
-              <IconSymbol size={24} name="clock.fill" color={colors.success} />
-              <Text style={styles.actionButtonText}>{t('reports.start_timer')}</Text>
+            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.timerButton]}>
+              <LinearGradient
+                colors={['rgba(52, 199, 89, 0.03)', 'rgba(52, 199, 89, 0.01)']}
+                style={styles.actionButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+              <View style={[styles.actionButtonIconContainer, { backgroundColor: colors.success + '20' }]}>
+                <IconSymbol size={24} name="clock.fill" color={colors.success} />
+              </View>
+              <Text style={[styles.actionButtonText, { color: colors.success }]}>{t('reports.start_timer')}</Text>
               <IconSymbol size={16} name="arrow.right" color={colors.success} />
             </BlurView>
           </TouchableOpacity>
         </View>
+        )}
       </ScrollView>
       
       {/* Date Picker Modal */}
@@ -2850,30 +2860,66 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontWeight: '600',
     color: colors.primary,
   },
-  actionsContainer: {
-    marginVertical: 20,
-    marginBottom: 24,
-    gap: 16,
-       paddingBottom: 44,
+  actionButtonsContainer: {
+    marginBottom: 70,
+    gap: 12,
+    marginTop: 16,
   },
   actionButton: {
-    marginVertical: 4,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 6,
   },
   actionButtonInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 20,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    overflow: 'hidden',
+  },
+  actionButtonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 20,
+  },
+  actionButtonIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  exportButton: {
+    backgroundColor: 'transparent',
+  },
+  calendarButton: {
+    backgroundColor: 'transparent',
+  },
+  timerButton: {
+    backgroundColor: 'transparent',
   },
   actionButtonText: {
     fontSize: 16,
     fontWeight: '600',
+    color: colors.text,
     flex: 1,
     marginLeft: 16,
-    color: colors.text,
+    marginRight: 8,
   },
   
   // Date Range Picker Styles
@@ -3126,53 +3172,13 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.separator,
   },
-  exportButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
-    gap: 8,
-    marginBottom: 40,
-  },
+
   exportButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
   },
 
-  // Primary Export Button Styles
-  primaryExportButton: {
-    marginHorizontal: 20,
-    marginVertical: 8,
-    borderRadius: 16,
-    shadowColor: '#007AFF',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  primaryExportButtonInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 18,
-    borderRadius: 16,
-  },
-  primaryExportButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    flex: 1,
-    marginHorizontal: 12,
-    letterSpacing: 0.5,
-  },
   // Salary calculation styles
   salarySection: {
     marginTop: -40,

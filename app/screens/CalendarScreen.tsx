@@ -432,7 +432,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     color: colors.textSecondary,
   },
   actionButtonsContainer: {
-    marginBottom: 20,
+    marginBottom: 70,
     gap: 12,
     marginTop: 12,
   },
@@ -726,6 +726,7 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
   const [preselectedJobId, setPreselectedJobId] = useState<string | undefined>();
   const [selectedJobId, setSelectedJobId] = useState<string | 'all'>('all');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(true);
   const [internalViewMode, setInternalViewMode] = useState<'month' | 'year'>('month');
   
   // Use external viewMode if provided, otherwise use internal
@@ -904,12 +905,16 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
 
   const loadData = async () => {
     try {
+      setIsLoadingJobs(true);
       const [loadedJobs, loadedWorkDays] = await Promise.all([
         JobService.getJobs(),
         JobService.getWorkDays(),
       ]);
       setJobs(loadedJobs);
       setWorkDays(loadedWorkDays);
+      
+      // Mark loading as complete immediately after data is set
+      setIsLoadingJobs(false);
       
       // Mark initial load as complete after a short delay
       setTimeout(() => {
@@ -920,6 +925,7 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
       // NO schedule reminders here - only when data changes
     } catch (error) {
       console.error('Error loading data:', error);
+      setIsLoadingJobs(false);
     }
   };
 
@@ -1573,16 +1579,17 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
     }
   };
 
+
   return (
     <SafeAreaView style={styles.container}>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {jobs.length === 0 ? (
+        {!isLoadingJobs && jobs.length === 0 ? (
           <NoJobsWarning onCreateJob={handleCreateJob} />
         ) : (
           <>
         {/* Job selector */}
-        {renderCompactJobSelector()}
+        {!isLoadingJobs && renderCompactJobSelector()}
 
         {/* Calendar Views */}
         {viewMode === 'month' ? (
@@ -1698,6 +1705,7 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
         ) : (
           renderYearView()
         )}
+        {!isLoadingJobs && (
                             <BlurView intensity={isDark ? 95 : 92} tint={isDark ? "dark" : "light"} style={{ padding: 24, borderRadius: 20 }}>
             <LinearGradient
               colors={isDark ? ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.11)'] : ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.01)']}
@@ -1759,6 +1767,8 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
             </View>
             
           </BlurView>
+        )}
+        {!isLoadingJobs && (
         <View style={styles.actionButtonsContainer}>
           <TouchableOpacity
             style={styles.actionButton}
@@ -1766,7 +1776,7 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
           >
             <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.syncButton]}>
               <LinearGradient
-                colors={['rgba(52, 199, 89, 0.1)', 'rgba(52, 199, 89, 0.05)']}
+                colors={['rgba(52, 199, 89, 0)', 'rgba(52, 199, 89, 0.04)']}
                 style={styles.actionButtonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -1779,13 +1789,14 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
             </BlurView>
           </TouchableOpacity>
 
+
           <TouchableOpacity
             style={styles.actionButton}
             onPress={handleClearMonth}
           >
             <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.clearButton]}>
               <LinearGradient
-                colors={['rgba(255, 59, 48, 0.1)', 'rgba(255, 59, 48, 0.05)']}
+                colors={['rgba(255, 58, 48, 0.03)', 'rgba(255, 58, 48, 0)']}
                 style={styles.actionButtonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -1798,20 +1809,7 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
             </BlurView>
           </TouchableOpacity>
         </View>
-
-   
-
-
-
-  
-
-        <View style={styles.legendCard}>
-
-        </View>
-
-
-
-
+        )}
           </>
         )}
       </ScrollView>

@@ -3824,7 +3824,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       }
       
       // Verificar suscripción premium antes de activar
-      if (value && isSubscribed) {
+      if (value && !isSubscribed) {
         setShowPremiumModal(true);
       } else {
         handleAutoTimerToggle(value);

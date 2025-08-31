@@ -504,7 +504,7 @@ export default function MiniMapWidget({
       }
     ]}>
       <View style={styles.mapContainer}>
-        {activeTimerElapsed > 0 && (
+     
           <View style={styles.timerOverlay}>
             <View style={styles.timerContent}>
               {/* Main timer display */}
@@ -537,7 +537,7 @@ export default function MiniMapWidget({
               )}
             </View>
           </View>
-        )}
+
 
         {/* Delay countdown overlay */}
         {(autoTimerState === 'entering' || autoTimerState === 'leaving') && remainingDelayTime > 0 && (

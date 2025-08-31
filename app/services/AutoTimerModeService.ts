@@ -49,9 +49,9 @@ class AutoTimerModeService {
       console.error('Error reading AutoTimer mode settings:', error);
     }
 
-    // Configuración por defecto: foreground-only (App Abierta)
+    // Configuración por defecto: background-allowed para que funcione con app minimizada
     return {
-      mode: 'foreground-only',
+      mode: 'background-allowed',
       hasBackgroundPermission: false,
       userChoice: 'not-selected'
     };
