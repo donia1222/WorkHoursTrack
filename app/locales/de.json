@@ -8,7 +8,11 @@
     "delete": "Löschen",
     "confirm_delete": "Löschung bestätigen",
     "loading": "Synchronisiert...",
-    "error": "Fehler"
+    "error": "Fehler",
+    "meters": "Meter",
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "more": "mehr"
   },
   "preferences": {
     "title": "Einstellungen",
@@ -210,6 +214,17 @@
     "delete_confirm_button": "Löschen",
     "delete_success": "Arbeit erfolgreich gelöscht",
     "delete_error": "Arbeit konnte nicht gelöscht werden",
+    "auto_timer_inactive": "Auto-Timer inaktiv",
+    "auto_timer_paused": "Auto-Timer pausiert",
+    "per_hour": "pro Stunde",
+    "configure_schedule": "Zeitplan konfigurieren",
+    "configure_rates": "Tarife konfigurieren",
+    "configure_company": "Unternehmen konfigurieren",
+    "company_configured": "Unternehmen konfiguriert",
+    "ready_to_invoice": "Bereit zur Abrechnung",
+    "my_jobs": "Meine Arbeitsplätze",
+    "active_jobs": "Aktive Arbeitsplätze",
+    "with_location": "Mit Standort",
     "no_job_selected": "Keine Arbeit ausgewählt",
     "working_now": "Arbeitet jetzt",
     "next_shift": "Nächste Schicht", 
@@ -219,7 +234,11 @@
     "in_range": "Im Arbeitsbereich",
     "out_of_range": "Außerhalb des Bereichs",
     "auto_timer_status": "Automatischer Timer: {{status}}",
-    "view_options": "Tippen für Optionen"
+    "view_options": "Tippen für Optionen",
+    "active_jobs": "Aktive Arbeitsplätze",
+    "configure_rates": "Tarife konfigurieren",
+    "overtime": "Extra",
+    "total_hours": "Gesamt"
   },
   "timer": {
     "title": "Timer",
@@ -470,7 +489,11 @@
     "quick_presets": "Schnelle Presets:",
     "calendar_sync_error": "Nur Arbeitstage können synchronisiert werden",
     "short_shift": "Kurze Schicht",
-    "overtime_hours": "Überstunden"
+    "overtime_hours": "Überstunden",
+    "monthly": "Monatlich",
+    "annual": "Jährlich",
+    "days_per_week": "Tage/Woche",
+    "per_day": "pro Tag"
   },
   "job_statistics": {
     "title": "Statistiken für {{jobName}}",

@@ -11,8 +11,8 @@
     "error": "Errore",
     "meters": "metri",
     "today": "Oggi",
-    "yesterday": "Ieri"
-  },
+    "yesterday": "Ieri",
+    "more": "più"  },
   "preferences": {
     "title": "Preferenze",
     "subtitle": "Personalizza la tua esperienza",
@@ -1088,8 +1088,8 @@
     "history": {
       "title": "Cronologia chat",
       "today": "Oggi",
-      "yesterday": "Ieri",
-      "days_ago": "giorni fa",
+      "yesterday": "Ieri",,
+    "more": "più"      "days_ago": "giorni fa",
       "restore": "Ripristina",
       "restore_title": "Ripristina sessione",
       "restore_message": "Questo sostituirà la conversazione attuale. Continuare?",

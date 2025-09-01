@@ -48,30 +48,59 @@ export default function WorkDayModal({
   const { t, language } = useLanguage();
   const { colors } = useTheme();
   const { settings } = useNotifications();
-  const { formatTimeWithPreferences, parseTimeInput, getTimePlaceholder } = useTimeFormat();
+  const { formatTimeWithPreferences, parseTimeInput } = useTimeFormat();
   const { navigateTo } = useNavigation();
 
-  // Custom TimeInput component for WorkDayModal
+  // Custom TimeInput component for WorkDayModal - shows only 24h format for clean input
   const TimeInput = ({ value, onChangeText, style, placeholder, ...props }: any) => {
-    const [displayValue, setDisplayValue] = useState(formatTimeWithPreferences(value || ''));
+    const [internalValue, setInternalValue] = useState(value || '');
+    const [hasInitialized, setHasInitialized] = useState(false);
+    
+    // Helper function to display time in 24h format always (clean input)
+    const formatTimeFor24hInput = (timeString: string) => {
+      if (!timeString) return '';
+      // Always show in 24h format regardless of user preference for cleaner input
+      return timeString.includes(':') ? timeString.substring(0, 5) : timeString; // Remove AM/PM part
+    };
     
     useEffect(() => {
-      setDisplayValue(formatTimeWithPreferences(value || ''));
-    }, [value, formatTimeWithPreferences]);
+      if (!hasInitialized && value) {
+        setInternalValue(formatTimeFor24hInput(value));
+        setHasInitialized(true);
+      }
+    }, [value, hasInitialized]);
 
     const handleChangeText = (text: string) => {
-      setDisplayValue(text);
-      // Convert to 24-hour format for storage
-      const parsedTime = parseTimeInput(text);
-      onChangeText(parsedTime);
+      setInternalValue(text);
+      // Only parse and send back valid times, but don't interrupt typing
+      if (text.includes(':') && text.length >= 4) {
+        const parsedTime = parseTimeInput(text);
+        if (parsedTime) {
+          onChangeText(parsedTime);
+        }
+      }
+    };
+
+    const handleBlur = () => {
+      // Format and validate on blur
+      const parsedTime = parseTimeInput(internalValue);
+      if (parsedTime) {
+        setInternalValue(formatTimeFor24hInput(parsedTime));
+        onChangeText(parsedTime);
+      } else if (value) {
+        setInternalValue(formatTimeFor24hInput(value));
+      }
     };
 
     return (
       <TextInput
         style={style}
-        value={displayValue}
+        value={internalValue}
         onChangeText={handleChangeText}
-        placeholder={placeholder || getTimePlaceholder()}
+        onBlur={handleBlur}
+        placeholder="HH:MM"
+        autoCorrect={false}
+        keyboardType="numeric"
         {...props}
       />
     );

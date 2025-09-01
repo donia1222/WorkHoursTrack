@@ -38,6 +38,73 @@ import { FreeAddressSearch } from './FreeAddressSearch';
 import AddressAutocompleteDropdown from './AddressAutocompleteDropdown';
 import * as Updates from 'expo-updates';
 
+// Custom TimeInput component that auto-formats time input (1200 -> 12:00)
+const TimeInput = ({ value, onChangeText, style, placeholder, placeholderTextColor, ...props }: any) => {
+  const [internalValue, setInternalValue] = useState(value || '');
+  const [hasInitialized, setHasInitialized] = useState(false);
+  
+  const formatTimeFor24hInput = (timeString: string) => {
+    if (!timeString) return '';
+    return timeString.includes(':') ? timeString.substring(0, 5) : timeString;
+  };
+  
+  const autoFormatTimeInput = (text: string) => {
+    // Remove all non-digits
+    const digitsOnly = text.replace(/\D/g, '');
+    
+    if (digitsOnly.length === 0) return '';
+    if (digitsOnly.length <= 2) return digitsOnly;
+    if (digitsOnly.length === 3) {
+      // 123 -> 1:23
+      return `${digitsOnly[0]}:${digitsOnly.slice(1)}`;
+    }
+    if (digitsOnly.length >= 4) {
+      // 1234 -> 12:34
+      return `${digitsOnly.slice(0, 2)}:${digitsOnly.slice(2, 4)}`;
+    }
+    return digitsOnly;
+  };
+  
+  useEffect(() => {
+    if (!hasInitialized && value) {
+      setInternalValue(formatTimeFor24hInput(value));
+      setHasInitialized(true);
+    }
+  }, [value, hasInitialized]);
+
+  const handleChangeText = (text: string) => {
+    const formatted = autoFormatTimeInput(text);
+    setInternalValue(formatted);
+    
+    if (formatted.includes(':') && formatted.length >= 4) {
+      onChangeText(formatted);
+    }
+  };
+
+  const handleBlur = () => {
+    if (internalValue && internalValue.includes(':') && internalValue.length >= 4) {
+      onChangeText(internalValue);
+    } else if (value) {
+      setInternalValue(formatTimeFor24hInput(value));
+    }
+  };
+
+  return (
+    <TextInput
+      style={style}
+      value={internalValue}
+      onChangeText={handleChangeText}
+      onBlur={handleBlur}
+      placeholder="HH:MM"
+      placeholderTextColor={placeholderTextColor}
+      keyboardType="numeric"
+      maxLength={5}
+      autoCorrect={false}
+      {...props}
+    />
+  );
+};
+
 interface JobFormModalProps {
   visible: boolean;
   onClose: () => void;
@@ -1136,6 +1203,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
+
   },
 
   radioButton: {
@@ -2712,32 +2780,28 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               <View style={styles.row}>
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>{t('job_form.schedule.start_time')}</Text>
-                  <TextInput
+                  <TimeInput
                     style={styles.input}
-                    value={formatTimeWithPreferences(getDaySchedule(selectedDay)?.startTime || '')}
+                    value={getDaySchedule(selectedDay)?.startTime || ''}
                     onChangeText={(value) => {
                       const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
-                      const parsedTime = parseTimeInput(value);
-                      console.log('🕐 Updating startTime for day', selectedDay, 'value:', value, 'parsedTime:', parsedTime);
-                      updateDaySchedule(selectedDay, { ...currentSchedule, startTime: parsedTime });
+                      console.log('🕐 Updating startTime for day', selectedDay, 'value:', value);
+                      updateDaySchedule(selectedDay, { ...currentSchedule, startTime: value });
                     }}
-                    placeholder={getTimePlaceholder()}
                     placeholderTextColor={colors.textTertiary}
                   />
                 </View>
                 
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>{t('job_form.schedule.end_time')}</Text>
-                  <TextInput
+                  <TimeInput
                     style={styles.input}
-                    value={formatTimeWithPreferences(getDaySchedule(selectedDay)?.endTime || '')}
+                    value={getDaySchedule(selectedDay)?.endTime || ''}
                     onChangeText={(value) => {
                       const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
-                      const parsedTime = parseTimeInput(value);
-                      console.log('🕐 Updating endTime for day', selectedDay, 'value:', value, 'parsedTime:', parsedTime);
-                      updateDaySchedule(selectedDay, { ...currentSchedule, endTime: parsedTime });
+                      console.log('🕐 Updating endTime for day', selectedDay, 'value:', value);
+                      updateDaySchedule(selectedDay, { ...currentSchedule, endTime: value });
                     }}
-                    placeholder={getTimePlaceholder()}
                     placeholderTextColor={colors.textTertiary}
                   />
                 </View>
@@ -2768,15 +2832,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 <View style={styles.row}>
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>{t('job_form.schedule.second_start_time')}</Text>
-                    <TextInput
+                    <TimeInput
                       style={styles.input}
-                      value={formatTimeWithPreferences(getDaySchedule(selectedDay)?.secondStartTime || '')}
+                      value={getDaySchedule(selectedDay)?.secondStartTime || ''}
                       onChangeText={(value) => {
                         const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
-                        const parsedTime = parseTimeInput(value);
-                        updateDaySchedule(selectedDay, { ...currentSchedule, secondStartTime: parsedTime });
+                        updateDaySchedule(selectedDay, { ...currentSchedule, secondStartTime: value });
                       }}
-                      placeholder={getTimePlaceholder()}
                       placeholderTextColor={colors.textTertiary}
                     />
                   </View>
@@ -2785,13 +2847,11 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     <Text style={styles.label}>{t('job_form.schedule.second_end_time')}</Text>
                     <TextInput
                       style={styles.input}
-                      value={formatTimeWithPreferences(getDaySchedule(selectedDay)?.secondEndTime || '')}
+                      value={getDaySchedule(selectedDay)?.secondEndTime || ''}
                       onChangeText={(value) => {
                         const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
-                        const parsedTime = parseTimeInput(value);
-                        updateDaySchedule(selectedDay, { ...currentSchedule, secondEndTime: parsedTime });
+                        updateDaySchedule(selectedDay, { ...currentSchedule, secondEndTime: value });
                       }}
-                      placeholder={getTimePlaceholder()}
                       placeholderTextColor={colors.textTertiary}
                     />
                   </View>
@@ -4039,35 +4099,6 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     </View>
                   </TouchableOpacity>
 
-                  {/* Modo 2: App abierta + minimizada */}
-                  <TouchableOpacity 
-                    style={[
-                      styles.modeOption, 
-                      selectedAutoTimerMode === 'background-allowed' && styles.modeOptionSelected
-                    ]}
-                    onPress={() => handleModeSelection('background-allowed')}
-                  >
-                    <View style={styles.modeOptionContent}>
-                      <View style={styles.modeOptionHeader}>
-                        <Text style={styles.modeOptionIcon}>🔄</Text>
-                        <Text style={styles.modeOptionTitle}>{t('job_form.auto_timer.mode_background_title')}</Text>
-                        <View style={[
-                          styles.radioButton,
-                          selectedAutoTimerMode === 'background-allowed' && styles.radioButtonSelected
-                        ]}>
-                          {selectedAutoTimerMode === 'background-allowed' && (
-                            <View style={styles.radioButtonInner} />
-                          )}
-                        </View>
-                      </View>
-                      <Text style={styles.modeOptionDescription}>
-                        {t('job_form.auto_timer.mode_background_description')}
-                      </Text>
-                      <Text style={styles.modeOptionDetails}>
-                        {t('job_form.auto_timer.mode_background_details')}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
 
                   {/* Modo 3: Siempre activo (requiere permisos) */}
                   <TouchableOpacity 
@@ -4078,8 +4109,11 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     onPress={() => handleModeSelection('full-background')}
                   >
                     <View style={styles.modeOptionContent}>
+                       <Text style={styles.modeOptionTitle}>🔄   {t('job_form.auto_timer.mode_background_title')}</Text>
                       <View style={styles.modeOptionHeader}>
+                        
                         <Text style={styles.modeOptionIcon}>🌍</Text>
+                        
                         <Text style={styles.modeOptionTitle}>{t('job_form.auto_timer.mode_full_background_title')}</Text>
                         <View style={[
                           styles.radioButton,
@@ -4186,6 +4220,18 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                       <IconSymbol size={20} name="plus" color={colors.primary} />
                     </TouchableOpacity>
                   </View>
+                     <View style={styles.previewCard}>
+
+              <Text style={styles.previewText}>
+                           <Text style={styles.previewTitle}>🕑 </Text>
+                {t('job_form.auto_timer.preview', {
+                  delayStart: formData.autoTimer?.delayStart ?? 2,
+                  delayStop: formData.autoTimer?.delayStop ?? 2
+                })}
+              </Text>
+             
+            </View>
+            
                 </View>
               </>
             )}
@@ -4245,16 +4291,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 </View>
               )}
             </View>
-   <View style={styles.previewCard}>
-   
-              <Text style={styles.previewText}>
-                           <Text style={styles.previewTitle}>🕑 </Text>
-                {t('job_form.auto_timer.preview', {
-                  delayStart: formData.autoTimer?.delayStart ?? 2,
-                  delayStop: formData.autoTimer?.delayStop ?? 2
-                })}
-              </Text>
-            </View>
+
 
 
             {/* Map showing job location and geofence radius */}

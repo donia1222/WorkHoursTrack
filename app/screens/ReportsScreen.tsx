@@ -2833,11 +2833,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   recentItemContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 6,
   },
   modernJobIndicator: {
-    width: 32,
-    height: 32,
+    width: 26,
+    height: 26,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',

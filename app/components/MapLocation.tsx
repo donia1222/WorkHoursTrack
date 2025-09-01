@@ -2962,6 +2962,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   >
                     <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
 
+{jobs.length <= 3 && (
                       <Animated.View style={[{
                         backgroundColor: isDark ? 'rgba(96, 165, 250, 0.25)' : 'rgba(59, 130, 246, 0.2)',
                         borderRadius: isTablet ? 20 : 12,
@@ -2971,6 +2972,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                       }, jobs.length === 0 ? animatedNoJobsIconStyle : {}]}>
                         <IconSymbol size={isTablet ? 36 : (isSmallScreen ? 18 : 22)} name={jobs.length === 0 ? "plus.circle.fill" : "briefcase.fill"} color={isDark ? '#93c5fd' : '#2563eb'} />
                       </Animated.View>
+                      )}
                       <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
                         {jobs.length === 0 ? (
                           <>
@@ -3058,7 +3060,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                     fontSize: isTablet ? 13 : (isSmallScreen ? 9 : 11),
                                     color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
                                     fontStyle: 'italic',
-                                  }}>+{jobs.length - 3} más...</Text>
+                                  }}>+{jobs.length - 3} {t('common.more')}...</Text>
                                 )}
                               </View>
                             </View>
@@ -3884,7 +3886,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                       fontSize: isTablet ? 14 : 10,
                                       color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#15803d',
                                       fontWeight: '600',
-                                    }}>hrs</Text>
+                                    }}>{t('job_selector.time_periods.hour')}</Text>
                                   </View>
                                   {/* Max indicator */}
                                   <View style={{
@@ -3933,7 +3935,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           {/* Text content on the left */}
                           <View style={{ flex: 1, alignItems: 'flex-start', justifyContent: 'center' }}>
                             <Text style={{
-                              fontSize: isTablet ? 14 : (isSmallScreen ? 11 : 12),
+                              fontSize: isTablet ? 14 : (isSmallScreen ? 11 : 14),
                               fontWeight: '700',
                                  color: isDark ? '#a7303092' : '#a7303092',
                               marginBottom: isTablet ? 2 : 1,

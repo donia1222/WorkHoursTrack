@@ -11,7 +11,8 @@
     "error": "Error",
     "meters": "metros",
     "today": "Hoy",
-    "yesterday": "Ayer"
+    "yesterday": "Ayer",
+    "more": "más"
   },
   "preferences": {
     "title": "Preferencias",
