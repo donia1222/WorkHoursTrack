@@ -1489,7 +1489,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       // Para hasta 4 opciones (incluyendo "Todos"), mostrar como pestañas
       return (
         <Animated.View style={[styles.compactJobSelector, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
-          <Text style={styles.compactJobSelectorTitle}>{t('reports.filter_by_job')}</Text>
+          <Text style={styles.compactJobSelectorTitle}></Text>
           <View style={styles.compactJobTabs}>
             {allOptions.map((option) => (
               <TouchableOpacity

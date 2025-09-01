@@ -1223,7 +1223,7 @@
   "chatbot": {
     "title": "Analyze-Bot",
     "subtitle": "Analyze images with artificial intelligence",
-    "welcome_message": "Hello! I'm your assistant specialized in work plan analysis. I can:\n\n📅 Analyze images and PDF documents of work schedules\n🔍 Extract work days, schedules and shifts\n🏖️ Identify free days and vacations\n👥 Detect multiple people and ask whose data to extract\n🧠 Remember the context of our conversation\n📊 Organize information clearly\n\n📸 Send a photo or 📄 PDF document of your work plan.\n💡 Type \"reset\" to start over.",
+    "welcome_message": "Hello! I'm your intelligent work assistant with multiple capabilities. I can:\n\n📅 Analyze images and PDF documents of work schedules\n🔍 Extract work days, schedules and shifts\n🏖️ Identify free days and vacations\n👥 Detect multiple people and ask whose data to extract\n🌐 Web search for labor information by countries\n⚖️ Legal consultations (minimum wage, legislation)\n📊 Export to app calendar\n🔄 Native calendar synchronization\n🧠 Advanced contextual intelligence\n\n📸 Send a photo or 📄 PDF document of your work plan.\n❓ Ask me about labor laws from any country.\n💡 Type \"reset\" to start over.",
     "welcome_title": "Work Plan AI Assistant",
     "welcome_subtitle": "Hello! I'm your specialized assistant for work schedule analysis. I help you extract and organize information from your work plans.",
     "feature_analyze": "Analyze images and PDF documents of work schedules",

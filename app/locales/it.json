@@ -1064,7 +1064,7 @@
     }
   },
   "chatbot": {
-    "welcome_message": "Ciao! Sono il tuo assistente specializzato nell'analisi dei piani di lavoro. Posso:\n\n📅 Analizzare immagini e documenti PDF di orari di lavoro\n🔍 Estrarre giorni lavorativi, orari e turni\n🏖️ Identificare giorni liberi e vacanze\n👥 Rilevare più persone e chiedere di chi estrarre i dati\n🧠 Ricordare il contesto della nostra conversazione\n📊 Organizzare le informazioni chiaramente\n\n📸 Invia una foto o 📄 documento PDF del tuo piano di lavoro.\n💡 Scrivi \"reset\" per ricominciare.",
+    "welcome_message": "Ciao! Sono il tuo assistente intelligente del lavoro con molteplici capacità. Posso:\n\n📅 Analizzare immagini e documenti PDF di orari di lavoro\n🔍 Estrarre giorni lavorativi, orari e turni\n🏖️ Identificare giorni liberi e vacanze\n👥 Rilevare più persone e chiedere di chi estrarre i dati\n🌐 Ricerca web di informazioni lavorative per paesi\n⚖️ Consulenze legali (salario minimo, legislazione)\n📊 Esportare nel calendario dell'app\n🔄 Sincronizzazione con calendario nativo\n🧠 Intelligenza contestuale avanzata\n\n📸 Invia una foto o 📄 documento PDF del tuo piano di lavoro.\n❓ Chiedimi delle leggi sul lavoro di qualsiasi paese.\n💡 Scrivi \"reset\" per ricominciare.",
     "welcome_title": "Assistente IA per Piani di Lavoro",
     "welcome_subtitle": "Ciao! Sono il tuo assistente specializzato nell'analisi degli orari di lavoro. Ti aiuto a estrarre e organizzare le informazioni dai tuoi piani di lavoro.",
     "feature_analyze": "Analizzare immagini e documenti PDF di orari di lavoro",
@@ -1088,8 +1088,9 @@
     "history": {
       "title": "Cronologia chat",
       "today": "Oggi",
-      "yesterday": "Ieri",,
-    "more": "più"      "days_ago": "giorni fa",
+      "yesterday": "Ieri",
+      "more": "più",
+      "days_ago": "giorni fa",
       "restore": "Ripristina",
       "restore_title": "Ripristina sessione",
       "restore_message": "Questo sostituirà la conversazione attuale. Continuare?",

@@ -18,6 +18,7 @@ import { useNavigation } from '../context/NavigationContext';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { getRandomQuestion } from '../services/ChatbotWidgetService';
 import { useAutoTimer } from '../contexts/AutoTimerContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { useTimeFormat } from '../hooks/useTimeFormat';
@@ -27,6 +28,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import WidgetSyncService from '../services/WidgetSyncService';
 import MiniMapWidget from './MiniMapWidget';
 import { logScreenDetection } from '../config/logging';
+
 
 // Dark mode map style
 const darkMapStyle = [
@@ -1177,7 +1179,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const { colors, isDark } = useTheme();
   const autoTimer = useAutoTimer();
   const { navigateTo } = useNavigation();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { triggerHaptic } = useHapticFeedback();
   const { formatTimeWithPreferences, useTimeFormat: isTimeFormat } = useTimeFormat();
   
@@ -1272,6 +1274,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [shouldReopenJobCardsModal, setShouldReopenJobCardsModal] = useState(false);
   const [selectedDaySchedule, setSelectedDaySchedule] = useState<number | null>(null);
   const [monthlyOvertime, setMonthlyOvertime] = useState<number>(0);
+  const [dynamicChatbotQuestion, setDynamicChatbotQuestion] = useState<string>('');
   const mapRef = useRef<MapView>(null);
     const [monthlyTotalHours, setMonthlyTotalHours] = useState<number>(0);
 
@@ -1301,6 +1304,31 @@ export default function MapLocation({ location, onNavigate }: Props) {
       return 0;
     }
   };
+
+  // Load dynamic chatbot question when component mounts or language changes
+  useEffect(() => {
+    const loadDynamicQuestion = async () => {
+      try {
+        // Get current location coordinates if available
+        const coordinates = location ? { 
+          latitude: location.latitude, 
+          longitude: location.longitude 
+        } : undefined;
+        
+        const randomQuestion = await getRandomQuestion(language, coordinates);
+        if (randomQuestion) {
+          setDynamicChatbotQuestion(randomQuestion);
+        } else {
+          setDynamicChatbotQuestion(t('chatbot.welcome_title'));
+        }
+      } catch (error) {
+        console.warn('Failed to load dynamic chatbot question:', error);
+        setDynamicChatbotQuestion(t('chatbot.welcome_title'));
+      }
+    };
+
+    loadDynamicQuestion();
+  }, [language, t, location]); // Re-run when language or location changes
   
   // Optimización para prevenir congelamiento durante zoom rápido
   const onRegionChangeComplete = useCallback((region: any) => {
@@ -4038,7 +4066,16 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     elevation: 5,
                     overflow: 'hidden',
                   }}
-                  onPress={() => onNavigate?.('chatbot')}
+                  onPress={async () => {
+                    if (dynamicChatbotQuestion) {
+                      try {
+                        await AsyncStorage.setItem('chatbot_initial_question', dynamicChatbotQuestion);
+                      } catch (error) {
+                        console.warn('Failed to store initial question:', error);
+                      }
+                    }
+                    onNavigate?.('chatbot');
+                  }}
                   activeOpacity={0.9}
                 >
                   <LinearGradient
@@ -4064,26 +4101,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         <IconSymbol size={24} name="sparkles" color={isDark ? '#93c5fd' : '#3b82f6'} />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Animated.Text 
-                          numberOfLines={1}
-                          style={[
-                          {
-                            fontSize: isTablet ? 18 : (isSmallScreen ? 13 : 14),
-                            fontWeight: '600',
-                            color: isDark ? 'white' : '#1e3a8a',
-                          },
-                          animatedAITextStyle
-                        ]}>
-                          {(() => {
-                            const title = t('chatbot.welcome_title');
-                            // Simplificar el título para iPhone
-                            if (!isTablet) {
-                              return title.replace('de Planes de Trabajo', '').replace('Work Plan', '').trim();
-                            }
-                            return title;
-                          })()}
-                        </Animated.Text>
-                        <Text 
+                                     <Text 
                           numberOfLines={2}
                           style={{
                           fontSize: isTablet ? 14 : (isSmallScreen ? 9 : 10),
@@ -4097,20 +4115,31 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             return subtitle.length > maxLength ? subtitle.substring(0, maxLength) + '...' : subtitle;
                           })()}
                         </Text>
+
+                        <Animated.Text 
+                          numberOfLines={1}
+                          style={[
+                          {
+                            fontSize: isTablet ? 18 : (isSmallScreen ? 13 : 14),
+                            fontWeight: '600',
+                            color: isDark ? 'white' : '#1e3a8a',
+                          },
+                          animatedAITextStyle
+                        ]}>
+                          {(() => {
+                            // Use dynamic question if available, fallback to static title
+                            const displayText = dynamicChatbotQuestion || t('chatbot.welcome_title');
+                            // Simplificar el texto para iPhone
+                            if (!isTablet && displayText.length > 50) {
+                              return displayText.substring(0, 50) + '...';
+                            }
+                            return displayText;
+                          })()}
+                        </Animated.Text>
+           
                       </View>
                     </View>
-                    <View style={{
-                      backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(37, 99, 235, 0.15)',
-                      borderRadius: 20,
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                    }}>
-                      <Text style={{
-                        fontSize: isTablet ? 12 : 10,
-                        fontWeight: '600',
-                        color: isDark ? '#93c5fd' : '#3b82f6',
-                      }}>NEW!</Text>
-                    </View>
+           
                   </View>
                 </TouchableOpacity>
                 )}

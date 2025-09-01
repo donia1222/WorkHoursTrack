@@ -1005,7 +1005,7 @@
     }
   },
   "chatbot": {
-    "welcome_message": "Hallo! Ich bin Ihr Assistent, spezialisiert auf die Analyse von Arbeitsplänen. Ich kann:\n\n📅 Bilder und PDF-Dokumente von Arbeitsplänen analysieren\n🔍 Arbeitstage, Arbeitszeiten und Schichten extrahieren\n🏖️ Freie Tage und Urlaub identifizieren\n👥 Mehrere Personen erkennen und fragen, wessen Daten extrahiert werden sollen\n🧠 Den Kontext unserer Unterhaltung merken\n📊 Informationen klar organisieren\n\n📸 Senden Sie ein Foto oder 📄 PDF-Dokument Ihres Arbeitsplans.\n💡 Schreiben Sie \"reset\" um neu zu beginnen.",
+    "welcome_message": "Hallo! Ich bin Ihr intelligenter Arbeitsassistent mit vielfältigen Fähigkeiten. Ich kann:\n\n📅 Bilder und PDF-Dokumente von Arbeitsplänen analysieren\n🔍 Arbeitstage, Arbeitszeiten und Schichten extrahieren\n🏖️ Freie Tage und Urlaub identifizieren\n👥 Mehrere Personen erkennen und fragen, wessen Daten extrahiert werden sollen\n🌐 Websuche für Arbeitsinformationen nach Ländern\n⚖️ Rechtsberatungen (Mindestlohn, Gesetzgebung)\n📊 In App-Kalender exportieren\n🔄 Native Kalender-Synchronisation\n🧠 Erweiterte kontextuelle Intelligenz\n\n📸 Senden Sie ein Foto oder 📄 PDF-Dokument Ihres Arbeitsplans.\n❓ Fragen Sie mich nach Arbeitsgesetzen aus jedem Land.\n💡 Schreiben Sie \"reset\" um neu zu beginnen.",
     "welcome_title": "Arbeitsplan KI-Assistent",
     "welcome_subtitle": "Hallo! Ich bin Ihr spezialisierter Assistent für die Analyse von Arbeitszeiten. Ich helfe Ihnen, Informationen aus Ihren Arbeitsplänen zu extrahieren und zu organisieren.",
     "feature_analyze": "Bilder und PDF-Dokumente von Arbeitszeiten analysieren",

@@ -1256,7 +1256,7 @@
   "chatbot": {
     "title": "Analyze-Bot",
     "subtitle": "Analiza imágenes con inteligencia artificial",
-    "welcome_message": "¡Hola! Soy tu asistente especializado en análisis de planes de trabajo. Puedo:\n\n📅 Analizar imágenes y documentos PDF de horarios laborales\n🔍 Extraer días de trabajo, horarios y turnos\n🏖️ Identificar días libres y vacaciones\n👥 Detectar múltiples personas y preguntar de quién extraer datos\n🧠 Recordar el contexto de nuestra conversación\n📊 Organizar la información de forma clara\n\n📸 Envía una foto o 📄 documento PDF de tu plan de trabajo.\n💡 Escribe \"reset\" para empezar de nuevo.",
+    "welcome_message": "¡Hola! Soy tu asistente laboral inteligente con múltiples capacidades. Puedo:\n\n📅 Analizar imágenes y documentos PDF de horarios laborales\n🔍 Extraer días de trabajo, horarios y turnos\n🏖️ Identificar días libres y vacaciones\n👥 Detectar múltiples personas y preguntar de quién extraer datos\n🌐 Búsqueda web de información laboral por países\n⚖️ Consultas legales (salario mínimo, legislación)\n📊 Exportar al calendario de la app\n🔄 Sincronización con calendario nativo\n🧠 Inteligencia contextual avanzada\n\n📸 Envía una foto o 📄 documento PDF de tu plan de trabajo.\n❓ Pregúntame sobre leyes laborales de cualquier país.\n💡 Escribe \"reset\" para empezar de nuevo.",
     "welcome_title": "Asistente IA de Planes de Trabajo",
     "welcome_subtitle": "¡Hola! Soy tu asistente especializado en análisis de horarios laborales. Te ayudo a extraer y organizar información de tus planes de trabajo.",
     "feature_analyze": "Analizar imágenes y documentos PDF de horarios laborales",

@@ -1234,7 +1234,7 @@
   "chatbot": {
     "title": "Analyse-Bot",
     "subtitle": "Analyseer afbeeldingen met kunstmatige intelligentie",
-    "welcome_message": "Hallo! Ik ben je assistent gespecialiseerd in werkplan analyses. Ik kan:\n\n📅 Afbeeldingen en PDF documenten van werkschema's analyseren\n🔍 Werkdagen, schema's en diensten extraheren\n🏖️ Vrije dagen en vakanties identificeren\n👥 Meerdere personen detecteren en vragen wiens gegevens te extraheren\n🧠 Het gesprek context onthouden\n📊 Informatie duidelijk organiseren\n\n📸 Stuur een foto of 📄 PDF document van je werkplan.\n💡 Typ \"reset\" om opnieuw te beginnen.",
+    "welcome_message": "Hallo! Ik ben je intelligente werkassistent met meerdere capaciteiten. Ik kan:\n\n📅 Afbeeldingen en PDF documenten van werkschema's analyseren\n🔍 Werkdagen, schema's en diensten extraheren\n🏖️ Vrije dagen en vakanties identificeren\n👥 Meerdere personen detecteren en vragen wiens gegevens te extraheren\n🌐 Webzoeken naar werkinformatie per land\n⚖️ Juridische consultaties (minimumloon, wetgeving)\n📊 Exporteren naar app kalender\n🔄 Synchronisatie met native kalender\n🧠 Geavanceerde contextuele intelligentie\n\n📸 Stuur een foto of 📄 PDF document van je werkplan.\n❓ Vraag me naar arbeidswetten uit elk land.\n💡 Typ \"reset\" om opnieuw te beginnen.",
     "welcome_title": "AI Werkplan Assistent",
     "welcome_subtitle": "Hallo! Ik ben je assistent gespecialiseerd in werkschema analyses. Ik help je informatie uit je werkplannen te extraheren en organiseren.",
     "feature_analyze": "Analyseer afbeeldingen en PDF documenten van werkschema's",

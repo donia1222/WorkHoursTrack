@@ -28,10 +28,10 @@ import { useLanguage } from '@/app/contexts/LanguageContext';
 import { useTheme, ThemeColors } from '@/app/contexts/ThemeContext';
 import { useNavigation, useBackNavigation } from '@/app/context/NavigationContext';
 import { useSubscription } from '@/app/hooks/useSubscription';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useHapticFeedback } from '@/app/hooks/useHapticFeedback';
 import { JobService } from '@/app/services/JobService';
 import { LinearGradient } from 'expo-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import ChatHistoryModal, { ChatSession } from '@/app/components/ChatHistoryModal';
 
 const CHAT_HISTORY_KEY = 'chatbot_history_sessions';
@@ -370,6 +370,24 @@ export default function ChatbotScreen() {
     
     loadJobs();
     loadChatHistory();
+  }, []);
+
+  // Check for initial question from dynamic widget
+  useEffect(() => {
+    const checkInitialQuestion = async () => {
+      try {
+        const initialQuestion = await AsyncStorage.getItem('chatbot_initial_question');
+        if (initialQuestion) {
+          setInputText(initialQuestion);
+          // Clear the stored question
+          await AsyncStorage.removeItem('chatbot_initial_question');
+        }
+      } catch (error) {
+        console.warn('Error checking initial question:', error);
+      }
+    };
+
+    checkInitialQuestion();
   }, []);
 
   // Register header history button handler
