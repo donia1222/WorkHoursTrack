@@ -167,6 +167,20 @@ export class EnhancedAIService {
       nl: ['kun je onthouden', 'hoe werkt het', 'wordt opgeslagen', 'geheugen', 'geschiedenis', 'gesprek', 'chatbot', 'applicatie', 'app', 'hoe te gebruiken', 'hoe toegang', 'pictogram', 'knop', 'scherm', 'venster'],
       tr: ['hatırlayabilir misin', 'nasıl çalışır', 'kaydediliyor', 'hafıza', 'geçmiş', 'konuşma', 'chatbot', 'uygulama', 'app', 'nasıl kullanılır', 'nasıl erişilir', 'simge', 'düğme', 'ekran', 'pencere']
     };
+
+    // 🔍 JOB SEARCH DETECTION: Check if question is about finding jobs/work
+    const jobSearchKeywords = {
+      es: ['donde puedo encontrar trabajo', 'como buscar trabajo', 'encontrar empleo', 'buscar empleo', 'paginas de trabajo', 'webs de trabajo', 'sitios de trabajo', 'portales de empleo', 'ofertas de trabajo', 'busqueda de trabajo', 'donde trabajar', 'conseguir trabajo'],
+      en: ['where can i find work', 'how to find job', 'find employment', 'job search', 'job websites', 'work sites', 'employment portals', 'job offers', 'job hunting', 'where to work', 'get a job'],
+      de: ['wo kann ich arbeit finden', 'wie finde ich arbeit', 'arbeit suchen', 'job suchen', 'job webseiten', 'arbeit seiten', 'stellenportale', 'stellenangebote', 'arbeitssuche', 'wo arbeiten', 'job bekommen'],
+      fr: ['où puis-je trouver du travail', 'comment trouver du travail', 'trouver emploi', 'chercher emploi', 'sites emploi', 'sites travail', 'portails emploi', 'offres emploi', 'recherche emploi', 'où travailler', 'obtenir travail'],
+      it: ['dove posso trovare lavoro', 'come trovare lavoro', 'trovare impiego', 'cercare lavoro', 'siti lavoro', 'siti impiego', 'portali lavoro', 'offerte lavoro', 'ricerca lavoro', 'dove lavorare', 'ottenere lavoro'],
+      pt: ['onde posso encontrar trabalho', 'como encontrar trabalho', 'encontrar emprego', 'procurar emprego', 'sites trabalho', 'sites emprego', 'portais emprego', 'ofertas trabalho', 'busca trabalho', 'onde trabalhar', 'conseguir trabalho'],
+      ru: ['где найти работу', 'как найти работу', 'найти работу', 'поиск работы', 'сайты работы', 'сайты трудоустройства', 'порталы работы', 'вакансии', 'поиск вакансий', 'где работать', 'получить работу'],
+      ja: ['どこで仕事を見つける', '仕事を見つける方法', '就職を見つける', '求人を探す', '求人サイト', '仕事サイト', '求人ポータル', '求人情報', '就職活動', 'どこで働く', '仕事を得る'],
+      nl: ['waar kan ik werk vinden', 'hoe werk vinden', 'werk zoeken', 'baan zoeken', 'werk websites', 'baan sites', 'werkportalen', 'vacatures', 'werk zoeken', 'waar werken', 'baan krijgen'],
+      tr: ['nerede iş bulabilirim', 'nasıl iş bulurum', 'iş bulmak', 'iş aramak', 'iş siteleri', 'çalışma siteleri', 'iş portalları', 'iş ilanları', 'iş arama', 'nerede çalışmak', 'iş almak']
+    };
     
     // Check if this is a calendar export question
     for (const [lang, keywords] of Object.entries(calendarExportKeywords)) {
@@ -191,6 +205,20 @@ export class EnhancedAIService {
             isLaborQuestion: false,
             isLocationQuestion: false,
             topics: ['app_functionality']
+          };
+        }
+      }
+    }
+
+    // Check if this is a job search question
+    for (const [lang, keywords] of Object.entries(jobSearchKeywords)) {
+      for (const keyword of keywords) {
+        if (messageLower.includes(keyword)) {
+          console.log(`🔍 [DETECT] Job search question detected: "${keyword}" in ${lang} - WILL search job websites`);
+          return {
+            isLaborQuestion: true,
+            isLocationQuestion: false,
+            topics: ['job_search']
           };
         }
       }

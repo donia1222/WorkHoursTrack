@@ -1334,7 +1334,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
 
 export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true, disableSubscriptionModal = false }: JobFormModalProps) {
   const { colors, isDark } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { isSubscribed } = useSubscription();
   const { navigateTo } = useNavigation();
   const { formatTimeWithPreferences, parseTimeInput, getTimePlaceholder, isValidTimeInput, autoFormatTimeInput } = useTimeFormat();
