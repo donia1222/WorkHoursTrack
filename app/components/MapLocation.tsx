@@ -1275,8 +1275,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [selectedDaySchedule, setSelectedDaySchedule] = useState<number | null>(null);
   const [monthlyOvertime, setMonthlyOvertime] = useState<number>(0);
   const [dynamicChatbotQuestion, setDynamicChatbotQuestion] = useState<string>('');
-  const [isLoadingChatbotQuestion, setIsLoadingChatbotQuestion] = useState<boolean>(true);
-  const [typingChatbotText, setTypingChatbotText] = useState<string>('');
   const mapRef = useRef<MapView>(null);
     const [monthlyTotalHours, setMonthlyTotalHours] = useState<number>(0);
 
@@ -1311,55 +1309,21 @@ export default function MapLocation({ location, onNavigate }: Props) {
   useEffect(() => {
     const loadDynamicQuestion = async () => {
       try {
-        // Initialize loading state
-        setIsLoadingChatbotQuestion(true);
-        setTypingChatbotText('');
+        // Get current location coordinates if available
+        const coordinates = location ? { 
+          latitude: location.latitude, 
+          longitude: location.longitude 
+        } : undefined;
         
-        // Show widget with entrance animation
-        chatbotWidgetOpacity.value = withTiming(1, { duration: 600 });
-        
-        // Start loading icon rotation animation
-        loadingDotsOpacity.value = withRepeat(
-          withTiming(1, { duration: 500 }), 
-          -1, 
-          false
-        );
-        
-        // Simulate loading time (1.5 seconds)
-        setTimeout(async () => {
-          // Get current location coordinates if available
-          const coordinates = location ? { 
-            latitude: location.latitude, 
-            longitude: location.longitude 
-          } : undefined;
-          
-          const randomQuestion = await getRandomQuestion(language, coordinates);
-          const questionToShow = randomQuestion || t('chatbot.welcome_title') || 'Ask me about labor laws!';
-          
-          setDynamicChatbotQuestion(questionToShow);
-          
-          // Stop loading animation
-          setIsLoadingChatbotQuestion(false);
-          loadingDotsOpacity.value = 0;
-          
-          // Start typing effect
-          let currentText = '';
-          const chars = questionToShow.split('');
-          
-          for (let i = 0; i < chars.length; i++) {
-            await new Promise(resolve => setTimeout(resolve, 50)); // 50ms per character
-            currentText += chars[i];
-            setTypingChatbotText(currentText);
-          }
-          
-        }, 600); // 1.5 second loading delay
-        
+        const randomQuestion = await getRandomQuestion(language, coordinates);
+        if (randomQuestion) {
+          setDynamicChatbotQuestion(randomQuestion);
+        } else {
+          setDynamicChatbotQuestion(t('chatbot.welcome_title'));
+        }
       } catch (error) {
         console.warn('Failed to load dynamic chatbot question:', error);
-        setIsLoadingChatbotQuestion(false);
         setDynamicChatbotQuestion(t('chatbot.welcome_title'));
-        setTypingChatbotText(t('chatbot.welcome_title'));
-        loadingDotsOpacity.value = 0;
       }
     };
 
@@ -1451,10 +1415,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
   // Animación para el texto del asistente IA
   const aiTextOpacity = useSharedValue(1);
   
-  // Animaciones para loader y typing del chatbot
-  const loadingDotsOpacity = useSharedValue(0.3);
-  const chatbotWidgetOpacity = useSharedValue(0);
-  
   useEffect(() => {
     aiTextOpacity.value = withRepeat(
       withTiming(0.6, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
@@ -1502,24 +1462,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const animatedAITextStyle = useAnimatedStyle(() => {
     return {
       opacity: aiTextOpacity.value,
-    };
-  });
-
-  const animatedLoadingDotsStyle = useAnimatedStyle(() => {
-    return {
-      opacity: loadingDotsOpacity.value,
-      transform: [{ 
-        rotate: `${loadingDotsOpacity.value * 360}deg` 
-      }]
-    };
-  });
-
-  const animatedChatbotWidgetStyle = useAnimatedStyle(() => {
-    return {
-      opacity: chatbotWidgetOpacity.value,
-      transform: [{
-        scale: chatbotWidgetOpacity.value * 0.2 + 0.8 // Scale from 0.8 to 1.0
-      }]
     };
   });
 
@@ -4107,7 +4049,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
                 {/* AI ASSISTANT WIDGET - NEW - Hide on iPad landscape and when auto-timer is active */}
                 {(!isTablet || (isTablet && isPortrait)) && autoTimerStatus?.state === 'inactive' && (
-                <Animated.View style={animatedChatbotWidgetStyle}>
                 <TouchableOpacity
                   style={{
                     marginTop: isTablet ? 28 : (isSmallScreen ? 6 : 20),
@@ -4209,113 +4150,34 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         <IconSymbol size={24} name="sparkles" color={isDark ? '#93c5fd' : '#3b82f6'} />
                       </View>
                       <View style={{ flex: 1 }}>
-                        {isLoadingChatbotQuestion ? (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                            <Animated.View style={[animatedLoadingDotsStyle]}>
-                              <IconSymbol 
-                                size={isTablet ? 20 : 16} 
-                                name="arrow.clockwise" 
-                                color={isDark ? '#93c5fd' : '#3b82f6'} 
-                              />
-                            </Animated.View>
-                          </View>
-                        ) : (
-                          <Animated.Text 
-                            numberOfLines={2}
-                            style={[
-                            {
-                              fontSize: isTablet ? 17 : (isSmallScreen ? 12 : 13),
-                              fontWeight: '600',
-                              color: isDark ? 'white' : '#1e3a8a',
-                              lineHeight: isTablet ? 20 : (isSmallScreen ? 14 : 16),
-                            },
-                            animatedAITextStyle
-                          ]}>
-                            {typingChatbotText || dynamicChatbotQuestion || t('chatbot.welcome_title')}
-                          </Animated.Text>
-                        )}
+            
+
+                        <Animated.Text 
+                          numberOfLines={2}
+                          style={[
+                          {
+                            fontSize: isTablet ? 17 : (isSmallScreen ? 12 : 13),
+                            fontWeight: '600',
+                            color: isDark ? 'white' : '#1e3a8a',
+                            lineHeight: isTablet ? 20 : (isSmallScreen ? 14 : 16),
+                          },
+                          animatedAITextStyle
+                        ]}>
+                          {dynamicChatbotQuestion || t('chatbot.welcome_title')}
+                        </Animated.Text>
+           
                       </View>
-                      
-                      {/* Send/Go Button */}
-                      {!isLoadingChatbotQuestion && (
-                        <TouchableOpacity
-                          style={{
-                            width: isTablet ? 36 : 32,
-                            height: isTablet ? 36 : 32,
-                            backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(37, 99, 235, 0.15)',
-                            borderRadius: isTablet ? 18 : 16,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            marginLeft: 8,
-                          }}
-                          onPress={async () => {
-                            if (dynamicChatbotQuestion) {
-                              try {
-                                // Store the question for the chatbot screen
-                                await AsyncStorage.setItem('chatbot_initial_question', dynamicChatbotQuestion);
-                                
-                                // Store location context if available
-                                if (location) {
-                                  const coordinates = { 
-                                    latitude: location.latitude, 
-                                    longitude: location.longitude 
-                                  };
-                                  
-                                  const detectedCountry = await detectCountryFromCoordinates(coordinates.latitude, coordinates.longitude);
-                                  const localizedCountry = getLocalizedCountryName(detectedCountry, language);
-                                  
-                                  const contextMessages = {
-                                    es: `[Contexto: Usuario ubicado en ${localizedCountry}.]`,
-                                    en: `[Context: User located in ${localizedCountry}.]`,
-                                    de: `[Kontext: Benutzer befindet sich in ${localizedCountry}.]`,
-                                    fr: `[Contexte: Utilisateur situé en ${localizedCountry}.]`,
-                                    it: `[Contesto: Utente situato in ${localizedCountry}.]`,
-                                    pt: `[Contexto: Usuário localizado em ${localizedCountry}.]`,
-                                    nl: `[Context: Gebruiker bevindt zich in ${localizedCountry}.]`,
-                                    tr: `[Bağlam: Kullanıcı ${localizedCountry}'de bulunuyor.]`,
-                                    ja: `[コンテキスト: ユーザーは${localizedCountry}にいます。]`,
-                                    ru: `[Контекст: Пользователь находится в ${localizedCountry}.]`
-                                  };
-                                  
-                                  const contextMessage = contextMessages[language as keyof typeof contextMessages] || contextMessages['en'];
-                                  
-                                  await AsyncStorage.setItem('chatbot_user_location', JSON.stringify({
-                                    country: detectedCountry,
-                                    localizedCountry: localizedCountry,
-                                    coordinates: coordinates,
-                                    language: language,
-                                    contextMessage: contextMessage
-                                  }));
-                                }
-                              } catch (error) {
-                                console.warn('Failed to store chatbot context:', error);
-                              }
-                              
-                              // Navigate to chatbot
-                              onNavigate?.('chatbot');
-                            }
-                          }}
-                          activeOpacity={0.7}
-                        >
-                          <IconSymbol 
-                            size={isTablet ? 18 : 16} 
-                            name="arrow.right" 
-                            color={isDark ? '#93c5fd' : '#3b82f6'} 
-                          />
-                        </TouchableOpacity>
-                      )}
                     </View>
            
                   </View>
                 </TouchableOpacity>
-                </Animated.View>
                 )}
                 
                 {/* STATISTICS WIDGET - Only for iPad in Portrait */}
                 {isTablet && isPortrait && (
                   <TouchableOpacity
                     style={{
-                      marginTop: isPortrait ? 100 : 106,
+                      marginTop: isPortrait ? 20 : 16,
                       height: isPortrait ? 80 : 70,
                       borderRadius: 28,
                       padding: isPortrait ? 20 : 18,
@@ -4357,10 +4219,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={{
-                            fontSize: 18,
+                            fontSize: 17,
                             fontWeight: '600',
                             marginTop: 10,
-                            color: isDark ? 'white' : '#14532d',
+                            color: isDark ? 'white' : '#14532da4',
                           }}>
                         {t('reports.subtitle')}
                           </Text>
