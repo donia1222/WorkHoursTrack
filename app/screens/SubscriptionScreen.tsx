@@ -717,7 +717,7 @@ Please describe your issue below:
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginBottom: 80,
+    marginBottom: 20,
 
   },
   backgroundGradient: {

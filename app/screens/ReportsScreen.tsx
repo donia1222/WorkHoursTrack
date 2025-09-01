@@ -1580,7 +1580,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
     return (
       <View style={styles.compactPeriodSelector}>
-        <Text style={styles.compactPeriodSelectorTitle}>{t('reports.analysis_period')}</Text>
+
         <View style={styles.compactPeriodTabs}>
           {periods.map((period) => (
             <TouchableOpacity

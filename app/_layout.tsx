@@ -14,6 +14,7 @@ import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { AutoTimerProvider } from './contexts/AutoTimerContext';
+import { HapticProvider } from './contexts/HapticContext';
 import { AutoBackupService } from './services/AutoBackupService';
 import WidgetCalendarService from './services/WidgetCalendarService';
 import WidgetSyncService from './services/WidgetSyncService';
@@ -139,13 +140,15 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <LanguageProvider>
         <ThemeProvider>
-          <NotificationProvider>
-            <AutoTimerProvider>
-              <NavigationThemeProvider value={DefaultTheme}>
-                <AppWithStatusBar />
-              </NavigationThemeProvider>
-            </AutoTimerProvider>
-          </NotificationProvider>
+          <HapticProvider>
+            <NotificationProvider>
+              <AutoTimerProvider>
+                <NavigationThemeProvider value={DefaultTheme}>
+                  <AppWithStatusBar />
+                </NavigationThemeProvider>
+              </AutoTimerProvider>
+            </NotificationProvider>
+          </HapticProvider>
         </ThemeProvider>
       </LanguageProvider>
     </GestureHandlerRootView>
