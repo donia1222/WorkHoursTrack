@@ -270,8 +270,8 @@ Please describe your issue below:
           <View>
             <LinearGradient
               colors={isDark 
-                ? ['#667eea', '#764ba2', '#f093fb', '#f5576c'] 
-                : ['#667eea', '#764ba2', '#f093fb', '#f5576c']
+                ? ['#667eea', '#4f4ba2ff', '#93a4fbff', '#576ff5ff'] 
+                : ['#667eea', '#4f4ba2ff', '#93a4fbff', '#576ff5ff']
               }
               style={styles.premiumHeader}
               start={{ x: 0, y: 0 }}

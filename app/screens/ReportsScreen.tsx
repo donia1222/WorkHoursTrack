@@ -32,6 +32,7 @@ import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import JobFormModal from '../components/JobFormModal';
 import EditWorkDayModal from '../components/EditWorkDayModal';
+import DeleteWorkDayModal from '../components/DeleteWorkDayModal';
 
 interface ReportsScreenProps {
   onNavigate: (screen: string) => void;
@@ -160,6 +161,8 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const [useTimeFormat, setUseTimeFormat] = useState(true); // false = decimal (8.05h), true = time (8h 3m) - DEFAULT: HH:MM
   const [editWorkDayModal, setEditWorkDayModal] = useState(false);
   const [selectedWorkDay, setSelectedWorkDay] = useState<WorkDay | null>(null);
+  const [deleteWorkDayModal, setDeleteWorkDayModal] = useState(false);
+  const [deletingWorkDay, setDeletingWorkDay] = useState<WorkDay | null>(null);
   
   const { handleBack } = useBackNavigation();
   const navigation = useNavigation();
@@ -693,80 +696,73 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   };
 
   const handleDeleteWorkDay = (workDay: WorkDay) => {
-    const job = jobs.find(j => j.id === workDay.jobId);
-    Alert.alert(
-      '',
-      `¿Delete Work Day ${formatDate(workDay.date)} de ${job?.name || ''}?`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              console.log('🗑️ Deleting work day:', workDay.id, workDay.date);
-              
-              // IMMEDIATELY update local state to show changes in UI
-              let filteredWorkDays: WorkDay[] = [];
-              setWorkDays(prevWorkDays => {
-                filteredWorkDays = prevWorkDays.filter(day => day.id !== workDay.id);
-                console.log('🔄 Immediately updated state, remaining work days:', filteredWorkDays.length);
-                return filteredWorkDays;
-              });
-              
-              // IMMEDIATE stats clearing - hide stats completely when no data
-              setTimeout(() => {
-                console.log('📊 Immediately hiding stats after deletion...');
-                
-                // Check if after deletion there are any work days left for the current period
-                const hasRemainingData = filteredWorkDays.some(day => {
-                  if (day.type && day.type !== 'work') return false;
-                  if (selectedJobId !== 'all' && day.jobId !== selectedJobId) return false;
-                  
-                  const dayDate = new Date(day.date);
-                  const now = new Date();
-                  
-                  if (selectedPeriod === 'month') {
-                    return dayDate.getFullYear() === now.getFullYear() && dayDate.getMonth() === now.getMonth();
-                  } else if (selectedPeriod === 'year') {
-                    return dayDate.getFullYear() === now.getFullYear();
-                  } else if (selectedPeriod === 'custom') {
-                    return dayDate >= fromDate && dayDate <= toDate;
-                  }
-                  return false;
-                });
-                
-                if (hasRemainingData) {
-                  // If there's still data, recalculate
-                  calculateStatsFromRecentActivity();
-                  console.log('📊 Recalculating stats with remaining data');
-                } else {
-                  // If no data remains, hide stats completely
-                  setPeriodStats(null);
-                  console.log('📊 No data remaining - stats hidden completely');
-                }
-              }, 10);
-              
-              // Then do the actual deletion in background
-              await JobService.deleteWorkDay(workDay.id);
-              
-              // Final reload to ensure everything is in sync
-              console.log('🔄 Final data reload after deletion...');
-              await loadData();
-              
-            } catch (error) {
-              console.error('Error deleting work day:', error);
-              // If deletion failed, reload to restore correct state
-              await loadData();
-              Alert.alert('Error', 'No se pudo eliminar el día de trabajo');
-            }
+    setDeletingWorkDay(workDay);
+    setDeleteWorkDayModal(true);
+  };
+
+  const confirmDeleteWorkDay = async () => {
+    if (!deletingWorkDay) return;
+
+    try {
+      console.log('🗑️ Deleting work day:', deletingWorkDay.id, deletingWorkDay.date);
+      
+      // IMMEDIATELY update local state to show changes in UI
+      let filteredWorkDays: WorkDay[] = [];
+      setWorkDays(prevWorkDays => {
+        filteredWorkDays = prevWorkDays.filter(day => day.id !== deletingWorkDay.id);
+        console.log('🔄 Immediately updated state, remaining work days:', filteredWorkDays.length);
+        return filteredWorkDays;
+      });
+      
+      // IMMEDIATE stats clearing - hide stats completely when no data
+      setTimeout(() => {
+        console.log('📊 Immediately hiding stats after deletion...');
+        
+        // Check if after deletion there are any work days left for the current period
+        const hasRemainingData = filteredWorkDays.some(day => {
+          if (day.type && day.type !== 'work') return false;
+          if (selectedJobId !== 'all' && day.jobId !== selectedJobId) return false;
+          
+          const dayDate = new Date(day.date);
+          const now = new Date();
+          
+          if (selectedPeriod === 'month') {
+            return dayDate.getFullYear() === now.getFullYear() && dayDate.getMonth() === now.getMonth();
+          } else if (selectedPeriod === 'year') {
+            return dayDate.getFullYear() === now.getFullYear();
+          } else if (selectedPeriod === 'custom') {
+            return dayDate >= fromDate && dayDate <= toDate;
           }
+          return false;
+        });
+        
+        if (hasRemainingData) {
+          // If there's still data, recalculate
+          calculateStatsFromRecentActivity();
+          console.log('📊 Recalculating stats with remaining data');
+        } else {
+          // If no data remains, hide stats completely
+          setPeriodStats(null);
+          console.log('📊 No data remaining - stats hidden completely');
         }
-      ]
-    );
+      }, 10);
+      
+      // Then do the actual deletion in background
+      await JobService.deleteWorkDay(deletingWorkDay.id);
+      
+      // Final reload to ensure everything is in sync
+      console.log('🔄 Final data reload after deletion...');
+      await loadData();
+      
+    } catch (error) {
+      console.error('Error deleting work day:', error);
+      // If deletion failed, reload to restore correct state
+      await loadData();
+      Alert.alert('Error', 'No se pudo eliminar el día de trabajo');
+    } finally {
+      setDeleteWorkDayModal(false);
+      setDeletingWorkDay(null);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -2280,6 +2276,19 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         workDay={selectedWorkDay}
         job={selectedWorkDay ? jobs.find(j => j.id === selectedWorkDay.jobId) || null : null}
         onSave={handleWorkDayUpdate}
+      />
+
+      {/* Delete Work Day Modal */}
+      <DeleteWorkDayModal
+        visible={deleteWorkDayModal}
+        onClose={() => {
+          setDeleteWorkDayModal(false);
+          setDeletingWorkDay(null);
+        }}
+        onConfirm={confirmDeleteWorkDay}
+        workDay={deletingWorkDay}
+        jobName={deletingWorkDay ? jobs.find(j => j.id === deletingWorkDay.jobId)?.name || '' : ''}
+        formatDate={formatDate}
       />
     </SafeAreaView>
   );

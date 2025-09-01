@@ -408,6 +408,13 @@
     "saving": "Kaydediliyor...",
     "work": "İş",
     "statistics_section": "İstatistikler",
+    "delete_work_day": {
+      "title": "Çalışma Gününü Sil",
+      "message": "{{jobName}} için {{date}} tarihindeki çalışma gününü silmek istediğinizden emin misiniz?",
+      "warning": "Bu işlem geri alınamaz.",
+      "cancel": "İptal",
+      "delete": "Sil"
+    },
     "breakdown_by_job": "İşe göre dökümü",
     "recent_activity_section": "Son Aktivite",
     "export_options": "Dışa Aktarma Seçenekleri",

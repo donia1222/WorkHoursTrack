@@ -342,6 +342,13 @@
     "overtime_hours": "{{hours}}h残業",
     "job_distribution": "仕事の分布",
     "recent_activity": "最近の活動",
+    "delete_work_day": {
+      "title": "勤務日を削除",
+      "message": "{{jobName}}の{{date}}の勤務日を削除してもよろしいですか？",
+      "warning": "この操作は取り消すことができません。",
+      "cancel": "キャンセル",
+      "delete": "削除"
+    },
     "no_records": "まだ記録がありません",
     "add_time": "時間を追加",
     "view_calendar": "カレンダーを見る",

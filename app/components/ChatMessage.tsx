@@ -92,7 +92,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   messageText: {
     fontSize: 16,
-    lineHeight: 20,
+    lineHeight: 22,
+    flexWrap: 'wrap',
   },
   userText: {
     color: '#FFFFFF',
@@ -150,10 +151,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     backgroundColor: colors.textSecondary,
   },
   messageHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
     marginBottom: 4,
+    width: '100%',
   },
   copyButton: {
     padding: 8,
@@ -423,13 +422,10 @@ export default function ChatMessage({ message, jobs = [], onExportToCalendar, on
         <View style={styles.messageHeader}>
           <Text style={[
             styles.messageText,
-            message.isUser ? styles.userText : styles.botText,
-            { flex: 1, marginRight: !message.isUser ? 8 : 0 }
+            message.isUser ? styles.userText : styles.botText
           ]}>
             {message.text}
           </Text>
-          
-
         </View>
       ) : null}
       

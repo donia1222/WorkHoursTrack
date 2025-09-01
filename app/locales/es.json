@@ -392,6 +392,13 @@
     "salary_calculation": "CÁLCULO SALARIAL",
     "calculation_details": "DETALLES DE CÁLCULO",
     "rate": "Tarifa",
+    "delete_work_day": {
+      "title": "Eliminar Día de Trabajo",
+      "message": "¿Estás seguro de que quieres eliminar el día de trabajo del {{date}} de {{jobName}}?",
+      "warning": "Esta acción no se puede deshacer.",
+      "cancel": "Cancelar",
+      "delete": "Eliminar"
+    },
     "period": "Período",
     "worked_hours": "Horas trabajadas",
     "worked_weeks": "Semanas trabajadas",
@@ -1039,6 +1046,7 @@
     "delete": {
       "title": "Eliminar trabajo",
       "message": "¿Estás seguro de que quieres eliminar \"{{jobName}}\"? Esto también eliminará todos los registros de tiempo asociados.",
+      "warning": "Esta acción no se puede deshacer.",
       "cancel": "Cancelar",
       "confirm": "Eliminar",
       "success": "Trabajo eliminado correctamente",

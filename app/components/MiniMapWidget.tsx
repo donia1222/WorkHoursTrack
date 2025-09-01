@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated as RNAnimated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated as RNAnimated, Dimensions, Alert } from 'react-native';
 import { logMiniMapWidget } from '../config/logging';
 import { BlurView } from 'expo-blur';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSpring } from 'react-native-reanimated';
@@ -7,8 +7,23 @@ import MapView, { Marker, Circle, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'reac
 import { Platform } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useTimeFormat } from '../hooks/useTimeFormat';
 import { Job } from '../types/WorkTypes';
+import StopAutoTimerModal from './StopAutoTimerModal';
+
+// Variable global para evitar mostrar Alert cuando se confirma desde el modal
+let skipNextAutoTimerAlert = false;
+
+export const setSkipNextAutoTimerAlert = (skip: boolean) => {
+  skipNextAutoTimerAlert = skip;
+};
+
+export const shouldSkipAutoTimerAlert = () => {
+  const skip = skipNextAutoTimerAlert;
+  if (skip) skipNextAutoTimerAlert = false; // Reset después de usar
+  return skip;
+};
 
 interface MiniMapWidgetProps {
   job: Job;
@@ -401,9 +416,13 @@ export default function MiniMapWidget({
     isAutoTimerPaused
   });
   const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
   const { formatTimeWithPreferences } = useTimeFormat();
   const styles = getStyles(colors, isDark);
   const mapRef = useRef<MapView>(null);
+  
+  // Estados para el modal de confirmación
+  const [showStopModal, setShowStopModal] = useState(false);
   
   // Animación de pulse para el timer
   const pulseScale = useSharedValue(1);
@@ -701,7 +720,7 @@ export default function MiniMapWidget({
           </TouchableOpacity>
           
           <TouchableOpacity
-            onPress={onStop}
+            onPress={() => setShowStopModal(true)}
             style={[styles.controlButton, styles.stopButton]}
             activeOpacity={0.8}
           >
@@ -713,6 +732,20 @@ export default function MiniMapWidget({
           </TouchableOpacity>
         </View>
       </BlurView>
+      
+      {/* Modal de confirmación para parar AutoTimer */}
+      <StopAutoTimerModal
+        visible={showStopModal}
+        onClose={() => setShowStopModal(false)}
+        onConfirm={() => {
+          // Cerrar modal y ejecutar la lógica original
+          setShowStopModal(false);
+          if (onStop) {
+            onStop();
+          }
+        }}
+        job={job}
+      />
     </RNAnimated.View>
   );
 }

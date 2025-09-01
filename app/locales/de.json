@@ -271,6 +271,7 @@
       "cancelled_stop": "Automatischer Stopp abgebrochen",
       "activation_alert": "AutoTimer aktiviert. Der Timer startet automatisch, wenn Sie den Arbeitsbereich betreten.",
       "manual_override": "Manuelle Steuerung aktiviert",
+      "manual_override_message": "Der automatische Timer ist aktiv. Möchten Sie ihn manuell stoppen? Dies deaktiviert den automatischen Modus.",
       "cancelled": "Abgebrochen - Play drücken zum Reaktivieren",
       "available_title": "Automatischer Timer Verfügbar",
       "available_description": "Dieser Job hat einen Standort konfiguriert. Möchten Sie den automatischen Timer aktivieren?",
@@ -366,6 +367,13 @@
     "net_hours_calculation": "({{hours}}h - {{breakHours}}h Pausen)",
     "saving": "Speichere...",
     "statistics_section": "Statistiken",
+    "delete_work_day": {
+      "title": "Arbeitstag löschen",
+      "message": "Sind Sie sicher, dass Sie den Arbeitstag vom {{date}} für {{jobName}} löschen möchten?",
+      "warning": "Diese Aktion kann nicht rückgängig gemacht werden.",
+      "cancel": "Abbrechen",
+      "delete": "Löschen"
+    },
     "breakdown_by_job": "Aufschlüsselung nach Arbeit",
     "recent_activity_section": "Letzte Aktivität"
   },

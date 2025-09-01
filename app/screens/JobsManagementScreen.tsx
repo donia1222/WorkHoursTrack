@@ -21,6 +21,7 @@ import Header from '../components/Header';
 import { Job } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import JobFormModal from '../components/JobFormModal';
+import DeleteJobModal from '../components/DeleteJobModal';
 
 interface JobsManagementScreenProps {
   onNavigate?: (screen: string) => void;
@@ -327,6 +328,8 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
   const [showAddModal, setShowAddModal] = useState(openAddModal);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [deleteJobModal, setDeleteJobModal] = useState(false);
+  const [deletingJob, setDeletingJob] = useState<Job | null>(null);
   
   const styles = getStyles(colors, isDark);
 
@@ -376,30 +379,27 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
   };
 
   const handleDeleteJob = (job: Job) => {
-    Alert.alert(
-      t('jobs_management.delete.title'),
-      t('jobs_management.delete.message', { jobName: job.name }),
-      [
-        { text: t('jobs_management.delete.cancel'), style: 'cancel' },
-        {
-          text: t('jobs_management.delete.confirm'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              console.log(`🗑️ JobsManagement: Starting deletion of job ${job.id} (${job.name})`);
-              await JobService.deleteJob(job.id);
-              console.log(`✅ JobsManagement: Job deleted successfully`);
-              await loadJobs();
-              console.log(`🔄 JobsManagement: Jobs reloaded after deletion`);
-              Alert.alert(t('maps.success'), t('jobs_management.delete.success'));
-            } catch (error) {
-              console.error('❌ JobsManagement: Error deleting job:', error);
-              Alert.alert(t('job_form.errors.error_title'), t('jobs_management.delete.error'));
-            }
-          },
-        },
-      ]
-    );
+    setDeletingJob(job);
+    setDeleteJobModal(true);
+  };
+
+  const confirmDeleteJob = async () => {
+    if (!deletingJob) return;
+
+    try {
+      console.log(`🗑️ JobsManagement: Starting deletion of job ${deletingJob.id} (${deletingJob.name})`);
+      await JobService.deleteJob(deletingJob.id);
+      console.log(`✅ JobsManagement: Job deleted successfully`);
+      await loadJobs();
+      console.log(`🔄 JobsManagement: Jobs reloaded after deletion`);
+      Alert.alert(t('maps.success'), t('jobs_management.delete.success'));
+    } catch (error) {
+      console.error('❌ JobsManagement: Error deleting job:', error);
+      Alert.alert(t('job_form.errors.error_title'), t('jobs_management.delete.error'));
+    } finally {
+      setDeleteJobModal(false);
+      setDeletingJob(null);
+    }
   };
 
   const handleToggleActive = async (job: Job) => {
@@ -494,10 +494,6 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
         onClose={() => {
           setShowAddModal(false);
           setEditingJob(null);
-          // Delay navigation to ensure modal closes properly
-          setTimeout(() => {
-            onNavigate?.('mapa');
-          }, 200);
         }}
         onSave={async () => {
           await loadJobs();
@@ -673,6 +669,17 @@ export default function JobsManagementScreen({ onNavigate, onClose, openAddModal
           </BlurView>
         </View>
       </Modal>
+
+      {/* Delete Job Modal */}
+      <DeleteJobModal
+        visible={deleteJobModal}
+        onClose={() => {
+          setDeleteJobModal(false);
+          setDeletingJob(null);
+        }}
+        onConfirm={confirmDeleteJob}
+        job={deletingJob}
+      />
 
     </SafeAreaView>
   );

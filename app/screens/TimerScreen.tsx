@@ -54,7 +54,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: isDark ? 'rgba(59, 130, 246, 0.08)' : 'rgba(59, 130, 246, 0.04)', // Azul suave
-
+marginTop: -16,
   },
   header: {
     borderBottomWidth: 1,

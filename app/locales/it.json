@@ -303,6 +303,7 @@
       "activation_alert": "AutoTimer attivato. Il timer inizierà automaticamente quando entrerai nell'area di lavoro.",
       "activation_title": "Timer Automatico",
       "manual_override": "Controllo manuale attivato",
+      "manual_override_message": "Il timer automatico è attivo. Vuoi fermarlo manualmente? Questo disattiverà la modalità automatica.",
       "cancelled": "Annullato - premi play per riattivare",
       "available_title": "Timer Automatico Disponibile",
       "available_description": "Questo lavoro ha una posizione configurata. Vuoi attivare il timer automatico?",
@@ -344,6 +345,13 @@
     "overtime_hours": "{{hours}}h di straordinario",
     "job_distribution": "Distribuzione per lavoro",
     "recent_activity": "Attività recente",
+    "delete_work_day": {
+      "title": "Elimina giornata lavorativa",
+      "message": "Sei sicuro di voler eliminare la giornata lavorativa del {{date}} per {{jobName}}?",
+      "warning": "Questa azione non può essere annullata.",
+      "cancel": "Annulla",
+      "delete": "Elimina"
+    },
     "no_records": "Nessun record ancora",
     "add_time": "Aggiungi tempo",
     "view_calendar": "Vedi calendario",

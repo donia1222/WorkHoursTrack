@@ -407,6 +407,13 @@
     "saving": "Salvando...",
     "work": "Trabalho",
     "statistics_section": "Estatísticas",
+    "delete_work_day": {
+      "title": "Excluir Dia de Trabalho",
+      "message": "Tem certeza que deseja excluir o dia de trabalho de {{date}} para {{jobName}}?",
+      "warning": "Esta ação não pode ser desfeita.",
+      "cancel": "Cancelar",
+      "delete": "Excluir"
+    },
     "breakdown_by_job": "Detalhamento por trabalho",
     "recent_activity_section": "Atividade Recente",
     "export_options": "Opções de Exportação",

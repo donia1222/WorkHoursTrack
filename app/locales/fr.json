@@ -303,6 +303,7 @@
       "activation_alert": "AutoTimer activé. Le minuteur démarrera automatiquement quand vous entrerez dans la zone de travail.",
       "activation_title": "Minuteur Automatique",
       "manual_override": "Contrôle manuel activé",
+      "manual_override_message": "Le minuteur automatique est actif. Voulez-vous l'arrêter manuellement ? Cela désactivera le mode automatique.",
       "cancelled": "Annulé - appuyez sur play pour réactiver",
       "available_title": "Minuteur Automatique Disponible",
       "available_description": "Ce travail a un emplacement configuré. Voulez-vous activer le minuteur automatique?",
@@ -336,6 +337,13 @@
     "overtime_hours": "{{hours}}h supplémentaires",
     "job_distribution": "Répartition par emploi",
     "recent_activity": "Activité récente",
+    "delete_work_day": {
+      "title": "Supprimer le jour de travail",
+      "message": "Êtes-vous sûr de vouloir supprimer le jour de travail du {{date}} pour {{jobName}}?",
+      "warning": "Cette action ne peut pas être annulée.",
+      "cancel": "Annuler",
+      "delete": "Supprimer"
+    },
     "no_records": "Aucun enregistrement pour le moment",
     "add_time": "Ajouter du temps",
     "view_calendar": "Voir le calendrier",

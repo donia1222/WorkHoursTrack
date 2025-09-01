@@ -428,6 +428,13 @@
     "salary_calculation": "SALARY CALCULATION",
     "calculation_details": "CALCULATION DETAILS",
     "rate": "Rate",
+    "delete_work_day": {
+      "title": "Delete Work Day",
+      "message": "Are you sure you want to delete the work day from {{date}} for {{jobName}}?",
+      "warning": "This action cannot be undone.",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    },
     "period": "Period",
     "worked_hours": "Worked hours",
     "worked_weeks": "Worked weeks",
