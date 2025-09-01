@@ -692,6 +692,83 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     }, 100);
   };
 
+  const handleDeleteWorkDay = (workDay: WorkDay) => {
+    const job = jobs.find(j => j.id === workDay.jobId);
+    Alert.alert(
+      '',
+      `¿Delete Work Day ${formatDate(workDay.date)} de ${job?.name || ''}?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              console.log('🗑️ Deleting work day:', workDay.id, workDay.date);
+              
+              // IMMEDIATELY update local state to show changes in UI
+              let filteredWorkDays: WorkDay[] = [];
+              setWorkDays(prevWorkDays => {
+                filteredWorkDays = prevWorkDays.filter(day => day.id !== workDay.id);
+                console.log('🔄 Immediately updated state, remaining work days:', filteredWorkDays.length);
+                return filteredWorkDays;
+              });
+              
+              // IMMEDIATE stats clearing - hide stats completely when no data
+              setTimeout(() => {
+                console.log('📊 Immediately hiding stats after deletion...');
+                
+                // Check if after deletion there are any work days left for the current period
+                const hasRemainingData = filteredWorkDays.some(day => {
+                  if (day.type && day.type !== 'work') return false;
+                  if (selectedJobId !== 'all' && day.jobId !== selectedJobId) return false;
+                  
+                  const dayDate = new Date(day.date);
+                  const now = new Date();
+                  
+                  if (selectedPeriod === 'month') {
+                    return dayDate.getFullYear() === now.getFullYear() && dayDate.getMonth() === now.getMonth();
+                  } else if (selectedPeriod === 'year') {
+                    return dayDate.getFullYear() === now.getFullYear();
+                  } else if (selectedPeriod === 'custom') {
+                    return dayDate >= fromDate && dayDate <= toDate;
+                  }
+                  return false;
+                });
+                
+                if (hasRemainingData) {
+                  // If there's still data, recalculate
+                  calculateStatsFromRecentActivity();
+                  console.log('📊 Recalculating stats with remaining data');
+                } else {
+                  // If no data remains, hide stats completely
+                  setPeriodStats(null);
+                  console.log('📊 No data remaining - stats hidden completely');
+                }
+              }, 10);
+              
+              // Then do the actual deletion in background
+              await JobService.deleteWorkDay(workDay.id);
+              
+              // Final reload to ensure everything is in sync
+              console.log('🔄 Final data reload after deletion...');
+              await loadData();
+              
+            } catch (error) {
+              console.error('Error deleting work day:', error);
+              // If deletion failed, reload to restore correct state
+              await loadData();
+              Alert.alert('Error', 'No se pudo eliminar el día de trabajo');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const locale = language === 'es' ? 'es-ES' : 
@@ -1739,6 +1816,12 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                             >
                               <IconSymbol size={16} name="pencil" color={colors.primary} />
                             </TouchableOpacity>
+                            <TouchableOpacity 
+                              style={styles.deleteButton}
+                              onPress={() => handleDeleteWorkDay(day)}
+                            >
+                              <IconSymbol size={16} name="trash" color={colors.error} />
+                            </TouchableOpacity>
                           </View>
                         </View>
                       </View>
@@ -1790,28 +1873,11 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         {/* Action Buttons */}
         {!isLoadingJobs && (
         <View style={styles.actionButtonsContainer}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={showBillingDataModal}
-          >
-            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.exportButton]}>
-              <LinearGradient
-                colors={['rgba(255, 149, 0, 0.1)', 'rgba(255, 149, 0, 0.12)']}
-                style={styles.actionButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              />
-              <View style={[styles.actionButtonIconContainer, { backgroundColor: colors.warning + '20' }]}>
-                <IconSymbol size={24} name="square.and.arrow.up" color={colors.warning} />
-              </View>
-              <Text style={[styles.actionButtonText, { color: colors.warning }]}>{t('reports.export_pdf')}</Text>
-              <IconSymbol size={16} name="arrow.right" color={colors.warning} />
-            </BlurView>
-          </TouchableOpacity>
+
 
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => onNavigate('calendar')}
+            onPress={showBillingDataModal}
           >
             <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.calendarButton]}>
               <LinearGradient
@@ -1821,31 +1887,14 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                 end={{ x: 1, y: 1 }}
               />
               <View style={[styles.actionButtonIconContainer, { backgroundColor: colors.primary + '20' }]}>
-                <IconSymbol size={24} name="calendar" color={colors.primary} />
+                <IconSymbol size={24} name="square.and.arrow.up" color={colors.primary} />
               </View>
-              <Text style={[styles.actionButtonText, { color: colors.primary }]}>{t('reports.view_calendar')}</Text>
+              <Text style={[styles.actionButtonText, { color: colors.primary }]}>{t('reports.export_pdf')}</Text>
               <IconSymbol size={16} name="arrow.right" color={colors.primary} />
             </BlurView>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => onNavigate('timer')}
-          >
-            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.timerButton]}>
-              <LinearGradient
-                colors={['rgba(52, 199, 89, 0.17)', 'rgba(52, 199, 89, 0.21)']}
-                style={styles.actionButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              />
-              <View style={[styles.actionButtonIconContainer, { backgroundColor: colors.success + '20' }]}>
-                <IconSymbol size={24} name="clock.fill" color={colors.success} />
-              </View>
-              <Text style={[styles.actionButtonText, { color: colors.success }]}>{t('reports.start_timer')}</Text>
-              <IconSymbol size={16} name="arrow.right" color={colors.success} />
-            </BlurView>
-          </TouchableOpacity>
+ 
         </View>
         )}
       </ScrollView>
@@ -2824,6 +2873,11 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderRadius: 12,
     backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
   },
+  deleteButton: {
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: isDark ? 'rgba(255, 69, 58, 0.15)' : 'rgba(255, 69, 58, 0.1)',
+  },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2905,7 +2959,13 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     elevation: 3,
   },
   exportButton: {
-    backgroundColor: 'transparent',
+
+    alignItems: 'center',
+    backgroundColor: colors.success,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 46,
   },
   calendarButton: {
     backgroundColor: 'transparent',
