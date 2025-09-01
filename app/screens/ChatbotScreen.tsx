@@ -348,6 +348,7 @@ export default function ChatbotScreen() {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historySessions, setHistorySessions] = useState<ChatSession[]>([]);
   const flatListRef = useRef<FlatList>(null);
+  const locationContextRef = useRef<any>(null);
   
   // Estado para mantener contexto de la última imagen/documento analizado
   const [lastAnalyzedImage, setLastAnalyzedImage] = useState<{ uri: string } | null>(null);
@@ -381,6 +382,21 @@ export default function ChatbotScreen() {
           setInputText(initialQuestion);
           // Clear the stored question
           await AsyncStorage.removeItem('chatbot_initial_question');
+        }
+
+        // Also check for user location data for context
+        const userLocation = await AsyncStorage.getItem('chatbot_user_location');
+        if (userLocation) {
+          try {
+            const locationData = JSON.parse(userLocation);
+            console.log('User location context loaded:', locationData);
+            // Store location context in a ref for AI requests (invisible to user)
+            locationContextRef.current = locationData;
+          } catch (parseError) {
+            console.warn('Error parsing user location data:', parseError);
+          }
+          // Clear the stored location
+          await AsyncStorage.removeItem('chatbot_user_location');
         }
       } catch (error) {
         console.warn('Error checking initial question:', error);
@@ -923,8 +939,13 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
             // Usar EnhancedAIService - solo muestra búsqueda si es pregunta laboral
             setSearchingSources([]);
             
+            // Add location context if available (invisible to user)
+            const messageToSend = locationContextRef.current 
+              ? `${inputText}\n\n${locationContextRef.current.contextMessage}`
+              : inputText;
+            
             const response = await EnhancedAIService.sendMessage(
-              inputText,
+              messageToSend,
               language,
               history,
               (sources) => {
@@ -936,6 +957,9 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
                 }
               }
             );
+            
+            // Clear location context after first use
+            locationContextRef.current = null;
             
             setIsSearching(false);
             

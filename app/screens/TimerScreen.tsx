@@ -646,11 +646,11 @@ marginTop: -4,
 
     compactJobSelectorTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
     color: colors.textSecondary,
     marginBottom: 12,
     textAlign: 'center',
-        marginTop:10,
+        marginTop:30,
   },
   compactJobTabs: {
     flexDirection: 'row',
@@ -1720,7 +1720,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
       return (
         <RNAnimated.View style={[styles.compactJobSelector, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
           {jobs.length > 1 && (
-            <Text style={styles.compactJobSelectorTitle}>{t('job_selector.title')}</Text>
+            <Text style={styles.compactJobSelectorTitle}>{t('reports.filter_by_job')}</Text>
           )}
           <ScrollView 
             horizontal 

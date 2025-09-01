@@ -18,7 +18,7 @@ import { useNavigation } from '../context/NavigationContext';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { getRandomQuestion } from '../services/ChatbotWidgetService';
+import { getRandomQuestion, detectCountryFromCoordinates, getLocalizedCountryName } from '../services/ChatbotWidgetService';
 import { useAutoTimer } from '../contexts/AutoTimerContext';
 import { useHapticFeedback } from '../hooks/useHapticFeedback';
 import { useTimeFormat } from '../hooks/useTimeFormat';
@@ -4067,7 +4067,56 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     overflow: 'hidden',
                   }}
                   onPress={async () => {
-                    if (dynamicChatbotQuestion) {
+                    if (dynamicChatbotQuestion && location) {
+                      try {
+                        // Detect current country
+                        const coordinates = { 
+                          latitude: location.latitude, 
+                          longitude: location.longitude 
+                        };
+                        
+                        // Get country info
+                        const detectedCountry = await detectCountryFromCoordinates(coordinates.latitude, coordinates.longitude);
+                        const localizedCountry = getLocalizedCountryName(detectedCountry, language);
+                        
+                        // Store just the question for the user to see
+                        await AsyncStorage.setItem('chatbot_initial_question', dynamicChatbotQuestion);
+                        
+                        // Create context message in the user's language
+                        const contextMessages = {
+                          es: `[Contexto: Usuario ubicado en ${localizedCountry}. Si la pregunta es sobre legislación laboral o información específica de país, proporciona información relevante para ${localizedCountry}.]`,
+                          en: `[Context: User located in ${localizedCountry}. If the question is about labor legislation or country-specific information, provide relevant information for ${localizedCountry}.]`,
+                          de: `[Kontext: Benutzer befindet sich in ${localizedCountry}. Wenn die Frage über Arbeitsgesetzgebung oder landesspezifische Informationen ist, geben Sie relevante Informationen für ${localizedCountry}.]`,
+                          fr: `[Contexte: Utilisateur situé en ${localizedCountry}. Si la question concerne la législation du travail ou des informations spécifiques au pays, fournissez des informations pertinentes pour ${localizedCountry}.]`,
+                          it: `[Contesto: Utente situato in ${localizedCountry}. Se la domanda riguarda la legislazione del lavoro o informazioni specifiche del paese, fornire informazioni rilevanti per ${localizedCountry}.]`,
+                          pt: `[Contexto: Usuário localizado em ${localizedCountry}. Se a pergunta é sobre legislação trabalhista ou informações específicas do país, forneça informações relevantes para ${localizedCountry}.]`,
+                          nl: `[Context: Gebruiker bevindt zich in ${localizedCountry}. Als de vraag gaat over arbeidswetgeving of landspecifieke informatie, geef dan relevante informatie voor ${localizedCountry}.]`,
+                          tr: `[Bağlam: Kullanıcı ${localizedCountry}'de bulunuyor. Soru iş mevzuatı veya ülkeye özgü bilgiler hakkındaysa, ${localizedCountry} için ilgili bilgi sağlayın.]`,
+                          ja: `[コンテキスト: ユーザーは${localizedCountry}にいます。質問が労働法や国固有の情報に関するものの場合、${localizedCountry}に関連する情報を提供してください。]`,
+                          ru: `[Контекст: Пользователь находится в ${localizedCountry}. Если вопрос касается трудового законодательства или информации, специфичной для страны, предоставьте актуальную информацию для ${localizedCountry}.]`
+                        };
+                        
+                        const contextMessage = contextMessages[language as keyof typeof contextMessages] || contextMessages['en'];
+                        
+                        // Also store location info separately for the chatbot
+                        await AsyncStorage.setItem('chatbot_user_location', JSON.stringify({
+                          country: detectedCountry,
+                          localizedCountry: localizedCountry,
+                          coordinates: coordinates,
+                          language: language,
+                          contextMessage: contextMessage
+                        }));
+                      } catch (error) {
+                        console.warn('Failed to store initial question with location:', error);
+                        // Fallback to basic question storage
+                        try {
+                          await AsyncStorage.setItem('chatbot_initial_question', dynamicChatbotQuestion);
+                        } catch (fallbackError) {
+                          console.warn('Failed to store basic initial question:', fallbackError);
+                        }
+                      }
+                    } else if (dynamicChatbotQuestion) {
+                      // No location available, store just the question
                       try {
                         await AsyncStorage.setItem('chatbot_initial_question', dynamicChatbotQuestion);
                       } catch (error) {
@@ -4101,40 +4150,20 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         <IconSymbol size={24} name="sparkles" color={isDark ? '#93c5fd' : '#3b82f6'} />
                       </View>
                       <View style={{ flex: 1 }}>
-                                     <Text 
-                          numberOfLines={2}
-                          style={{
-                          fontSize: isTablet ? 14 : (isSmallScreen ? 9 : 10),
-                          color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#2563eb',
-                          marginTop: isTablet ? 2 : 0,
-                          lineHeight: isTablet ? 18 : (isSmallScreen ? 12 : 14),
-                        }}>
-                          {(() => {
-                            const subtitle = t('chatbot.welcome_subtitle');
-                            const maxLength = isSmallScreen ? 40 : (isTablet ? 60 : 50);
-                            return subtitle.length > maxLength ? subtitle.substring(0, maxLength) + '...' : subtitle;
-                          })()}
-                        </Text>
+            
 
                         <Animated.Text 
-                          numberOfLines={1}
+                          numberOfLines={2}
                           style={[
                           {
-                            fontSize: isTablet ? 18 : (isSmallScreen ? 13 : 14),
+                            fontSize: isTablet ? 17 : (isSmallScreen ? 12 : 13),
                             fontWeight: '600',
                             color: isDark ? 'white' : '#1e3a8a',
+                            lineHeight: isTablet ? 20 : (isSmallScreen ? 14 : 16),
                           },
                           animatedAITextStyle
                         ]}>
-                          {(() => {
-                            // Use dynamic question if available, fallback to static title
-                            const displayText = dynamicChatbotQuestion || t('chatbot.welcome_title');
-                            // Simplificar el texto para iPhone
-                            if (!isTablet && displayText.length > 50) {
-                              return displayText.substring(0, 50) + '...';
-                            }
-                            return displayText;
-                          })()}
+                          {dynamicChatbotQuestion || t('chatbot.welcome_title')}
                         </Animated.Text>
            
                       </View>

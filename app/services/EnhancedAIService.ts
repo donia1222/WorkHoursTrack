@@ -138,6 +138,64 @@ export class EnhancedAIService {
     country?: string;
     topics?: string[];
   } {
+    const messageLower = message.toLowerCase();
+    
+    // 📅 CALENDAR EXPORT DETECTION: Check if question is about exporting/syncing calendar
+    const calendarExportKeywords = {
+      es: ['sincroniz', 'exportar', 'calendario nativo', 'calendario de la app', 'calendario del sistema', 'añadir al calendario', 'como exporto', 'como sincronizo'],
+      en: ['sync', 'export', 'native calendar', 'app calendar', 'system calendar', 'add to calendar', 'how do i export', 'how do i sync'],
+      de: ['synchronisier', 'exportier', 'nativen kalender', 'app kalender', 'system kalender', 'zum kalender hinzufüg', 'wie exportiere', 'wie synchronisiere'],
+      fr: ['synchronis', 'export', 'calendrier natif', 'calendrier app', 'calendrier système', 'ajouter au calendrier', 'comment export', 'comment synchronis'],
+      it: ['sincronizz', 'esport', 'calendario nativo', 'calendario app', 'calendario sistema', 'aggiungere al calendario', 'come esport', 'come sincronizz'],
+      pt: ['sincroniz', 'export', 'calendário nativo', 'calendário app', 'calendário sistema', 'adicionar ao calendário', 'como export', 'como sincroniz'],
+      ru: ['синхронизир', 'экспорт', 'родной календарь', 'календарь приложения', 'системный календарь', 'добавить в календарь', 'как экспортир', 'как синхронизир'],
+      ja: ['同期', 'エクスポート', 'ネイティブカレンダー', 'アプリカレンダー', 'システムカレンダー', 'カレンダーに追加', 'どうやってエクスポート', 'どうやって同期'],
+      nl: ['synchroniseer', 'exporteer', 'native kalender', 'app kalender', 'systeem kalender', 'toevoegen aan kalender', 'hoe exporteer', 'hoe synchroniseer'],
+      tr: ['senkroniz', 'dışa aktar', 'yerel takvim', 'uygulama takvimi', 'sistem takvimi', 'takvime ekle', 'nasıl dışa aktar', 'nasıl senkroniz']
+    };
+
+    // 🤖 APP FUNCTIONALITY DETECTION: Check if question is about app features/functionality
+    const appFunctionalityKeywords = {
+      es: ['puedes recordar', 'como funciona', 'se guarda', 'memoria', 'historial', 'conversacion', 'chatbot', 'aplicacion', 'app', 'como usar', 'como acceder', 'icono', 'boton', 'pantalla', 'ventana'],
+      en: ['can you remember', 'how does it work', 'is saved', 'memory', 'history', 'conversation', 'chatbot', 'application', 'app', 'how to use', 'how to access', 'icon', 'button', 'screen', 'window'],
+      de: ['kannst du dich erinnern', 'wie funktioniert', 'wird gespeichert', 'speicher', 'verlauf', 'gespräch', 'chatbot', 'anwendung', 'app', 'wie benutzen', 'wie zugreifen', 'symbol', 'taste', 'bildschirm', 'fenster'],
+      fr: ['peux-tu te souvenir', 'comment ça marche', 'est sauvegardé', 'mémoire', 'historique', 'conversation', 'chatbot', 'application', 'app', 'comment utiliser', 'comment accéder', 'icône', 'bouton', 'écran', 'fenêtre'],
+      it: ['puoi ricordare', 'come funziona', 'viene salvato', 'memoria', 'cronologia', 'conversazione', 'chatbot', 'applicazione', 'app', 'come usare', 'come accedere', 'icona', 'pulsante', 'schermo', 'finestra'],
+      pt: ['você pode lembrar', 'como funciona', 'é salvo', 'memória', 'histórico', 'conversa', 'chatbot', 'aplicação', 'app', 'como usar', 'como acessar', 'ícone', 'botão', 'tela', 'janela'],
+      ru: ['можешь помнить', 'как работает', 'сохраняется', 'память', 'история', 'разговор', 'чатбот', 'приложение', 'приложения', 'как использовать', 'как получить доступ', 'значок', 'кнопка', 'экран', 'окно'],
+      ja: ['覚えていますか', 'どう動作', '保存される', 'メモリ', '履歴', '会話', 'チャットボット', 'アプリケーション', 'アプリ', '使い方', 'アクセス方法', 'アイコン', 'ボタン', '画面', 'ウィンドウ'],
+      nl: ['kun je onthouden', 'hoe werkt het', 'wordt opgeslagen', 'geheugen', 'geschiedenis', 'gesprek', 'chatbot', 'applicatie', 'app', 'hoe te gebruiken', 'hoe toegang', 'pictogram', 'knop', 'scherm', 'venster'],
+      tr: ['hatırlayabilir misin', 'nasıl çalışır', 'kaydediliyor', 'hafıza', 'geçmiş', 'konuşma', 'chatbot', 'uygulama', 'app', 'nasıl kullanılır', 'nasıl erişilir', 'simge', 'düğme', 'ekran', 'pencere']
+    };
+    
+    // Check if this is a calendar export question
+    for (const [lang, keywords] of Object.entries(calendarExportKeywords)) {
+      for (const keyword of keywords) {
+        if (messageLower.includes(keyword)) {
+          console.log(`📅 [DETECT] Calendar export question detected: "${keyword}" in ${lang} - NOT searching labor info`);
+          return {
+            isLaborQuestion: false,
+            isLocationQuestion: false,
+            topics: ['calendar_export']
+          };
+        }
+      }
+    }
+
+    // Check if this is an app functionality question
+    for (const [lang, keywords] of Object.entries(appFunctionalityKeywords)) {
+      for (const keyword of keywords) {
+        if (messageLower.includes(keyword)) {
+          console.log(`🤖 [DETECT] App functionality question detected: "${keyword}" in ${lang} - NOT searching labor info`);
+          return {
+            isLaborQuestion: false,
+            isLocationQuestion: false,
+            topics: ['app_functionality']
+          };
+        }
+      }
+    }
+
     const laborKeywords = {
       es: ['horas trabajo', 'salario mínimo', 'salrio mínimo', 'sueldo mínimo', 'sueldo minimo', 'salario minimo', 'vacaciones', 'días libres', 'contrato', 'despido', 'indemnización', 'seguridad social', 'jornada laboral', 'horas extra', 'trabajo', 'empleo', 'laboral', 'mínimo', 'minimo'],
       en: ['working hours', 'minimum wage', 'salary', 'vacation', 'days off', 'contract', 'dismissal', 'compensation', 'social security', 'work schedule', 'overtime', 'employment', 'labor', 'work'],
@@ -191,7 +249,6 @@ export class EnhancedAIService {
       /\b(turquía|turkey|turquie|türkei|turchia|турция|トルコ|turkije|türkiye)\b/i
     ];
 
-    const messageLower = message.toLowerCase();
     let isLaborQuestion = false;
     let isLocationQuestion = false;
     let detectedCountry: string | undefined;

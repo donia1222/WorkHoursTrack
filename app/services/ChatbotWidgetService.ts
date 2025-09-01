@@ -40,56 +40,110 @@ const loadQuestions = (language: string): ChatbotQuestions => {
 const SUPPORTED_WIDGET_LANGUAGES = Object.keys(questionsMap);
 
 // Country detection based on coordinates
-const detectCountryFromCoordinates = async (latitude: number, longitude: number): Promise<string> => {
+export const detectCountryFromCoordinates = async (latitude: number, longitude: number): Promise<string> => {
   try {
     const result = await Location.reverseGeocodeAsync({ latitude, longitude });
     if (result && result.length > 0) {
       const location = result[0];
-      return location.country || 'España'; // Default fallback
+      const detectedCountry = location.country || 'Spain';
+      console.log('🌍 Raw country from GPS:', detectedCountry);
+      
+      // Normalize country names to English for consistent mapping
+      const countryNormalization: Record<string, string> = {
+        'Suiza': 'Switzerland',
+        'España': 'Spain',
+        'Francia': 'France',
+        'Italia': 'Italy',
+        'Alemania': 'Germany',
+        'Austria': 'Austria',
+        'Bélgica': 'Belgium',
+        'Portugal': 'Portugal',
+        'Reino Unido': 'United Kingdom',
+        'Países Bajos': 'Netherlands',
+        'Brasil': 'Brazil',
+        'Canadá': 'Canada',
+        'Turquía': 'Turkey',
+        'Japón': 'Japan',
+        'Rusia': 'Russia',
+        // Add more variations
+        'Switzerland': 'Switzerland',
+        'Schweiz': 'Switzerland',
+        'Svizzera': 'Switzerland',
+        'Suisse': 'Switzerland'
+      };
+      
+      const normalizedCountry = countryNormalization[detectedCountry] || detectedCountry;
+      console.log('🌍 Normalized country:', normalizedCountry);
+      return normalizedCountry;
     }
   } catch (error) {
     console.warn('Error detecting country from coordinates:', error);
   }
-  return 'España'; // Default fallback
+  return 'Spain'; // Default fallback
 };
 
 // Map country names to their localized versions
-const getLocalizedCountryName = (country: string, language: string): string => {
+export const getLocalizedCountryName = (country: string, language: string): string => {
   const countryMappings: Record<string, Record<string, string>> = {
     'Spain': { 
-      'es': 'España', 
-      'en': 'Spain', 
-      'de': 'Spanien', 
-      'fr': 'Espagne', 
-      'it': 'Spagna' 
+      'es': 'España', 'en': 'Spain', 'de': 'Spanien', 'fr': 'Espagne', 'it': 'Spagna', 
+      'pt': 'Espanha', 'nl': 'Spanje', 'tr': 'İspanya', 'ja': 'スペイン', 'ru': 'Испания'
     },
     'France': { 
-      'es': 'Francia', 
-      'en': 'France', 
-      'de': 'Frankreich', 
-      'fr': 'France', 
-      'it': 'Francia' 
+      'es': 'Francia', 'en': 'France', 'de': 'Frankreich', 'fr': 'France', 'it': 'Francia',
+      'pt': 'França', 'nl': 'Frankrijk', 'tr': 'Fransa', 'ja': 'フランス', 'ru': 'Франция'
     },
     'Germany': { 
-      'es': 'Alemania', 
-      'en': 'Germany', 
-      'de': 'Deutschland', 
-      'fr': 'Allemagne', 
-      'it': 'Germania' 
+      'es': 'Alemania', 'en': 'Germany', 'de': 'Deutschland', 'fr': 'Allemagne', 'it': 'Germania',
+      'pt': 'Alemanha', 'nl': 'Duitsland', 'tr': 'Almanya', 'ja': 'ドイツ', 'ru': 'Германия'
     },
     'Italy': { 
-      'es': 'Italia', 
-      'en': 'Italy', 
-      'de': 'Italien', 
-      'fr': 'Italie', 
-      'it': 'Italia' 
+      'es': 'Italia', 'en': 'Italy', 'de': 'Italien', 'fr': 'Italie', 'it': 'Italia',
+      'pt': 'Itália', 'nl': 'Italië', 'tr': 'İtalya', 'ja': 'イタリア', 'ru': 'Италия'
     },
     'Portugal': { 
-      'es': 'Portugal', 
-      'en': 'Portugal', 
-      'de': 'Portugal', 
-      'fr': 'Portugal', 
-      'it': 'Portogallo' 
+      'es': 'Portugal', 'en': 'Portugal', 'de': 'Portugal', 'fr': 'Portugal', 'it': 'Portogallo',
+      'pt': 'Portugal', 'nl': 'Portugal', 'tr': 'Portekiz', 'ja': 'ポルトガル', 'ru': 'Португалия'
+    },
+    'Switzerland': { 
+      'es': 'Suiza', 'en': 'Switzerland', 'de': 'Schweiz', 'fr': 'Suisse', 'it': 'Svizzera',
+      'pt': 'Suíça', 'nl': 'Zwitserland', 'tr': 'İsviçre', 'ja': 'スイス', 'ru': 'Швейцария'
+    },
+    'Austria': { 
+      'es': 'Austria', 'en': 'Austria', 'de': 'Österreich', 'fr': 'Autriche', 'it': 'Austria',
+      'pt': 'Áustria', 'nl': 'Oostenrijk', 'tr': 'Avusturya', 'ja': 'オーストリア', 'ru': 'Австрия'
+    },
+    'Belgium': { 
+      'es': 'Bélgica', 'en': 'Belgium', 'de': 'Belgien', 'fr': 'Belgique', 'it': 'Belgio',
+      'pt': 'Bélgica', 'nl': 'België', 'tr': 'Belçika', 'ja': 'ベルギー', 'ru': 'Бельгия'
+    },
+    'Netherlands': { 
+      'es': 'Países Bajos', 'en': 'Netherlands', 'de': 'Niederlande', 'fr': 'Pays-Bas', 'it': 'Paesi Bassi',
+      'pt': 'Países Baixos', 'nl': 'Nederland', 'tr': 'Hollanda', 'ja': 'オランダ', 'ru': 'Нидерланды'
+    },
+    'United Kingdom': { 
+      'es': 'Reino Unido', 'en': 'United Kingdom', 'de': 'Vereinigtes Königreich', 'fr': 'Royaume-Uni', 'it': 'Regno Unito',
+      'pt': 'Reino Unido', 'nl': 'Verenigd Koninkrijk', 'tr': 'Birleşik Krallık', 'ja': 'イギリス', 'ru': 'Великобритания'
+    },
+    'Turkey': { 
+      'es': 'Turquía', 'en': 'Turkey', 'de': 'Türkei', 'fr': 'Turquie', 'it': 'Turchia',
+      'pt': 'Turquia', 'nl': 'Turkije', 'tr': 'Türkiye', 'ja': 'トルコ', 'ru': 'Турция'
+    },
+    'Brazil': { 
+      'es': 'Brasil', 'en': 'Brazil', 'de': 'Brasilien', 'fr': 'Brésil', 'it': 'Brasile',
+      'pt': 'Brasil', 'nl': 'Brazilië', 'tr': 'Brezilya', 'ja': 'ブラジル', 'ru': 'Бразилия'
+    },
+    'Canada': { 
+      'es': 'Canadá', 'en': 'Canada', 'de': 'Kanada', 'fr': 'Canada', 'it': 'Canada',
+      'pt': 'Canadá', 'nl': 'Canada', 'tr': 'Kanada', 'ja': 'カナダ', 'ru': 'Канада'
+    },
+    'Japan': { 
+      'es': 'Japón', 'en': 'Japan', 'de': 'Japan', 'fr': 'Japon', 'it': 'Giappone',
+      'pt': 'Japão', 'nl': 'Japan', 'tr': 'Japonya', 'ja': '日本', 'ru': 'Япония'
+    },
+    'Russia': { 
+      'es': 'Rusia', 'en': 'Russia', 'de': 'Russland', 'fr': 'Russie', 'it': 'Russia',
+      'pt': 'Rússia', 'nl': 'Rusland', 'tr': 'Rusya', 'ja': 'ロシア', 'ru': 'Россия'
     }
   };
 
@@ -106,23 +160,8 @@ const getLocalizedCountryName = (country: string, language: string): string => {
 
 // Replace country names in specific questions
 const replaceCountryInQuestion = async (question: string, language: string, coordinates?: { latitude: number, longitude: number }): Promise<string> => {
-  // Only process questions that mention specific countries
-  const countryPatterns = [
-    { pattern: /Francia/gi, replacement: 'Francia' },
-    { pattern: /France/gi, replacement: 'France' },
-    { pattern: /España/gi, replacement: 'España' },
-    { pattern: /Spain/gi, replacement: 'Spain' },
-    { pattern: /Italia/gi, replacement: 'Italia' },
-    { pattern: /Italy/gi, replacement: 'Italy' },
-    { pattern: /Alemania/gi, replacement: 'Alemania' },
-    { pattern: /Germany/gi, replacement: 'Germany' },
-  ];
-
-  // Check if question contains any country name
-  const hasCountryMention = countryPatterns.some(({ pattern }) => pattern.test(question));
-  
-  if (!hasCountryMention || !coordinates) {
-    return question; // Return original question if no country mention or no coordinates
+  if (!coordinates) {
+    return question; // Return original question if no coordinates
   }
 
   try {
@@ -130,12 +169,50 @@ const replaceCountryInQuestion = async (question: string, language: string, coor
     const detectedCountry = await detectCountryFromCoordinates(coordinates.latitude, coordinates.longitude);
     const localizedCountry = getLocalizedCountryName(detectedCountry, language);
     
+    // All possible country patterns that could appear in questions (multilingual)
+    const countryPatterns = [
+      // Spanish
+      /Francia/gi, /España/gi, /Italia/gi, /Alemania/gi, /Portugal/gi, /Brasil/gi, /Austria/gi, /Suiza/gi, /Bélgica/gi, /Canadá/gi,
+      // English  
+      /France/gi, /Spain/gi, /Italy/gi, /Germany/gi, /Portugal/gi, /Brazil/gi, /Austria/gi, /Switzerland/gi, /Belgium/gi, /Canada/gi, /UK/gi, /United Kingdom/gi,
+      // German
+      /Frankreich/gi, /Spanien/gi, /Italien/gi, /Deutschland/gi, /Österreich/gi, /Schweiz/gi, /Belgien/gi,
+      // French
+      /Espagne/gi, /Italie/gi, /Allemagne/gi, /Autriche/gi, /Suisse/gi, /Belgique/gi,
+      // Italian
+      /Spagna/gi, /Francia/gi, /Germania/gi, /Svizzera/gi, /Austria/gi, /Belgio/gi,
+      // Portuguese
+      /Espanha/gi, /França/gi, /Alemanha/gi, /Itália/gi, /Áustria/gi, /Suíça/gi, /Bélgica/gi,
+      // Dutch
+      /Frankrijk/gi, /Spanje/gi, /Italië/gi, /Duitsland/gi, /Oostenrijk/gi, /Zwitserland/gi, /België/gi, /Nederland/gi,
+      // Turkish
+      /Fransa/gi, /İspanya/gi, /İtalya/gi, /Almanya/gi, /Avusturya/gi, /İsviçre/gi, /Belçika/gi, /Türkiye/gi,
+      // Japanese
+      /フランス/gi, /スペイン/gi, /イタリア/gi, /ドイツ/gi, /オーストリア/gi, /スイス/gi, /ベルギー/gi, /日本/gi, /韓国/gi,
+      // Russian
+      /Франция/gi, /Испания/gi, /Италия/gi, /Германия/gi, /Австрия/gi, /Швейцария/gi, /Бельгия/gi, /Россия/gi, /Казахстан/gi
+    ];
+
+    // Check if question contains any country name
+    const hasCountryMention = countryPatterns.some(pattern => pattern.test(question));
+    
+    if (!hasCountryMention) {
+      return question; // Return original question if no country mention
+    }
+    
     // Replace any country mention with the detected one
     let updatedQuestion = question;
-    countryPatterns.forEach(({ pattern }) => {
-      updatedQuestion = updatedQuestion.replace(pattern, localizedCountry);
+    console.log('🔄 Original question:', question);
+    console.log('🔄 Localized country to replace with:', localizedCountry);
+    
+    countryPatterns.forEach(pattern => {
+      if (pattern.test(question)) {
+        console.log('🔄 Found pattern to replace:', pattern);
+        updatedQuestion = updatedQuestion.replace(pattern, localizedCountry);
+      }
     });
     
+    console.log('🔄 Updated question:', updatedQuestion);
     return updatedQuestion;
   } catch (error) {
     console.warn('Error replacing country in question:', error);
