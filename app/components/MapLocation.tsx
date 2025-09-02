@@ -3543,17 +3543,53 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     activeOpacity={0.8}
                   >
                     <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
-                      {isTablet && (
-                        <View style={{
-                          backgroundColor: isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(147, 51, 234, 0.2)',
-                          borderRadius: 20,
-                          padding: 16,
-                          marginRight: 20,
-                        }}>
-                          <IconSymbol size={36} name="clock.badge" color={isDark ? '#c084fc' : '#8b5cf6'} />
-                        </View>
-                      )}
+                      {isTablet && (() => {
+                        const job = jobs[0];
+                        let hasSplitShift = false;
+                        
+                        // Check for split shift in weekly schedule
+                        if (job?.schedule?.weeklySchedule) {
+                          const schedules = Object.values(job.schedule.weeklySchedule).filter(s => s !== null);
+                          if (schedules.length > 0) {
+                            const firstSchedule = schedules[0];
+                            hasSplitShift = Boolean(firstSchedule.hasSplitShift && 
+                                                    firstSchedule.secondStartTime && 
+                                                    firstSchedule.secondEndTime);
+                          }
+                        }
+                        
+                        // Check for split shift in simple schedule
+                        if (job?.schedule?.startTime && job?.schedule?.endTime) {
+                          hasSplitShift = Boolean(job.schedule.hasSplitShift && 
+                                                job.schedule.secondStartTime && 
+                                                job.schedule.secondEndTime);
+                        }
+                        
+                        // Don't show icon if there's a split shift
+                        if (hasSplitShift) {
+                          return null;
+                        }
+                        
+                        return (
+                          <View style={{
+                            backgroundColor: isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(147, 51, 234, 0.2)',
+                            borderRadius: 20,
+                            padding: 16,
+                            marginRight: 20,
+                          }}>
+                            <IconSymbol size={36} name="clock.badge" color={isDark ? '#c084fc' : '#8b5cf6'} />
+                          </View>
+                        );
+                      })()}
                       <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
+                        <View style={{
+                          backgroundColor: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(147, 51, 234, 0.2)',
+                          borderRadius: 12,
+                          padding: 8,
+                          marginBottom: 8,
+                        }}>
+                          <IconSymbol size={24} name="clock.fill" color={isDark ? '#a855f7' : '#8b5cf6'} />
+                        </View>
                         <Text style={{
                           fontSize: isTablet ? 16 : 13,
                           fontWeight: '600',
@@ -3578,22 +3614,36 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           const schedules = Object.values(job.schedule.weeklySchedule).filter(s => s !== null);
                           if (schedules.length > 0) {
                             const firstSchedule = schedules[0];
+                            const hasSplitShift = firstSchedule.hasSplitShift && 
+                                                firstSchedule.secondStartTime && 
+                                                firstSchedule.secondEndTime;
+                            
                             return (
                               <>
                                 <Text style={{
                                   fontSize: isTablet ? 18 : (isSmallScreen ? 14 : 16),
                                   fontWeight: '600',
                                   color: isDark ? 'white' : '#581c87',
+                                  textAlign: 'center',
                                 }}>
                                   {formatTimeCompact(firstSchedule.startTime)} - {formatTimeCompact(firstSchedule.endTime)}
+                                  {hasSplitShift && (
+                                    <>
+                                      {'\n'}
+                                      {formatTimeCompact(firstSchedule.secondStartTime!)} - {formatTimeCompact(firstSchedule.secondEndTime!)}
+                                    </>
+                                  )}
                                 </Text>
-                                <Text style={{
-                                  fontSize: 11,
-                                  color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#a855f7',
-                                  marginTop: 2,
-                                }}>
-                                  {schedules.length} {t('calendar.days_per_week')}
-                                </Text>
+                                {!hasSplitShift && (
+                                  <Text style={{
+                                    fontSize: 11,
+                                    color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#a855f7',
+                                    marginTop: 2,
+                                    textAlign: 'center',
+                                  }}>
+                                    {`${schedules.length} ${t('calendar.days_per_week')}`}
+                                  </Text>
+                                )}
                               </>
                             );
                           }
@@ -3601,22 +3651,36 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         
                         // Check for simple schedule
                         if (job.schedule?.startTime && job.schedule?.endTime) {
+                          const hasSplitShift = job.schedule.hasSplitShift && 
+                                              job.schedule.secondStartTime && 
+                                              job.schedule.secondEndTime;
+                          
                           return (
                             <>
                               <Text style={{
                                 fontSize: isTablet ? 18 : (isSmallScreen ? 14 : 16),
                                 fontWeight: '600',
                                 color: isDark ? 'white' : '#581c87',
+                                textAlign: 'center',
                               }}>
                                 {formatTimeCompact(job.schedule.startTime)} - {formatTimeCompact(job.schedule.endTime)}
+                                {hasSplitShift && (
+                                  <>
+                                    {'\n'}
+                                    {formatTimeCompact(job.schedule.secondStartTime!)} - {formatTimeCompact(job.schedule.secondEndTime!)}
+                                  </>
+                                )}
                               </Text>
-                              <Text style={{
-                                fontSize: 11,
-                                color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#a855f7',
-                                marginTop: 2,
-                              }}>
-                                {job.schedule.workDays?.length || 5} {t('calendar.days_per_week')}
-                              </Text>
+                              {!hasSplitShift && (
+                                <Text style={{
+                                  fontSize: 11,
+                                  color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#a855f7',
+                                  marginTop: 2,
+                                  textAlign: 'center',
+                                }}>
+                                  {`${job.schedule.workDays?.length || 5} ${t('calendar.days_per_week')}`}
+                                </Text>
+                              )}
                             </>
                           );
                         }
@@ -3664,16 +3728,44 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         );
                       })()}
                       </View>
-                      {!isTablet && (
-                        <View style={{
-                          backgroundColor: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(147, 51, 234, 0.2)',
-                          borderRadius: 12,
-                          padding: 8,
-                          marginTop: 8,
-                        }}>
-                          <IconSymbol size={20} name="clock.fill" color={isDark ? '#a855f7' : '#8b5cf6'} />
-                        </View>
-                      )}
+                      {!isTablet && (() => {
+                        const job = jobs[0];
+                        let hasSplitShift = false;
+                        
+                        // Check for split shift in weekly schedule
+                        if (job?.schedule?.weeklySchedule) {
+                          const schedules = Object.values(job.schedule.weeklySchedule).filter(s => s !== null);
+                          if (schedules.length > 0) {
+                            const firstSchedule = schedules[0];
+                            hasSplitShift = Boolean(firstSchedule.hasSplitShift && 
+                                                    firstSchedule.secondStartTime && 
+                                                    firstSchedule.secondEndTime);
+                          }
+                        }
+                        
+                        // Check for split shift in simple schedule
+                        if (job?.schedule?.startTime && job?.schedule?.endTime) {
+                          hasSplitShift = Boolean(job.schedule.hasSplitShift && 
+                                                job.schedule.secondStartTime && 
+                                                job.schedule.secondEndTime);
+                        }
+                        
+                        // Don't show icon if there's a split shift
+                        if (hasSplitShift) {
+                          return null;
+                        }
+                        
+                        return (
+                          <View style={{
+                            backgroundColor: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(147, 51, 234, 0.2)',
+                            borderRadius: 12,
+                            padding: 8,
+                            marginTop: 8,
+                          }}>
+                            <IconSymbol size={20} name="clock.fill" color={isDark ? '#a855f7' : '#8b5cf6'} />
+                          </View>
+                        );
+                      })()}
                     </View>
                   </TouchableOpacity>
                 </View>

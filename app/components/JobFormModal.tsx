@@ -464,13 +464,6 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
   },
-  removeDayButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: colors.error + '15',
-    borderWidth: 1,
-    borderColor: colors.error + '30',
-  },
   switchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2240,12 +2233,6 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     return daySchedule !== null;
   };
 
-  const removeDaySchedule = (day: number) => {
-    updateDaySchedule(day, null);
-    if (selectedDay === day) {
-      setSelectedDay(null);
-    }
-  };
 
   const renderSimplifiedForm = () => (
     <TouchableOpacity 
@@ -2669,7 +2656,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     </>
   );
 
-    const renderScheduleTab = () => (
+        const renderScheduleTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
         <Text style={styles.sectionTitle}>{t('job_form.schedule.title')}</Text>
@@ -2706,9 +2693,6 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           {/* Days of the week selector */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>{t('job_form.schedule.select_day')}</Text>
-            <Text style={[styles.helperText, { color: colors.textSecondary, marginBottom: 8 }]}>
-              {t('job_form.schedule.day_helper_updated')}
-            </Text>
             <View style={styles.workDaysContainer}>
               {(t('job_form.schedule.days') as unknown as string[]).map((day: string, index: number) => (
                 <TouchableOpacity
@@ -2719,28 +2703,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     selectedDay === index && styles.workDayButtonSelected,
                   ]}
                   onPress={() => {
-                    console.log('🔧 Day button pressed for index:', index, 'day:', day);
-                    console.log('🔧 hasDaySchedule(index):', hasDaySchedule(index));
-                    console.log('🔧 selectedDay before:', selectedDay);
-                    
                     if (hasDaySchedule(index)) {
-                      // Si ya tiene horario, simplemente lo selecciona para editar
+                      // Si ya tiene horario, simplemente lo selecciona para editar (lila)
                       setSelectedDay(index);
                     } else {
                       // Si no tiene horario, le pone uno por defecto y lo selecciona
                       updateDaySchedule(index, getDefaultDaySchedule());
                       setSelectedDay(index);
-                    }
-                    console.log('🔧 selectedDay after:', selectedDay);
-                  }}
-                  onLongPress={() => {
-                    // Long press para eliminar el horario del día
-                    console.log('🔧 Day button long pressed for index:', index);
-                    if (hasDaySchedule(index)) {
-                      removeDaySchedule(index);
-                      if (selectedDay === index) {
-                        setSelectedDay(null);
-                      }
                     }
                   }}
                 >
@@ -2756,23 +2725,23 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               ))}
             </View>
             <Text style={styles.helperText}>
-              Tap: Check/Uncheck day. Tap and hold: Edit schedule
+              {t('job_form.schedule.tap_to_select')}
             </Text>
           </View>
 
           {/* Schedule details for selected day */}
           {selectedDay !== null && (
             <View style={styles.dayScheduleContainer}>
-              <View style={styles.dayScheduleHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                 <Text style={styles.dayScheduleTitle}>
                   {t('job_form.schedule.schedule_for')} {(t('job_form.schedule.days') as unknown as string[])[selectedDay]}
                 </Text>
                 <TouchableOpacity
+                  style={{ padding: 8, borderRadius: 8, backgroundColor: colors.error + '15' }}
                   onPress={() => {
-                    removeDaySchedule(selectedDay);
+                    updateDaySchedule(selectedDay, null);
                     setSelectedDay(null);
                   }}
-                  style={styles.removeDayButton}
                 >
                   <IconSymbol size={16} name="trash" color={colors.error} />
                 </TouchableOpacity>
@@ -2781,28 +2750,30 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               <View style={styles.row}>
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>{t('job_form.schedule.start_time')}</Text>
-                  <TimeInput
+                  <TextInput
                     style={styles.input}
-                    value={getDaySchedule(selectedDay)?.startTime || ''}
+                    value={formatTimeWithPreferences(getDaySchedule(selectedDay)?.startTime || '')}
                     onChangeText={(value) => {
                       const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
-                      console.log('🕐 Updating startTime for day', selectedDay, 'value:', value);
-                      updateDaySchedule(selectedDay, { ...currentSchedule, startTime: value });
+                      const parsedTime = parseTimeInput(value);
+                      updateDaySchedule(selectedDay, { ...currentSchedule, startTime: parsedTime });
                     }}
+                    placeholder={getTimePlaceholder()}
                     placeholderTextColor={colors.textTertiary}
                   />
                 </View>
                 
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>{t('job_form.schedule.end_time')}</Text>
-                  <TimeInput
+                  <TextInput
                     style={styles.input}
-                    value={getDaySchedule(selectedDay)?.endTime || ''}
+                    value={formatTimeWithPreferences(getDaySchedule(selectedDay)?.endTime || '')}
                     onChangeText={(value) => {
                       const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
-                      console.log('🕐 Updating endTime for day', selectedDay, 'value:', value);
-                      updateDaySchedule(selectedDay, { ...currentSchedule, endTime: value });
+                      const parsedTime = parseTimeInput(value);
+                      updateDaySchedule(selectedDay, { ...currentSchedule, endTime: parsedTime });
                     }}
+                    placeholder={getTimePlaceholder()}
                     placeholderTextColor={colors.textTertiary}
                   />
                 </View>
@@ -2833,13 +2804,15 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 <View style={styles.row}>
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>{t('job_form.schedule.second_start_time')}</Text>
-                    <TimeInput
+                    <TextInput
                       style={styles.input}
-                      value={getDaySchedule(selectedDay)?.secondStartTime || ''}
-                      onChangeText={(value) => {
+                      value={formatTimeWithPreferences(getDaySchedule(selectedDay)?.secondStartTime || '')}
+                      onChangeText={(value: string) => {
                         const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
-                        updateDaySchedule(selectedDay, { ...currentSchedule, secondStartTime: value });
+                        const parsedTime = parseTimeInput(value);
+                        updateDaySchedule(selectedDay, { ...currentSchedule, secondStartTime: parsedTime });
                       }}
+                      placeholder={getTimePlaceholder()}
                       placeholderTextColor={colors.textTertiary}
                     />
                   </View>
@@ -2848,11 +2821,13 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     <Text style={styles.label}>{t('job_form.schedule.second_end_time')}</Text>
                     <TextInput
                       style={styles.input}
-                      value={getDaySchedule(selectedDay)?.secondEndTime || ''}
-                      onChangeText={(value) => {
+                      value={formatTimeWithPreferences(getDaySchedule(selectedDay)?.secondEndTime || '')}
+                      onChangeText={(value: string) => {
                         const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
-                        updateDaySchedule(selectedDay, { ...currentSchedule, secondEndTime: value });
+                        const parsedTime = parseTimeInput(value);
+                        updateDaySchedule(selectedDay, { ...currentSchedule, secondEndTime: parsedTime });
                       }}
+                      placeholder={getTimePlaceholder()}
                       placeholderTextColor={colors.textTertiary}
                     />
                   </View>
@@ -2864,7 +2839,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 <TextInput
                   style={styles.input}
                   value={String(getDaySchedule(selectedDay)?.breakTime || 0)}
-                  onChangeText={(value) => {
+                  onChangeText={(value: string) => {
                     const currentSchedule = getDaySchedule(selectedDay) || getDefaultDaySchedule();
                     updateDaySchedule(selectedDay, { ...currentSchedule, breakTime: Number(value) || 0 });
                   }}
@@ -3066,6 +3041,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       </BlurView>
     </ScrollView>
   );
+
 
 
   const renderFinancialTab = () => (
