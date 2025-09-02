@@ -1244,8 +1244,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [selectedJobForStats, setSelectedJobForStats] = useState<Job | null>(null);
   const [jobStatistics, setJobStatistics] = useState<Map<string, { thisMonthHours: number; thisMonthDays: number }>>(new Map());
   const [activeTimerJobId, setActiveTimerJobId] = useState<string | null>(null);
-  const [autoTimerStatus, setAutoTimerStatus] = useState<AutoTimerStatus | null>(null);
   const [autoTimerService] = useState(() => AutoTimerService.getInstance());
+  const [autoTimerStatus, setAutoTimerStatus] = useState<AutoTimerStatus | null>(null);
+  const [isAutoTimerInitialized, setIsAutoTimerInitialized] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isTimerPaused, setIsTimerPaused] = useState(false);
   const [lastAutoTimerSession, setLastAutoTimerSession] = useState<{
@@ -1823,10 +1824,18 @@ export default function MapLocation({ location, onNavigate }: Props) {
     autoTimerService.addAlertListener(handleAutoTimerAlert);
     autoTimerService.addPauseListener(handleAutoTimerPauseChange);
     
-    // Get current status immediately to sync with any ongoing countdown
-    const currentStatus = autoTimerService.getStatus();
-    setAutoTimerStatus(currentStatus);
-    console.log('🔄 MapLocation: Synced with current AutoTimer status:', currentStatus.state, currentStatus.remainingTime);
+    // Get current status with a small delay to allow AutoTimer service to fully initialize
+    const initializeAutoTimerStatus = async () => {
+      // Wait a bit for AutoTimer service to restore its state from storage
+      setTimeout(() => {
+        const currentStatus = autoTimerService.getStatus();
+        setAutoTimerStatus(currentStatus);
+        setIsAutoTimerInitialized(true);
+        console.log('🔄 MapLocation: Synced with current AutoTimer status:', currentStatus.state, currentStatus.remainingTime);
+      }, 100); // 100ms delay to allow state restoration
+    };
+    
+    initializeAutoTimerStatus();
 
     // Get current pause state
     const initializePauseState = async () => {
@@ -2935,6 +2944,11 @@ export default function MapLocation({ location, onNavigate }: Props) {
     }, 150);
   };
 
+  // Unified logic to prevent flicker between normal widgets and MiniMapWidget
+  // Don't show anything until AutoTimer is properly initialized
+  const shouldShowNormalWidgets = isAutoTimerInitialized && autoTimerStatus?.state === 'inactive';
+  const shouldShowMiniMapWidget = isAutoTimerInitialized && autoTimerStatus?.state !== 'inactive' && autoTimerStatus?.jobId;
+
   return (
 
 
@@ -2963,7 +2977,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   height: isTablet ? 160 : (isSmallScreen ? 120 : 140),
                 }}>
                   {/* JOBS WIDGET - Hide when auto-timer is active */}
-                  {autoTimerStatus?.state === 'inactive' && (
+                  {shouldShowNormalWidgets && (
                   <TouchableOpacity
                     style={{
                       flex: 1,
@@ -3100,7 +3114,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   )}
                   
                   {/* TIMER WIDGET - Hide when auto-timer is active */}
-                  {autoTimerStatus?.state === 'inactive' && (
+                  {shouldShowNormalWidgets && (
                   <TouchableOpacity
                     style={{
                       flex: 1,
@@ -3122,10 +3136,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     <View style={{ 
                       flexDirection: isTablet ? 'row' : 'column', 
                       alignItems: 'center', 
-                      justifyContent: isTablet && autoTimerStatus?.state !== 'inactive' ? 'center' : (isTablet ? 'space-between' : 'center'), 
+                      justifyContent: isTablet && !shouldShowNormalWidgets ? 'center' : (isTablet ? 'space-between' : 'center'), 
                       flex: 1 
                     }}>
-                            {autoTimerStatus?.state === 'inactive' && (
+                            {shouldShowNormalWidgets && (
                       <Animated.View style={[animatedClockStyle, {
                         backgroundColor: isDark ? 'rgba(52, 211, 153, 0.25)' : 'rgba(16, 185, 129, 0.2)',
                         borderRadius: isTablet ? 20 : 12,
@@ -3175,7 +3189,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           marginTop: isTablet ? 0 : (isSmallScreen ? 2 : 4),
                           letterSpacing: isTablet ? 0.7 : (isSmallScreen ? 0.3 : 0.5),
                         }}>
-                          {autoTimer.state.isWaiting ? 'Waiting' : (lastAutoTimerSession && autoTimerStatus?.state === 'inactive' ? 
+                          {autoTimer.state.isWaiting ? 'Waiting' : (lastAutoTimerSession && shouldShowNormalWidgets ? 
                             `${formatTimeCompact(lastAutoTimerSession.startTime)} - ${formatTimeCompact(lastAutoTimerSession.endTime)}` : 
                             formatTime(elapsedTime))}
                         </Text>
@@ -3186,12 +3200,12 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           marginTop: isTablet ? 4 : (isSmallScreen ? 2 : 4),
                         }}>
 
-                                                      {lastAutoTimerSession && autoTimerStatus?.state === 'inactive' ?
+                                                      {lastAutoTimerSession && shouldShowNormalWidgets ?
                             `${t('reports.total_hours')}: ${lastAutoTimerSession.hours.toFixed(2)}h` :
                             t('maps.auto_timer_inactive')}
                         </Text>
                         {/* Pause/Play and Stop buttons - show below when AutoTimer is active */}
-                        {autoTimerStatus?.state !== 'inactive' && (
+                        {!shouldShowNormalWidgets && (
                           <View style={{
                             flexDirection: 'row',
                             gap: isSmallScreen ? 6 : 8,
@@ -3248,7 +3262,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
                 {/* MIDDLE ROW - CALENDAR + SCHEDULES */}
 
-                  {autoTimerStatus?.state === 'inactive' && (
+                  {shouldShowNormalWidgets && (
 
                 <View style={{
                   flexDirection: 'row',
@@ -3755,16 +3769,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           return null;
                         }
                         
-                        return (
-                          <View style={{
-                            backgroundColor: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(147, 51, 234, 0.2)',
-                            borderRadius: 12,
-                            padding: 8,
-                            marginTop: 8,
-                          }}>
-                            <IconSymbol size={20} name="clock.fill" color={isDark ? '#a855f7' : '#8b5cf6'} />
-                          </View>
-                        );
+                 
                       })()}
                     </View>
                   </TouchableOpacity>
@@ -3772,7 +3777,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   )}
 
                 {/* BOTTOM ROW - 2 CONFIG WIDGETS */}
-                  {autoTimerStatus?.state === 'inactive' && (
+                  {shouldShowNormalWidgets && (
                 <View style={{
                   flexDirection: 'row',
                   gap: isTablet ? 28 : (isSmallScreen ? 12 : 20),
@@ -4140,7 +4145,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   )}
 
                 {/* AI ASSISTANT WIDGET - NEW - Hide on iPad landscape and when auto-timer is active */}
-                {(!isTablet || (isTablet && isPortrait)) && autoTimerStatus?.state === 'inactive' && (
+                {(!isTablet || (isTablet && isPortrait)) && shouldShowNormalWidgets && (
                 <TouchableOpacity
                   style={{
                     marginTop: isTablet ? 28 : (isSmallScreen ? 6 : 20),
@@ -4407,7 +4412,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
 
       {/* Mini Map Widget - shown when auto-timer is active instead of job cards modal */}
-      {autoTimerStatus?.state !== 'inactive' && autoTimerStatus?.jobId && (() => {
+      {shouldShowMiniMapWidget && (() => {
         const activeJob = jobs.find(job => job.id === autoTimerStatus.jobId);
         if (activeJob && !showJobCardsModal) {
           return (

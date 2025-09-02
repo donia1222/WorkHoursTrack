@@ -576,17 +576,6 @@ class AutoTimerService {
             console.log('Live Activity could not be stopped - app might be closed');
           }
           
-          // Notificación simple para el usuario
-          const Notifications = require('expo-notifications');
-          await Notifications.scheduleNotificationAsync({
-            identifier: 'timer_stopped_' + Date.now(),
-            content: {
-              title: '⏹️ Timer Stopped',
-              body: `Timer stopped for "${job.name}"`,
-              sound: 'default',
-            },
-            trigger: null,
-          });
         }
         
         // Enviar notificación normal solo si las notificaciones de auto-timer están habilitadas

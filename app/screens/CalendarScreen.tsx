@@ -419,10 +419,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderRadius: 24,
   },
   legendTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 16,
+
   },
   legendItem: {
     flexDirection: 'row',
@@ -680,7 +680,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   dayTypeGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
+    marginBottom: 8,
   },
   dayTypeItem: {
     alignItems: 'center',
@@ -712,6 +713,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     textAlign: 'center',
     fontWeight: '500',
     letterSpacing: -0.2,
+    textTransform: 'capitalize',
   },
   legendSeparator: {
     height: 1,
@@ -1487,6 +1489,10 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
     const totalDays = monthWorkDays.length;
     const totalHours = workDaysOnly.reduce((sum, day) => sum + day.hours, 0);
     const overtimeDays = workDaysOnly.filter(day => day.overtime).length;
+    
+    // Count unique work days only (multiple sessions on same day count as 1 day) - like ReportsScreen
+    const uniqueWorkDates = new Set(workDaysOnly.map(day => day.date.split('T')[0]));
+    const uniqueWorkDays = uniqueWorkDates.size;
 
     // Group by job (only work days)
     const jobStats = jobs.reduce((acc, job) => {
@@ -1506,7 +1512,7 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
       totalHours, 
       overtimeDays, 
       jobStats,
-      workDays: workDaysOnly.length,
+      workDays: uniqueWorkDays,
       freeDays: freeDays.length,
       vacationDays: vacationDays.length,
       sickDays: sickDays.length,
@@ -1766,56 +1772,61 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             />
-          <Text style={styles.legendTitle}>{t('calendar.day_types')}</Text>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.work.color }]} />
-            <Text style={styles.legendText}>{t('calendar.work_day')}</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.free.color }]} />
-            <Text style={styles.legendText}>{t('calendar.free_day')}</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.vacation.color }]} />
-            <Text style={styles.legendText}>{t('calendar.vacation_day')}</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: DAY_TYPES.sick.color }]} />
-            <Text style={styles.legendText}>{t('calendar.sick_day')}</Text>
-          </View>
-    
-             
+          <Text style={styles.legendTitle}>{t('calendar.month_stats')}</Text>
+
             <View style={styles.dayTypeBreakdown}>
-          
-
+              {/* Primera fila - Días de trabajo */}
               <View style={styles.dayTypeGrid}>
+                <View style={styles.dayTypeItem}>
+                  <View style={[styles.dayTypeIconContainer, { backgroundColor: DAY_TYPES.work.color + '20' }]}>
+                    <IconSymbol size={28} name="briefcase.fill" color={DAY_TYPES.work.color} />
+                  </View>
+                  <Text style={styles.dayTypeNumber}>{stats.workDays}</Text>
+                  <Text style={styles.dayTypeLabel}>{t('reports.days')}</Text>
+                </View>
 
-                  <View style={styles.dayTypeItem}>
-                    <View style={[styles.dayTypeIconContainer, { backgroundColor: DAY_TYPES.free.color + '20' }]}>
-                      <IconSymbol size={28} name="house.fill" color={DAY_TYPES.free.color} />
-                    </View>
-                    <Text style={styles.dayTypeNumber}>{stats.freeDays}</Text>
-                    <Text style={styles.dayTypeLabel}>{t('calendar.free_days')}</Text>
+                <View style={styles.dayTypeItem}>
+                  <View style={[styles.dayTypeIconContainer, { backgroundColor: colors.primary + '20' }]}>
+                    <IconSymbol size={28} name="clock.fill" color={colors.primary} />
                   </View>
-      
+                  <Text style={styles.dayTypeNumber}>{stats.totalHours.toFixed(1)}</Text>
+                  <Text style={styles.dayTypeLabel}>{t('reports.total_hours')}</Text>
+                </View>
 
-                  <View style={styles.dayTypeItem}>
-                    <View style={[styles.dayTypeIconContainer, { backgroundColor: DAY_TYPES.vacation.color + '20' }]}>
-                      <IconSymbol size={28} name="sun.max.fill" color={DAY_TYPES.vacation.color} />
-                    </View>
-                    <Text style={styles.dayTypeNumber}>{stats.vacationDays}</Text>
-                    <Text style={styles.dayTypeLabel}>{t('calendar.vacation_days')}</Text>
+                <View style={styles.dayTypeItem}>
+                  <View style={[styles.dayTypeIconContainer, { backgroundColor: colors.warning + '20' }]}>
+                    <IconSymbol size={28} name="clock.arrow.circlepath" color={colors.warning} />
                   </View>
-      
- 
-                  <View style={styles.dayTypeItem}>
-                    <View style={[styles.dayTypeIconContainer, { backgroundColor: DAY_TYPES.sick.color + '20' }]}>
-                      <IconSymbol size={28} name="cross.case.fill" color={DAY_TYPES.sick.color} />
-                    </View>
-                    <Text style={styles.dayTypeNumber}>{stats.sickDays}</Text>
-                    <Text style={styles.dayTypeLabel}>{t('calendar.sick_days')}</Text>
+                  <Text style={styles.dayTypeNumber}>{stats.overtimeDays}</Text>
+                  <Text style={styles.dayTypeLabel}>Overtime</Text>
+                </View>
+              </View>
+
+              {/* Segunda fila - Otros tipos de días */}
+              <View style={styles.dayTypeGrid}>
+                <View style={styles.dayTypeItem}>
+                  <View style={[styles.dayTypeIconContainer, { backgroundColor: DAY_TYPES.free.color + '20' }]}>
+                    <IconSymbol size={28} name="house.fill" color={DAY_TYPES.free.color} />
                   </View>
-       
+                  <Text style={styles.dayTypeNumber}>{stats.freeDays}</Text>
+                  <Text style={styles.dayTypeLabel}>{t('calendar.free_days')}</Text>
+                </View>
+
+                <View style={styles.dayTypeItem}>
+                  <View style={[styles.dayTypeIconContainer, { backgroundColor: DAY_TYPES.vacation.color + '20' }]}>
+                    <IconSymbol size={28} name="sun.max.fill" color={DAY_TYPES.vacation.color} />
+                  </View>
+                  <Text style={styles.dayTypeNumber}>{stats.vacationDays}</Text>
+                  <Text style={styles.dayTypeLabel}>{t('calendar.vacation_days')}</Text>
+                </View>
+
+                <View style={styles.dayTypeItem}>
+                  <View style={[styles.dayTypeIconContainer, { backgroundColor: DAY_TYPES.sick.color + '20' }]}>
+                    <IconSymbol size={28} name="cross.case.fill" color={DAY_TYPES.sick.color} />
+                  </View>
+                  <Text style={styles.dayTypeNumber}>{stats.sickDays}</Text>
+                  <Text style={styles.dayTypeLabel}>{t('calendar.sick_days')}</Text>
+                </View>
               </View>
             </View>
             

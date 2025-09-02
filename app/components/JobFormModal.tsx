@@ -2362,6 +2362,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         value={displayValue}
         onChangeText={handleChangeText}
         placeholder={placeholder || getTimePlaceholder()}
+        keyboardType="numeric"
         {...props}
       />
     );
@@ -2760,6 +2761,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     }}
                     placeholder={getTimePlaceholder()}
                     placeholderTextColor={colors.textTertiary}
+                    keyboardType="numeric"
                   />
                 </View>
                 
@@ -2775,6 +2777,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     }}
                     placeholder={getTimePlaceholder()}
                     placeholderTextColor={colors.textTertiary}
+                    keyboardType="numeric"
                   />
                 </View>
               </View>
@@ -2814,6 +2817,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                       }}
                       placeholder={getTimePlaceholder()}
                       placeholderTextColor={colors.textTertiary}
+                      keyboardType="numeric"
                     />
                   </View>
                   
@@ -2829,6 +2833,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                       }}
                       placeholder={getTimePlaceholder()}
                       placeholderTextColor={colors.textTertiary}
+                      keyboardType="numeric"
                     />
                   </View>
                 </View>
