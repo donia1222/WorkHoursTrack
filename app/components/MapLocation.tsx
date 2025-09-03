@@ -1209,6 +1209,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showJobForm, setShowJobForm] = useState(false);
+  const [lastLoggedElapsedTime, setLastLoggedElapsedTime] = useState<number>(-1);
   
   // Responsive dimensions for mini calendar
   const windowDimensions = useWindowDimensions();
@@ -1984,7 +1985,11 @@ export default function MapLocation({ location, onNavigate }: Props) {
           // Use AutoTimerService's getElapsedTime method directly
           const elapsed = await autoTimerService.getElapsedTime();
           
-          console.log('⏱️ MapLocation updating elapsed time:', elapsed, 'seconds for job:', autoTimerStatus.jobId, 'isPaused:', isPaused);
+          // Only log every 10 seconds to reduce spam
+          if (elapsed % 10 === 0 && elapsed !== lastLoggedElapsedTime) {
+            console.log('⏱️ MapLocation updating elapsed time:', elapsed, 'seconds for job:', autoTimerStatus.jobId, 'isPaused:', isPaused);
+            setLastLoggedElapsedTime(elapsed);
+          }
           setElapsedTime(elapsed);
         }
       };

@@ -681,7 +681,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
-    marginBottom: 8,
+    marginBottom: 16,
   },
   dayTypeItem: {
     alignItems: 'center',
@@ -1764,6 +1764,8 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
             )}
           </Reanimated.View>
         </GestureDetector>
+
+            <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
         {!isLoadingJobs && (
                             <BlurView intensity={isDark ? 95 : 92} tint={isDark ? "dark" : "light"} style={{ padding: 24, borderRadius: 20 }}>
             <LinearGradient
@@ -1772,7 +1774,7 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             />
-          <Text style={styles.legendTitle}>{t('calendar.month_stats')}</Text>
+          <Text style={styles.legendTitle}>{t('calendar.day_types')}</Text>
 
             <View style={styles.dayTypeBreakdown}>
               {/* Primera fila - Días de trabajo */}
@@ -1874,8 +1876,10 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
           </TouchableOpacity>
         </View>
         )}
+        </Animated.View> 
           </>
         )}
+        
       </ScrollView>
 
       <WorkDayModal

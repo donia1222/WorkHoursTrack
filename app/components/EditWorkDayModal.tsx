@@ -278,6 +278,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
       justifyContent: 'flex-end',
       paddingHorizontal: 20,
       paddingVertical: 10,
+      marginTop: 8,
     },
     closeButton: {
       padding: 8,
@@ -568,14 +569,8 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
         
         <SafeAreaView style={styles.fullScreenModal}>
 
-          {/* Handle bar for swipe to close */}
-          <TouchableOpacity 
-            style={styles.handleContainer}
-            onPress={handleSave}
-            activeOpacity={0.7}
-          >
-            <View style={styles.handle} />
-          </TouchableOpacity>
+
+
           
           {/* Close button - también guarda cambios */}
           <View style={styles.headerActions}>

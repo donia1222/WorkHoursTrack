@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState } from 'react-native';
 import { TimeFormatPreferences, formatTimeWithPreferences, parseTimeInput, getTimePlaceholder, isValidTimeInput, autoFormatTimeInput } from '../utils/timeUtils';
@@ -7,16 +7,19 @@ import { logTimeFormat } from '../config/logging';
 export const useTimeFormat = () => {
   const [useTimeFormat, setUseTimeFormat] = useState(true);
   const [use12HourFormat, setUse12HourFormat] = useState(true); // Default to AM/PM format
+  // Use refs to persist values between renders and avoid state resets
+  const lastTimeFormatRef = useRef<boolean | null>(null);
+  const last12HourRef = useRef<boolean | null>(null);
 
   useEffect(() => {
     loadTimeFormatPreference();
     load12HourFormatPreference();
     
-    // Refresh preferences every 2 seconds to catch changes
+    // Refresh preferences every 10 seconds to catch changes (reduced frequency)
     const interval = setInterval(() => {
       loadTimeFormatPreference();
       load12HourFormatPreference();
-    }, 2000);
+    }, 10000);
     
     // Listen for app state changes to refresh preferences
     const handleAppStateChange = (nextAppState: string) => {
@@ -40,7 +43,11 @@ export const useTimeFormat = () => {
       logTimeFormat('Loading time format preference:', saved);
       if (saved !== null) {
         const newValue = saved === 'true';
-        console.log('🕐 Setting useTimeFormat to:', newValue);
+        // Only log when value actually changes
+        if (lastTimeFormatRef.current !== newValue) {
+          console.log('🕐 Setting useTimeFormat to:', newValue);
+          lastTimeFormatRef.current = newValue;
+        }
         setUseTimeFormat(newValue);
       }
     } catch (error) {
@@ -54,7 +61,11 @@ export const useTimeFormat = () => {
       logTimeFormat('Loading 12-hour format preference:', saved);
       if (saved !== null) {
         const newValue = saved === 'true';
-        console.log('🕐 Setting use12HourFormat to:', newValue);
+        // Only log when value actually changes
+        if (last12HourRef.current !== newValue) {
+          console.log('🕐 Setting use12HourFormat to:', newValue);
+          last12HourRef.current = newValue;
+        }
         setUse12HourFormat(newValue);
       }
     } catch (error) {

@@ -163,6 +163,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const [selectedWorkDay, setSelectedWorkDay] = useState<WorkDay | null>(null);
   const [deleteWorkDayModal, setDeleteWorkDayModal] = useState(false);
   const [deletingWorkDay, setDeletingWorkDay] = useState<WorkDay | null>(null);
+  const [skipAnimations, setSkipAnimations] = useState(false);
   
   const { handleBack } = useBackNavigation();
   const navigation = useNavigation();
@@ -196,14 +197,14 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 600,
+        duration: skipAnimations ? 0 : 600,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
         useNativeDriver: true,
-        tension: 50,
-        friction: 7,
+        tension: skipAnimations ? 1000 : 50,
+        friction: skipAnimations ? 20 : 7,
       }),
     ]).start();
     
@@ -218,8 +219,16 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     return () => {
       appStateSubscription?.remove();
     };
-  }, [fadeAnim, scaleAnim]);
+  }, [fadeAnim, scaleAnim, skipAnimations]);
 
+  // Handle animation updates when skipAnimations changes
+  useEffect(() => {
+    if (skipAnimations) {
+      // Instantly set to final values when skipping animations
+      fadeAnim.setValue(1);
+      scaleAnim.setValue(1);
+    }
+  }, [skipAnimations]);
 
   useEffect(() => {
     if (workDays.length > 0) {
@@ -685,14 +694,28 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   };
 
   const handleWorkDayUpdate = async (updatedWorkDay: WorkDay) => {
+    // Disable animations temporarily when returning from EditModal
+    setSkipAnimations(true);
+    
     // Close modal first
     setEditWorkDayModal(false);
     setSelectedWorkDay(null);
     
-    // Force reload data after a small delay to ensure storage is updated
+    // Update the local workDays state directly to avoid re-fetch
+    setWorkDays(prevWorkDays => 
+      prevWorkDays.map(wd => 
+        wd.id === updatedWorkDay.id ? updatedWorkDay : wd
+      )
+    );
+    
+    // Only reload statistics without full re-render
     setTimeout(() => {
-      loadData();
-    }, 100);
+      calculateStatsFromRecentActivity();
+      // Re-enable animations after update is complete
+      setTimeout(() => {
+        setSkipAnimations(false);
+      }, 100);
+    }, 50);
   };
 
   const handleDeleteWorkDay = (workDay: WorkDay) => {
@@ -1738,6 +1761,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         )}
 
         {/* Recent activity */}
+         <Animated.View style={[styles.compactJobSelectore, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
         <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.recentCard}>
           <LinearGradient
             colors={isDark ? ['rgba(142, 142, 147, 0.1)', 'rgba(142, 142, 147, 0.03)'] : ['rgba(142, 142, 147, 0.06)', 'rgba(142, 142, 147, 0.02)']}
@@ -1865,7 +1889,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
             </View>
           ) : null}
         </BlurView>
-
+</Animated.View>
         {/* Action Buttons */}
         {!isLoadingJobs && (
         <View style={styles.actionButtonsContainer}>
@@ -3365,5 +3389,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  compactJobSelectore: {
+
   },
 });
