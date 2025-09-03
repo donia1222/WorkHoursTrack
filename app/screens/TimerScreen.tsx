@@ -1965,6 +1965,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
 
       
         {/* Quick Actions - Moved below recent sessions */}
+         <RNAnimated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
         {!isRunning && !activeSession && (
           <View style={styles.quickActions}>
             <Text style={styles.quickActionsTitle}>{t('timer.quick_actions')}</Text>
@@ -2028,9 +2029,10 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
                        
           </View>
         )}
-
+</RNAnimated.View>
           </>
         )}
+        
       </ScrollView>
       </KeyboardAvoidingView>
 

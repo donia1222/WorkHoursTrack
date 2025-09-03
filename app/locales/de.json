@@ -189,6 +189,7 @@
     "you_are_here": "Sie sind hier",
     "add_job": "Arbeit hinzufügen",
     "add_job_desc": "Richten Sie Ihre erste Arbeit ein, um zu beginnen",
+    "no_jobs": "Keine Arbeiten",
     "location_permission_denied_title": "Standortberechtigungen erforderlich",
     "location_permission_denied_message": "Um die Karte und automatische Standortfunktionen zu verwenden, müssen Sie Standortberechtigungen in den Einstellungen aktivieren.",
     "location_open_settings": "Einstellungen öffnen",

@@ -2953,6 +2953,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   // Don't show anything until AutoTimer is properly initialized
   const shouldShowNormalWidgets = isAutoTimerInitialized && autoTimerStatus?.state === 'inactive' && jobs.length > 0;
   const shouldShowMiniMapWidget = isAutoTimerInitialized && autoTimerStatus?.state !== 'inactive' && autoTimerStatus?.jobId;
+  const shouldShowOnlyJobWidget = isAutoTimerInitialized && autoTimerStatus?.state === 'inactive' && jobs.length === 0;
 
   return (
 
@@ -2967,50 +2968,43 @@ export default function MapLocation({ location, onNavigate }: Props) {
             {/* 6 WIDGET CARDS - MODERN GRADIENT STYLE */}
             <View style={{
                 position: 'absolute',
-                top: (jobs.length === 0 && isAutoTimerInitialized && autoTimerStatus?.state === 'inactive') 
-                  ? 100 // Add 100px margin from top when no jobs
-                  : (isTablet ? 40 : (isSmallScreen ? 30 : 35)),
+                top: isTablet ? 40 : (isSmallScreen ? 30 : 35),
                 left: isTablet ? 20 : (isSmallScreen ? 8 : 12),
                 right: isTablet ? 20 : (isSmallScreen ? 8 : 12),
-                bottom: (jobs.length === 0 && isAutoTimerInitialized && autoTimerStatus?.state === 'inactive') 
-                  ? undefined // Remove bottom constraint when no jobs
-                  : (isTablet ? 100 : (isSmallScreen ? 80 : 90)),
-                alignItems: (jobs.length === 0 && isAutoTimerInitialized && autoTimerStatus?.state === 'inactive') ? 'center' : 'stretch',
-                justifyContent: (jobs.length === 0 && isAutoTimerInitialized && autoTimerStatus?.state === 'inactive') ? 'center' : 'flex-start',
+                bottom: isTablet ? 100 : (isSmallScreen ? 80 : 90),
                 flexDirection: 'column',
                 gap: isTablet ? 32 : (isSmallScreen ? 12 : 24),
                 paddingHorizontal: isTablet ? 12 : (isSmallScreen ? 4 : 6),
               }}>
                 {/* TOP ROW - 2 WIDGETS */}
                 <View style={{
-                  flexDirection: 'row',
+                  flexDirection: shouldShowOnlyJobWidget ? 'column' : 'row',
                   gap: isTablet ? 28 : (isSmallScreen ? 12 : 20),
-                  height: isTablet ? 160 : (isSmallScreen ? 120 : 140),
+                  height: shouldShowOnlyJobWidget ? (isTablet ? 200 : (isSmallScreen ? 160 : 180)) : (isTablet ? 160 : (isSmallScreen ? 120 : 140)),
                 }}>
                   {/* JOBS WIDGET - Show always when auto-timer is inactive */}
-                  {(shouldShowNormalWidgets || (isAutoTimerInitialized && autoTimerStatus?.state === 'inactive' && jobs.length === 0)) && (
+                  {(shouldShowNormalWidgets || shouldShowOnlyJobWidget) && (
                   <TouchableOpacity
                     style={{
-                      flex: jobs.length === 0 ? undefined : 1,
-                      width: jobs.length === 0 ? (isTablet ? 320 : '85%') : undefined,
-                      minHeight: jobs.length === 0 ? (isTablet ? 360 : 300) : undefined,
-                      borderRadius: jobs.length === 0 ? (isTablet ? 36 : 28) : (isTablet ? 28 : (isSmallScreen ? 20 : 24)),
+                      flex: shouldShowOnlyJobWidget ? undefined : 1,
+                      width: shouldShowOnlyJobWidget ? '100%' : undefined,
+                      borderRadius: isTablet ? 28 : (isSmallScreen ? 20 : 24),
                       padding: jobs.length === 0 
-                        ? (isTablet ? 40 : (isSmallScreen ? 28 : 32))
+                        ? (shouldShowOnlyJobWidget ? (isTablet ? 40 : (isSmallScreen ? 28 : 36)) : (isTablet ? 32 : (isSmallScreen ? 20 : 28)))
                         : (isTablet ? 22 : (isSmallScreen ? 10 : 18)),
                       backgroundColor: jobs.length === 0 
-                        ? (isDark ? 'rgba(96, 165, 250, 0.2)' : 'rgba(59, 130, 246, 0.15)')
+                        ? (isDark ? 'rgba(96, 165, 250, 0.18)' : 'rgba(147, 197, 253, 0.35)')
                         : (isDark ? 'rgba(96, 165, 250, 0.12)' : 'rgba(147, 197, 253, 0.25)'),
                       backdropFilter: 'blur(20px)',
-                      borderWidth: jobs.length === 0 ? 2.5 : 1.5,
+                      borderWidth: jobs.length === 0 ? 2 : 1.5,
                       borderColor: jobs.length === 0 
-                        ? (isDark ? 'rgba(96, 165, 250, 0.5)' : 'rgba(59, 130, 246, 0.4)')
+                        ? (isDark ? 'rgba(96, 165, 250, 0.4)' : 'rgba(59, 130, 246, 0.45)')
                         : (isDark ? 'rgba(96, 165, 250, 0.25)' : 'rgba(59, 130, 246, 0.3)'),
-                      shadowColor: jobs.length === 0 ? '#3b82f6' : '#3b82f6',
-                      shadowOffset: { width: 0, height: jobs.length === 0 ? 12 : 4 },
-                      shadowOpacity: jobs.length === 0 ? 0.3 : 0.15,
-                      shadowRadius: jobs.length === 0 ? 30 : 20,
-                      elevation: jobs.length === 0 ? 12 : 5,
+                      shadowColor: '#3b82f6',
+                      shadowOffset: { width: 0, height: jobs.length === 0 ? 8 : 4 },
+                      shadowOpacity: jobs.length === 0 ? 0.25 : 0.15,
+                      shadowRadius: jobs.length === 0 ? 24 : 20,
+                      elevation: jobs.length === 0 ? 8 : 5,
                     }}
                     onPress={() => {
                       if (jobs.length === 0) {
@@ -3023,83 +3017,58 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   >
                     <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
 
-{jobs.length <= 3 && jobs.length > 0 && (
+{jobs.length <= 3 && (
                       <Animated.View style={[{
-                        backgroundColor: isDark ? 'rgba(96, 165, 250, 0.25)' : 'rgba(59, 130, 246, 0.2)',
-                        borderRadius: isTablet ? 20 : 12,
-                        padding: isTablet ? 16 : (isSmallScreen ? 8 : 10),
-                        marginBottom: isTablet ? 0 : (isSmallScreen ? 4 : 8),
+                        backgroundColor: jobs.length === 0 
+                          ? (isDark ? 'rgba(96, 165, 250, 0.35)' : 'rgba(59, 130, 246, 0.3)')
+                          : (isDark ? 'rgba(96, 165, 250, 0.25)' : 'rgba(59, 130, 246, 0.2)'),
+                        borderRadius: jobs.length === 0 ? (isTablet ? 24 : 16) : (isTablet ? 20 : 12),
+                        padding: jobs.length === 0 
+                          ? (isTablet ? 20 : (isSmallScreen ? 12 : 16))
+                          : (isTablet ? 16 : (isSmallScreen ? 8 : 10)),
+                        marginBottom: isTablet ? 0 : (jobs.length === 0 ? (isSmallScreen ? 8 : 12) : (isSmallScreen ? 4 : 8)),
                         marginRight: isTablet ? 20 : 0,
-                      }]}>
-                        <IconSymbol size={isTablet ? 36 : (isSmallScreen ? 18 : 22)} name="briefcase.fill" color={isDark ? '#93c5fd' : '#2563eb'} />
+                      }, jobs.length === 0 ? animatedNoJobsIconStyle : {}]}>
+                        <IconSymbol 
+                          size={jobs.length === 0 
+                            ? (isTablet ? 48 : (isSmallScreen ? 24 : 32))
+                            : (isTablet ? 36 : (isSmallScreen ? 18 : 22))
+                          } 
+                          name={jobs.length === 0 ? "plus.circle.fill" : "briefcase.fill"} 
+                          color={isDark ? '#93c5fd' : '#2563eb'} 
+                        />
                       </Animated.View>
                       )}
                       <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
                         {jobs.length === 0 ? (
-                          <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                            {/* Large decorative icon */}
-                            <Animated.View style={[{
-                              backgroundColor: isDark ? 'rgba(96, 165, 250, 0.3)' : 'rgba(59, 130, 246, 0.2)',
-                              borderRadius: isTablet ? 32 : 24,
-                              padding: isTablet ? 24 : (isSmallScreen ? 16 : 20),
-                              marginBottom: isTablet ? 28 : (isSmallScreen ? 18 : 24),
-                              shadowColor: '#3b82f6',
-                              shadowOffset: { width: 0, height: 8 },
-                              shadowOpacity: 0.15,
-                              shadowRadius: 16,
-                              elevation: 8,
-                            }, animatedNoJobsIconStyle]}>
-                              <IconSymbol 
-                                size={isTablet ? 56 : (isSmallScreen ? 32 : 40)} 
-                                name="bag.badge.plus" 
-                                color={isDark ? '#93c5fd' : '#3b82f6'} 
-                              />
-                            </Animated.View>
-                            
-                            {/* Large title text */}
+                          <>
                             <Animated.Text style={[{
-                              fontSize: isTablet ? 24 : (isSmallScreen ? 18 : 20),
+                              fontSize: isTablet ? 22 : (isSmallScreen ? 14 : 18),
                               fontWeight: '700',
-                              color: isDark ? 'rgba(255, 255, 255, 0.9)' : '#1f2937',
+                              color: isDark ? 'rgba(255, 255, 255, 0.9)' : '#374151',
                               marginBottom: isTablet ? 12 : (isSmallScreen ? 6 : 8),
                               textAlign: 'center',
                             }, animatedNoJobsTextStyle]}>{t('maps.no_jobs')}</Animated.Text>
-                            
-                            {/* Subtitle text */}
-                            <Text style={{
-                              fontSize: isTablet ? 16 : (isSmallScreen ? 12 : 14),
-                              fontWeight: '500',
-                              color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#6b7280',
-                              marginBottom: isTablet ? 28 : (isSmallScreen ? 16 : 22),
-                              textAlign: 'center',
-                              lineHeight: isTablet ? 20 : (isSmallScreen ? 16 : 18),
-                            }}>{t('maps.add_job_desc')}</Text>
-                            
-                            {/* Large decorative button */}
                             <Animated.View style={[{
                               flexDirection: 'row',
                               alignItems: 'center',
                               gap: 8,
-                              backgroundColor: isDark ? 'rgba(59, 130, 246, 0.8)' : '#3b82f6',
-                              paddingHorizontal: isTablet ? 28 : (isSmallScreen ? 20 : 24),
-                              paddingVertical: isTablet ? 14 : (isSmallScreen ? 12 : 14),
-                              borderRadius: isTablet ? 20 : 16,
-                              minWidth: isTablet ? 220 : (isSmallScreen ? 160 : 180),
+                              backgroundColor: isDark ? 'rgba(96, 165, 250, 0.3)' : 'rgba(59, 130, 246, 0.25)',
+                              paddingHorizontal: isTablet ? 24 : (isSmallScreen ? 16 : 20),
+                              paddingVertical: isTablet ? 14 : (isSmallScreen ? 10 : 12),
+                              borderRadius: isTablet ? 18 : 14,
+                              marginTop: 6,
+                              minWidth: isTablet ? 200 : (isSmallScreen ? 140 : 160),
                               justifyContent: 'center',
-                              shadowColor: '#3b82f6',
-                              shadowOffset: { width: 0, height: 4 },
-                              shadowOpacity: 0.25,
-                              shadowRadius: 8,
-                              elevation: 6,
                             }, animatedNoJobsTextStyle]}>
-                              <IconSymbol size={isTablet ? 24 : (isSmallScreen ? 16 : 20)} name="plus.circle.fill" color="white" />
+                              <IconSymbol size={isTablet ? 24 : (isSmallScreen ? 18 : 20)} name="plus.circle.fill" color={isDark ? '#93c5fd' : '#1e40af'} />
                               <Text style={{
-                                fontSize: isTablet ? 18 : (isSmallScreen ? 14 : 16),
-                                fontWeight: '600',
-                                color: 'white',
+                                fontSize: isTablet ? 17 : (isSmallScreen ? 13 : 15),
+                                fontWeight: '700',
+                                color: isDark ? '#93c5fd' : '#1e40af',
                               }}>{t('maps.add_job')}</Text>
                             </Animated.View>
-                          </View>
+                          </>
                         ) : (
                           <>
                             {/* Title */}

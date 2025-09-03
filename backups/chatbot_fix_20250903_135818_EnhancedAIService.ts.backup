@@ -129,7 +129,7 @@ export class EnhancedAIService {
   /**
    * Detect if message requires labor law information or location detection
    */
-  public static detectQuestionType(
+  private static detectLaborQuestion(
     message: string, 
     conversationHistory: any[] = []
   ): {
@@ -137,7 +137,6 @@ export class EnhancedAIService {
     isLocationQuestion?: boolean;
     country?: string;
     topics?: string[];
-    isMultipleCountriesQuestion?: boolean;
   } {
     const messageLower = message.toLowerCase();
     
@@ -157,16 +156,16 @@ export class EnhancedAIService {
 
     // 🤖 APP FUNCTIONALITY DETECTION: Check if question is about app features/functionality
     const appFunctionalityKeywords = {
-      es: ['puedes recordar', 'como funciona', 'se guarda', 'memoria', 'historial', 'conversacion', 'chatbot', 'aplicacion', 'app', 'como usar', 'como acceder', 'icono', 'boton', 'pantalla', 'ventana', 'puedes detectar', 'puedes analizar', '¿puedes', 'múltiples personas', 'detectar personas', 'plan de trabajo', 'analizar imagen', 'analizar pdf', 'analizar documento', 'extraer datos', 'analizar plan'],
-      en: ['can you remember', 'how does it work', 'is saved', 'memory', 'history', 'conversation', 'chatbot', 'application', 'app', 'how to use', 'how to access', 'icon', 'button', 'screen', 'window', 'can you detect', 'can you analyze', 'can you', 'multiple people', 'detect people', 'work plan', 'analyze image', 'analyze pdf', 'analyze document', 'extract data', 'analyze plan'],
-      de: ['kannst du dich erinnern', 'wie funktioniert', 'wird gespeichert', 'speicher', 'verlauf', 'gespräch', 'chatbot', 'anwendung', 'app', 'wie benutzen', 'wie zugreifen', 'symbol', 'taste', 'bildschirm', 'fenster', 'kannst du erkennen', 'kannst du analysieren', 'kannst du', 'mehrere personen', 'personen erkennen', 'arbeitsplan', 'bild analysieren', 'pdf analysieren', 'dokument analysieren', 'daten extrahieren', 'plan analysieren'],
-      fr: ['peux-tu te souvenir', 'comment ça marche', 'est sauvegardé', 'mémoire', 'historique', 'conversation', 'chatbot', 'application', 'app', 'comment utiliser', 'comment accéder', 'icône', 'bouton', 'écran', 'fenêtre', 'peux-tu détecter', 'peux-tu analyser', 'peux-tu', 'plusieurs personnes', 'détecter personnes', 'plan de travail', 'analyser image', 'analyser pdf', 'analyser document', 'extraire données', 'analyser plan'],
-      it: ['puoi ricordare', 'come funziona', 'viene salvato', 'memoria', 'cronologia', 'conversazione', 'chatbot', 'applicazione', 'app', 'come usare', 'come accedere', 'icona', 'pulsante', 'schermo', 'finestra', 'puoi rilevare', 'puoi analizzare', 'puoi', 'più persone', 'rilevare persone', 'piano di lavoro', 'analizzare immagine', 'analizzare pdf', 'analizzare documento', 'estrarre dati', 'analizzare piano'],
-      pt: ['você pode lembrar', 'como funciona', 'é salvo', 'memória', 'histórico', 'conversa', 'chatbot', 'aplicação', 'app', 'como usar', 'como acessar', 'ícone', 'botão', 'tela', 'janela', 'você pode detectar', 'você pode analisar', 'você pode', 'múltiplas pessoas', 'detectar pessoas', 'plano de trabalho', 'analisar imagem', 'analisar pdf', 'analisar documento', 'extrair dados', 'analisar plano'],
-      ru: ['можешь помнить', 'как работает', 'сохраняется', 'память', 'история', 'разговор', 'чатбот', 'приложение', 'приложения', 'как использовать', 'как получить доступ', 'значок', 'кнопка', 'экран', 'окно', 'можешь обнаружить', 'можешь анализировать', 'можешь', 'несколько людей', 'обнаружить людей', 'план работы', 'анализировать изображение', 'анализировать pdf', 'анализировать документ', 'извлекать данные', 'анализировать план'],
-      ja: ['覚えていますか', 'どう動作', '保存される', 'メモリ', '履歴', '会話', 'チャットボット', 'アプリケーション', 'アプリ', '使い方', 'アクセス方法', 'アイコン', 'ボタン', '画面', 'ウィンドウ', '検出できます', '分析できます', 'できます', '複数の人', '人を検出', '作業計画', '画像分析', 'pdf分析', '文書分析', 'データ抽出', '計画分析'],
-      nl: ['kun je onthouden', 'hoe werkt het', 'wordt opgeslagen', 'geheugen', 'geschiedenis', 'gesprek', 'chatbot', 'applicatie', 'app', 'hoe te gebruiken', 'hoe toegang', 'pictogram', 'knop', 'scherm', 'venster', 'kun je detecteren', 'kun je analyseren', 'kun je', 'meerdere personen', 'personen detecteren', 'werkplan', 'afbeelding analyseren', 'pdf analyseren', 'document analyseren', 'gegevens extraheren', 'plan analyseren'],
-      tr: ['hatırlayabilir misin', 'nasıl çalışır', 'kaydediliyor', 'hafıza', 'geçmiş', 'konuşma', 'chatbot', 'uygulama', 'app', 'nasıl kullanılır', 'nasıl erişilir', 'simge', 'düğme', 'ekran', 'pencere', 'tespit edebilir misin', 'analiz edebilir misin', 'yapabilir misin', 'birden fazla kişi', 'kişileri tespit', 'çalışma planı', 'resim analiz', 'pdf analiz', 'belge analiz', 'veri çıkar', 'plan analiz']
+      es: ['puedes recordar', 'como funciona', 'se guarda', 'memoria', 'historial', 'conversacion', 'chatbot', 'aplicacion', 'app', 'como usar', 'como acceder', 'icono', 'boton', 'pantalla', 'ventana'],
+      en: ['can you remember', 'how does it work', 'is saved', 'memory', 'history', 'conversation', 'chatbot', 'application', 'app', 'how to use', 'how to access', 'icon', 'button', 'screen', 'window'],
+      de: ['kannst du dich erinnern', 'wie funktioniert', 'wird gespeichert', 'speicher', 'verlauf', 'gespräch', 'chatbot', 'anwendung', 'app', 'wie benutzen', 'wie zugreifen', 'symbol', 'taste', 'bildschirm', 'fenster'],
+      fr: ['peux-tu te souvenir', 'comment ça marche', 'est sauvegardé', 'mémoire', 'historique', 'conversation', 'chatbot', 'application', 'app', 'comment utiliser', 'comment accéder', 'icône', 'bouton', 'écran', 'fenêtre'],
+      it: ['puoi ricordare', 'come funziona', 'viene salvato', 'memoria', 'cronologia', 'conversazione', 'chatbot', 'applicazione', 'app', 'come usare', 'come accedere', 'icona', 'pulsante', 'schermo', 'finestra'],
+      pt: ['você pode lembrar', 'como funciona', 'é salvo', 'memória', 'histórico', 'conversa', 'chatbot', 'aplicação', 'app', 'como usar', 'como acessar', 'ícone', 'botão', 'tela', 'janela'],
+      ru: ['можешь помнить', 'как работает', 'сохраняется', 'память', 'история', 'разговор', 'чатбот', 'приложение', 'приложения', 'как использовать', 'как получить доступ', 'значок', 'кнопка', 'экран', 'окно'],
+      ja: ['覚えていますか', 'どう動作', '保存される', 'メモリ', '履歴', '会話', 'チャットボット', 'アプリケーション', 'アプリ', '使い方', 'アクセス方法', 'アイコン', 'ボタン', '画面', 'ウィンドウ'],
+      nl: ['kun je onthouden', 'hoe werkt het', 'wordt opgeslagen', 'geheugen', 'geschiedenis', 'gesprek', 'chatbot', 'applicatie', 'app', 'hoe te gebruiken', 'hoe toegang', 'pictogram', 'knop', 'scherm', 'venster'],
+      tr: ['hatırlayabilir misin', 'nasıl çalışır', 'kaydediliyor', 'hafıza', 'geçmiş', 'konuşma', 'chatbot', 'uygulama', 'app', 'nasıl kullanılır', 'nasıl erişilir', 'simge', 'düğme', 'ekran', 'pencere']
     };
 
     // 🔍 JOB SEARCH DETECTION: Check if question is about finding jobs/work
@@ -367,40 +366,7 @@ export class EnhancedAIService {
       }
     }
 
-    // 🌍 MULTIPLE COUNTRIES DETECTION: Check if asking about different/multiple countries
-    const multipleCountriesKeywords = {
-      es: ['diferentes países', 'varios países', 'qué países', 'múltiples países', 'otros países', 'distintos países'],
-      en: ['different countries', 'several countries', 'multiple countries', 'various countries', 'other countries', 'which countries'],
-      de: ['verschiedene länder', 'mehrere länder', 'welche länder', 'andere länder'],
-      fr: ['différents pays', 'plusieurs pays', 'quels pays', 'autres pays'],
-      it: ['diversi paesi', 'più paesi', 'quali paesi', 'altri paesi'],
-      pt: ['diferentes países', 'vários países', 'quais países', 'outros países'],
-      ru: ['разные страны', 'несколько стран', 'какие страны', 'другие страны'],
-      ja: ['異なる国', '複数の国', 'どの国', '他の国'],
-      nl: ['verschillende landen', 'meerdere landen', 'welke landen', 'andere landen'],
-      tr: ['farklı ülkeler', 'birkaç ülke', 'hangi ülkeler', 'diğer ülkeler']
-    };
-
-    let isMultipleCountriesQuestion = false;
-    for (const [lang, keywords] of Object.entries(multipleCountriesKeywords)) {
-      for (const keyword of keywords) {
-        if (messageLower.includes(keyword)) {
-          console.log(`🌍 [DETECT] Multiple countries question detected: "${keyword}" in ${lang}`);
-          isMultipleCountriesQuestion = true;
-          topics.push('multiple_countries');
-          break;
-        }
-      }
-      if (isMultipleCountriesQuestion) break;
-    }
-
-    return { 
-      isLaborQuestion, 
-      isLocationQuestion, 
-      country: detectedCountry, 
-      topics,
-      isMultipleCountriesQuestion 
-    };
+    return { isLaborQuestion, isLocationQuestion, country: detectedCountry, topics };
   }
 
   /**
@@ -1700,7 +1666,7 @@ Fuente: Organización Internacional del Trabajo (OIT)`;
       let searchingSources: WebSearchResult[] = [];
       
       // Check if this is a labor law question
-      const laborCheck = this.detectQuestionType(message, conversationHistory);
+      const laborCheck = this.detectLaborQuestion(message, conversationHistory);
       
       // Handle location questions first
       if (laborCheck.isLocationQuestion) {
@@ -1744,76 +1710,36 @@ ${localPrompts.locationAsk}`;
           }
         };
       } else if (laborCheck.isLaborQuestion) {
+        // If no country is specified in the message, try to detect user's country
         let targetCountry = laborCheck.country;
-        
-        // If asking about multiple countries, use international approach
-        if (laborCheck.isMultipleCountriesQuestion) {
-          console.log(`🌍 [MULTIPLE-COUNTRIES] Pregunta sobre múltiples países detectada, buscando información internacional`);
-          
-          // Get user's country for regional context but don't limit search to it
-          const userCountry = await this.getUserCountry(language);
-          targetCountry = userCountry; // For context purposes only
-          
-          // Search for international labor information with regional context
-          const searchResult = await this.searchLaborInfo(
-            `${message} internacional comparative labor laws Europe USA ${userCountry}`,
-            undefined, // No specific country - international search
-            language,
-            onSearchProgress
-          );
-          
-          result = searchResult.data;
-          searchingSources = searchResult.searchingSources || [];
-        } else {
-          // If no country is specified in the message, try to detect user's country
-          if (!targetCountry) {
-            targetCountry = await this.getUserCountry(language);
-            console.log(`🎯 [SMART-SEARCH] No se especificó país, usando país del usuario: ${targetCountry}`);
-          }
-          
-          // Search for labor information for specific country
-          const searchResult = await this.searchLaborInfo(
-            message,
-            targetCountry,
-            language,
-            onSearchProgress
-          );
-          
-          result = searchResult.data;
-          searchingSources = searchResult.searchingSources || [];
+        if (!targetCountry) {
+          targetCountry = await this.getUserCountry(language);
+          console.log(`🎯 [SMART-SEARCH] No se especificó país, usando país del usuario: ${targetCountry}`);
         }
+        
+        // Search for labor information
+        const searchResult = await this.searchLaborInfo(
+          message,
+          targetCountry,
+          language,
+          onSearchProgress
+        );
+        searchingSources = searchResult.sources;
         
         // Enhance the message with search results - Create a focused prompt for labor questions
         const localPrompts = this.getLocalizedPrompts(language);
-        
-        let countryContext = '';
-        let instructions = '';
-        
-        if (laborCheck.isMultipleCountriesQuestion) {
-          countryContext = `\n\n${localPrompts.userContext} ${targetCountry} (${localPrompts.autoDetected}${laborCheck.country ? '' : ` ${localPrompts.byLanguage}`}), pero la pregunta es sobre múltiples países. Proporciona información comparativa internacional.`;
-          instructions = `${localPrompts.instructions}
-
-INSTRUCCIONES ESPECIALES PARA MÚLTIPLES PAÍSES:
-- Proporciona información de AL MENOS 3-5 países diferentes
-- Incluye países europeos (Alemania, Francia, Reino Unido) y otros importantes (Estados Unidos, Canadá)
-- Si no tienes información específica de múltiples países, explícalo claramente
-- Organiza la información por país de forma clara y comparativa
-- Menciona las diferencias más importantes entre países`;
-        } else {
-          countryContext = targetCountry ? 
-            `\n\n${localPrompts.userContext} ${targetCountry} (${localPrompts.autoDetected}${laborCheck.country ? '' : ` ${localPrompts.byLanguage}`}).` : 
-            '';
-          instructions = localPrompts.instructions;
-        }
+        const countryContext = targetCountry ? 
+          `\n\n${localPrompts.userContext} ${targetCountry} (${localPrompts.autoDetected}${laborCheck.country ? '' : ` ${localPrompts.byLanguage}`}).` : 
+          '';
           
         const enhancedMessage = `${localPrompts.expertPrompt} 
 
 El usuario pregunta: "${message}"${countryContext}
 
 Información actualizada obtenida de fuentes oficiales:
-${result}
+${searchResult.info}
 
-${instructions}`;
+${localPrompts.instructions}`;
         
         if (provider === 'openai') {
           if (conversationHistory.length > 0) {
