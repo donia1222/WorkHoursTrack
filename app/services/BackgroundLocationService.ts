@@ -139,6 +139,8 @@ async function processLocationForGeofencing(location: any) {
 
 async function handleGeofenceEnter(job: any) {
   try {
+    console.log(`🟢 Background service detected ENTER for ${job.name}`);
+    
     // Verificar si ya hay una sesión activa
     const activeSession = await JobService.getActiveSession();
     if (activeSession && activeSession.jobId === job.id) {
@@ -146,7 +148,19 @@ async function handleGeofenceEnter(job: any) {
       return;
     }
     
-    const delayMinutes = job.autoTimer?.delayStart || 0;
+    // Verificar el modo de AutoTimer para aplicar delays apropiados
+    const modeSettings = await AsyncStorage.getItem('@autotimer_mode_settings');
+    const mode = modeSettings ? JSON.parse(modeSettings).mode : 'foreground-only';
+    
+    let delayMinutes = job.autoTimer?.delayStart || 0;
+    
+    // En modo full-background (app cerrada), no aplicar delays
+    if (mode === 'full-background') {
+      delayMinutes = 0;
+      console.log(`🌍 Full-background mode: ignoring delayStart, starting immediately`);
+    }
+    
+    console.log(`⏳ ENTER ${job.name}: delay=${delayMinutes} min (mode: ${mode})`);
     
     if (delayMinutes > 0) {
       // Programar inicio con delay
@@ -156,7 +170,24 @@ async function handleGeofenceEnter(job: any) {
         targetTime: new Date(Date.now() + delayMinutes * 60 * 1000).toISOString()
       };
       await AsyncStorage.setItem(`@auto_timer_pending_start_${job.id}`, JSON.stringify(pendingStart));
-      console.log(`⏱️ Timer programado para iniciar en ${delayMinutes} minutos`);
+      console.log(`⏱️ Background service: Timer programado para iniciar en ${delayMinutes} minutos`);
+      
+      // Crear una notificación para informar al usuario
+      try {
+        const { Notifications } = require('expo-notifications');
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "🟡 AutoTimer - Inicio Programado",
+            body: `El timer se iniciará en ${delayMinutes} minuto${delayMinutes > 1 ? 's' : ''} para ${job.name}`,
+            sound: true,
+            priority: 'high',
+          },
+          trigger: null, // Inmediata
+        });
+        console.log(`📱 Notificación enviada: Timer programado para ${job.name}`);
+      } catch (e) {
+        console.error('Error sending notification:', e);
+      }
     } else {
       // Iniciar inmediatamente
       const sessionForStorage = {
@@ -165,7 +196,24 @@ async function handleGeofenceEnter(job: any) {
         notes: 'Auto-started (Background)',
       };
       await JobService.saveActiveSession(sessionForStorage);
-      console.log(`✅ Sesión iniciada para ${job.name}`);
+      console.log(`✅ Background service: Sesión iniciada inmediatamente para ${job.name}`);
+      
+      // Crear notificación de inicio
+      try {
+        const { Notifications } = require('expo-notifications');
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "🟢 Timer Iniciado",
+            body: `AutoTimer iniciado automáticamente para ${job.name}`,
+            sound: true,
+            priority: 'high',
+          },
+          trigger: null,
+        });
+        console.log(`📱 Notificación enviada: Timer iniciado para ${job.name}`);
+      } catch (e) {
+        console.error('Error sending notification:', e);
+      }
     }
   } catch (error) {
     console.error('❌ Error handling geofence enter:', error);
@@ -174,13 +222,27 @@ async function handleGeofenceEnter(job: any) {
 
 async function handleGeofenceExit(job: any) {
   try {
+    console.log(`🔴 Background service detected EXIT for ${job.name}`);
+    
     const activeSession = await JobService.getActiveSession();
     if (!activeSession || activeSession.jobId !== job.id) {
       console.log(`⚠️ No hay sesión activa para ${job.name}`);
       return;
     }
     
-    const delayMinutes = job.autoTimer?.delayStop || 0;
+    // Verificar el modo de AutoTimer para aplicar delays apropiados
+    const modeSettings = await AsyncStorage.getItem('@autotimer_mode_settings');
+    const mode = modeSettings ? JSON.parse(modeSettings).mode : 'foreground-only';
+    
+    let delayMinutes = job.autoTimer?.delayStop || 0;
+    
+    // En modo full-background (app cerrada), no aplicar delays
+    if (mode === 'full-background') {
+      delayMinutes = 0;
+      console.log(`🌍 Full-background mode: ignoring delayStop, stopping immediately`);
+    }
+    
+    console.log(`⏳ EXIT ${job.name}: delay=${delayMinutes} min (mode: ${mode})`);
     
     if (delayMinutes > 0) {
       // Programar parada con delay
@@ -190,7 +252,24 @@ async function handleGeofenceExit(job: any) {
         targetTime: new Date(Date.now() + delayMinutes * 60 * 1000).toISOString()
       };
       await AsyncStorage.setItem(`@auto_timer_pending_stop_${job.id}`, JSON.stringify(pendingStop));
-      console.log(`⏱️ Timer programado para detenerse en ${delayMinutes} minutos`);
+      console.log(`⏱️ Background service: Timer programado para detenerse en ${delayMinutes} minutos`);
+      
+      // Crear notificación de pending stop
+      try {
+        const { Notifications } = require('expo-notifications');
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "🟡 AutoTimer - Parada Programada",
+            body: `El timer se detendrá en ${delayMinutes} minuto${delayMinutes > 1 ? 's' : ''} para ${job.name}`,
+            sound: true,
+            priority: 'high',
+          },
+          trigger: null,
+        });
+        console.log(`📱 Notificación enviada: Timer programado para parar ${job.name}`);
+      } catch (e) {
+        console.error('Error sending notification:', e);
+      }
     } else {
       // Detener inmediatamente
       const sessionStart = new Date(activeSession.startTime);
@@ -203,7 +282,7 @@ async function handleGeofenceExit(job: any) {
         date: today,
         jobId: activeSession.jobId,
         hours: elapsedHours,
-        notes: 'Auto-stopped',
+        notes: 'Auto-stopped (Background)',
         type: 'work' as const,
         actualStartTime: sessionStart.toTimeString().substring(0, 5),
         actualEndTime: now.toTimeString().substring(0, 5),
@@ -212,7 +291,24 @@ async function handleGeofenceExit(job: any) {
       
       await JobService.addWorkDay(workDay);
       await JobService.clearActiveSession();
-      console.log(`✅ Sesión detenida para ${job.name}: ${elapsedHours}h`);
+      console.log(`✅ Background service: Sesión detenida inmediatamente para ${job.name}: ${elapsedHours}h`);
+      
+      // Crear notificación de parada
+      try {
+        const { Notifications } = require('expo-notifications');
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "🔴 Timer Detenido",
+            body: `AutoTimer detenido automáticamente para ${job.name} (${elapsedHours.toFixed(2)}h registradas)`,
+            sound: true,
+            priority: 'high',
+          },
+          trigger: null,
+        });
+        console.log(`📱 Notificación enviada: Timer detenido para ${job.name}`);
+      } catch (e) {
+        console.error('Error sending notification:', e);
+      }
     }
   } catch (error) {
     console.error('❌ Error handling geofence exit:', error);
@@ -239,14 +335,16 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
  */
 export async function startBackgroundLocationTracking(jobs: any[]): Promise<boolean> {
   try {
-    console.log('🚀 Iniciando background location tracking (alternativa a geofencing)...');
+    console.log('🚀 Iniciando background location tracking (funciona con permisos básicos)...');
     
-    // Verificar permisos
+    // Solo verificar permisos básicos (When In Use)
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
-      console.error('❌ Permisos de ubicación no otorgados');
+      console.error('❌ Permisos básicos de ubicación no otorgados');
       return false;
     }
+    
+    console.log('✅ Permisos básicos de ubicación obtenidos');
     
     // Filtrar trabajos válidos
     const validJobs = jobs.filter(job => 
@@ -264,38 +362,47 @@ export async function startBackgroundLocationTracking(jobs: any[]): Promise<bool
     const radii = validJobs.map(job => job.autoTimer?.geofenceRadius || 100);
     const smallestRadius = Math.min(...radii);
     
-    // Configurar tracking basado en el radio más pequeño
-    const distanceInterval = smallestRadius <= 50 ? 10 : 20;
+    // Configurar tracking más agresivo para detectar cambios rápidamente
+    const distanceInterval = Math.max(5, smallestRadius / 4); // Más sensible
+    const timeInterval = 3000; // Cada 3 segundos para mejor detección
+    
+    console.log(`📍 Configurando tracking con radio mínimo: ${smallestRadius}m, intervalo: ${distanceInterval}m`);
     
     // Detener tracking previo si existe
     try {
       const hasStarted = await Location.hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
       if (hasStarted) {
         await Location.stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
+        console.log('🛑 Tracking previo detenido');
       }
     } catch (e) {
       // Ignorar si no había tracking previo
     }
     
-    // Iniciar tracking con opciones de background
+    // Iniciar tracking optimizado para app minimizada con permisos básicos
     await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
-      accuracy: Location.Accuracy.BestForNavigation,
-      timeInterval: 5000, // Actualizar cada 5 segundos
-      distanceInterval: distanceInterval, // Actualizar según distancia
-      pausesUpdatesAutomatically: false, // No pausar automáticamente
-      activityType: Location.ActivityType.AutomotiveNavigation, // Optimizado para movimiento
-      showsBackgroundLocationIndicator: false, // NUNCA mostrar indicador en iOS
+      accuracy: Location.Accuracy.BestForNavigation, // Mayor precisión para mejor detección
+      timeInterval: 2000, // Cada 2 segundos para detectar cambios rápido
+      distanceInterval: 3, // Cada 3 metros para no perder eventos
+      pausesUpdatesAutomatically: false, // CRÍTICO: no pausar automáticamente
+      activityType: Location.ActivityType.AutomotiveNavigation, // Para mejor tracking en movimiento
+      showsBackgroundLocationIndicator: true, // MOSTRAR indicador para que iOS no pause
+      mayShowUserSettingsDialog: false, // No pedir más permisos
+      // Configuración crítica para Android foreground service
       foregroundService: {
-        notificationTitle: "VixTime",
-        notificationBody: "AutoTimer está monitoreando tu ubicación",
-        notificationColor: "#007AFF"
+        notificationTitle: "VixTime - AutoTimer Activo",
+        notificationBody: "Detectando ubicación para iniciar/parar timer automáticamente",
+        notificationColor: "#007AFF",
+        killServiceOnDestroy: false, // No matar el servicio
       },
-      deferredUpdatesInterval: 5000,
-      deferredUpdatesDistance: distanceInterval,
+      // Configuraciones adicionales para mantener activo
+      deferredUpdatesDistance: 3,
+      deferredUpdatesInterval: 2000,
     });
     
-    console.log('✅ Background location tracking iniciado');
-    console.log(`📍 Monitoreando ${validJobs.length} trabajo(s) con intervalo de ${distanceInterval}m`);
+    console.log('✅ Background location tracking iniciado con permisos básicos');
+    console.log(`📍 Monitoreando ${validJobs.length} trabajo(s)`);
+    console.log(`⚙️ Configuración: ${timeInterval}ms tiempo, ${distanceInterval}m distancia`);
     
     return true;
   } catch (error) {

@@ -968,7 +968,7 @@
       "mode_full_background_details": "Rechten: Achtergrond locatie vereist • Batterij: Hoger • Vertragingen: Niet configureerbaar",
       "permissions_required_title": "Rechten Vereist",
       "permissions_required_message": "Achtergrond locatie rechten zijn nodig voor de \"Altijd Actief\" modus. Dit stelt AutoTimer in staat om te werken zelfs wanneer de app volledig gesloten is.",
-      "background_permissions_explanation": "Locatierechten zijn nodig voor de modus \"App Open + Geminimaliseerd\". Dit stelt AutoTimer in staat om te werken wanneer de app op de achtergrond draait.",
+      "background_permissions_explanation_DEPRECATED": "DEPRECATED - NO USAR",
       "permissions_grant_button": "Rechten Verlenen",
       "grant_permissions_button": "Rechten Verlenen",
       "permissions_needed_title": "Rechten Nodig",

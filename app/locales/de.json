@@ -718,7 +718,7 @@
       "permissions_required_title": "Berechtigungen Erforderlich",
       "permissions_required_message": "Hintergrund-Standortberechtigungen sind für den \"Immer Aktiv\" Modus erforderlich. Dies ermöglicht AutoTimer auch bei vollständig geschlossener App zu funktionieren.",
       "permissions_grant_button": "Berechtigungen Erteilen",
-      "background_permissions_explanation": "Standortberechtigungen werden für den Modus \"App Geöffnet + Minimiert\" benötigt. Dies ermöglicht es AutoTimer zu funktionieren, wenn die App im Hintergrund läuft.",
+      "background_permissions_explanation_DEPRECATED": "DEPRECATED - NO USAR",
       "grant_permissions_button": "Berechtigungen Erteilen",
       "permissions_needed_title": "Berechtigungen Benötigt",
       "permissions_needed_message": "Um den \"Immer Aktiv\" Modus zu verwenden, müssen Sie Hintergrund-Standortberechtigungen in den App-Einstellungen aktivieren.",

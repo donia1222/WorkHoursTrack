@@ -158,27 +158,54 @@ class AutoTimerService {
         console.log('🟢 Auto timer service started successfully');
         console.log(`📊 Current status: ${this.currentState}, Job: ${this.currentJobId}, Enabled: ${this.isEnabled}`);
         
-        // Para iOS, usar dos estrategias en paralelo para mejor confiabilidad
-        console.log('📱 iOS: Iniciando servicios de background...');
+        // Get AutoTimer mode to determine which background strategy to use
+        const modeSettings = await this.getAutoTimerModeSettings();
+        console.log(`📱 Starting background services for mode: ${modeSettings.mode}`);
         
-        // Estrategia 1: Background Location Tracking (funciona con permisos When In Use)
-        try {
-          const trackingStarted = await startBackgroundLocationTracking(autoTimerJobs);
-          if (trackingStarted) {
-            console.log('✅ Background location tracking iniciado (funciona con app minimizada)');
-          }
-        } catch (error) {
-          console.error('❌ Error iniciando background location tracking:', error);
-        }
-        
-        // Estrategia 2: Geofencing nativo (mejor batería, requiere permisos Always para app cerrada)
-        try {
-          const geofencingStarted = await startBackgroundGeofencing(autoTimerJobs);
-          if (geofencingStarted) {
-            console.log('✅ Background geofencing iniciado (funciona con app cerrada si hay permisos Always)');
-          }
-        } catch (error) {
-          console.error('❌ Error iniciando background geofencing:', error);
+        switch (modeSettings.mode) {
+          case 'foreground-only':
+            console.log('📱 Foreground-only mode: No background services needed');
+            break;
+            
+          case 'background-allowed':
+            // Solo usar Background Location Tracking con permisos básicos
+            console.log('📱 App minimized mode: Starting background location tracking with basic permissions');
+            try {
+              const trackingStarted = await startBackgroundLocationTracking(autoTimerJobs);
+              if (trackingStarted) {
+                console.log('✅ Background location tracking iniciado para app minimizada');
+              } else {
+                console.error('❌ No se pudo iniciar background location tracking');
+              }
+            } catch (error) {
+              console.error('❌ Error iniciando background location tracking:', error);
+            }
+            break;
+            
+          case 'full-background':
+            // Usar ambas estrategias para máxima confiabilidad
+            console.log('📱 Full background mode: Starting both location tracking and geofencing');
+            
+            // Estrategia 1: Background Location Tracking (funciona con permisos When In Use)
+            try {
+              const trackingStarted = await startBackgroundLocationTracking(autoTimerJobs);
+              if (trackingStarted) {
+                console.log('✅ Background location tracking iniciado (funciona con app minimizada)');
+              }
+            } catch (error) {
+              console.error('❌ Error iniciando background location tracking:', error);
+            }
+            
+            // Estrategia 2: Geofencing nativo (mejor batería, requiere permisos Always para app cerrada)
+            try {
+              const geofencingStarted = await startBackgroundGeofencing(autoTimerJobs);
+              if (geofencingStarted) {
+                console.log('✅ Background geofencing iniciado (funciona con app cerrada si hay permisos Always)');
+              }
+            } catch (error) {
+              console.error('❌ Error iniciando background geofencing:', error);
+            }
+            break;
         }
         
         // Check if user is inside any geofence when starting
@@ -1343,6 +1370,8 @@ class AutoTimerService {
    */
   async checkPendingActions(): Promise<void> {
     try {
+      console.log('🔍 AutoTimer: Checking pending actions on app resume...');
+      
       // First, check if there's a current delayed action that needs adjustment
       if (this.currentDelayedAction) {
         const elapsed = (Date.now() - this.currentDelayedAction.startTime.getTime()) / 1000;
@@ -1368,11 +1397,69 @@ class AutoTimerService {
         }
       }
       
-      // Get all stored keys
+      // Check for pending actions created by BackgroundLocationService
       const keys = await AsyncStorage.getAllKeys();
-      const pendingKeys = keys.filter(key => key.startsWith('@auto_timer_pending_'));
+      const pendingStartKeys = keys.filter(key => key.startsWith('@auto_timer_pending_start_'));
+      const pendingStopKeys = keys.filter(key => key.startsWith('@auto_timer_pending_stop_'));
       
-      for (const key of pendingKeys) {
+      console.log(`🔍 Found ${pendingStartKeys.length} pending start actions and ${pendingStopKeys.length} pending stop actions`);
+      
+      // Process pending start actions
+      for (const key of pendingStartKeys) {
+        const pendingAction = await AsyncStorage.getItem(key);
+        if (pendingAction) {
+          const action = JSON.parse(pendingAction);
+          const targetTime = new Date(action.targetTime);
+          const now = new Date();
+          
+          const jobId = key.replace('@auto_timer_pending_start_', '');
+          const job = this.jobs.find(j => j.id === jobId);
+          
+          if (job) {
+            if (now >= targetTime) {
+              console.log(`⏰ Executing expired background start action for ${job.name}`);
+              await this.startAutoTimer(job);
+              await AsyncStorage.removeItem(key);
+            } else {
+              console.log(`⏳ Background start action still pending for ${job.name}, scheduling...`);
+              const remainingMs = targetTime.getTime() - now.getTime();
+              await this.scheduleDelayedAction(job, 'start', Math.ceil(remainingMs / (60 * 1000)));
+              await AsyncStorage.removeItem(key); // Clean up background service item
+            }
+          }
+        }
+      }
+      
+      // Process pending stop actions
+      for (const key of pendingStopKeys) {
+        const pendingAction = await AsyncStorage.getItem(key);
+        if (pendingAction) {
+          const action = JSON.parse(pendingAction);
+          const targetTime = new Date(action.targetTime);
+          const now = new Date();
+          
+          const jobId = key.replace('@auto_timer_pending_stop_', '');
+          const job = this.jobs.find(j => j.id === jobId);
+          
+          if (job) {
+            if (now >= targetTime) {
+              console.log(`⏰ Executing expired background stop action for ${job.name}`);
+              await this.stopAutoTimer(job);
+              await AsyncStorage.removeItem(key);
+            } else {
+              console.log(`⏳ Background stop action still pending for ${job.name}, scheduling...`);
+              const remainingMs = targetTime.getTime() - now.getTime();
+              await this.scheduleDelayedAction(job, 'stop', Math.ceil(remainingMs / (60 * 1000)));
+              await AsyncStorage.removeItem(key); // Clean up background service item
+            }
+          }
+        }
+      }
+      
+      // Check legacy pending actions (for backward compatibility)
+      const legacyPendingKeys = keys.filter(key => key.startsWith('@auto_timer_pending_') && !key.includes('start_') && !key.includes('stop_'));
+      
+      for (const key of legacyPendingKeys) {
         const pendingAction = await AsyncStorage.getItem(key);
         if (pendingAction) {
           const action = JSON.parse(pendingAction);
@@ -1381,16 +1468,16 @@ class AutoTimerService {
           
           // Check if the action should have been executed
           if (now >= targetTime) {
-            console.log(`⏰ Found expired pending action for job ${action.jobId}, executing now`);
+            console.log(`⏰ Found expired legacy pending action for job ${action.jobId}, executing now`);
             
             const job = this.jobs.find(j => j.id === action.jobId);
             if (job) {
               // Execute the pending action based on the action type
               if (action.action === 'start' && (this.currentState === 'entering' || this.currentState === 'inactive')) {
-                console.log(`⏰ Executing pending start action for ${job.name}`);
+                console.log(`⏰ Executing legacy pending start action for ${job.name}`);
                 await this.startAutoTimer(job);
               } else if (action.action === 'stop' && this.currentState === 'leaving') {
-                console.log(`⏰ Executing pending stop action for ${job.name}`);
+                console.log(`⏰ Executing legacy pending stop action for ${job.name}`);
                 await this.stopAutoTimer(job);
               }
             }
@@ -1400,6 +1487,8 @@ class AutoTimerService {
           }
         }
       }
+      
+      console.log('✅ AutoTimer: Finished checking pending actions');
     } catch (error) {
       console.error('Error checking pending actions:', error);
     }
