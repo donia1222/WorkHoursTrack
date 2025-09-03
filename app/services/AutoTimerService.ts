@@ -403,9 +403,17 @@ class AutoTimerService {
       return;
     }
 
-    // Apply delayStart (0 by default = immediate)
-    const delayStartMin = job.autoTimer?.delayStart ?? 0;
-    console.log(`⏳ ENTER ${job.name}: delayStart=${delayStartMin} min`);
+    // Get AutoTimer mode settings to determine delay behavior
+    const modeSettings = await this.getAutoTimerModeSettings();
+    let delayStartMin = job.autoTimer?.delayStart ?? 0;
+    
+    // In full-background mode (app closed), ignore delays and start immediately
+    if (modeSettings.mode === 'full-background') {
+      delayStartMin = 0;
+      console.log(`🌍 Full-background mode active: ignoring delayStart, starting immediately`);
+    }
+    
+    console.log(`⏳ ENTER ${job.name}: delayStart=${delayStartMin} min (mode: ${modeSettings.mode})`);
     await this.scheduleDelayedAction(job, 'start', delayStartMin);
   }
 
@@ -430,9 +438,17 @@ class AutoTimerService {
       return;
     }
 
-    // Apply delayStop (0 by default = immediate)
-    const delayStopMin = job.autoTimer?.delayStop ?? 0;
-    console.log(`⏳ EXIT ${job.name}: delayStop=${delayStopMin} min`);
+    // Get AutoTimer mode settings to determine delay behavior
+    const modeSettings = await this.getAutoTimerModeSettings();
+    let delayStopMin = job.autoTimer?.delayStop ?? 0;
+    
+    // In full-background mode (app closed), ignore delays and stop immediately
+    if (modeSettings.mode === 'full-background') {
+      delayStopMin = 0;
+      console.log(`🌍 Full-background mode active: ignoring delayStop, stopping immediately`);
+    }
+    
+    console.log(`⏳ EXIT ${job.name}: delayStop=${delayStopMin} min (mode: ${modeSettings.mode})`);
     await this.scheduleDelayedAction(job, 'stop', delayStopMin);
   }
 
