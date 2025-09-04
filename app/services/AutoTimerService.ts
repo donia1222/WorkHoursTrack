@@ -263,8 +263,13 @@ class AutoTimerService {
     try {
       await stopBackgroundGeofencing();
       console.log('🛑 Background geofencing detenido');
-    } catch (error) {
-      console.error('❌ Error deteniendo background geofencing:', error);
+    } catch (error: any) {
+      // Solo mostrar error si NO es E_TASK_NOT_FOUND
+      if (!error?.message?.includes('E_TASK_NOT_FOUND')) {
+        console.error('❌ Error deteniendo background geofencing:', error);
+      } else {
+        console.log('ℹ️ Background geofencing no estaba activo');
+      }
     }
     
     this.cancelDelayedAction();

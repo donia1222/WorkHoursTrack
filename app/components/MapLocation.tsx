@@ -1279,6 +1279,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [dynamicChatbotQuestion, setDynamicChatbotQuestion] = useState<string>('');
   const mapRef = useRef<MapView>(null);
     const [monthlyTotalHours, setMonthlyTotalHours] = useState<number>(0);
+    const [monthlyTotalEarnings, setMonthlyTotalEarnings] = useState<number>(0);
 
   const calculateMonthlyTotalHours = async (): Promise<number> => {
     try {
@@ -1303,6 +1304,39 @@ export default function MapLocation({ location, onNavigate }: Props) {
       return totalHours;
     } catch (error) {
       console.error('Error calculating monthly total hours:', error);
+      return 0;
+    }
+  };
+
+  const calculateMonthlyTotalEarnings = async (): Promise<number> => {
+    try {
+      const allWorkDays = await JobService.getWorkDays();
+      const allJobs = await JobService.getJobs();
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      
+      let totalEarnings = 0;
+      
+      allWorkDays.forEach((day: any) => {
+        const dayDate = new Date(day.date);
+        
+        if (dayDate.getMonth() + 1 === currentMonth && 
+            dayDate.getFullYear() === currentYear && 
+            (day.type === 'work' || !day.type)) {
+          // Find the job for this work day
+          const job = allJobs.find((j: Job) => j.id === day.jobId);
+          if (job && job.hourlyRate && job.hourlyRate > 0) {
+            // Calculate net hours for this day
+            const netHours = Math.max(0, (day.hours || 0) - (day.breakHours || 0));
+            // Add earnings for this day (hours * hourly rate)
+            totalEarnings += netHours * job.hourlyRate;
+          }
+        }
+      });
+      return totalEarnings;
+    } catch (error) {
+      console.error('Error calculating monthly total earnings:', error);
       return 0;
     }
   };
@@ -3892,9 +3926,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           );
                         }
                         
-                        // Check for hourly rate
+                        // Check for hourly rate - Show total earnings for the month
                         if (job.hourlyRate && job.hourlyRate > 0) {
                           const currency = job.currency || '€';
+                          const totalEarnings = monthlyTotalHours * job.hourlyRate;
                           return (
                             <>
                               <Text style={{
@@ -3902,13 +3937,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                 fontWeight: '600',
                                 color: isDark ? 'white' : '#1f2937',
                               }}>
-                                {currency} {job.hourlyRate}
+                                {currency} {totalEarnings.toFixed(2)}
                               </Text>
                               <Text style={{
                                 fontSize: 12,
                                 color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
                                 marginTop: 4,
-                              }}>{t('maps.per_hour')}</Text>
+                              }}>{getMonthName(new Date())}</Text>
                             </>
                           );
                         }

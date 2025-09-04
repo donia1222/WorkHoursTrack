@@ -247,6 +247,7 @@ class NotificationService {
         showBadge: true,
       });
 
+
       console.log('✅ Notification channels created');
     } catch (error) {
       console.error('Error creating notification channels:', error);

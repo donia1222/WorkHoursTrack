@@ -1908,9 +1908,14 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   };
 
   const handleClose = async () => {
-    // If there's a name, save the job
+    // Always save if there's a name, regardless of how the modal is closed
     if (formData.name?.trim()) {
       await handleSave();
+      // If we're in auto tab with auto-timer enabled, also start the auto-timer
+      if (currentTab === 'auto' && formData.autoTimer?.enabled) {
+        // The auto-timer will be started automatically after saving if enabled
+        console.log('Auto-timer will start after saving job with auto-timer enabled');
+      }
     } else {
       // Check if any other fields have been filled
       const hasOtherFields = formData.company?.trim() || 
@@ -2325,7 +2330,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               />
               <IconSymbol size={18} name="checkmark.circle.fill" color="#FFFFFF" />
               <Text style={styles.simplifiedSaveButtonText}>
-                {t('job_form.save')}
+                {currentTab === 'auto' && formData.autoTimer?.enabled ? 'Start Auto-Timer' : t('job_form.save')}
               </Text>
             </TouchableOpacity>
           </BlurView>
@@ -3762,16 +3767,33 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           console.error('Error configurando modo AutoTimer:', result.message);
         }
       } else if (mode === 'background-allowed') {
-        // Modo "App Abierta + Minimizada" - NO requiere permisos adicionales
-        // Funciona con permisos básicos cuando la app está minimizada (no cerrada)
-        setSelectedAutoTimerMode(mode);
+        // Modo "App Abierta + Minimizada" - REQUIERE permisos de background para funcionar correctamente
         const modeService = AutoTimerModeService.getInstance();
-        const result = await modeService.setAutoTimerModeWithoutPermissions(mode, false);
+        const hasPermission = await modeService.checkBackgroundPermissions();
         
-        if (!result.success) {
-          console.error('Error configurando modo AutoTimer:', result.message);
+        if (hasPermission) {
+          setSelectedAutoTimerMode(mode);
+          setHasBackgroundPermission(true);
+          const result = await modeService.setAutoTimerModeWithoutPermissions(mode, true);
+          
+          if (!result.success) {
+            console.error('Error configurando modo AutoTimer:', result.message);
+          } else {
+            console.log('✅ AutoTimer configurado en modo "App Abierta + Minimizada" con permisos de background');
+          }
         } else {
-          console.log('✅ AutoTimer configurado en modo "App Abierta + Minimizada" (sin permisos adicionales)');
+          // Mostrar explicación antes de pedir permiso
+          Alert.alert(
+            t('job_form.auto_timer.permissions_required_title'),
+            t('job_form.auto_timer.permissions_background_message'),
+            [
+              { text: t('common.cancel'), style: 'cancel' },
+              { 
+                text: t('job_form.auto_timer.permissions_grant_button'), 
+                onPress: async () => await requestBackgroundPermissionForMode(mode)
+              }
+            ]
+          );
         }
       } else if (mode === 'full-background') {
         // Verificar si ya tiene permisos
@@ -4598,7 +4620,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         visible={visible} 
         animationType="slide" 
         presentationStyle={Platform.OS === 'ios' && Platform.isPad ? "fullScreen" : "formSheet"}
-        onRequestClose={onClose}
+        onRequestClose={handleClose}
       >
       {isFirstTimeUser && !editingJob ? (
         // Show simplified form for first time users
@@ -4615,8 +4637,26 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 </Text>
               </View>
               <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                <View style={styles.closeButtonCircle}>
+                <View style={[styles.closeButtonCircle, 
+                  currentTab === 'auto' && formData.autoTimer?.enabled && formData.name?.trim() && {
+                    width: 'auto',
+                    paddingHorizontal: 16,
+                    borderRadius: 20,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6
+                  }
+                ]}>
                   <IconSymbol size={20} name={formData.name?.trim() ? "checkmark" : "xmark"} color="#FFFFFF" />
+                  {currentTab === 'auto' && formData.autoTimer?.enabled && formData.name?.trim() && (
+                    <Text style={{ 
+                      fontSize: 14,
+                      fontWeight: '600',
+                      color: '#FFFFFF',
+                    }}>
+                      Start Auto-Timer
+                    </Text>
+                  )}
                 </View>
               </TouchableOpacity>
             </View>

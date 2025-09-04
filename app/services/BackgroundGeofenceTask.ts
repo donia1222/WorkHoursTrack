@@ -489,10 +489,24 @@ export async function startBackgroundGeofencing(jobs: any[]): Promise<boolean> {
  */
 export async function stopBackgroundGeofencing(): Promise<void> {
   try {
-    await Location.stopGeofencingAsync(BACKGROUND_GEOFENCE_TASK);
-    console.log('🛑 Background geofencing detenido');
-  } catch (error) {
-    console.error('❌ Error deteniendo background geofencing:', error);
+    // Verificar si el geofencing está activo antes de intentar detenerlo
+    const hasStarted = await Location.hasStartedGeofencingAsync(BACKGROUND_GEOFENCE_TASK);
+    if (hasStarted) {
+      await Location.stopGeofencingAsync(BACKGROUND_GEOFENCE_TASK);
+      console.log('🛑 Background geofencing detenido');
+    } else {
+      console.log('ℹ️ Background geofencing no estaba activo');
+    }
+    
+    // Limpiar el estado guardado
+    await AsyncStorage.removeItem('@background_geofencing_active');
+  } catch (error: any) {
+    // Solo mostrar error si no es porque la tarea no existe
+    if (!error?.message?.includes('E_TASK_NOT_FOUND')) {
+      console.error('❌ Error deteniendo background geofencing:', error);
+    } else {
+      console.log('ℹ️ Background geofencing task no estaba registrada');
+    }
   }
 }
 

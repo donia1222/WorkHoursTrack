@@ -422,6 +422,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     color: colors.text,
+    marginTop: 8,
+    textAlign: 'center',
 
   },
   legendItem: {
@@ -1767,7 +1769,7 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
 
             <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
         {!isLoadingJobs && (
-                            <BlurView intensity={isDark ? 95 : 92} tint={isDark ? "dark" : "light"} style={{ padding: 24, borderRadius: 20 }}>
+                            <BlurView intensity={isDark ? 95 : 92} tint={isDark ? "dark" : "light"} style={{ padding: 4, borderRadius: 20 }}>
             <LinearGradient
               colors={isDark ? ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.11)'] : ['rgba(142, 142, 147, 0.08)', 'rgba(142, 142, 147, 0.01)']}
               style={[styles.legendCardGradient, { borderRadius: 20 }]}
