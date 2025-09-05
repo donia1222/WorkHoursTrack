@@ -38,6 +38,30 @@ import { FreeAddressSearch } from './FreeAddressSearch';
 import AddressAutocompleteDropdown from './AddressAutocompleteDropdown';
 import * as Updates from 'expo-updates';
 
+// Main currencies list
+const CURRENCIES = [
+  { code: 'EUR', symbol: '€', name: 'Euro' },
+  { code: 'USD', symbol: '$', name: 'US Dollar' },
+  { code: 'GBP', symbol: '£', name: 'British Pound' },
+  { code: 'CHF', symbol: 'Fr.', name: 'Swiss Franc' },
+  { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
+  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
+  { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
+  { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
+  { code: 'SEK', symbol: 'kr', name: 'Swedish Krona' },
+  { code: 'NOK', symbol: 'kr', name: 'Norwegian Krone' },
+  { code: 'DKK', symbol: 'kr', name: 'Danish Krone' },
+  { code: 'PLN', symbol: 'zł', name: 'Polish Zloty' },
+  { code: 'MXN', symbol: '$', name: 'Mexican Peso' },
+  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
+  { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+  { code: 'RUB', symbol: '₽', name: 'Russian Ruble' },
+  { code: 'KRW', symbol: '₩', name: 'South Korean Won' },
+  { code: 'TRY', symbol: '₺', name: 'Turkish Lira' },
+  { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
+  { code: 'HKD', symbol: 'HK$', name: 'Hong Kong Dollar' },
+];
+
 // Custom TimeInput component that auto-formats time input (1200 -> 12:00)
 const TimeInput = ({ value, onChangeText, style, placeholder, placeholderTextColor, ...props }: any) => {
   const [internalValue, setInternalValue] = useState(value || '');
@@ -621,6 +645,42 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderColor: colors.primary,
     minWidth: 100,
   },
+  currencySelectorContainer: {
+    maxHeight: 80,
+  },
+  currencySelector: {
+    flexDirection: 'row',
+    paddingVertical: 8,
+    gap: 8,
+  },
+  currencyOption: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+    alignItems: 'center',
+    minWidth: 70,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  currencyOptionActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  currencySymbol: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  currencyCode: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  currencyCodeActive: {
+    color: '#FFFFFF',
+  },
   salaryTypeSelector: {
     flexDirection: 'row',
     backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
@@ -660,14 +720,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderColor: colors.separator,
     overflow: 'hidden',
   },
-  currencySymbol: {
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    minWidth: 60,
-  },
+
   currencySymbolText: {
     ...Theme.typography.callout,
     fontWeight: '700',
@@ -3092,16 +3145,30 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 <IconSymbol size={20} name="dollarsign.circle.fill" color={colors.primary} />
                 <Text style={styles.financialCardTitle}>{t('job_form.financial.currency_label')}</Text>
               </View>
-              <View style={styles.currencyInputContainer}>
-                <TextInput
-                  style={styles.currencyInput}
-                  value={formData.salary?.currency || ''}
-                  onChangeText={(value) => updateNestedData('salary', 'currency', value)}
-                  placeholder="EUR"
-                  placeholderTextColor={colors.textTertiary}
-                  maxLength={3}
-                />
-              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.currencySelectorContainer}>
+                <View style={styles.currencySelector}>
+                  {CURRENCIES.map((currency) => (
+                    <TouchableOpacity
+                      key={currency.code}
+                      style={[
+                        styles.currencyOption,
+                        formData.salary?.currency === currency.code && styles.currencyOptionActive,
+                      ]}
+                      onPress={() => updateNestedData('salary', 'currency', currency.code)}
+                    >
+                      <Text style={styles.currencySymbol}>{currency.symbol}</Text>
+                      <Text
+                        style={[
+                          styles.currencyCode,
+                          formData.salary?.currency === currency.code && styles.currencyCodeActive,
+                        ]}
+                      >
+                        {currency.code}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
             </View>
 
             {/* Salary Type Section */}
@@ -4117,8 +4184,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   >
                     <View style={styles.modeOptionContent}>
                       <View style={styles.modeOptionHeader}>
-                        <Text style={styles.modeOptionIcon}>🔄</Text>
-                        <Text style={styles.modeOptionTitle}>{t('job_form.auto_timer.mode_background_title')}</Text>
+
+                        <Text style={styles.modeOptionTitle}>🔄 {t('job_form.auto_timer.mode_background_title')}</Text>
                         <View style={[
                           styles.radioButton,
                           selectedAutoTimerMode === 'background-allowed' && styles.radioButtonSelected
@@ -4128,52 +4195,22 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                           )}
                         </View>
                       </View>
+                      
                       <Text style={styles.modeOptionDescription}>
                         {t('job_form.auto_timer.mode_background_description')}
                       </Text>
-                      <Text style={styles.modeOptionDetails}>
-                        {t('job_form.auto_timer.mode_background_details')}
+    
+                               <Text style={styles.modeOptionTitle}>🌍 {t('job_form.auto_timer.mode_full_background_title')}</Text>
+                          <Text style={styles.modeOptionDescription}>
+                        {t('job_form.auto_timer.mode_full_background_description')}
+                      </Text>
+                                   <Text style={styles.modeOptionDetails}>
+                        {t('job_form.auto_timer.mode_full_background_details')}
                       </Text>
                     </View>
                   </TouchableOpacity>
 
-                  {/* Modo 3: Siempre activo (requiere permisos) */}
-                  <TouchableOpacity 
-                    style={[
-                      styles.modeOption, 
-                      selectedAutoTimerMode === 'full-background' && styles.modeOptionSelected
-                    ]}
-                    onPress={() => handleModeSelection('full-background')}
-                  >
-                    <View style={styles.modeOptionContent}>
-                      <View style={styles.modeOptionHeader}>
-                        <Text style={styles.modeOptionIcon}>🌍</Text>
-                        <Text style={styles.modeOptionTitle}>{t('job_form.auto_timer.mode_full_background_title')}</Text>
-                        <View style={[
-                          styles.radioButton,
-                          selectedAutoTimerMode === 'full-background' && styles.radioButtonSelected
-                        ]}>
-                          {selectedAutoTimerMode === 'full-background' && (
-                            <View style={styles.radioButtonInner} />
-                          )}
-                        </View>
-                      </View>
-                      <Text style={styles.modeOptionDescription}>
-                        {t('job_form.auto_timer.mode_full_background_description')}
-                      </Text>
-                      <Text style={styles.modeOptionDetails}>
-                        {t('job_form.auto_timer.mode_full_background_details')}
-                      </Text>
-                      {selectedAutoTimerMode === 'full-background' && !hasBackgroundPermission && (
-                        <View style={styles.permissionWarning}>
-                          <IconSymbol size={16} name="exclamationmark.triangle" color={colors.warning} />
-                          <Text style={styles.permissionWarningText}>
-                            {t('job_form.auto_timer.permissions_pending_warning')}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  </TouchableOpacity>
+
                 </View>
               )}
           

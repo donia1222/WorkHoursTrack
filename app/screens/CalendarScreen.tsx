@@ -1490,7 +1490,9 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
 
     const totalDays = monthWorkDays.length;
     const totalHours = workDaysOnly.reduce((sum, day) => sum + day.hours, 0);
-    const overtimeDays = workDaysOnly.filter(day => day.overtime).length;
+    // Calculate overtime hours, not days - same as ReportsScreen
+    const overtimeHours = workDaysOnly.reduce((sum, day) => 
+      sum + (day.overtime ? Math.max(0, day.hours - 8) : 0), 0);
     
     // Count unique work days only (multiple sessions on same day count as 1 day) - like ReportsScreen
     const uniqueWorkDates = new Set(workDaysOnly.map(day => day.date.split('T')[0]));
@@ -1512,7 +1514,7 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
     return { 
       totalDays, 
       totalHours, 
-      overtimeDays, 
+      overtimeHours, 
       jobStats,
       workDays: uniqueWorkDays,
       freeDays: freeDays.length,
@@ -1801,7 +1803,7 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
                   <View style={[styles.dayTypeIconContainer, { backgroundColor: colors.warning + '20' }]}>
                     <IconSymbol size={28} name="clock.arrow.circlepath" color={colors.warning} />
                   </View>
-                  <Text style={styles.dayTypeNumber}>{stats.overtimeDays}</Text>
+                  <Text style={styles.dayTypeNumber}>{stats.overtimeHours.toFixed(1)}</Text>
                   <Text style={styles.dayTypeLabel}>Overtime</Text>
                 </View>
               </View>
