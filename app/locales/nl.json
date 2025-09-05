@@ -845,7 +845,7 @@
       "period_year": "jaar",
       "amount_helper_hourly": "Bijv: €15/uur voor freelance werk",
       "amount_helper_monthly": "Bijv: €1800/maand voor vaste banen",
-      "amount_helper_annual": "Bijv: €35000/jaar voor jaarsalarissen"
+      "amount_helper_annual": "Bijv: €35000/jaar voor jaarsalarissen",
       "overtime_rate": "Overwerktarief",
       "enable_overtime_rate": "Overwerktarief inschakelen",
       "overtime_rate_helper": "Stel het tarief voor overuren in. Vaak hoger dan het reguliere uurtarief."

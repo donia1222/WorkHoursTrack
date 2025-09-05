@@ -845,7 +845,7 @@
       "period_year": "ano",
       "amount_helper_hourly": "Ex: R$50/hora para trabalhos freelance",
       "amount_helper_monthly": "Ex: R$5000/mês para empregos fixos",
-      "amount_helper_annual": "Ex: R$60000/ano para salários anuais"
+      "amount_helper_annual": "Ex: R$60000/ano para salários anuais",
       "overtime_rate": "Taxa de horas extras",
       "enable_overtime_rate": "Ativar taxa de horas extras",
       "overtime_rate_helper": "Defina a taxa para horas extras. Geralmente maior que a taxa horária regular."
