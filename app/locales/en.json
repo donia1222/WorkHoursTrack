@@ -934,7 +934,7 @@
       "delay_stop_desc": "Wait time before stopping timer when leaving",
       "notifications": "Show notifications",
       "notifications_desc": "Notify when automatic timer changes state",
-      "preview": "Preview: Will start after {{delayStart}} min at work, will stop {{delayStop}} min after leaving",
+      "preview": "Preview: Will start after {{delayStart}} min at work, will stop {{delayStop}} min after leaving (requires app in background)",
       "map_title": "📍 Job location and geofencing area",
       "map_description": "The circle shows the {{radius}} meter area where the timer will activate automatically",
       "address_required_title": "Address Required",

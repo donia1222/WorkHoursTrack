@@ -4321,7 +4321,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   onPress={() => {
                     const currentValue = formData.autoTimer?.geofenceRadius || 50;
                     // Si está en modo full-background, el mínimo es 50m, sino 25m
-                    const minValue = selectedAutoTimerMode === 'full-background' ? 50 : 25;
+                    const minValue = selectedAutoTimerMode === 'full-background' ? 50 : 35;
                     const newValue = Math.max(minValue, currentValue - 5);
                     updateNestedData('autoTimer', 'geofenceRadius', newValue);
                   }}

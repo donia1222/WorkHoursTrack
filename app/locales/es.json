@@ -965,7 +965,7 @@
       "delay_stop_desc": "Tiempo de espera antes de parar el timer al salir",
       "notifications": "Mostrar notificaciones",
       "notifications_desc": "Avisar cuando el timer automático cambie de estado",
-      "preview": "Vista previa: Se iniciará después de {{delayStart}} min en el trabajo, se parará {{delayStop}} min después de salir",
+      "preview": "Vista previa: Se iniciará después de {{delayStart}} min en el trabajo, se parará {{delayStop}} min después de salir (requiere app en segundo plano)",
       "map_title": "📍 Ubicación del trabajo y área de geofencing",
       "map_description": "El círculo muestra el área de {{radius}} metros donde se activará el timer automáticamente",
       "address_required_title": "Dirección Requerida",
