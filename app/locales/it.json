@@ -678,6 +678,9 @@
       "amount_helper_hourly": "Es: 15€/ora per lavori freelance",
       "amount_helper_monthly": "Es: 1800€/mese per impieghi fissi",
       "amount_helper_annual": "Es: 35000€/anno per stipendi annuali"
+      "overtime_rate": "Tariffa straordinari",
+      "enable_overtime_rate": "Abilita tariffa straordinari",
+      "overtime_rate_helper": "Imposta la tariffa per le ore straordinarie. Spesso superiore alla tariffa oraria normale."
     },
     "billing": {
       "title": "Configurazione fatturazione",

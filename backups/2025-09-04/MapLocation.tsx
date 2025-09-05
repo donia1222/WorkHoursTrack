@@ -1279,6 +1279,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [dynamicChatbotQuestion, setDynamicChatbotQuestion] = useState<string>('');
   const mapRef = useRef<MapView>(null);
     const [monthlyTotalHours, setMonthlyTotalHours] = useState<number>(0);
+    const [monthlyTotalEarnings, setMonthlyTotalEarnings] = useState<number>(0);
 
   const calculateMonthlyTotalHours = async (): Promise<number> => {
     try {
@@ -1303,6 +1304,39 @@ export default function MapLocation({ location, onNavigate }: Props) {
       return totalHours;
     } catch (error) {
       console.error('Error calculating monthly total hours:', error);
+      return 0;
+    }
+  };
+
+  const calculateMonthlyTotalEarnings = async (): Promise<number> => {
+    try {
+      const allWorkDays = await JobService.getWorkDays();
+      const allJobs = await JobService.getJobs();
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      
+      let totalEarnings = 0;
+      
+      allWorkDays.forEach((day: any) => {
+        const dayDate = new Date(day.date);
+        
+        if (dayDate.getMonth() + 1 === currentMonth && 
+            dayDate.getFullYear() === currentYear && 
+            (day.type === 'work' || !day.type)) {
+          // Find the job for this work day
+          const job = allJobs.find((j: Job) => j.id === day.jobId);
+          if (job && job.hourlyRate && job.hourlyRate > 0) {
+            // Calculate net hours for this day
+            const netHours = Math.max(0, (day.hours || 0) - (day.breakHours || 0));
+            // Add earnings for this day (hours * hourly rate)
+            totalEarnings += netHours * job.hourlyRate;
+          }
+        }
+      });
+      return totalEarnings;
+    } catch (error) {
+      console.error('Error calculating monthly total earnings:', error);
       return 0;
     }
   };
@@ -2953,7 +2987,6 @@ export default function MapLocation({ location, onNavigate }: Props) {
   // Don't show anything until AutoTimer is properly initialized
   const shouldShowNormalWidgets = isAutoTimerInitialized && autoTimerStatus?.state === 'inactive' && jobs.length > 0;
   const shouldShowMiniMapWidget = isAutoTimerInitialized && autoTimerStatus?.state !== 'inactive' && autoTimerStatus?.jobId;
-  const shouldShowOnlyJobWidget = isAutoTimerInitialized && autoTimerStatus?.state === 'inactive' && jobs.length === 0;
 
   return (
 
@@ -2968,43 +3001,50 @@ export default function MapLocation({ location, onNavigate }: Props) {
             {/* 6 WIDGET CARDS - MODERN GRADIENT STYLE */}
             <View style={{
                 position: 'absolute',
-                top: isTablet ? 40 : (isSmallScreen ? 30 : 35),
+                top: (jobs.length === 0 && isAutoTimerInitialized && autoTimerStatus?.state === 'inactive') 
+                  ? 100 // Add 100px margin from top when no jobs
+                  : (isTablet ? 40 : (isSmallScreen ? 30 : 35)),
                 left: isTablet ? 20 : (isSmallScreen ? 8 : 12),
                 right: isTablet ? 20 : (isSmallScreen ? 8 : 12),
-                bottom: isTablet ? 100 : (isSmallScreen ? 80 : 90),
+                bottom: (jobs.length === 0 && isAutoTimerInitialized && autoTimerStatus?.state === 'inactive') 
+                  ? undefined // Remove bottom constraint when no jobs
+                  : (isTablet ? 100 : (isSmallScreen ? 80 : 90)),
+                alignItems: (jobs.length === 0 && isAutoTimerInitialized && autoTimerStatus?.state === 'inactive') ? 'center' : 'stretch',
+                justifyContent: (jobs.length === 0 && isAutoTimerInitialized && autoTimerStatus?.state === 'inactive') ? 'center' : 'flex-start',
                 flexDirection: 'column',
                 gap: isTablet ? 32 : (isSmallScreen ? 12 : 24),
                 paddingHorizontal: isTablet ? 12 : (isSmallScreen ? 4 : 6),
               }}>
                 {/* TOP ROW - 2 WIDGETS */}
                 <View style={{
-                  flexDirection: shouldShowOnlyJobWidget ? 'column' : 'row',
+                  flexDirection: 'row',
                   gap: isTablet ? 28 : (isSmallScreen ? 12 : 20),
-                  height: shouldShowOnlyJobWidget ? (isTablet ? 200 : (isSmallScreen ? 160 : 180)) : (isTablet ? 160 : (isSmallScreen ? 120 : 140)),
+                  height: isTablet ? 160 : (isSmallScreen ? 120 : 140),
                 }}>
                   {/* JOBS WIDGET - Show always when auto-timer is inactive */}
-                  {(shouldShowNormalWidgets || shouldShowOnlyJobWidget) && (
+                  {(shouldShowNormalWidgets || (isAutoTimerInitialized && autoTimerStatus?.state === 'inactive' && jobs.length === 0)) && (
                   <TouchableOpacity
                     style={{
-                      flex: shouldShowOnlyJobWidget ? undefined : 1,
-                      width: shouldShowOnlyJobWidget ? '100%' : undefined,
-                      borderRadius: isTablet ? 28 : (isSmallScreen ? 20 : 24),
+                      flex: jobs.length === 0 ? undefined : 1,
+                      width: jobs.length === 0 ? (isTablet ? 320 : '85%') : undefined,
+                      minHeight: jobs.length === 0 ? (isTablet ? 360 : 300) : undefined,
+                      borderRadius: jobs.length === 0 ? (isTablet ? 36 : 28) : (isTablet ? 28 : (isSmallScreen ? 20 : 24)),
                       padding: jobs.length === 0 
-                        ? (shouldShowOnlyJobWidget ? (isTablet ? 40 : (isSmallScreen ? 28 : 36)) : (isTablet ? 32 : (isSmallScreen ? 20 : 28)))
+                        ? (isTablet ? 40 : (isSmallScreen ? 28 : 32))
                         : (isTablet ? 22 : (isSmallScreen ? 10 : 18)),
                       backgroundColor: jobs.length === 0 
-                        ? (isDark ? 'rgba(96, 165, 250, 0.18)' : 'rgba(147, 197, 253, 0.35)')
+                        ? (isDark ? 'rgba(96, 165, 250, 0.2)' : 'rgba(59, 130, 246, 0.15)')
                         : (isDark ? 'rgba(96, 165, 250, 0.12)' : 'rgba(147, 197, 253, 0.25)'),
                       backdropFilter: 'blur(20px)',
-                      borderWidth: jobs.length === 0 ? 2 : 1.5,
+                      borderWidth: jobs.length === 0 ? 2.5 : 1.5,
                       borderColor: jobs.length === 0 
-                        ? (isDark ? 'rgba(96, 165, 250, 0.4)' : 'rgba(59, 130, 246, 0.45)')
+                        ? (isDark ? 'rgba(96, 165, 250, 0.5)' : 'rgba(59, 130, 246, 0.4)')
                         : (isDark ? 'rgba(96, 165, 250, 0.25)' : 'rgba(59, 130, 246, 0.3)'),
-                      shadowColor: '#3b82f6',
-                      shadowOffset: { width: 0, height: jobs.length === 0 ? 8 : 4 },
-                      shadowOpacity: jobs.length === 0 ? 0.25 : 0.15,
-                      shadowRadius: jobs.length === 0 ? 24 : 20,
-                      elevation: jobs.length === 0 ? 8 : 5,
+                      shadowColor: jobs.length === 0 ? '#3b82f6' : '#3b82f6',
+                      shadowOffset: { width: 0, height: jobs.length === 0 ? 12 : 4 },
+                      shadowOpacity: jobs.length === 0 ? 0.3 : 0.15,
+                      shadowRadius: jobs.length === 0 ? 30 : 20,
+                      elevation: jobs.length === 0 ? 12 : 5,
                     }}
                     onPress={() => {
                       if (jobs.length === 0) {
@@ -3017,58 +3057,83 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   >
                     <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
 
-{jobs.length <= 3 && (
+{jobs.length <= 3 && jobs.length > 0 && (
                       <Animated.View style={[{
-                        backgroundColor: jobs.length === 0 
-                          ? (isDark ? 'rgba(96, 165, 250, 0.35)' : 'rgba(59, 130, 246, 0.3)')
-                          : (isDark ? 'rgba(96, 165, 250, 0.25)' : 'rgba(59, 130, 246, 0.2)'),
-                        borderRadius: jobs.length === 0 ? (isTablet ? 24 : 16) : (isTablet ? 20 : 12),
-                        padding: jobs.length === 0 
-                          ? (isTablet ? 20 : (isSmallScreen ? 12 : 16))
-                          : (isTablet ? 16 : (isSmallScreen ? 8 : 10)),
-                        marginBottom: isTablet ? 0 : (jobs.length === 0 ? (isSmallScreen ? 8 : 12) : (isSmallScreen ? 4 : 8)),
+                        backgroundColor: isDark ? 'rgba(96, 165, 250, 0.25)' : 'rgba(59, 130, 246, 0.2)',
+                        borderRadius: isTablet ? 20 : 12,
+                        padding: isTablet ? 16 : (isSmallScreen ? 8 : 10),
+                        marginBottom: isTablet ? 0 : (isSmallScreen ? 4 : 8),
                         marginRight: isTablet ? 20 : 0,
-                      }, jobs.length === 0 ? animatedNoJobsIconStyle : {}]}>
-                        <IconSymbol 
-                          size={jobs.length === 0 
-                            ? (isTablet ? 48 : (isSmallScreen ? 24 : 32))
-                            : (isTablet ? 36 : (isSmallScreen ? 18 : 22))
-                          } 
-                          name={jobs.length === 0 ? "plus.circle.fill" : "briefcase.fill"} 
-                          color={isDark ? '#93c5fd' : '#2563eb'} 
-                        />
+                      }]}>
+                        <IconSymbol size={isTablet ? 36 : (isSmallScreen ? 18 : 22)} name="briefcase.fill" color={isDark ? '#93c5fd' : '#2563eb'} />
                       </Animated.View>
                       )}
                       <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
                         {jobs.length === 0 ? (
-                          <>
+                          <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                            {/* Large decorative icon */}
+                            <Animated.View style={[{
+                              backgroundColor: isDark ? 'rgba(96, 165, 250, 0.3)' : 'rgba(59, 130, 246, 0.2)',
+                              borderRadius: isTablet ? 32 : 24,
+                              padding: isTablet ? 24 : (isSmallScreen ? 16 : 20),
+                              marginBottom: isTablet ? 28 : (isSmallScreen ? 18 : 24),
+                              shadowColor: '#3b82f6',
+                              shadowOffset: { width: 0, height: 8 },
+                              shadowOpacity: 0.15,
+                              shadowRadius: 16,
+                              elevation: 8,
+                            }, animatedNoJobsIconStyle]}>
+                              <IconSymbol 
+                                size={isTablet ? 56 : (isSmallScreen ? 32 : 40)} 
+                                name="bag.badge.plus" 
+                                color={isDark ? '#93c5fd' : '#3b82f6'} 
+                              />
+                            </Animated.View>
+                            
+                            {/* Large title text */}
                             <Animated.Text style={[{
-                              fontSize: isTablet ? 22 : (isSmallScreen ? 14 : 18),
+                              fontSize: isTablet ? 24 : (isSmallScreen ? 18 : 20),
                               fontWeight: '700',
-                              color: isDark ? 'rgba(255, 255, 255, 0.9)' : '#374151',
+                              color: isDark ? 'rgba(255, 255, 255, 0.9)' : '#1f2937',
                               marginBottom: isTablet ? 12 : (isSmallScreen ? 6 : 8),
                               textAlign: 'center',
                             }, animatedNoJobsTextStyle]}>{t('maps.no_jobs')}</Animated.Text>
+                            
+                            {/* Subtitle text */}
+                            <Text style={{
+                              fontSize: isTablet ? 16 : (isSmallScreen ? 12 : 14),
+                              fontWeight: '500',
+                              color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#6b7280',
+                              marginBottom: isTablet ? 28 : (isSmallScreen ? 16 : 22),
+                              textAlign: 'center',
+                              lineHeight: isTablet ? 20 : (isSmallScreen ? 16 : 18),
+                            }}>{t('maps.add_job_desc')}</Text>
+                            
+                            {/* Large decorative button */}
                             <Animated.View style={[{
                               flexDirection: 'row',
                               alignItems: 'center',
                               gap: 8,
-                              backgroundColor: isDark ? 'rgba(96, 165, 250, 0.3)' : 'rgba(59, 130, 246, 0.25)',
-                              paddingHorizontal: isTablet ? 24 : (isSmallScreen ? 16 : 20),
-                              paddingVertical: isTablet ? 14 : (isSmallScreen ? 10 : 12),
-                              borderRadius: isTablet ? 18 : 14,
-                              marginTop: 6,
-                              minWidth: isTablet ? 200 : (isSmallScreen ? 140 : 160),
+                              backgroundColor: isDark ? 'rgba(59, 130, 246, 0.8)' : '#3b82f6',
+                              paddingHorizontal: isTablet ? 28 : (isSmallScreen ? 20 : 24),
+                              paddingVertical: isTablet ? 14 : (isSmallScreen ? 12 : 14),
+                              borderRadius: isTablet ? 20 : 16,
+                              minWidth: isTablet ? 220 : (isSmallScreen ? 160 : 180),
                               justifyContent: 'center',
+                              shadowColor: '#3b82f6',
+                              shadowOffset: { width: 0, height: 4 },
+                              shadowOpacity: 0.25,
+                              shadowRadius: 8,
+                              elevation: 6,
                             }, animatedNoJobsTextStyle]}>
-                              <IconSymbol size={isTablet ? 24 : (isSmallScreen ? 18 : 20)} name="plus.circle.fill" color={isDark ? '#93c5fd' : '#1e40af'} />
+                              <IconSymbol size={isTablet ? 24 : (isSmallScreen ? 16 : 20)} name="plus.circle.fill" color="white" />
                               <Text style={{
-                                fontSize: isTablet ? 17 : (isSmallScreen ? 13 : 15),
-                                fontWeight: '700',
-                                color: isDark ? '#93c5fd' : '#1e40af',
+                                fontSize: isTablet ? 18 : (isSmallScreen ? 14 : 16),
+                                fontWeight: '600',
+                                color: 'white',
                               }}>{t('maps.add_job')}</Text>
                             </Animated.View>
-                          </>
+                          </View>
                         ) : (
                           <>
                             {/* Title */}
@@ -3803,373 +3868,461 @@ export default function MapLocation({ location, onNavigate }: Props) {
                 </View>
   )}
 
-                {/* BOTTOM ROW - 2 CONFIG WIDGETS */}
-                  {shouldShowNormalWidgets && (
-                <View style={{
-                  flexDirection: 'row',
-                  gap: isTablet ? 28 : (isSmallScreen ? 12 : 20),
-                  height: isTablet ? 160 : (isSmallScreen ? 120 : 140),
-                }}>
-                  {/* RATES WIDGET */}
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      borderRadius: isTablet ? 28 : (isSmallScreen ? 20 : 24),
-                      padding: isTablet ? 22 : (isSmallScreen ? 12 : 18),
-                      backgroundColor: isDark ? 'rgba(251, 191, 36, 0.12)' : 'rgba(252, 211, 77, 0.25)',
-                      backdropFilter: 'blur(20px)',
-                      borderWidth: 1.5,
-                      borderColor: isDark ? 'rgba(251, 191, 36, 0.25)' : 'rgba(245, 158, 11, 0.3)',
-                      shadowColor: '#f59e0b',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.15,
-                      shadowRadius: 20,
-                      elevation: 5,
-                    }}
-                    onPress={() => handleEditCategory('financial')}
-                    activeOpacity={0.9}
-                  >
-                    <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
-                      {isTablet && (
+                {/* BOTTOM ROW - CONDITIONAL WIDGETS */}
+                  {shouldShowNormalWidgets && (() => {
+                    const job = jobs[0];
+                    const hasSalary = job && ((job.hourlyRate && job.hourlyRate > 0) || (job.salary?.enabled && job.salary?.amount > 0));
+                    
+                    if (!hasSalary) {
+                      // NO SALARY - Show salary widget with smaller overtime/total hours widgets
+                      return (
                         <View style={{
-                          backgroundColor: isDark ? 'rgba(251, 191, 36, 0.25)' : 'rgba(245, 158, 11, 0.2)',
-                          borderRadius: 20,
-                          padding: 16,
-                          marginRight: 20,
+                          flexDirection: 'row',
+                          gap: isTablet ? 28 : (isSmallScreen ? 12 : 20),
+                          height: isTablet ? 160 : (isSmallScreen ? 120 : 140),
                         }}>
-                          <IconSymbol size={36} name="eurosign.circle.fill" color={isDark ? '#fbbf24' : '#f59e0b'} />
-                        </View>
-                      )}
-                      <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
-                        <Text style={{
-                          fontSize: isTablet ? 16 : 13,
-                          fontWeight: '600',
-                          color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#92400e',
-                          marginBottom: isTablet ? 6 : 8,
-                        }}>{t('settings.financial_config.rates')}</Text>
-                      {(() => {
-                        const job = jobs[0];
-                        if (!job) {
-                          return (
-                            <Text style={{
-                              fontSize: 14,
-                              fontWeight: '500',
-                              color: '#f59e0b',
-                              marginTop: 12,
-                              opacity: 0.9,
-                            }}>{t('maps.configure_rates')}</Text>
-                          );
-                        }
-                        
-                        // Check for hourly rate
-                        if (job.hourlyRate && job.hourlyRate > 0) {
-                          const currency = job.currency || '€';
-                          return (
-                            <>
-                              <Text style={{
-                                fontSize: isTablet ? 36 : (isSmallScreen ? 24 : 28),
-                                fontWeight: '600',
-                                color: isDark ? 'white' : '#1f2937',
-                              }}>
-                                {currency} {job.hourlyRate}
-                              </Text>
-                              <Text style={{
-                                fontSize: 12,
-                                color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
-                                marginTop: 4,
-                              }}>{t('maps.per_hour')}</Text>
-                            </>
-                          );
-                        }
-                        
-                        // Check for salary
-                        if (job.salary?.enabled && job.salary?.amount > 0) {
-                          const currency = job.salary.currency || '€';
-                          let period = '';
-                          switch(job.salary.type) {
-                            case 'monthly':
-                              period = t('calendar.monthly');
-                              break;
-                            case 'annual':
-                              period = t('calendar.annual');
-                              break;
-                            default:
-                              period = t('maps.per_hour');
-                          }
-                          return (
-                            <>
-                              <Text style={{
-                                fontSize: isTablet ? 28 : (isSmallScreen ? 16 : 22),
-                                fontWeight: '600',
-                                color: isDark ? 'white' : '#1f2937',
-                              }}>
-                                {currency} {job.salary.amount}
-                              </Text>
-                              <Text style={{
-                                fontSize: 12,
-                                color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#416ebbff',
-                                marginTop: 4,
-                              }}>{period}</Text>
-                            </>
-                          );
-                        }
-                        
-                        return (
-                          <View style={{ alignItems: 'center', marginTop: 4 }}>
-                            <Text style={{
-                               fontSize: isTablet ? 18 : 12,
-                              fontWeight: '500',
-                              color: isDark ? '#d97706' : '#d97706',
-                              textAlign: 'center',
-                            }}>{t('maps.configure_rates')}</Text>
+                          {/* RATES WIDGET */}
+                          <TouchableOpacity
+                            style={{
+                              flex: 1,
+                              borderRadius: isTablet ? 28 : (isSmallScreen ? 20 : 24),
+                              padding: isTablet ? 22 : (isSmallScreen ? 12 : 18),
+                              backgroundColor: isDark ? 'rgba(251, 191, 36, 0.12)' : 'rgba(252, 211, 77, 0.25)',
+                              backdropFilter: 'blur(20px)',
+                              borderWidth: 1.5,
+                              borderColor: isDark ? 'rgba(251, 191, 36, 0.25)' : 'rgba(245, 158, 11, 0.3)',
+                              shadowColor: '#f59e0b',
+                              shadowOffset: { width: 0, height: 4 },
+                              shadowOpacity: 0.15,
+                              shadowRadius: 20,
+                              elevation: 5,
+                            }}
+                            onPress={() => handleEditCategory('financial')}
+                            activeOpacity={0.9}
+                          >
+                            <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
+                              {isTablet && (
+                                <View style={{
+                                  backgroundColor: isDark ? 'rgba(251, 191, 36, 0.25)' : 'rgba(245, 158, 11, 0.2)',
+                                  borderRadius: 20,
+                                  padding: 16,
+                                  marginRight: 20,
+                                }}>
+                                  <IconSymbol size={36} name="eurosign.circle.fill" color={isDark ? '#fbbf24' : '#f59e0b'} />
+                                </View>
+                              )}
+                              <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
+                                <Text style={{
+                                  fontSize: isTablet ? 16 : 13,
+                                  fontWeight: '600',
+                                  color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#92400e',
+                                  marginBottom: isTablet ? 6 : 8,
+                                }}>{t('settings.financial_config.rates')}</Text>
+                                <View style={{ alignItems: 'center', marginTop: 4 }}>
+                                  <Text style={{
+                                    fontSize: isTablet ? 18 : 12,
+                                    fontWeight: '500',
+                                    color: isDark ? '#d97706' : '#d97706',
+                                    textAlign: 'center',
+                                  }}>{t('maps.configure_rates')}</Text>
+                                </View>
+                              </View>
+                              {!isTablet && (
+                                <View style={{
+                                  backgroundColor: isDark ? 'rgba(251, 191, 36, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                                  borderRadius: 12,
+                                  padding: 8,
+                                  marginTop: 8,
+                                }}>
+                                  <IconSymbol size={20} name="eurosign.circle.fill" color={isDark ? '#fbbf24' : '#f59e0b'} />
+                                </View>
+                              )}
+                            </View>
+                          </TouchableOpacity>
+
+                          <View style={{
+                            gap: isTablet ? 8 : (isSmallScreen ? 6 : 8),
+                            height: isTablet ? 160 : (isSmallScreen ? 110 : 140),
+                            width: isTablet ? 360 : (isSmallScreen ? 165 : 165),
+                            marginTop: isTablet ? 0 : (isSmallScreen ? 5 : 0),
+                          }}>
+                            {/* OVERTIME WIDGET - SMALL */}
+                            <TouchableOpacity
+                              style={{
+                                flex: 1,
+                                height: isTablet ? 90 : (isSmallScreen ? 90 : 80),
+                                borderRadius: isTablet ? 32 : (isSmallScreen ? 24 : 28),
+                                padding: isTablet ? 20 : (isSmallScreen ? 18 : 16),
+                                backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(248, 113, 113, 0.18)',
+                                borderWidth: 1.5,
+                                borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
+                                shadowColor: '#ef4444',
+                                shadowOffset: { width: 0, height: 6 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 24,
+                                elevation: 8,
+                              }}
+                              onPress={() => {
+                                triggerHaptic('light');
+                                navigateTo('reports');
+                              }}
+                              activeOpacity={0.9}
+                            >
+                              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: isTablet ? 4 : 2 }}>
+                                <View style={{ flex: 1, alignItems: 'flex-start', justifyContent: 'center' }}>
+                                  <Text style={{
+                                    fontSize: isTablet ? 14 : (isSmallScreen ? 11 : 14),
+                                    fontWeight: '700',
+                                    color: isDark ? '#a7303092' : '#a7303092',
+                                    marginBottom: isTablet ? 2 : 1,
+                                    letterSpacing: -0.5,
+                                  }}>{t('maps.overtime')}</Text>
+                                  <Text style={{
+                                    fontSize: isTablet ? 10 : (isSmallScreen ? 9 : 9),
+                                    fontWeight: '500',
+                                    color: isDark ? '#7b7b7bff' : '#7b7b7bff',
+                                    opacity: 0.9,
+                                  }}>{getMonthName(new Date())}</Text>
+                                </View>
+                                {(() => {
+                                  let maxValue = 10;
+                                  if (monthlyOvertime > 80) maxValue = 160;
+                                  else if (monthlyOvertime > 40) maxValue = 80;
+                                  else if (monthlyOvertime > 20) maxValue = 40;
+                                  else if (monthlyOvertime > 10) maxValue = 20;
+                                  
+                                  const percentage = Math.min(100, (monthlyOvertime / maxValue) * 100);
+                                  const rotation = (percentage / 100) * 360 - 90;
+                                  
+                                  return (
+                                    <View style={{ 
+                                      width: isTablet ? 45 : 35, 
+                                      height: isTablet ? 45 : 35,
+                                    }}>
+                                      <View style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                      }}>
+                                        <View style={{
+                                          position: 'absolute',
+                                          width: '100%',
+                                          height: '100%',
+                                          borderRadius: 100,
+                                          borderWidth: isTablet ? 8 : 6,
+                                          borderColor: 'transparent',
+                                          transform: [{ rotate: `${rotation}deg` }],
+                                        }} />
+                                        <View style={{ alignItems: 'center' }}>
+                                          <Text style={{
+                                            fontSize: isTablet ? 16 : 14,
+                                            fontWeight: '700',
+                                            color: isDark ? '#4ade80' : '#16a34a',
+                                          }}>{monthlyOvertime.toFixed(1)}</Text>
+                                          <Text style={{
+                                            fontSize: isTablet ? 14 : 10,
+                                            color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#15803d',
+                                            fontWeight: '600',
+                                          }}>{t('job_selector.time_periods.hour')}</Text>
+                                        </View>
+                                      </View>
+                                    </View>
+                                  );
+                                })()}
+                              </View>
+                            </TouchableOpacity>
+
+                            {/* TOTAL HOURS WIDGET - SMALL */}
+                            <TouchableOpacity
+                              style={{
+                                flex: 1,
+                                height: isTablet ? 90 : (isSmallScreen ? 90 : 80),
+                                borderRadius: isTablet ? 32 : (isSmallScreen ? 24 : 28),
+                                padding: isTablet ? 20 : (isSmallScreen ? 18 : 16),
+                                backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(248, 113, 113, 0.18)',
+                                borderWidth: 1.5,
+                                borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
+                                shadowColor: '#ef4444',
+                                shadowOffset: { width: 0, height: 6 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 24,
+                                elevation: 8,
+                              }}
+                              onPress={() => {
+                                triggerHaptic('light');
+                                navigateTo('reports');
+                              }}
+                              activeOpacity={0.9}
+                            >
+                              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: isTablet ? 4 : 2 }}>
+                                <View style={{ flex: 1, alignItems: 'flex-start', justifyContent: 'center' }}>
+                                  <Text style={{
+                                    fontSize: isTablet ? 14 : (isSmallScreen ? 11 : 14),
+                                    fontWeight: '700',
+                                    color: isDark ? '#a7303092' : '#a7303092',
+                                    marginBottom: isTablet ? 2 : 1,
+                                    letterSpacing: -0.5,
+                                  }}>{t('maps.total_hours')}</Text>
+                                  <Text style={{
+                                    fontSize: isTablet ? 10 : (isSmallScreen ? 9 : 9),
+                                    fontWeight: '500',
+                                    color: isDark ? '#7b7b7bff' : '#7b7b7bff',
+                                    opacity: 0.9,
+                                  }}>{getMonthName(new Date())}</Text>
+                                </View>
+                                {(() => {
+                                  const totalHours = monthlyTotalHours;
+                                  let maxValue = 160;
+                                  if (totalHours > 240) maxValue = 320;
+                                  else if (totalHours > 200) maxValue = 240;
+                                  else if (totalHours > 160) maxValue = 200;
+                                  
+                                  const percentage = Math.min(100, (totalHours / maxValue) * 100);
+                                  const rotation = (percentage / 100) * 360 - 90;
+                                  
+                                  return (
+                                    <View style={{ 
+                                      width: isTablet ? 45 : 35, 
+                                      height: isTablet ? 45 : 35,
+                                    }}>
+                                      <View style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                      }}>
+                                        <View style={{
+                                          position: 'absolute',
+                                          width: '100%',
+                                          height: '100%',
+                                          borderRadius: 100,
+                                          borderWidth: isTablet ? 8 : 6,
+                                          borderColor: 'transparent',
+                                          transform: [{ rotate: `${rotation}deg` }],
+                                        }} />
+                                        <View style={{ alignItems: 'center' }}>
+                                          <Text style={{
+                                            fontSize: isTablet ? 16 : 14,
+                                            fontWeight: '700',
+                                            color: isDark ? '#4ade80' : '#16a34a',
+                                          }}>{formatHoursForDisplay(totalHours)}</Text>
+                                        </View>
+                                      </View>
+                                    </View>
+                                  );
+                                })()}
+                              </View>
+                            </TouchableOpacity>
                           </View>
-                        );
-                      })()}
-                      </View>
-                      {!isTablet && (
+                        </View>
+                      );
+                    } else {
+                      // HAS SALARY - Show only overtime and total hours widgets (BIG)
+                      return (
                         <View style={{
-                          backgroundColor: isDark ? 'rgba(251, 191, 36, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                          borderRadius: 12,
-                          padding: 8,
-                          marginTop: 8,
+                          flexDirection: 'row',
+                          gap: isTablet ? 28 : (isSmallScreen ? 12 : 20),
+                          height: isTablet ? 160 : (isSmallScreen ? 120 : 140),
                         }}>
-                          <IconSymbol size={20} name="eurosign.circle.fill" color={isDark ? '#fbbf24' : '#f59e0b'} />
-                        </View>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-
-
-
-       <View style={{
-            
-                  gap: isTablet ? 8 : (isSmallScreen ? 6 : 8),
-                  height: isTablet ? 160 : (isSmallScreen ? 110 : 140),
-                  width: isTablet ?360 :(isSmallScreen ? 165 : 165),
-                  marginTop: isTablet ? 0 : (isSmallScreen ?  5 : 0),
-                }}>
-
-               <TouchableOpacity
-                       style={{
-                      flex: 1,
-                  height: isTablet ? 90 : (isSmallScreen ? 90 : 80),
-                          borderRadius: isTablet ? 32 : (isSmallScreen ? 24 : 28),
-                          padding: isTablet ? 20 : (isSmallScreen ? 18 : 16),
-              backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(248, 113, 113, 0.18)',
-                      borderWidth: 1.5,
-                    borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
-
-                     shadowColor: '#ef4444',
-                      shadowOffset: { width: 0, height: 6 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 24,
-                      elevation: 8,
-                       }}
-                        onPress={() => {
-                          triggerHaptic('light');
-                          navigateTo('reports');
-                        }}
-                        activeOpacity={0.9}
-                      >
-                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: isTablet ? 4 : 2 }}>
-                          {/* Text content on the left */}
-                          <View style={{ flex: 1, alignItems: 'flex-start', justifyContent: 'center' }}>
-                            <Text style={{
-                              fontSize: isTablet ? 14 : (isSmallScreen ? 11 : 14),
-                              fontWeight: '700',
-                        color: isDark ? '#a7303092' : '#a7303092',
-                              marginBottom: isTablet ? 2 : 1,
-                              letterSpacing: -0.5,
-                            }}>{t('maps.overtime')}</Text>
-                            
-                            <Text style={{
-                              fontSize: isTablet ? 10 : (isSmallScreen ? 9 : 9),
-                              fontWeight: '500',
-                            color: isDark ? '#7b7b7bff' : '#7b7b7bff',
-                              opacity: 0.9,
-                            }}>{getMonthName(new Date())}</Text>
-                            
-                        
-                          </View>
-                          
-                          {/* Circular Progress Chart on the right */}
+                          {/* TOTAL HOURS WIDGET - BIG */}
                           {(() => {
-                            // Dynamic max based on current overtime value
-                            let maxValue = 10;
-                            if (monthlyOvertime > 80) maxValue = 160;
-                            else if (monthlyOvertime > 40) maxValue = 80;
-                            else if (monthlyOvertime > 20) maxValue = 40;
-                            else if (monthlyOvertime > 10) maxValue = 20;
-                            
-                            const percentage = Math.min(100, (monthlyOvertime / maxValue) * 100);
-                            const rotation = (percentage / 100) * 360 - 90;
+                            const job = jobs[0];
+                            const hasHourlySalary = job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.amount > 0;
                             
                             return (
-                              <View style={{ 
-                                width: isTablet ? 45 : 35, 
-                                height: isTablet ? 45 : 35,
-                              }}>
-                                <View style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  justifyContent: 'center',
-                                  alignItems: 'center',
-                                }}>
-                   
-                                  {/* Progress arc - simplified approach */}
-                                  <View style={{
-                                    position: 'absolute',
-                                    width: '100%',
-                                    height: '100%',
-                                    borderRadius: 100,
-                                    borderWidth: isTablet ? 8 : 6,
-                                    borderColor: 'transparent',
-                
-                                    transform: [{ rotate: `${rotation}deg` }],
-                                  }} />
-                                  {/* Center text - simplified */}
-                                  <View style={{ alignItems: 'center' }}>
+                              <TouchableOpacity
+                                style={{
+                                  flex: 1,
+                                  borderRadius: isTablet ? 28 : (isSmallScreen ? 20 : 24),
+                                  padding: isTablet ? 22 : (isSmallScreen ? 12 : 18),
+                                  backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(248, 113, 113, 0.18)',
+                                  backdropFilter: 'blur(20px)',
+                                  borderWidth: 1.5,
+                                  borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
+                                  shadowColor: '#ef4444',
+                                  shadowOffset: { width: 0, height: 4 },
+                                  shadowOpacity: 0.15,
+                                  shadowRadius: 20,
+                                  elevation: 5,
+                                }}
+                                onPress={() => {
+                                  triggerHaptic('light');
+                                  if (hasHourlySalary) {
+                                    handleEditCategory('financial');
+                                  } else {
+                                    navigateTo('reports');
+                                  }
+                                }}
+                                activeOpacity={0.9}
+                              >
+                                <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
+                                  {isTablet && !hasHourlySalary && (
+                                    <View style={{
+                                      backgroundColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.2)',
+                                      borderRadius: 20,
+                                      padding: 16,
+                                      marginRight: 20,
+                                    }}>
+                                      <IconSymbol size={36} name="clock.fill" color={isDark ? '#f87171' : '#ef4444'} />
+                                    </View>
+                                  )}
+                                  <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
                                     <Text style={{
-                                       fontSize: isTablet ? 16 :14,
-                                      fontWeight: '700',
-                                     color: isDark ? '#4ade80' : '#16a34a',
-                                    }}>{monthlyOvertime.toFixed(1)}</Text>
-                                    <Text style={{
-                                      fontSize: isTablet ? 14 : 10,
-                                      color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#15803d',
+                                      fontSize: isTablet ? 21 : 16,
                                       fontWeight: '600',
-                                    }}>{t('job_selector.time_periods.hour')}</Text>
-                                  </View>
-                                  {/* Max indicator */}
-                                  <View style={{
-                                    position: 'absolute',
-                                    top: -14,
-                                    right: 0,
-                                    left: 0,
-                                    alignItems: 'center',
-                                  }}>
-                     
-                                  </View>
-                                </View>
-                              </View>
-                            );
-                          })()}
-                        </View>
-                      </TouchableOpacity>
-
-
-
-
-                  {/* OVERTIME WIDGET */}
- <TouchableOpacity
-                        style={{
-                          flex: 1,
-                          height: isTablet ? 90 : (isSmallScreen ? 90 : 80),
-                          borderRadius: isTablet ? 32 : (isSmallScreen ? 24 : 28),
-                          padding: isTablet ? 20 : (isSmallScreen ? 18 : 16),
-                     backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(248, 113, 113, 0.18)',
-                      borderWidth: 1.5,
-                    borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
-
-                     shadowColor: '#ef4444',
-                          shadowOffset: { width: 0, height: 6 },
-                          shadowOpacity: 0.1,
-                          shadowRadius: 24,
-                          elevation: 8,
-                        }}
-                        onPress={() => {
-                          triggerHaptic('light');
-                          navigateTo('reports');
-                        }}
-                        activeOpacity={0.9}
-                      >
-                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: isTablet ? 4 : 2 }}>
-                          {/* Text content on the left */}
-                          <View style={{ flex: 1, alignItems: 'flex-start', justifyContent: 'center' }}>
-                            <Text style={{
-                              fontSize: isTablet ? 14 : (isSmallScreen ? 11 : 14),
-                              fontWeight: '700',
-                                 color: isDark ? '#a7303092' : '#a7303092',
-                              marginBottom: isTablet ? 2 : 1,
-                              letterSpacing: -0.5,
-                            }}>{t('maps.total_hours')}</Text>
-                            
-                            <Text style={{
-                              fontSize: isTablet ? 10 : (isSmallScreen ? 9 : 9),
-                              fontWeight: '500',
-                           color: isDark ? '#7b7b7bff' : '#7b7b7bff',
-                              opacity: 0.9,
-                            }}>{getMonthName(new Date())}</Text>
-                            
-                  
-                          </View>
-                          
-                          {/* Circular Progress Chart on the right */}
-                          {(() => {
-                            // Use the monthly total hours state
-                            const totalHours = monthlyTotalHours;
-                            // Dynamic max based on typical monthly hours (160-200 hours standard)
-                            let maxValue = 160;
-                            if (totalHours > 240) maxValue = 320;
-                            else if (totalHours > 200) maxValue = 240;
-                            else if (totalHours > 160) maxValue = 200;
-                            
-                            const percentage = Math.min(100, (totalHours / maxValue) * 100);
-                            const rotation = (percentage / 100) * 360 - 90;
-                            
-                            return (
-                              <View style={{ 
-                                width: isTablet ? 45 : 35, 
-                                height: isTablet ? 45 : 35,
-                              }}>
-                                <View style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  justifyContent: 'center',
-                                  alignItems: 'center',
-                                }}>
-             
-                  
-                                  {/* Progress arc - simplified approach */}
-                                  <View style={{
-                                    position: 'absolute',
-                                    width: '100%',
-                                    height: '100%',
-                                    borderRadius: 100,
-                                    borderWidth: isTablet ? 8 : 6,
-                                    borderColor: 'transparent',
-                           
-                                    transform: [{ rotate: `${rotation}deg` }],
-                                  }} />
-                                  {/* Center text - simplified */}
-                                  <View style={{ alignItems: 'center' }}>
+                                      color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#991b1b',
+                                      marginBottom: isTablet ? 6 : 8,
+                                    }}>{t('maps.total_hours')}</Text>
                                     <Text style={{
-                                      fontSize: isTablet ? 16 :14,
-                                      fontWeight: '700',
+                                      fontSize: isTablet ? 31 : (isSmallScreen ? 20 : 21),
+                                      fontWeight: '600',
                                       color: isDark ? '#4ade80' : '#16a34a',
-                                    }}>{formatHoursForDisplay(totalHours)}</Text>
+                                    }}>
+                                      {formatHoursForDisplay(monthlyTotalHours)}
+                                    </Text>
+                                    {hasHourlySalary && (() => {
+                                      const totalEarnings = monthlyTotalHours * (job?.salary?.amount || 0);
+                                      const currency = job?.salary?.currency || 'EUR';
+                                      const currencySymbol = currency === 'EUR' ? '€' : 
+                                                           currency === 'USD' ? '$' : 
+                                                           currency === 'GBP' ? '£' : currency;
+                                      return (
+                                        <Text style={{
+                                          fontSize: isTablet ? 16 : (isSmallScreen ? 14 : 15),
+                                          fontWeight: '600',
+                                          color: isDark ? '#fbbf24' : '#f59e0b',
+                                          marginTop: 2,
+                                        }}>
+                                          {currencySymbol} {totalEarnings.toFixed(2)}
+                                        </Text>
+                                      );
+                                    })()}
+                                    <Text style={{
+                                      fontSize: 12,
+                                      color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
+                                      marginTop: 4,
+                                    }}>{getMonthName(new Date())}</Text>
                                   </View>
-                                  {/* Max indicator */}
-                                  <View style={{
-                                    position: 'absolute',
-                                    top: -14,
-                                    right: 0,
-                                    left: 0,
-                                    alignItems: 'center',
-                                  }}>
-                     
-                                  </View>
+                                  {!isTablet && !hasHourlySalary && (
+                                    <View style={{
+                                      backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                                      borderRadius: 12,
+                                      padding: 8,
+                                      marginTop: 8,
+                                    }}>
+                                      <IconSymbol size={20} name="clock.fill" color={isDark ? '#f87171' : '#ef4444'} />
+                                    </View>
+                                  )}
                                 </View>
-                              </View>
+                              </TouchableOpacity>
                             );
                           })()}
+
+                          {/* OVERTIME WIDGET - BIG */}
+                          <TouchableOpacity
+                            style={{
+                              flex: 1,
+                              borderRadius: isTablet ? 28 : (isSmallScreen ? 20 : 24),
+                              padding: isTablet ? 22 : (isSmallScreen ? 12 : 18),
+                              backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(248, 113, 113, 0.18)',
+                              backdropFilter: 'blur(20px)',
+                              borderWidth: 1.5,
+                              borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
+                              shadowColor: '#ef4444',
+                              shadowOffset: { width: 0, height: 4 },
+                              shadowOpacity: 0.15,
+                              shadowRadius: 20,
+                              elevation: 5,
+                            }}
+                            onPress={() => {
+                              triggerHaptic('light');
+                              const job = jobs[0];
+                              const hasOvertimeRate = job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.overtimeEnabled && job.salary.overtimeRate && job.salary.overtimeRate > 0;
+                              if (hasOvertimeRate) {
+                                handleEditCategory('financial');
+                              } else {
+                                navigateTo('reports');
+                              }
+                            }}
+                            activeOpacity={0.9}
+                          >
+                            <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
+                              {isTablet && (() => {
+                                const job = jobs[0];
+                                const hasOvertimeRate = job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.overtimeEnabled && job.salary.overtimeRate && job.salary.overtimeRate > 0;
+                                return !hasOvertimeRate; // Only show icon if NO overtime rate
+                              })() && (
+                                <View style={{
+                                  backgroundColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.2)',
+                                  borderRadius: 20,
+                                  padding: 16,
+                                  marginRight: 20,
+                                }}>
+                                  <IconSymbol size={36} name="clock.badge.exclamationmark" color={isDark ? '#f87171' : '#ef4444'} />
+                                </View>
+                              )}
+                              <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
+                                <Text style={{
+                                  fontSize: isTablet ? 21 : 16,
+                                  fontWeight: '600',
+                                  color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#991b1b',
+                                  marginBottom: isTablet ? 6 : 8,
+                                }}>{t('maps.overtime')}</Text>
+                                <Text style={{
+                                  fontSize: isTablet ? 31 : (isSmallScreen ? 20 : 21),
+                                  fontWeight: '600',
+                                  color: isDark ? '#4ade80' : '#16a34a',
+                                }}>
+                                  {monthlyOvertime.toFixed(1)} {t('job_selector.time_periods.hour')}
+                                </Text>
+                                {(() => {
+                                  const job = jobs[0];
+                                  if (job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.overtimeEnabled && job.salary.overtimeRate && job.salary.overtimeRate > 0) {
+                                    const overtimeEarnings = monthlyOvertime * job.salary.overtimeRate;
+                                    const currency = job.salary.currency || 'EUR';
+                                    const currencySymbol = currency === 'EUR' ? '€' : 
+                                                         currency === 'USD' ? '$' : 
+                                                         currency === 'GBP' ? '£' : currency;
+                                    return (
+                                      <Text style={{
+                                        fontSize: isTablet ? 16 : (isSmallScreen ? 14 : 15),
+                                        fontWeight: '600',
+                                        color: isDark ? '#fbbf24' : '#f59e0b',
+                                        marginTop: 2,
+                                      }}>
+                                        {currencySymbol} {overtimeEarnings.toFixed(2)}
+                                      </Text>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+                                <Text style={{
+                                  fontSize: 12,
+                                  color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
+                                  marginTop: 4,
+                                }}>{getMonthName(new Date())}</Text>
+                              </View>
+                              {!isTablet && (() => {
+                                const job = jobs[0];
+                                const hasOvertimeRate = job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.overtimeEnabled && job.salary.overtimeRate && job.salary.overtimeRate > 0;
+                                return !hasOvertimeRate; // Only show icon if NO overtime rate
+                              })() && (
+                                <View style={{
+                                  backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                                  borderRadius: 12,
+                                  padding: 8,
+                                  marginTop: 8,
+                                }}>
+                                  <IconSymbol size={20} name="clock.badge.exclamationmark" color={isDark ? '#f87171' : '#ef4444'} />
+                                </View>
+                              )}
+                            </View>
+                          </TouchableOpacity>
                         </View>
-                        
-                      </TouchableOpacity>
-                      
-                </View>
-                           </View>
-                  )}
+                      );
+                    }
+                  })()}
 
                 {/* AI ASSISTANT WIDGET - NEW - Hide on iPad landscape and when auto-timer is active */}
                 {(!isTablet || (isTablet && isPortrait)) && shouldShowNormalWidgets && (
@@ -4448,11 +4601,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
               userLocation={currentUserLocation}
               activeTimerElapsed={elapsedTime}
               isAutoTimerPaused={isAutoTimerPaused}
-              startTime={autoTimer.state.startTime}
               onPause={handleAutoTimerPause}
               onResume={handleAutoTimerResume}
               onStop={handleAutoTimerWidgetStop}
-              formatTime={formatTime}
               autoTimerState={autoTimerStatus.state}
               remainingDelayTime={autoTimerStatus.remainingTime}
             />

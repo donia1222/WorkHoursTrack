@@ -818,6 +818,9 @@
       "amount_helper_hourly": "例: フリーランス作業で1500円/時間",
       "amount_helper_monthly": "例: 固定職で180000円/月",
       "amount_helper_annual": "例: 年俸3500000円/年"
+      "overtime_rate": "残業レート",
+      "enable_overtime_rate": "残業レートを有効にする",
+      "overtime_rate_helper": "残業時間のレートを設定します。通常の時給よりも高いことが多いです。"
     },
     "billing": {
       "title": "請求設定",

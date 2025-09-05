@@ -1373,6 +1373,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       type: 'hourly',
       amount: 0,
       currency: 'EUR',
+      overtimeEnabled: false,
+      overtimeRate: 0,
     },
     schedule: {
       enabled: false, // Schedule disabled by default
@@ -1578,6 +1580,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           type: 'hourly',
           amount: editingJob.hourlyRate || 0,
           currency: editingJob.currency || 'EUR',
+          overtimeEnabled: false,
+          overtimeRate: 0,
         },
         schedule: scheduleToUse,
         billing: editingJob.billing || {
@@ -1627,6 +1631,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
           type: 'hourly',
           amount: 0,
           currency: 'EUR',
+          overtimeEnabled: false,
+          overtimeRate: 0,
         },
         schedule: scheduleToUse,
         billing: {
@@ -3182,11 +3188,11 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               <View style={styles.financialCard}>
                 <View style={styles.financialCardHeader}>
                   <IconSymbol size={20} name="clock.badge.exclamationmark" color={colors.primary} />
-                  <Text style={styles.financialCardTitle}>{t('job_form.financial.overtime_rate')}</Text>
+                  <Text style={styles.financialCardTitle}>{t('job_form.financial.overtime_rate') || 'Overtime Rate'}</Text>
                 </View>
                 
                 <View style={styles.switchRow}>
-                  <Text style={styles.label}>{t('job_form.financial.enable_overtime_rate')}</Text>
+                  <Text style={styles.label}>{t('job_form.financial.enable_overtime_rate') || 'Enable Overtime Rate'}</Text>
                   <Switch
                     value={formData.salary?.overtimeEnabled || false}
                     onValueChange={(value) => {
@@ -3224,7 +3230,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 
                 {formData.salary?.overtimeEnabled && (
                   <Text style={styles.amountHelper}>
-                    {t('job_form.financial.overtime_rate_helper')}
+                    {t('job_form.financial.overtime_rate_helper') || 'Set the rate for overtime hours. Often higher than regular hourly rate.'}
                   </Text>
                 )}
               </View>

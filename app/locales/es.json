@@ -864,7 +864,10 @@
       "period_year": "año",
       "amount_helper_hourly": "Ej: 15€/hora para trabajos freelance",
       "amount_helper_monthly": "Ej: 1800€/mes para empleos fijos",
-      "amount_helper_annual": "Ej: 35000€/año para salarios anuales"
+      "amount_helper_annual": "Ej: 35000€/año para salarios anuales",
+      "overtime_rate": "Tarifa de Horas Extra",
+      "enable_overtime_rate": "Habilitar Tarifa de Horas Extra",
+      "overtime_rate_helper": "Establece la tarifa para horas extra. Generalmente es mayor que la tarifa regular."
     },
     "billing": {
       "title": "Configuración de Facturación",

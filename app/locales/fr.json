@@ -671,6 +671,9 @@
       "amount_helper_hourly": "Ex : 15€/heure pour travail freelance",
       "amount_helper_monthly": "Ex : 1800€/mois pour emplois fixes",
       "amount_helper_annual": "Ex : 35000€/an pour salaires annuels"
+      "overtime_rate": "Taux heures supplémentaires",
+      "enable_overtime_rate": "Activer le taux heures supplémentaires",
+      "overtime_rate_helper": "Définissez le taux pour les heures supplémentaires. Souvent plus élevé que le taux horaire régulier."
     },
     "billing": {
       "title": "Configuration de facturation",

@@ -833,7 +833,10 @@
       "period_year": "year",
       "amount_helper_hourly": "E.g.: 15$/hour for freelance work",
       "amount_helper_monthly": "E.g.: 1800$/month for fixed jobs",
-      "amount_helper_annual": "E.g.: 35000$/year for annual salaries"
+      "amount_helper_annual": "E.g.: 35000$/year for annual salaries",
+      "overtime_rate": "Overtime Rate",
+      "enable_overtime_rate": "Enable Overtime Rate",
+      "overtime_rate_helper": "Set the rate for overtime hours. Often higher than regular hourly rate."
     },
     "billing": {
       "title": "Billing Configuration",

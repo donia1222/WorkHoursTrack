@@ -847,6 +847,9 @@
       "amount_helper_hourly": "Örn: Serbest işler için 150₺/saat",
       "amount_helper_monthly": "Örn: Sabit işler için 18000₺/ay",
       "amount_helper_annual": "Örn: Yıllık maaşlar için 350000₺/yıl"
+      "overtime_rate": "Fazla mesai ücreti",
+      "enable_overtime_rate": "Fazla mesai ücretini etkinleştir",
+      "overtime_rate_helper": "Fazla mesai saatleri için ücreti ayarlayın. Genellikle normal saatlik ücretten yüksektir."
     },
     "billing": {
       "title": "Faturalandırma Yapılandırması",

@@ -3868,15 +3868,21 @@ export default function MapLocation({ location, onNavigate }: Props) {
                 </View>
   )}
 
-                {/* BOTTOM ROW - 2 CONFIG WIDGETS */}
-                  {shouldShowNormalWidgets && (
-                <View style={{
-                  flexDirection: 'row',
-                  gap: isTablet ? 28 : (isSmallScreen ? 12 : 20),
-                  height: isTablet ? 160 : (isSmallScreen ? 120 : 140),
-                }}>
-                  {/* RATES WIDGET */}
-                  <TouchableOpacity
+                {/* BOTTOM ROW - CONDITIONAL WIDGETS */}
+                  {shouldShowNormalWidgets && (() => {
+                    const job = jobs[0];
+                    const hasHourlySalary = job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.amount > 0;
+                    
+                    if (!hasHourlySalary) {
+                      // NO HOURLY SALARY (or monthly/annual salary) - Show salary widget with smaller overtime/total hours widgets
+                      return (
+                        <View style={{
+                          flexDirection: 'row',
+                          gap: isTablet ? 28 : (isSmallScreen ? 12 : 20),
+                          height: isTablet ? 160 : (isSmallScreen ? 120 : 140),
+                        }}>
+                          {/* RATES WIDGET */}
+                          <TouchableOpacity
                     style={{
                       flex: 1,
                       borderRadius: isTablet ? 28 : (isSmallScreen ? 20 : 24),
@@ -4234,8 +4240,214 @@ export default function MapLocation({ location, onNavigate }: Props) {
                       </TouchableOpacity>
                       
                 </View>
-                           </View>
-                  )}
+                        </View>
+                      );
+                    } else {
+                      // HAS HOURLY SALARY - Show only overtime and total hours widgets (BIG)
+                      return (
+                        <View style={{
+                          flexDirection: 'row',
+                          gap: isTablet ? 28 : (isSmallScreen ? 12 : 20),
+                          height: isTablet ? 160 : (isSmallScreen ? 120 : 140),
+                        }}>
+                          {/* TOTAL HOURS WIDGET - BIG */}
+                          {(() => {
+                            const job = jobs[0];
+                            const hasHourlySalary = job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.amount > 0;
+                            
+                            return (
+                              <TouchableOpacity
+                                style={{
+                                  flex: 1,
+                                  borderRadius: isTablet ? 28 : (isSmallScreen ? 20 : 24),
+                                  padding: isTablet ? 22 : (isSmallScreen ? 12 : 18),
+                                  backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(248, 113, 113, 0.18)',
+                                  backdropFilter: 'blur(20px)',
+                                  borderWidth: 1.5,
+                                  borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
+                                  shadowColor: '#ef4444',
+                                  shadowOffset: { width: 0, height: 4 },
+                                  shadowOpacity: 0.15,
+                                  shadowRadius: 20,
+                                  elevation: 5,
+                                }}
+                                onPress={() => {
+                                  triggerHaptic('light');
+                                  if (hasHourlySalary && monthlyTotalHours > 0) {
+                                    handleEditCategory('financial');
+                                  } else {
+                                    navigateTo('reports');
+                                  }
+                                }}
+                                activeOpacity={0.9}
+                              >
+                                <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
+                                  {isTablet && !hasHourlySalary && (
+                                    <View style={{
+                                      backgroundColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.2)',
+                                      borderRadius: 20,
+                                      padding: 16,
+                                      marginRight: 20,
+                                    }}>
+                                      <IconSymbol size={36} name="clock.fill" color={isDark ? '#f87171' : '#ef4444'} />
+                                    </View>
+                                  )}
+                                  <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
+                                    <Text style={{
+                                      fontSize: isTablet ? 21 : 16,
+                                      fontWeight: '600',
+                                      color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#991b1b',
+                                      marginBottom: isTablet ? 6 : 8,
+                                    }}>{t('maps.total_hours')}</Text>
+                                    <Text style={{
+                                      fontSize: isTablet ? 31 : (isSmallScreen ? 20 : 21),
+                                      fontWeight: '600',
+                                      color: isDark ? '#4ade80' : '#16a34a',
+                                    }}>
+                                      {formatHoursForDisplay(monthlyTotalHours)}
+                                    </Text>
+                                    {hasHourlySalary && (() => {
+                                      const totalEarnings = monthlyTotalHours * (job?.salary?.amount || 0);
+                                      const currency = job?.salary?.currency || 'EUR';
+                                      const currencySymbol = currency === 'EUR' ? '€' : 
+                                                           currency === 'USD' ? '$' : 
+                                                           currency === 'GBP' ? '£' : currency;
+                                      return (
+                                        <Text style={{
+                                          fontSize: isTablet ? 16 : (isSmallScreen ? 14 : 15),
+                                          fontWeight: '600',
+                                          color: isDark ? '#fbbf24' : '#f59e0b',
+                                          marginTop: 2,
+                                        }}>
+                                          {currencySymbol} {totalEarnings.toFixed(2)}
+                                        </Text>
+                                      );
+                                    })()}
+                                    <Text style={{
+                                      fontSize: 12,
+                                      color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
+                                      marginTop: 4,
+                                    }}>{getMonthName(new Date())}</Text>
+                                  </View>
+                                  {!isTablet && !hasHourlySalary && (
+                                    <View style={{
+                                      backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                                      borderRadius: 12,
+                                      padding: 8,
+                                      marginTop: 8,
+                                    }}>
+                                      <IconSymbol size={20} name="clock.fill" color={isDark ? '#f87171' : '#ef4444'} />
+                                    </View>
+                                  )}
+                                </View>
+                              </TouchableOpacity>
+                            );
+                          })()}
+
+                          {/* OVERTIME WIDGET - BIG */}
+                          <TouchableOpacity
+                            style={{
+                              flex: 1,
+                              borderRadius: isTablet ? 28 : (isSmallScreen ? 20 : 24),
+                              padding: isTablet ? 22 : (isSmallScreen ? 12 : 18),
+                              backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(248, 113, 113, 0.18)',
+                              backdropFilter: 'blur(20px)',
+                              borderWidth: 1.5,
+                              borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
+                              shadowColor: '#ef4444',
+                              shadowOffset: { width: 0, height: 4 },
+                              shadowOpacity: 0.15,
+                              shadowRadius: 20,
+                              elevation: 5,
+                            }}
+                            onPress={() => {
+                              triggerHaptic('light');
+                              const job = jobs[0];
+                              const hasOvertimeRate = job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.overtimeEnabled && job.salary.overtimeRate && job.salary.overtimeRate > 0;
+                              if (hasOvertimeRate && monthlyOvertime > 0) {
+                                handleEditCategory('financial');
+                              } else {
+                                navigateTo('reports');
+                              }
+                            }}
+                            activeOpacity={0.9}
+                          >
+                            <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
+                              {isTablet && (() => {
+                                const job = jobs[0];
+                                const hasOvertimeRate = job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.overtimeEnabled && job.salary.overtimeRate && job.salary.overtimeRate > 0;
+                                return !hasOvertimeRate; // Only show icon if NO overtime rate
+                              })() && (
+                                <View style={{
+                                  backgroundColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.2)',
+                                  borderRadius: 20,
+                                  padding: 16,
+                                  marginRight: 20,
+                                }}>
+                                  <IconSymbol size={36} name="clock.badge.exclamationmark" color={isDark ? '#f87171' : '#ef4444'} />
+                                </View>
+                              )}
+                              <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
+                                <Text style={{
+                                  fontSize: isTablet ? 21 : 16,
+                                  fontWeight: '600',
+                                  color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#991b1b',
+                                  marginBottom: isTablet ? 6 : 8,
+                                }}>{t('maps.overtime')}</Text>
+                                <Text style={{
+                                  fontSize: isTablet ? 31 : (isSmallScreen ? 20 : 21),
+                                  fontWeight: '600',
+                                  color: isDark ? '#4ade80' : '#16a34a',
+                                }}>
+                                  {monthlyOvertime.toFixed(1)} {t('job_selector.time_periods.hour')}
+                                </Text>
+                                {(() => {
+                                  const job = jobs[0];
+                                  if (job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.overtimeEnabled && job.salary.overtimeRate && job.salary.overtimeRate > 0) {
+                                    const overtimeEarnings = monthlyOvertime * job.salary.overtimeRate;
+                                    const currency = job.salary.currency || 'EUR';
+                                    const currencySymbol = currency === 'EUR' ? '€' : 
+                                                         currency === 'USD' ? '$' : 
+                                                         currency === 'GBP' ? '£' : currency;
+                                    return (
+                                      <Text style={{
+                                        fontSize: isTablet ? 16 : (isSmallScreen ? 14 : 15),
+                                        fontWeight: '600',
+                                        color: isDark ? '#fbbf24' : '#f59e0b',
+                                        marginTop: 2,
+                                      }}>
+                                        {currencySymbol} {overtimeEarnings.toFixed(2)}
+                                      </Text>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+                                <Text style={{
+                                  fontSize: 12,
+                                  color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
+                                  marginTop: 4,
+                                }}>{getMonthName(new Date())}</Text>
+                              </View>
+                              {!isTablet && (() => {
+                                const job = jobs[0];
+                                const hasOvertimeRate = job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.overtimeEnabled && job.salary.overtimeRate && job.salary.overtimeRate > 0;
+                                return !hasOvertimeRate; // Only show icon if NO overtime rate
+                              })() && (
+                                <View style={{
+                                  backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                                  borderRadius: 12,
+                                  padding: 8,
+                                  marginTop: 8,
+                                }}>
+                                  <IconSymbol size={20} name="clock.badge.exclamationmark" color={isDark ? '#f87171' : '#ef4444'} />
+                                </View>
+                              )}
+                            </View>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }
+                  })()}
 
                 {/* AI ASSISTANT WIDGET - NEW - Hide on iPad landscape and when auto-timer is active */}
                 {(!isTablet || (isTablet && isPortrait)) && shouldShowNormalWidgets && (

@@ -22,6 +22,8 @@ export interface Job {
     type: 'hourly' | 'monthly' | 'annual';
     amount: number;
     currency: string;
+    overtimeEnabled?: boolean;
+    overtimeRate?: number;
   };
   schedule?: {
     enabled?: boolean; // Enable/disable schedule functionality
