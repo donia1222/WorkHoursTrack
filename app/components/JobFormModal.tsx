@@ -4200,17 +4200,49 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                         {t('job_form.auto_timer.mode_background_description')}
                       </Text>
     
-                               <Text style={styles.modeOptionTitle}>🌍 {t('job_form.auto_timer.mode_full_background_title')}</Text>
-                          <Text style={styles.modeOptionDescription}>
-                        {t('job_form.auto_timer.mode_full_background_description')}
-                      </Text>
-                                   <Text style={styles.modeOptionDetails}>
-                        {t('job_form.auto_timer.mode_full_background_details')}
+                     <Text style={styles.modeOptionDetails}>
+                        {t('job_form.auto_timer.mode_background_details')}
                       </Text>
                     </View>
                   </TouchableOpacity>
 
-
+       <TouchableOpacity 
+                    style={[
+                      styles.modeOption, 
+                      selectedAutoTimerMode === 'full-background' && styles.modeOptionSelected
+                    ]}
+                    onPress={() => handleModeSelection('full-background')}
+                  >
+                    <View style={styles.modeOptionContent}>
+                      <View style={styles.modeOptionHeader}>
+                        <Text style={styles.modeOptionIcon}>🌍</Text>
+                        <Text style={styles.modeOptionTitle}>{t('job_form.auto_timer.mode_full_background_title')}</Text>
+                        <View style={[
+                          styles.radioButton,
+                          selectedAutoTimerMode === 'full-background' && styles.radioButtonSelected
+                        ]}>
+                          {selectedAutoTimerMode === 'full-background' && (
+                            <View style={styles.radioButtonInner} />
+                          )}
+                        </View>
+                      </View>
+                      <Text style={styles.modeOptionDescription}>
+                        {t('job_form.auto_timer.mode_full_background_description')}
+                      </Text>
+                      <Text style={styles.modeOptionDetails}>
+                        {t('job_form.auto_timer.mode_full_background_details')}
+                      </Text>
+                      {selectedAutoTimerMode === 'full-background' && !hasBackgroundPermission && (
+                        <View style={styles.permissionWarning}>
+                          <IconSymbol size={16} name="exclamationmark.triangle" color={colors.warning} />
+                          <Text style={styles.permissionWarningText}>
+                            {t('job_form.auto_timer.permissions_pending_warning')}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                  
                 </View>
               )}
           
@@ -4321,7 +4353,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   onPress={() => {
                     const currentValue = formData.autoTimer?.geofenceRadius || 50;
                     // Si está en modo full-background, el mínimo es 50m, sino 25m
-                    const minValue = selectedAutoTimerMode === 'full-background' ? 50 : 35;
+                    const minValue = selectedAutoTimerMode === 'full-background' ? 50 : 25;
                     const newValue = Math.max(minValue, currentValue - 5);
                     updateNestedData('autoTimer', 'geofenceRadius', newValue);
                   }}
