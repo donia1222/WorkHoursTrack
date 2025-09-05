@@ -450,6 +450,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
       shadowRadius: 4,
       elevation: 3,
     },
+    
     hoursText: {
       fontSize: 12,
       color: colors.textSecondary,
