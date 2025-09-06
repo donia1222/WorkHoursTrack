@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MapView, { Marker, Circle } from 'react-native-maps';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, Modal, Dimensions, Switch, InteractionManager, useWindowDimensions } from 'react-native';
 import * as Location from 'expo-location';
+import Svg, { Circle as SvgCircle } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming, Easing, runOnJS } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -4250,26 +4251,27 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           gap: isTablet ? 28 : (isSmallScreen ? 12 : 20),
                           height: isTablet ? 160 : (isSmallScreen ? 120 : 140),
                         }}>
-                          {/* TOTAL HOURS WIDGET - BIG */}
+                          {/* TOTAL HOURS WIDGET - COMPACT */}
                           {(() => {
                             const job = jobs[0];
                             const hasHourlySalary = job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.amount > 0;
+                            const expectedHours = 160; // Standard monthly hours
+                            const progressPercentage = Math.min((monthlyTotalHours / expectedHours) * 100, 100);
                             
                             return (
                               <TouchableOpacity
                                 style={{
                                   flex: 1,
-                                  borderRadius: isTablet ? 28 : (isSmallScreen ? 20 : 24),
-                                  padding: isTablet ? 22 : (isSmallScreen ? 12 : 18),
-                                  backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(248, 113, 113, 0.18)',
-                                  backdropFilter: 'blur(20px)',
-                                  borderWidth: 1.5,
-                                  borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
-                                  shadowColor: '#ef4444',
-                                  shadowOffset: { width: 0, height: 4 },
-                                  shadowOpacity: 0.15,
-                                  shadowRadius: 20,
-                                  elevation: 5,
+                                  borderRadius: isTablet ? 20 : 16,
+                                  padding: isTablet ? 16 : 14,
+                                  backgroundColor: isDark ? 'rgba(254, 226, 226, 0.08)' : 'rgba(254, 226, 226, 0.95)',
+                                  borderWidth: 1,
+                                  borderColor: isDark ? 'rgba(252, 165, 165, 0.2)' : 'rgba(252, 165, 165, 0.3)',
+                                  shadowColor: '#000',
+                                  shadowOffset: { width: 0, height: 2 },
+                                  shadowOpacity: 0.05,
+                                  shadowRadius: 8,
+                                  elevation: 2,
                                 }}
                                 onPress={() => {
                                   triggerHaptic('light');
@@ -4279,86 +4281,108 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                     navigateTo('reports');
                                   }
                                 }}
-                                activeOpacity={0.9}
+                                activeOpacity={0.8}
                               >
-                                <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
-                                  {isTablet && !hasHourlySalary && (
-                                    <View style={{
-                                      backgroundColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.2)',
-                                      borderRadius: 20,
-                                      padding: 16,
-                                      marginRight: 20,
-                                    }}>
-                                      <IconSymbol size={36} name="clock.fill" color={isDark ? '#f87171' : '#ef4444'} />
+                                <View style={{ flex: 1 }}>
+                                  <Text style={{
+                                    fontSize: isTablet ? 15 : 13,
+                                    fontWeight: '600',
+                                    color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#991b1b',
+                                    marginBottom: 8,
+                                      marginTop: isTablet ? 8 : 8,
+                                  }}>{t('maps.total_hours')}</Text>
+                                  
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <View style={{ flex: 1 }}>
+                                      <Text style={{
+                                        fontSize: isTablet ? 26 : 22,
+                                        fontWeight: '700',
+                                        color: isDark ? '#4ade80' : '#16a34a',
+                                        marginBottom: 2,
+                                      }}>
+                                        {formatHoursForDisplay(monthlyTotalHours)}
+                                      </Text>
+                                      {hasHourlySalary && (() => {
+                                        const totalEarnings = monthlyTotalHours * (job?.salary?.amount || 0);
+                                        const currency = job?.salary?.currency || 'EUR';
+                                        const currencySymbol = currency === 'EUR' ? '€' : 
+                                                             currency === 'USD' ? '$' : 
+                                                             currency === 'GBP' ? '£' : 
+                                                             currency === 'CHF' ? 'CHF' : currency;
+                                        return (
+                                          <Text style={{
+                                            fontSize: isTablet ? 15 : 14,
+                                            fontWeight: '600',
+                                            color: isDark ? '#fbbf24' : '#f59e0b',
+                                          }}>
+                                            {currencySymbol} {totalEarnings.toFixed(2)}
+                                          </Text>
+                                        );
+                                      })()}
                                     </View>
-                                  )}
-                                  <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
-                                    <Text style={{
-                                      fontSize: isTablet ? 21 : 16,
-                                      fontWeight: '600',
-                                      color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#991b1b',
-                                      marginBottom: isTablet ? 6 : 8,
-                                    }}>{t('maps.total_hours')}</Text>
-                                    <Text style={{
-                                      fontSize: isTablet ? 31 : (isSmallScreen ? 20 : 21),
-                                      fontWeight: '600',
-                                      color: isDark ? '#4ade80' : '#16a34a',
+                                    
+                                    {/* Mini circular progress */}
+                                    <View style={{
+                                      width: isTablet ? 50 : 45,
+                                      height: isTablet ? 50 : 45,
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
                                     }}>
-                                      {formatHoursForDisplay(monthlyTotalHours)}
-                                    </Text>
-                                    {hasHourlySalary && (() => {
-                                      const totalEarnings = monthlyTotalHours * (job?.salary?.amount || 0);
-                                      const currency = job?.salary?.currency || 'EUR';
-                                      const currencySymbol = currency === 'EUR' ? '€' : 
-                                                           currency === 'USD' ? '$' : 
-                                                           currency === 'GBP' ? '£' : currency;
-                                      return (
-                                        <Text style={{
-                                          fontSize: isTablet ? 16 : (isSmallScreen ? 14 : 15),
-                                          fontWeight: '600',
-                                          color: isDark ? '#fbbf24' : '#f59e0b',
-                                          marginTop: 2,
-                                        }}>
-                                          {currencySymbol} {totalEarnings.toFixed(2)}
-                                        </Text>
-                                      );
-                                    })()}
-                                    <Text style={{
-                                      fontSize: 12,
-                                      color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
-                                      marginTop: 4,
-                                    }}>{getMonthName(new Date())}</Text>
+                                      <Svg width={isTablet ? 50 : 45} height={isTablet ? 50 : 45} style={{ position: 'absolute' }}>
+                                        <SvgCircle
+                                          cx={(isTablet ? 50 : 45) / 2}
+                                          cy={(isTablet ? 50 : 45) / 2}
+                                          r={(isTablet ? 50 : 45) / 2 - 3}
+                                          stroke={isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}
+                                          strokeWidth={3}
+                                          fill="none"
+                                        />
+                                        <SvgCircle
+                                          cx={(isTablet ? 50 : 45) / 2}
+                                          cy={(isTablet ? 50 : 45) / 2}
+                                          r={(isTablet ? 50 : 45) / 2 - 3}
+                                          stroke={isDark ? '#4ade80' : '#16a34a'}
+                                          strokeWidth={3}
+                                          fill="none"
+                                          strokeDasharray={`${(progressPercentage / 100) * Math.PI * ((isTablet ? 50 : 45) - 6)} ${Math.PI * ((isTablet ? 50 : 45) - 6)}`}
+                                          strokeLinecap="round"
+                                          transform={`rotate(-90 ${(isTablet ? 50 : 45) / 2} ${(isTablet ? 50 : 45) / 2})`}
+                                        />
+                                      </Svg>
+                                      <Text style={{
+                                        fontSize: isTablet ? 12 : 11,
+                                        fontWeight: '700',
+                                        color: isDark ? '#4ade80' : '#16a34a',
+                                      }}>
+                                        {Math.round(progressPercentage)}%
+                                      </Text>
+                                    </View>
                                   </View>
-                                  {!isTablet && !hasHourlySalary && (
-                                    <View style={{
-                                      backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                                      borderRadius: 12,
-                                      padding: 8,
-                                      marginTop: 8,
-                                    }}>
-                                      <IconSymbol size={20} name="clock.fill" color={isDark ? '#f87171' : '#ef4444'} />
-                                    </View>
-                                  )}
+                                  
+                                  <Text style={{
+                                    fontSize: 11,
+                                    color: isDark ? 'rgba(255, 255, 255, 0.4)' : '#9ca3af',
+                                    marginTop: 6,
+                                  }}>{getMonthName(new Date())}</Text>
                                 </View>
                               </TouchableOpacity>
                             );
                           })()}
 
-                          {/* OVERTIME WIDGET - BIG */}
+                          {/* OVERTIME WIDGET - COMPACT */}
                           <TouchableOpacity
                             style={{
                               flex: 1,
-                              borderRadius: isTablet ? 28 : (isSmallScreen ? 20 : 24),
-                              padding: isTablet ? 22 : (isSmallScreen ? 12 : 18),
-                              backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(248, 113, 113, 0.18)',
-                              backdropFilter: 'blur(20px)',
-                              borderWidth: 1.5,
-                              borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
-                              shadowColor: '#ef4444',
-                              shadowOffset: { width: 0, height: 4 },
-                              shadowOpacity: 0.15,
-                              shadowRadius: 20,
-                              elevation: 5,
+                              borderRadius: isTablet ? 20 : 16,
+                              padding: isTablet ? 16 : 14,
+                              backgroundColor: isDark ? 'rgba(254, 226, 226, 0.08)' : 'rgba(254, 226, 226, 0.95)',
+                              borderWidth: 1,
+                              borderColor: isDark ? 'rgba(252, 165, 165, 0.2)' : 'rgba(252, 165, 165, 0.3)',
+                              shadowColor: '#000',
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.05,
+                              shadowRadius: 8,
+                              elevation: 2,
                             }}
                             onPress={() => {
                               triggerHaptic('light');
@@ -4370,78 +4394,91 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                 navigateTo('reports');
                               }
                             }}
-                            activeOpacity={0.9}
+                            activeOpacity={0.8}
                           >
-                            <View style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: 'center', justifyContent: isTablet ? 'space-between' : 'center', flex: 1 }}>
-                              {isTablet && (() => {
-                                const job = jobs[0];
-                                const hasOvertimeRate = job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.overtimeEnabled && job.salary.overtimeRate && job.salary.overtimeRate > 0;
-                                return !hasOvertimeRate; // Only show icon if NO overtime rate
-                              })() && (
-                                <View style={{
-                                  backgroundColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.2)',
-                                  borderRadius: 20,
-                                  padding: 16,
-                                  marginRight: 20,
-                                }}>
-                                  <IconSymbol size={36} name="clock.badge.exclamationmark" color={isDark ? '#f87171' : '#ef4444'} />
+                            <View style={{ flex: 1 }}>
+                              <Text style={{
+                                fontSize: isTablet ? 15 : 13,
+                                fontWeight: '600',
+                                color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#991b1b',
+                                marginBottom: 8,
+                                     marginTop: isTablet ? 8 : 8,
+                              }}>{t('maps.overtime')}</Text>
+                              
+                              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <View style={{ flex: 1 }}>
+                                  <Text style={{
+                                    fontSize: isTablet ? 26 : 22,
+                                    fontWeight: '700',
+                                    color: isDark ? '#4ade80' : '#16a34a',
+                                    marginBottom: 2,
+                               
+                                  }}>
+                                    {monthlyOvertime.toFixed(1)} h
+                                  </Text>
+                                  {(() => {
+                                    const job = jobs[0];
+                                    if (job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.overtimeEnabled && job.salary.overtimeRate && job.salary.overtimeRate > 0) {
+                                      const overtimeEarnings = monthlyOvertime * job.salary.overtimeRate;
+                                      const currency = job.salary.currency || 'EUR';
+                                      const currencySymbol = currency === 'EUR' ? '€' : 
+                                                           currency === 'USD' ? '$' : 
+                                                           currency === 'GBP' ? '£' : 
+                                                           currency === 'CHF' ? 'CHF' : currency;
+                                      return (
+                                        <Text style={{
+                                          fontSize: isTablet ? 15 : 14,
+                                          fontWeight: '600',
+                                          color: isDark ? '#fbbf24' : '#f59e0b',
+                                        }}>
+                                          {currencySymbol} {overtimeEarnings.toFixed(2)}
+                                        </Text>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
                                 </View>
-                              )}
-                              <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
-                                <Text style={{
-                                  fontSize: isTablet ? 21 : 16,
-                                  fontWeight: '600',
-                                  color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#991b1b',
-                                  marginBottom: isTablet ? 6 : 8,
-                                }}>{t('maps.overtime')}</Text>
-                                <Text style={{
-                                  fontSize: isTablet ? 31 : (isSmallScreen ? 20 : 21),
-                                  fontWeight: '600',
-                                  color: isDark ? '#4ade80' : '#16a34a',
+                                
+                                {/* Mini bar chart for overtime */}
+                                <View style={{
+                                  width: isTablet ? 50 : 45,
+                                  height: isTablet ? 50 : 45,
+                                  alignItems: 'center',
+                                  justifyContent: 'flex-end',
+                                  paddingBottom: 2,
                                 }}>
-                                  {monthlyOvertime.toFixed(1)} {t('job_selector.time_periods.hour')}
-                                </Text>
-                                {(() => {
-                                  const job = jobs[0];
-                                  if (job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.overtimeEnabled && job.salary.overtimeRate && job.salary.overtimeRate > 0) {
-                                    const overtimeEarnings = monthlyOvertime * job.salary.overtimeRate;
-                                    const currency = job.salary.currency || 'EUR';
-                                    const currencySymbol = currency === 'EUR' ? '€' : 
-                                                         currency === 'USD' ? '$' : 
-                                                         currency === 'GBP' ? '£' : currency;
-                                    return (
-                                      <Text style={{
-                                        fontSize: isTablet ? 16 : (isSmallScreen ? 14 : 15),
-                                        fontWeight: '600',
-                                        color: isDark ? '#fbbf24' : '#f59e0b',
-                                        marginTop: 2,
-                                      }}>
-                                        {currencySymbol} {overtimeEarnings.toFixed(2)}
-                                      </Text>
-                                    );
-                                  }
-                                  return null;
-                                })()}
-                                <Text style={{
-                                  fontSize: 12,
-                                  color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#9ca3af',
-                                  marginTop: 4,
-                                }}>{getMonthName(new Date())}</Text>
+                                  <View style={{
+                                    width: '100%',
+                                    height: '80%',
+                                    flexDirection: 'row',
+                                    alignItems: 'flex-end',
+                                    justifyContent: 'space-evenly',
+                                  }}>
+                                    {[0.3, 0.6, 0.4, 0.8, 1].map((height, index) => (
+                                      <View
+                                        key={index}
+                                        style={{
+                                          width: isTablet ? 6 : 5,
+                                          height: `${(monthlyOvertime > 0 ? height : 0.1) * 100}%`,
+                                          backgroundColor: index === 4 ? (isDark ? '#f87171' : '#ef4444') : (isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'),
+                                          borderRadius: 2,
+                                        }}
+                                      />
+                                    ))}
+                                  </View>
+                                  <Text style={{
+                                    fontSize: 9,
+                                    color: isDark ? 'rgba(255, 255, 255, 0.4)' : '#9ca3af',
+                                    marginTop: 2,
+                                  }}>+{Math.round((monthlyOvertime / monthlyTotalHours) * 100)}%</Text>
+                                </View>
                               </View>
-                              {!isTablet && (() => {
-                                const job = jobs[0];
-                                const hasOvertimeRate = job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.overtimeEnabled && job.salary.overtimeRate && job.salary.overtimeRate > 0;
-                                return !hasOvertimeRate; // Only show icon if NO overtime rate
-                              })() && (
-                                <View style={{
-                                  backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                                  borderRadius: 12,
-                                  padding: 8,
-                                  marginTop: 8,
-                                }}>
-                                  <IconSymbol size={20} name="clock.badge.exclamationmark" color={isDark ? '#f87171' : '#ef4444'} />
-                                </View>
-                              )}
+                              
+                              <Text style={{
+                                fontSize: 11,
+                                color: isDark ? 'rgba(255, 255, 255, 0.4)' : '#9ca3af',
+                                marginTop: 6,
+                              }}>{getMonthName(new Date())}</Text>
                             </View>
                           </TouchableOpacity>
                         </View>
