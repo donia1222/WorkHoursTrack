@@ -10,11 +10,12 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Job, StoredActiveSession } from '../types/WorkTypes';
+import { Job, StoredActiveSession, WorkDay } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import JobFormModal from '../components/JobFormModal';
 import JobStatisticsModal from '../components/JobStatisticsModal';
 import JobSelectorModal from '../components/JobSelectorModal';
+import WorkDayModal from '../components/WorkDayModal';
 import { useNavigation } from '../context/NavigationContext';
 import { Theme } from '../constants/Theme';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
@@ -1276,6 +1277,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [showJobCardsModal, setShowJobCardsModal] = useState(false);
   const [showSalaryStatsModal, setShowSalaryStatsModal] = useState(false);
   const [showOvertimeStatsModal, setShowOvertimeStatsModal] = useState(false);
+  const [showWorkDayModal, setShowWorkDayModal] = useState(false);
+  const [selectedDateForEdit, setSelectedDateForEdit] = useState<string>('');
+  const [editingWorkDay, setEditingWorkDay] = useState<any>(undefined);
   const [shouldShowMiniCalendar, setShouldShowMiniCalendar] = useState(true);
   const [wasJobCardsModalOpen, setWasJobCardsModalOpen] = useState(false);
   const [shouldReopenJobCardsModal, setShouldReopenJobCardsModal] = useState(false);
@@ -1742,6 +1746,107 @@ export default function MapLocation({ location, onNavigate }: Props) {
     newWeekStart.setDate(newWeekStart.getDate() + (directionValue * 7));
     setCurrentWeekStart(newWeekStart);
     loadMiniCalendarData(newWeekStart, isIPadPortrait);
+  };
+
+  // Handle day press in mini calendar to open WorkDayModal
+  const handleMiniCalendarDayPress = async (dayData: any) => {
+    try {
+      console.log('📅 Mini calendar day pressed:', dayData);
+      
+      // Generate date string in YYYY-MM-DD format
+      let dateString: string;
+      if (dayData.date && dayData.date instanceof Date) {
+        // Use the date from dayData
+        const date = dayData.date;
+        dateString = date.getFullYear() + '-' + 
+                    String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(date.getDate()).padStart(2, '0');
+      } else {
+        // Fallback to today
+        const today = new Date();
+        dateString = today.getFullYear() + '-' + 
+                    String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(today.getDate()).padStart(2, '0');
+      }
+      
+      console.log('📅 Date string generated:', dateString);
+      setSelectedDateForEdit(dateString);
+      
+      // Use existing workDay from dayData if available, otherwise load from service
+      let existingWorkDay = dayData.workDay || undefined;
+      if (!existingWorkDay) {
+        const workDays = await JobService.getWorkDays();
+        existingWorkDay = workDays.find((wd: WorkDay) => wd.date === dateString);
+      }
+      
+      console.log('📅 Existing work day:', existingWorkDay);
+      setEditingWorkDay(existingWorkDay);
+      
+      setShowWorkDayModal(true);
+      console.log('📅 Work day modal opened');
+      
+    } catch (error) {
+      console.error('❌ Error in handleMiniCalendarDayPress:', error);
+      Alert.alert(t('common.error'), t('common.generic_error'));
+    }
+  };
+
+  // Handle saving work day from modal
+  const handleWorkDayModalSave = async (workDayData: Omit<WorkDay, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      console.log('💾 MapLocation: Saving work day:', workDayData);
+      
+      if (editingWorkDay) {
+        await JobService.updateWorkDay(editingWorkDay.id, workDayData);
+      } else {
+        await JobService.addWorkDay(workDayData);
+      }
+      
+      // Reload jobs data to refresh the mini calendar
+      loadJobs();
+      
+      // Reload mini calendar data to show updated information
+      loadMiniCalendarData(currentWeekStart, isIPadPortrait);
+      
+      // Sync with widget after saving
+      await WidgetSyncService.syncCalendarToWidget();
+      
+      setShowWorkDayModal(false);
+      console.log('✅ MapLocation: Work day saved and mini calendar updated');
+      
+    } catch (error) {
+      console.error('❌ MapLocation: Error saving work day:', error);
+      Alert.alert(t('common.error'), t('common.save_error'));
+    }
+  };
+
+  // Handle deleting work day from modal
+  const handleWorkDayModalDelete = async () => {
+    if (editingWorkDay) {
+      try {
+        console.log('🗑️ MapLocation: Deleting work day:', editingWorkDay.id);
+        
+        await JobService.deleteWorkDay(editingWorkDay.id);
+        
+        // Reload jobs data to refresh the mini calendar
+        loadJobs();
+        
+        // Reload mini calendar data to show updated information
+        loadMiniCalendarData(currentWeekStart, isIPadPortrait);
+        
+        // Sync with widget after deleting
+        await WidgetSyncService.syncCalendarToWidget();
+        
+        setShowWorkDayModal(false);
+        console.log('✅ MapLocation: Work day deleted and mini calendar updated');
+        
+      } catch (error) {
+        console.error('❌ MapLocation: Error deleting work day:', error);
+        Alert.alert(t('common.error'), t('common.delete_error'));
+      }
+    } else {
+      setShowWorkDayModal(false);
+    }
   };
 
   // Gesture handler for calendar swipe
@@ -3486,7 +3591,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             }
                             
                             return (
-                              <View
+                              <TouchableOpacity
                                 key={i}
                                 style={{
                                   flex: 1,
@@ -3503,6 +3608,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                   justifyContent: 'center',
                                   alignItems: 'center',
                                 }}
+                                onPress={() => handleMiniCalendarDayPress(dayData)}
+                                activeOpacity={0.7}
                               >
                                 <View style={{ alignItems: 'center' }}>
                                   
@@ -3554,7 +3661,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                   )}
                                 </View>
                        
-                              </View>
+                              </TouchableOpacity>
 
                               
                             );
@@ -4965,6 +5072,19 @@ export default function MapLocation({ location, onNavigate }: Props) {
           }}
           job={jobs[0]}
           monthlyOvertime={monthlyOvertime}
+        />
+      )}
+
+      {/* WorkDayModal for mini calendar day editing */}
+      {showWorkDayModal && (
+        <WorkDayModal
+          visible={showWorkDayModal}
+          onClose={() => setShowWorkDayModal(false)}
+          date={selectedDateForEdit}
+          existingWorkDay={editingWorkDay}
+          jobs={jobs}
+          onSave={handleWorkDayModalSave}
+          onDelete={editingWorkDay ? handleWorkDayModalDelete : undefined}
         />
       )}
     </View>
