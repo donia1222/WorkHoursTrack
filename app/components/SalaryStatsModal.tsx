@@ -403,6 +403,18 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
               ]}>
                 {getCurrencySymbol()}{calculateTotalEarnings().toFixed(2)}
               </Text>
+                         <TouchableOpacity
+              style={[
+                styles.actionButtone,
+                { backgroundColor: isDark ? '#1e40af' : '#3b82f6' }
+              ]}
+              onPress={onEditSalary}
+            >
+  <Ionicons name="settings" size={14} color="#ffffff" />
+              <Text style={styles.buttonTexte}>
+                {t('jobs.edit_salary')}
+              </Text>
+            </TouchableOpacity>
             </LinearGradient>
 
             <View style={[
@@ -411,7 +423,7 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
             ]}>
               <Ionicons 
                 name="time" 
-                size={20} 
+                size={28} 
                 color={isDark ? '#4ade80' : '#16a34a'} 
                 style={{ marginBottom: 4 }}
               />
@@ -479,18 +491,7 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
 
           {/* Action Buttons */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[
-                styles.actionButton,
-                { backgroundColor: isDark ? '#1e40af' : '#3b82f6' }
-              ]}
-              onPress={onEditSalary}
-            >
-              <Ionicons name="settings" size={20} color="#ffffff" />
-              <Text style={styles.buttonText}>
-                {t('jobs.edit_salary')}
-              </Text>
-            </TouchableOpacity>
+ 
 
             <TouchableOpacity
               style={[
@@ -598,5 +599,22 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  actionButtone: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 8,
+
+  },
+    buttonTexte: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '600',
+    
   },
 });

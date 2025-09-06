@@ -1808,6 +1808,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
       // Reload mini calendar data to show updated information
       loadMiniCalendarData(currentWeekStart, isIPadPortrait);
       
+      // Update monthly statistics (total hours and overtime)
+      const overtime = await calculateMonthlyOvertime();
+      const totalHours = await calculateMonthlyTotalHours();
+      setMonthlyOvertime(overtime);
+      setMonthlyTotalHours(totalHours);
+      console.log('📊 MapLocation: Updated monthly stats - Hours:', totalHours, 'Overtime:', overtime);
+      
       // Sync with widget after saving
       await WidgetSyncService.syncCalendarToWidget();
       
@@ -1833,6 +1840,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
         
         // Reload mini calendar data to show updated information
         loadMiniCalendarData(currentWeekStart, isIPadPortrait);
+        
+        // Update monthly statistics (total hours and overtime)
+        const overtime = await calculateMonthlyOvertime();
+        const totalHours = await calculateMonthlyTotalHours();
+        setMonthlyOvertime(overtime);
+        setMonthlyTotalHours(totalHours);
+        console.log('📊 MapLocation: Updated monthly stats after delete - Hours:', totalHours, 'Overtime:', overtime);
         
         // Sync with widget after deleting
         await WidgetSyncService.syncCalendarToWidget();

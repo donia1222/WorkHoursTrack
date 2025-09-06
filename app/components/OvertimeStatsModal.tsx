@@ -376,6 +376,18 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
               ]}>
                 {getCurrencySymbol()}{calculateOvertimeEarnings().toFixed(2)}
               </Text>
+                          <TouchableOpacity
+              style={[
+                styles.actionButtone,
+                { backgroundColor: isDark ? '#f59e0b' : '#fbbf24' }
+              ]}
+              onPress={onEditSalary}
+            >
+              <Ionicons name="settings" size={14} color="#ffffff" />
+              <Text style={styles.buttonTexte}>
+                {t('jobs.edit_salary')}
+              </Text>
+            </TouchableOpacity>
             </LinearGradient>
 
             <View style={[
@@ -384,7 +396,7 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
             ]}>
               <Ionicons 
                 name="time" 
-                size={20} 
+                size={28} 
                 color={isDark ? '#fbbf24' : '#f59e0b'} 
                 style={{ marginBottom: 4 }}
               />
@@ -451,18 +463,7 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
 
           {/* Action Buttons */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[
-                styles.actionButton,
-                { backgroundColor: isDark ? '#f59e0b' : '#fbbf24' }
-              ]}
-              onPress={onEditSalary}
-            >
-              <Ionicons name="settings" size={20} color="#ffffff" />
-              <Text style={styles.buttonText}>
-                {t('jobs.edit_salary')}
-              </Text>
-            </TouchableOpacity>
+
 
             <TouchableOpacity
               style={[
@@ -570,5 +571,22 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
+  },
+    actionButtone: {
+    flex: 1,
+
+    paddingVertical: 4,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+    buttonTexte: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '600',
+    
   },
 });
