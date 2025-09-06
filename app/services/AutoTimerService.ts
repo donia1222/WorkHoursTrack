@@ -1634,7 +1634,7 @@ class AutoTimerService {
    */
   private async shouldSendAutoTimerNotification(): Promise<boolean> {
     try {
-      const notificationSettings = await AsyncStorage.getItem('@notification_settings');
+      const notificationSettings = await AsyncStorage.getItem('notification_settings');
       if (notificationSettings) {
         const settings = JSON.parse(notificationSettings);
         // Check if general notifications AND auto-timer notifications are enabled
