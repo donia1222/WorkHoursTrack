@@ -1,4 +1,5 @@
 {
+  "locale_code": "ru-RU",
   "common": {
     "no_jobs_title": "Работы не настроены",
     "no_jobs_message": "Вам необходимо создать хотя бы одну работу, прежде чем использовать таймер, календарь или отчеты. Начните с настройки вашей первой работы.",
@@ -348,6 +349,13 @@
     "overtime_hours": "{{hours}}ч сверхурочных",
     "job_distribution": "Распределение работ",
     "recent_activity": "Недавняя активность",
+    "salary_statistics": "Статистика зарплаты",
+    "monthly_earnings": "Месячные доходы",
+    "weekly_hours": "Недельные часы",
+    "monthly_comparison": "Месячное сравнение",
+    "hours_breakdown": "Разбивка часов",
+    "regular_hours": "Обычные часы",
+    "export_report": "Экспорт отчета",
     "delete_work_day": {
       "title": "Удалить рабочий день",
       "message": "Вы уверены, что хотите удалить рабочий день {{date}} для {{jobName}}?",
@@ -716,6 +724,9 @@
       "statistics": "Статистика",
       "settings": "Настройки"
     }
+  },
+  "jobs": {
+    "edit_salary": "Изменить зарплату"
   },
   "job_form": {
     "title_edit": "Редактировать работу",

@@ -1,4 +1,5 @@
 {
+  "locale_code": "es-ES",
   "common": {
     "no_jobs_title": "Sin Trabajos Configurados",
     "no_jobs_message": "Necesitas crear al menos un trabajo antes de poder usar el cronómetro, calendario o reportes. Comienza configurando tu primer trabajo.",
@@ -398,6 +399,14 @@
     "salary_calculation": "CÁLCULO SALARIAL",
     "calculation_details": "DETALLES DE CÁLCULO",
     "rate": "Tarifa",
+    "salary_statistics": "Estadísticas de Salario",
+    "monthly_earnings": "Ingresos Mensuales",
+    "weekly_hours": "Horas Semanales",
+    "monthly_comparison": "Comparación Mensual",
+    "hours_breakdown": "Desglose de Horas",
+    "regular_hours": "Horas Regulares",
+    "overtime": "Horas Extra",
+    "export_report": "Exportar Reporte",
     "delete_work_day": {
       "title": "Eliminar Día de Trabajo",
       "message": "¿Estás seguro de que quieres eliminar el día de trabajo del {{date}} de {{jobName}}?",
@@ -760,6 +769,9 @@
       "statistics": "Estadísticas",
       "settings": "Ajustes"
     }
+  },
+  "jobs": {
+    "edit_salary": "Editar Salario"
   },
   "job_form": {
     "title_edit": "Editar Trabajo",

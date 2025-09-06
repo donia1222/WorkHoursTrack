@@ -1,4 +1,5 @@
 {
+  "locale_code": "ja-JP",
   "common": {
     "no_jobs_title": "仕事が設定されていません",
     "no_jobs_message": "タイマー、カレンダー、レポートを使用するには、最低1つの仕事を作成する必要があります。最初の仕事を設定することから始めましょう。",
@@ -347,6 +348,14 @@
     "overtime_hours": "{{hours}}h残業",
     "job_distribution": "仕事の分布",
     "recent_activity": "最近の活動",
+    "salary_statistics": "給与統計",
+    "monthly_earnings": "月収",
+    "weekly_hours": "週間時間",
+    "monthly_comparison": "月間比較",
+    "hours_breakdown": "時間内訳",
+    "regular_hours": "通常時間",
+    "overtime": "残業時間",
+    "export_report": "レポート出力",
     "delete_work_day": {
       "title": "勤務日を削除",
       "message": "{{jobName}}の{{date}}の勤務日を削除してもよろしいですか？",
@@ -715,6 +724,9 @@
       "statistics": "統計",
       "settings": "設定"
     }
+  },
+  "jobs": {
+    "edit_salary": "給与を編集"
   },
   "job_form": {
     "title_edit": "仕事を編集",

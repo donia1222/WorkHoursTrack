@@ -1,4 +1,5 @@
 {
+  "locale_code": "it-IT",
   "common": {
     "no_jobs_title": "Nessun Lavoro Configurato",
     "no_jobs_message": "Devi creare almeno un lavoro prima di poter utilizzare il timer, il calendario o i report. Inizia configurando il tuo primo lavoro.",
@@ -350,6 +351,14 @@
     "overtime_hours": "{{hours}}h di straordinario",
     "job_distribution": "Distribuzione per lavoro",
     "recent_activity": "Attività recente",
+    "salary_statistics": "Statistiche Stipendio",
+    "monthly_earnings": "Guadagni Mensili",
+    "weekly_hours": "Ore Settimanali",
+    "monthly_comparison": "Confronto Mensile",
+    "hours_breakdown": "Ripartizione Ore",
+    "regular_hours": "Ore Regolari",
+    "overtime": "Straordinario", 
+    "export_report": "Esporta Rapporto",
     "delete_work_day": {
       "title": "Elimina giornata lavorativa",
       "message": "Sei sicuro di voler eliminare la giornata lavorativa del {{date}} per {{jobName}}?",
@@ -576,6 +585,9 @@
       "statistics": "Statistiche",
       "settings": "Impostazioni"
     }
+  },
+  "jobs": {
+    "edit_salary": "Modifica Stipendio"
   },
   "job_form": {
     "title_edit": "Modifica lavoro",

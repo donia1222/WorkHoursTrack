@@ -1,4 +1,5 @@
 {
+  "locale_code": "en-US",
   "common": {
     "no_jobs_title": "No Jobs Configured",
     "no_jobs_message": "You need to create at least one job before you can use the timer, calendar, or reports. Start by setting up your first job.",
@@ -434,6 +435,14 @@
     "salary_calculation": "SALARY CALCULATION",
     "calculation_details": "CALCULATION DETAILS",
     "rate": "Rate",
+    "salary_statistics": "Salary Statistics",
+    "monthly_earnings": "Monthly Earnings",
+    "weekly_hours": "Weekly Hours",
+    "monthly_comparison": "Monthly Comparison",
+    "hours_breakdown": "Hours Breakdown",
+    "regular_hours": "Regular Hours",
+    "overtime": "Overtime",
+    "export_report": "Export Report",
     "delete_work_day": {
       "title": "Delete Work Day",
       "message": "Are you sure you want to delete the work day from {{date}} for {{jobName}}?",
@@ -731,6 +740,9 @@
       "statistics": "Statistics",
       "settings": "Settings"
     }
+  },
+  "jobs": {
+    "edit_salary": "Edit Salary"
   },
   "job_form": {
     "title_edit": "Edit Job",

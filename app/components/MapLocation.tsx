@@ -28,6 +28,8 @@ import { JobCardsSwiper } from './JobCardsSwiper';
 import { useFocusEffect } from '@react-navigation/native';
 import WidgetSyncService from '../services/WidgetSyncService';
 import MiniMapWidget from './MiniMapWidget';
+import { SalaryStatsModal } from './SalaryStatsModal';
+import { OvertimeStatsModal } from './OvertimeStatsModal';
 import { logScreenDetection } from '../config/logging';
 
 
@@ -1272,6 +1274,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [miniCalendarData, setMiniCalendarData] = useState<any[]>([]);
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
   const [showJobCardsModal, setShowJobCardsModal] = useState(false);
+  const [showSalaryStatsModal, setShowSalaryStatsModal] = useState(false);
+  const [showOvertimeStatsModal, setShowOvertimeStatsModal] = useState(false);
   const [shouldShowMiniCalendar, setShouldShowMiniCalendar] = useState(true);
   const [wasJobCardsModalOpen, setWasJobCardsModalOpen] = useState(false);
   const [shouldReopenJobCardsModal, setShouldReopenJobCardsModal] = useState(false);
@@ -3872,7 +3876,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                 {/* BOTTOM ROW - CONDITIONAL WIDGETS */}
                   {shouldShowNormalWidgets && (() => {
                     const job = jobs[0];
-                    const hasHourlySalary = job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.amount > 0;
+                    const hasHourlySalary = true; // Always show 2 big widgets instead of 3 small ones
                     
                     if (!hasHourlySalary) {
                       // NO HOURLY SALARY (or monthly/annual salary) - Show salary widget with smaller overtime/total hours widgets
@@ -4275,11 +4279,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                 }}
                                 onPress={() => {
                                   triggerHaptic('light');
-                                  if (hasHourlySalary && monthlyTotalHours > 0) {
-                                    handleEditCategory('financial');
-                                  } else {
-                                    navigateTo('reports');
-                                  }
+                                  setShowSalaryStatsModal(true);
                                 }}
                                 activeOpacity={0.8}
                               >
@@ -4386,13 +4386,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             }}
                             onPress={() => {
                               triggerHaptic('light');
-                              const job = jobs[0];
-                              const hasOvertimeRate = job?.salary?.enabled && job.salary.type === 'hourly' && job.salary.overtimeEnabled && job.salary.overtimeRate && job.salary.overtimeRate > 0;
-                              if (hasOvertimeRate && monthlyOvertime > 0) {
-                                handleEditCategory('financial');
-                              } else {
-                                navigateTo('reports');
-                              }
+                              setShowOvertimeStatsModal(true);
                             }}
                             activeOpacity={0.8}
                           >
@@ -4944,6 +4938,35 @@ export default function MapLocation({ location, onNavigate }: Props) {
         }}
         job={selectedJobForStats}
       />
+
+      {/* Salary Statistics Modal */}
+      {jobs.length > 0 && (
+        <SalaryStatsModal
+          visible={showSalaryStatsModal}
+          onClose={() => setShowSalaryStatsModal(false)}
+          onEditSalary={() => {
+            setShowSalaryStatsModal(false);
+            handleEditCategory('financial');
+          }}
+          job={jobs[0]}
+          monthlyTotalHours={monthlyTotalHours}
+          monthlyOvertime={monthlyOvertime}
+        />
+      )}
+
+      {/* Overtime Statistics Modal */}
+      {jobs.length > 0 && (
+        <OvertimeStatsModal
+          visible={showOvertimeStatsModal}
+          onClose={() => setShowOvertimeStatsModal(false)}
+          onEditSalary={() => {
+            setShowOvertimeStatsModal(false);
+            handleEditCategory('financial');
+          }}
+          job={jobs[0]}
+          monthlyOvertime={monthlyOvertime}
+        />
+      )}
     </View>
   );
 }

@@ -1,4 +1,5 @@
 {
+  "locale_code": "de-DE",
   "common": {
     "no_jobs_title": "Keine Jobs Konfiguriert",
     "no_jobs_message": "Sie müssen mindestens einen Job erstellen, bevor Sie den Timer, Kalender oder Berichte verwenden können. Beginnen Sie mit der Einrichtung Ihres ersten Jobs.",
@@ -392,6 +393,14 @@
     "net_hours_calculation": "({{hours}}h - {{breakHours}}h Pausen)",
     "saving": "Speichere...",
     "statistics_section": "Statistiken",
+    "salary_statistics": "Gehaltsstatistiken",
+    "monthly_earnings": "Monatliche Einnahmen",
+    "weekly_hours": "Wöchentliche Stunden",
+    "monthly_comparison": "Monatsvergleich",
+    "hours_breakdown": "Stundenaufteilung",
+    "regular_hours": "Reguläre Stunden",
+    "overtime": "Überstunden",
+    "export_report": "Bericht Exportieren",
     "delete_work_day": {
       "title": "Arbeitstag löschen",
       "message": "Sind Sie sicher, dass Sie den Arbeitstag vom {{date}} für {{jobName}} löschen möchten?",
@@ -400,7 +409,16 @@
       "delete": "Löschen"
     },
     "breakdown_by_job": "Aufschlüsselung nach Arbeit",
-    "recent_activity_section": "Letzte Aktivität"
+    "recent_activity_section": "Letzte Aktivität",
+    "total_earnings": "Gesamtverdienst",
+    "hours_worked": "Arbeitsstunden",
+    "extra_hours": "Überstunden",
+    "work_days": "Arbeitstage",
+    "days_worked": "Gearbeitete Tage",
+    "extra_earnings": "Zusatzverdienst",
+    "average_daily": "Täglich Durchschnitt",
+    "per_day": "pro Tag",
+    "days_with_overtime": "Tage mit Überstunden"
   },
   "calendar": {
     "title": "Mein Kalender",
@@ -543,6 +561,9 @@
       "statistics": "Statistiken",
       "settings": "Einstellungen"
     }
+  },
+  "jobs": {
+    "edit_salary": "Gehalt Bearbeiten"
   },
   "job_form": {
     "title_edit": "Arbeit bearbeiten",

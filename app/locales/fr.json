@@ -1,4 +1,5 @@
 {
+  "locale_code": "fr-FR",
   "common": {
     "no_jobs_title": "Aucun Emploi Configuré",
     "no_jobs_message": "Vous devez créer au moins un emploi avant de pouvoir utiliser le minuteur, le calendrier ou les rapports. Commencez par configurer votre premier emploi.",
@@ -343,6 +344,14 @@
     "overtime_hours": "{{hours}}h supplémentaires",
     "job_distribution": "Répartition par emploi",
     "recent_activity": "Activité récente",
+    "salary_statistics": "Statistiques de Salaire",
+    "monthly_earnings": "Revenus Mensuels",
+    "weekly_hours": "Heures Hebdomadaires",
+    "monthly_comparison": "Comparaison Mensuelle",
+    "hours_breakdown": "Répartition des Heures",
+    "regular_hours": "Heures Régulières", 
+    "overtime": "Heures Supplémentaires",
+    "export_report": "Exporter le Rapport",
     "delete_work_day": {
       "title": "Supprimer le jour de travail",
       "message": "Êtes-vous sûr de vouloir supprimer le jour de travail du {{date}} pour {{jobName}}?",
@@ -569,6 +578,9 @@
       "statistics": "Statistiques",
       "settings": "Paramètres"
     }
+  },
+  "jobs": {
+    "edit_salary": "Modifier le Salaire"
   },
   "job_form": {
     "title_edit": "Éditer l'emploi",

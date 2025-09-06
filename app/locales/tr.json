@@ -1,4 +1,5 @@
 {
+  "locale_code": "tr-TR",
   "common": {
     "no_jobs_title": "Yapılandırılmış İş Yok",
     "no_jobs_message": "Kronometreyi, takvimi veya raporları kullanabilmek için en az bir iş oluşturmanız gerekiyor. İlk işinizi yapılandırarak başlayın.",
@@ -413,6 +414,13 @@
     "saving": "Kaydediliyor...",
     "work": "İş",
     "statistics_section": "İstatistikler",
+    "salary_statistics": "Maaş İstatistikleri",
+    "monthly_earnings": "Aylık Kazanç",
+    "weekly_hours": "Haftalık Saatler",
+    "monthly_comparison": "Aylık Karşılaştırma",
+    "hours_breakdown": "Saat Dağılımı",
+    "regular_hours": "Normal Saatler",
+    "export_report": "Rapor Dışa Aktar",
     "delete_work_day": {
       "title": "Çalışma Gününü Sil",
       "message": "{{jobName}} için {{date}} tarihindeki çalışma gününü silmek istediğinizden emin misiniz?",
@@ -742,6 +750,9 @@
       "statistics": "İstatistikler",
       "settings": "Ayarlar"
     }
+  },
+  "jobs": {
+    "edit_salary": "Maaşı Düzenle"
   },
   "job_form": {
     "title_edit": "İşi Düzenle",
