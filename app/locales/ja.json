@@ -970,6 +970,7 @@
       "mode_full_background_details": "権限: バックグラウンド位置情報が必要 • バッテリー: 高 • 遅延: 設定不可",
       "permissions_required_title": "権限が必要です",
       "permissions_required_message": "「常時アクティブ」モードにはバックグラウンド位置情報権限が必要です。これによりアプリが完全に閉じられていてもオートタイマーが動作します。",
+      "permissions_background_message": "「アプリ開いた状態 + 最小化」モードにはバックグラウンド位置情報権限が必要です。これによりアプリが最小化されているが完全に閉じられていない時にオートタイマーが動作します。",
       "background_permissions_explanation_DEPRECATED": "DEPRECATED - NO USAR",
       "permissions_grant_button": "権限を許可",
       "grant_permissions_button": "権限を許可",

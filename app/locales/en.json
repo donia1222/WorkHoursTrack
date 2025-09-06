@@ -986,6 +986,7 @@
       "mode_full_background_details": "Permissions: Background location required • Battery: Higher • Delays: Not configurable",
       "permissions_required_title": "Permissions Required",
       "permissions_required_message": "Background location permissions are needed for \"Always Active\" mode. This allows AutoTimer to work even when the app is completely closed.",
+      "permissions_background_message": "Background location permissions are needed for \"App Open + Minimized\" mode. This allows AutoTimer to work when the app is minimized but not completely closed.",
       "background_permissions_explanation_DEPRECATED": "DEPRECATED - NO USAR",
       "permissions_grant_button": "Grant Permissions",
       "grant_permissions_button": "Grant Permissions",

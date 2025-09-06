@@ -808,6 +808,7 @@
       "mode_full_background_details": "Permissions: Localisation en arrière-plan requise • Batterie: Plus élevée • Délais: Non configurables",
       "permissions_required_title": "Permissions Requises",
       "permissions_required_message": "Les permissions de localisation en arrière-plan sont nécessaires pour le mode \"Toujours Actif\". Cela permet à AutoTimer de fonctionner même quand l'app est complètement fermée.",
+      "permissions_background_message": "Les permissions de localisation en arrière-plan sont nécessaires pour le mode \"App Ouverte + Réduite\". Cela permet à AutoTimer de fonctionner quand l'app est réduite mais pas complètement fermée.",
       "permissions_grant_button": "Accorder les Permissions",
       "background_permissions_explanation_DEPRECATED": "DEPRECATED - NO USAR",
       "grant_permissions_button": "Accorder les Permissions",

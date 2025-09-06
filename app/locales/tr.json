@@ -998,6 +998,7 @@
       "mode_full_background_details": "İzinler: Arka plan konumu gerekli • Batarya: Daha yüksek • Gecikmeler: Yapılandırılamaz",
       "permissions_required_title": "İzinler Gerekli",
       "permissions_required_message": "\"Her Zaman Aktif\" modu için arka plan konum izinleri gereklidir. Bu, uygulamanın tamamen kapatılmış olduğunda bile OtoKronometrenin çalışmasını sağlar.",
+      "permissions_background_message": "\"Uygulama Açık + Küçültülmüş\" modu için arka plan konum izinleri gereklidir. Bu, uygulamanın küçültülmüş olduğunda ama tamamen kapatılmadığında OtoKronometrenin çalışmasını sağlar.",
       "background_permissions_explanation_DEPRECATED": "DEPRECATED - NO USAR",
       "permissions_grant_button": "İzinleri Ver",
       "grant_permissions_button": "İzinleri Ver",

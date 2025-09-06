@@ -1017,6 +1017,7 @@
       "mode_full_background_details": "Permisos: Ubicación en segundo plano requeridos • Batería: Mayor • Delays: No configurables",
       "permissions_required_title": "Permisos Requeridos",
       "permissions_required_message": "Se necesitan permisos de ubicación en segundo plano para el modo \"Siempre Activo\". Esto permite que AutoTimer funcione incluso cuando la app está completamente cerrada.",
+      "permissions_background_message": "Se necesitan permisos de ubicación en segundo plano para el modo \"App Minimizada\". Esto permite que AutoTimer funcione cuando la app está minimizada pero no completamente cerrada.",
       "background_permissions_explanation_DEPRECATED": "DEPRECATED - NO USAR",
       "permissions_grant_button": "Conceder Permisos",
       "grant_permissions_button": "Conceder Permisos",

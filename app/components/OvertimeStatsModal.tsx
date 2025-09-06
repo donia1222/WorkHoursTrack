@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { JobService } from '../services/JobService';
-import { Job } from '../types/WorkTypes';
+import { Job, WorkDay } from '../types/WorkTypes';
 import { PDFExportService } from '../services/PDFExportService';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
@@ -37,50 +37,87 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
   job,
   monthlyOvertime,
 }) => {
-  const { isDark } = useTheme();
+  const { isDark, colors } = useTheme();
   const { t } = useLanguage();
   const [weeklyOvertimeData, setWeeklyOvertimeData] = useState<number[]>([]);
   const [monthlyOvertimeComparison, setMonthlyOvertimeComparison] = useState<number[]>([]);
   const [earningsBreakdown, setEarningsBreakdown] = useState<any[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [selectedJobId, setSelectedJobId] = useState<string | 'all'>('all');
+  const [workDays, setWorkDays] = useState<WorkDay[]>([]);
+  const [calculatedOvertime, setCalculatedOvertime] = useState<number>(0);
 
   useEffect(() => {
-    if (visible && job) {
+    if (visible) {
+      loadJobsAndData();
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    if (visible && jobs.length > 0 && workDays.length > 0) {
       loadOvertimeStatistics();
     }
-  }, [visible, job]);
+  }, [visible, selectedJobId, jobs, workDays]);
+
+  const loadJobsAndData = async () => {
+    try {
+      const [loadedJobs, loadedWorkDays] = await Promise.all([
+        JobService.getJobs(),
+        JobService.getWorkDays()
+      ]);
+      setJobs(loadedJobs);
+      setWorkDays(loadedWorkDays);
+      // If job prop is provided, set it as selected
+      if (job) {
+        setSelectedJobId(job.id);
+      } else if (loadedJobs.length === 1) {
+        // Auto-select if only one job
+        setSelectedJobId(loadedJobs[0].id);
+      }
+    } catch (error) {
+      console.error('Error loading jobs and data:', error);
+    }
+  };
 
   const handleExportReport = async () => {
     try {
-      const allWorkDays = await JobService.getWorkDays();
       const now = new Date();
       const currentMonth = now.getMonth() + 1;
       const currentYear = now.getFullYear();
       
-      // Filter work days for current job and month with overtime
-      const overtimeWorkDays = allWorkDays.filter((day: any) => {
+      // Filter work days based on selected job filter
+      let overtimeWorkDays = workDays.filter((day: any) => {
         const dayDate = new Date(day.date);
         return dayDate.getMonth() + 1 === currentMonth && 
                dayDate.getFullYear() === currentYear && 
                (day.type === 'work' || !day.type) &&
-               day.jobId === job.id &&
                day.overtime;
       });
+      
+      // Apply job filter
+      if (selectedJobId !== 'all') {
+        overtimeWorkDays = overtimeWorkDays.filter(day => day.jobId === selectedJobId);
+      }
 
       // Calculate overtime breakdown
       const totalOvertimeHours = overtimeWorkDays.reduce((sum: number, day: any) => {
         return sum + Math.max(0, (day.hours || 0) - 8); // Hours over 8 = overtime
       }, 0);
       
+      const selectedJob = selectedJobId === 'all' ? null : jobs.find(j => j.id === selectedJobId);
+      const jobName = selectedJob ? selectedJob.name : t('reports.all_jobs');
+      
       const reportData = {
         title: t('reports.overtime'),
         period: `${now.toLocaleDateString(t('locale_code') || 'es-ES', { month: 'long', year: 'numeric' })}`,
-        jobs: [job],
+        jobName: jobName,
+        jobs: selectedJob ? [selectedJob] : jobs,
         workDays: overtimeWorkDays,
         totalHours: totalOvertimeHours,
         totalDays: overtimeWorkDays.length,
-        overtimeHours: monthlyOvertime,
+        overtimeHours: calculatedOvertime,
         jobBreakdown: [{
-          job: job,
+          job: selectedJob || { name: t('reports.all_jobs') },
           hours: totalOvertimeHours,
           days: overtimeWorkDays.length,
           percentage: 100
@@ -89,7 +126,7 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
 
       // Generate and share PDF
       const htmlContent = generateOvertimeReportHTML(reportData);
-      const fileName = `${t('reports.overtime')}_${job.name}_${now.getFullYear()}_${String(currentMonth).padStart(2, '0')}.pdf`;
+      const fileName = `${t('reports.overtime')}_${jobName}_${now.getFullYear()}_${String(currentMonth).padStart(2, '0')}.pdf`;
       
       await generateAndSharePDF(htmlContent, fileName);
     } catch (error) {
@@ -154,7 +191,7 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
       <body>
         <div class="header">
           <div class="logo">${data.title}</div>
-          <h1 class="title">${job.name}</h1>
+          <h1 class="title">${data.jobName}</h1>
           <p class="period">${data.period}</p>
         </div>
         
@@ -215,8 +252,6 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
 
   const loadOvertimeStatistics = async () => {
     try {
-      // Get work days for overtime calculations
-      const allWorkDays = await JobService.getWorkDays();
       const now = new Date();
       const currentMonth = now.getMonth() + 1;
       const currentYear = now.getFullYear();
@@ -224,32 +259,41 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
       // Weekly overtime data for current month (last 4 weeks)
       const weeklyOvertimeHours: number[] = [0, 0, 0, 0];
       const monthlyOvertimeData: number[] = [];
+      
+      // Calculate total overtime for selected job(s)
+      let totalMonthlyOvertime = 0;
 
       // Calculate weekly overtime hours for current month
-      allWorkDays.forEach((day: any) => {
+      workDays.forEach((day: any) => {
         const dayDate = new Date(day.date);
-        if (dayDate.getMonth() + 1 === currentMonth && 
-            dayDate.getFullYear() === currentYear && 
-            (day.type === 'work' || !day.type) &&
-            day.jobId === job.id &&
-            day.overtime) {
+        const isCurrentMonth = dayDate.getMonth() + 1 === currentMonth && 
+                              dayDate.getFullYear() === currentYear;
+        const isWorkDay = day.type === 'work' || !day.type;
+        const matchesJobFilter = selectedJobId === 'all' || day.jobId === selectedJobId;
+        
+        if (isCurrentMonth && isWorkDay && matchesJobFilter && day.overtime) {
           const weekNumber = Math.floor(dayDate.getDate() / 7);
           const overtimeHours = Math.max(0, (day.hours || 0) - 8); // Hours over 8 = overtime
           weeklyOvertimeHours[Math.min(weekNumber, 3)] += overtimeHours;
+          totalMonthlyOvertime += overtimeHours;
         }
       });
+      
+      setCalculatedOvertime(totalMonthlyOvertime);
 
       // Monthly overtime comparison (last 6 months)
       for (let i = 5; i >= 0; i--) {
         const targetMonth = new Date(currentYear, currentMonth - 1 - i, 1);
         let monthOvertimeHours = 0;
         
-        allWorkDays.forEach((day: any) => {
+        workDays.forEach((day: any) => {
           const dayDate = new Date(day.date);
+          const matchesJobFilter = selectedJobId === 'all' || day.jobId === selectedJobId;
+          
           if (dayDate.getMonth() === targetMonth.getMonth() && 
               dayDate.getFullYear() === targetMonth.getFullYear() &&
               (day.type === 'work' || !day.type) &&
-              day.jobId === job.id &&
+              matchesJobFilter &&
               day.overtime) {
             const overtimeHours = Math.max(0, (day.hours || 0) - 8);
             monthOvertimeHours += overtimeHours;
@@ -263,9 +307,9 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
       setMonthlyOvertimeComparison(monthlyOvertimeData);
 
       // Overtime breakdown (regular vs overtime earnings)
-      const regularHours = Math.max(0, 160 - monthlyOvertime); // Assume 160 standard monthly hours
-      const overtimeHours = monthlyOvertime;
-      const regularRate = job.salary?.amount || job.hourlyRate || 0;
+      const regularHours = Math.max(0, 160 - totalMonthlyOvertime); // Assume 160 standard monthly hours
+      const overtimeHours = totalMonthlyOvertime;
+      const regularRate = getHourlyRate();
       const overtimeRate = regularRate * 1.5; // Overtime typically 1.5x
 
       setEarningsBreakdown([
@@ -289,14 +333,33 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
     }
   };
 
+  const getHourlyRate = () => {
+    // Get rate from selected job or average from all jobs
+    if (selectedJobId !== 'all') {
+      const selectedJob = jobs.find(j => j.id === selectedJobId);
+      return selectedJob?.salary?.amount || selectedJob?.hourlyRate || 0;
+    } else {
+      // Calculate average rate from all jobs
+      const rates = jobs.map(j => j.salary?.amount || j.hourlyRate || 0).filter(r => r > 0);
+      return rates.length > 0 ? rates.reduce((a, b) => a + b, 0) / rates.length : 0;
+    }
+  };
+
   const calculateOvertimeEarnings = () => {
-    const regularRate = job.salary?.amount || job.hourlyRate || 0;
+    const regularRate = getHourlyRate();
     const overtimeRate = regularRate * 1.5;
-    return monthlyOvertime * overtimeRate;
+    return calculatedOvertime * overtimeRate;
   };
 
   const getCurrencySymbol = () => {
-    const currency = job.salary?.currency || job.currency || 'EUR';
+    // Get currency from selected job or first job with currency
+    let currency = 'EUR';
+    if (selectedJobId !== 'all') {
+      const selectedJob = jobs.find(j => j.id === selectedJobId);
+      currency = selectedJob?.salary?.currency || selectedJob?.currency || 'EUR';
+    } else if (jobs.length > 0) {
+      currency = jobs[0]?.salary?.currency || jobs[0]?.currency || 'EUR';
+    }
     return currency === 'EUR' ? '€' : 
            currency === 'USD' ? '$' : 
            currency === 'GBP' ? '£' : 
@@ -352,6 +415,81 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Job Filter - Copy exact style from ReportsScreen */}
+          {jobs.length > 1 && (
+            <View style={styles.compactJobSelector}>
+              <Text style={[styles.compactJobSelectorTitle, { color: isDark ? '#d1d5db' : '#6b7280' }]}>
+                {t('reports.filter_by_job')}
+              </Text>
+              <View style={[styles.compactJobTabs, { backgroundColor: (isDark ? '#374151' : '#f3f4f6') + '40' }]}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.compactJobScrollContainer}
+                  contentContainerStyle={{ paddingHorizontal: 4 }}
+                >
+                <TouchableOpacity
+                  style={[
+                    styles.compactJobTab,
+                    selectedJobId === 'all' && styles.compactJobTabActive,
+                    { 
+                      flex: 0,
+                      minWidth: 100,
+                      marginRight: 8,
+                      backgroundColor: selectedJobId === 'all'
+                        ? (isDark ? '#1f2937' : '#ffffff')
+                        : 'transparent'
+                    }
+                  ]}
+                  onPress={() => setSelectedJobId('all')}
+                >
+                  <Text style={[
+                    styles.compactJobTabText,
+                    selectedJobId === 'all' && styles.compactJobTabTextActive,
+                    { 
+                      color: selectedJobId === 'all'
+                        ? (isDark ? '#ffffff' : '#1f2937')
+                        : (isDark ? '#d1d5db' : '#6b7280')
+                    }
+                  ]}>
+                    {t('reports.all_jobs')}
+                  </Text>
+                </TouchableOpacity>
+                {jobs.map((jobItem, index) => (
+                  <TouchableOpacity
+                    key={jobItem.id}
+                    style={[
+                      styles.compactJobTab,
+                      selectedJobId === jobItem.id && styles.compactJobTabActive,
+                      { 
+                        flex: 0,
+                        minWidth: 100,
+                        marginRight: index < jobs.length - 1 ? 8 : 0,
+                        backgroundColor: selectedJobId === jobItem.id
+                          ? (isDark ? '#1f2937' : '#ffffff')
+                          : 'transparent'
+                      }
+                    ]}
+                    onPress={() => setSelectedJobId(jobItem.id)}
+                  >
+                    <View style={[styles.compactJobTabDot, { backgroundColor: jobItem.color || colors.primary }]} />
+                    <Text style={[
+                      styles.compactJobTabText,
+                      selectedJobId === jobItem.id && styles.compactJobTabTextActive,
+                      { 
+                        color: selectedJobId === jobItem.id
+                          ? (isDark ? '#ffffff' : '#1f2937')
+                          : (isDark ? '#d1d5db' : '#6b7280')
+                      }
+                    ]}>
+                      {jobItem.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+                </ScrollView>
+              </View>
+            </View>
+          )}
           {/* Summary Cards */}
           <View style={styles.summaryContainer}>
             <LinearGradient
@@ -383,7 +521,7 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
               ]}
               onPress={onEditSalary}
             >
-              <Ionicons name="settings" size={14} color="#ffffff" />
+
               <Text style={styles.buttonTexte}>
                 {t('jobs.edit_salary')}
               </Text>
@@ -410,7 +548,7 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
                 styles.summaryValue,
                 { color: isDark ? '#fbbf24' : '#f59e0b' }
               ]}>
-                {monthlyOvertime.toFixed(1)}h
+                {calculatedOvertime.toFixed(1)}h
               </Text>
             </View>
           </View>
@@ -574,7 +712,7 @@ const styles = StyleSheet.create({
   },
     actionButtone: {
     flex: 1,
-
+marginTop: 6,
     paddingVertical: 4,
     paddingHorizontal: 20,
     borderRadius: 12,
@@ -588,5 +726,51 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     
+  },
+  compactJobSelector: {
+    marginVertical: 16,
+    paddingHorizontal: 8,
+  },
+  compactJobSelectorTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 12,
+    textAlign: 'center',
+    marginTop: 6,
+  },
+  compactJobTabs: {
+    borderRadius: 12,
+    padding: 4,
+  },
+  compactJobScrollContainer: {
+    flexDirection: 'row',
+  },
+  compactJobTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 8,
+    justifyContent: 'center',
+  },
+  compactJobTabActive: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  compactJobTabText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  compactJobTabTextActive: {
+    fontWeight: '600',
+  },
+  compactJobTabDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
 });
