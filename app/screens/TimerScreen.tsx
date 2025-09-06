@@ -27,6 +27,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import NoJobsWarning from '../components/NoJobsWarning';
 import JobFormModal from '../components/JobFormModal';
 import TimerSuccessModal from '../components/TimerSuccessModal';
+import NotesHistoryModal from '../components/NotesHistoryModal';
 import { Job, WorkDay, StoredActiveSession } from '../types/WorkTypes';
 import { JobService } from '../services/JobService';
 import { ManualTimerService } from '../services/ManualTimerService';
@@ -55,6 +56,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flex: 1,
     backgroundColor: isDark ? 'rgba(59, 130, 246, 0.08)' : 'rgba(59, 130, 246, 0.04)', // Azul suave
 marginTop: -16,
+marginBottom: 50,
   },
   header: {
     borderBottomWidth: 1,
@@ -1086,6 +1088,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
     wasAutoTimerActive?: boolean;
     jobId?: string;
   }>({ hours: 0, seconds: 0, isUpdate: false });
+  const [showNotesHistoryModal, setShowNotesHistoryModal] = useState(false);
   const [recentTimerSessions, setRecentTimerSessions] = useState<WorkDay[]>([]);
   const [notesModalVisible, setNotesModalVisible] = useState(false);
   const [statsModalVisible, setStatsModalVisible] = useState(false);
@@ -1918,7 +1921,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
 
 
         {/* Session Notes Input - Show when timer is active */}
-        {activeSession && (
+
           <View style={[styles.notesCard, { backgroundColor: colors.surface, marginVertical: 16 }]}>
             <LinearGradient
               colors={isDark ? 
@@ -1929,7 +1932,31 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             />
-            <Text style={styles.notesTitle}>{t('timer.session_notes')}</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <Text style={styles.notesTitle}>{t('timer.session_notes')}</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  triggerHaptic('light');
+                  setShowNotesHistoryModal(true);
+                }}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: isDark ? 'rgba(96, 165, 250, 0.15)' : 'rgba(96, 165, 250, 0.1)',
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 8,
+                }}
+              >
+                <IconSymbol size={16} name="note.text" color={isDark ? '#60a5fa' : '#3b82f6'} />
+                <Text style={{
+                  fontSize: 13,
+                  fontWeight: '600',
+                  color: isDark ? '#60a5fa' : '#3b82f6',
+                  marginLeft: 6,
+                }}>{t('timer.view_notes_history')}</Text>
+              </TouchableOpacity>
+            </View>
             <TextInput
               style={[styles.notesInput, { color: colors.text, borderColor: colors.border }]}
               placeholder={t('timer.notes_placeholder')}
@@ -1946,22 +1973,8 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
               {t('timer.notes_hint')}
             </Text>
           </View>
-        )}
+ 
 
-        {/* Sessions With Notes - Only show if there are sessions with notes */}
-        {recentTimerSessions.length > 0 && (
-          <View style={styles.recentSessionsContainer}>
-            <View style={styles.recentSessionsHeader}>
-              <Text style={styles.recentSessionsTitle}>
-                {t('timer.recent_sessions')}
-              </Text>
-              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>
-                {recentTimerSessions.length} {recentTimerSessions.length === 1 ? 'sesión con notas' : 'sesiones con notas'}
-              </Text>
-            </View>
-            {renderRecentTimerSessions()}
-          </View>
-        )}
 
       
         {/* Quick Actions - Moved below recent sessions */}
@@ -1997,30 +2010,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
 
 
 
-                                   <TouchableOpacity
-                          style={styles.actionButton}
-                                 onPress={() => {
-                  triggerHaptic('light');
-                  setNotesModalVisible(true);
-                }}
-                        >
-                          <BlurView intensity={99} tint={isDark ? "dark" : "light"} style={[styles.actionButtonInner, styles.syncButton]}>
-                            <LinearGradient
-                              colors={['rgba(255, 140, 0, 0.15)', 'rgba(255, 165, 0, 0.12)']}
-                              style={styles.actionButtonGradient}
-                              start={{ x: 0, y: 0 }}
-                              end={{ x: 1, y: 1 }}
-                            />
-                            <View style={[styles.actionButtonIconContainer, { backgroundColor: '#FF8C00' + '20' }]}>
-                              <IconSymbol size={24} name="pencil" color="#FF8C00" />
-                            </View>
-                            <View style={{ flex: 1, marginLeft: 12, marginRight: 12 }}>
-                              <Text style={[styles.actionButtonText, { color: '#FF8C00', marginBottom: 2 }]}>{t('timer.session_notes')}</Text>
-                              <Text style={[styles.actionButtonTextsub, { color: '#FF8C00', opacity: 0.8 }]}>{t('timer.notes_placeholder')}</Text>
-                            </View>
-                            <IconSymbol size={16} name="arrow.right" color="#FF8C00" />
-                          </BlurView>
-                        </TouchableOpacity>
+     
 
 
 
@@ -2249,7 +2239,13 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           </ScrollView>
         </SafeAreaView>
       </Modal>
+
+      {/* Notes History Modal */}
+      <NotesHistoryModal
+        visible={showNotesHistoryModal}
+        onClose={() => setShowNotesHistoryModal(false)}
+        jobs={jobs}
+      />
     </SafeAreaView>
   );
 }
-

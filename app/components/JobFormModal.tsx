@@ -4174,7 +4174,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     </View>
                   </TouchableOpacity>
 
-                  {/* Modo 2: App abierta + minimizada */}
+                  {/* Modo 2: App abierta + minimizada - RECOMENDADO */}
                   <TouchableOpacity 
                     style={[
                       styles.modeOption, 
@@ -4184,8 +4184,25 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                   >
                     <View style={styles.modeOptionContent}>
                       <View style={styles.modeOptionHeader}>
-
-                        <Text style={styles.modeOptionTitle}>🔄 {t('job_form.auto_timer.mode_background_title')}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                          <Text style={styles.modeOptionTitle}>🔄 {t('job_form.auto_timer.mode_background_title')}</Text>
+                          <View style={{
+                            backgroundColor: isDark ? 'rgba(74, 222, 128, 0.2)' : 'rgba(34, 197, 94, 0.15)',
+                            borderRadius: 6,
+                            paddingHorizontal: 8,
+                            paddingVertical: 3,
+                            marginLeft: 8,
+                          }}>
+                            <Text style={{
+                              fontSize: 11,
+                              fontWeight: '700',
+                              color: isDark ? '#4ade80' : '#16a34a',
+                              letterSpacing: 0.3,
+                            }}>
+                              {t('job_form.auto_timer.recommended') || 'RECOMENDADO'}
+                            </Text>
+                          </View>
+                        </View>
                         <View style={[
                           styles.radioButton,
                           selectedAutoTimerMode === 'background-allowed' && styles.radioButtonSelected
