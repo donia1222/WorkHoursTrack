@@ -423,7 +423,16 @@
     "salary_note": "Ce calcul est basé sur les heures enregistrées et la configuration salariale du travail.",
     "per_worked_hours": "par heures travaillées",
     "per_worked_weeks": "par semaines travaillées",
-    "proportional_month": "proportionnel au mois"
+    "proportional_month": "proportionnel au mois",
+    "total_earnings": "Revenus totaux",
+    "hours_worked": "Heures travaillées",
+    "extra_hours": "Heures supplémentaires",
+    "work_days": "Jours de travail", 
+    "days_worked": "Jours travaillés",
+    "extra_earnings": "Revenus supplémentaires",
+    "average_daily": "Moyenne quotidienne",
+    "per_day": "par jour",
+    "days_with_overtime": "Jours avec heures supplémentaires"
   },
   "calendar": {
     "title": "Mon Calendrier",

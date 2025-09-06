@@ -443,7 +443,16 @@
     "salary_note": "Этот расчет основан на записанных часах и конфигурации зарплаты работы.",
     "per_worked_hours": "за отработанные часы",
     "per_worked_weeks": "за отработанные недели",
-    "proportional_month": "пропорционально месяцу"
+    "proportional_month": "пропорционально месяцу",
+    "total_earnings": "Общий заработок",
+    "hours_worked": "Отработанные часы",
+    "extra_hours": "Сверхурочные часы",
+    "work_days": "Рабочие дни",
+    "days_worked": "Отработанные дни",
+    "extra_earnings": "Дополнительные доходы",
+    "average_daily": "Средний дневной",
+    "per_day": "в день",
+    "days_with_overtime": "Дни со сверхурочными"
   },
   "calendar": {
     "title": "Мой календарь",

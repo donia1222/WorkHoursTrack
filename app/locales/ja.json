@@ -443,7 +443,16 @@
     "salary_note": "この計算は記録された時間と仕事の給与設定に基づいています。",
     "per_worked_hours": "勤務時間単位",
     "per_worked_weeks": "勤務週単位",
-    "proportional_month": "月比例"
+    "proportional_month": "月比例",
+    "total_earnings": "総収入",
+    "hours_worked": "勤務時間",
+    "extra_hours": "残業時間", 
+    "work_days": "勤務日",
+    "days_worked": "勤務日数",
+    "extra_earnings": "追加収入",
+    "average_daily": "日平均",
+    "per_day": "日あたり",
+    "days_with_overtime": "残業のある日"
   },
   "calendar": {
     "title": "マイカレンダー",

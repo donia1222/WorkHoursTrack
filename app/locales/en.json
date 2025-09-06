@@ -459,7 +459,16 @@
     "salary_note": "This calculation is based on recorded hours and job salary configuration.",
     "per_worked_hours": "per worked hours",
     "per_worked_weeks": "per worked weeks",
-    "proportional_month": "proportional to month"
+    "proportional_month": "proportional to month",
+    "total_earnings": "Total earnings",
+    "hours_worked": "Hours worked",
+    "extra_hours": "Extra hours", 
+    "work_days": "Work days",
+    "days_worked": "Days worked",
+    "extra_earnings": "Extra earnings",
+    "average_daily": "Daily average",
+    "per_day": "per day",
+    "days_with_overtime": "Days with overtime"
   },
   "calendar": {
     "title": "My Calendar",
