@@ -206,7 +206,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
         actualEndTime: formatTime(endTime),
         hours: finalHours,
         breakHours: finalBreakHours, // Always include breakHours, even if 0
-        ...(notes.trim() ? { notes: notes.trim() } : {}),
+        notes: notes.trim() || undefined, // Explicitly set to undefined if empty
       } as any;
 
       await JobService.updateWorkDay(workDay.id, {
@@ -215,7 +215,7 @@ const EditWorkDayModal: React.FC<EditWorkDayModalProps> = ({
         actualEndTime: formatTime(endTime),
         hours: finalHours,
         breakHours: finalBreakHours, // Always include breakHours, even if 0
-        ...(notes.trim() ? { notes: notes.trim() } : {}),
+        notes: notes.trim() || undefined, // Explicitly set to undefined if empty
       });
       onSave(updatedWorkDay);
       onClose();

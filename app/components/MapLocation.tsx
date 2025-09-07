@@ -630,8 +630,8 @@ marginTop:10
     borderColor: 'rgba(142, 142, 147, 0.2)',
   },
   errorButtonBg: {
-    backgroundColor: 'rgba(255, 59, 48, 0.15)',
-    borderColor: 'rgba(255, 59, 48, 0.25)',
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    borderColor: 'rgba(59, 130, 246, 0.25)',
   },
   autoTimerStatusOverlay: {
     position: 'absolute',
@@ -643,7 +643,7 @@ marginTop:10
   disableButton: {
     width: 24,
     height: 24,
-    backgroundColor: '#FF3B30',
+    backgroundColor: '#3b82f6',
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1145,8 +1145,8 @@ marginTop:10
     marginRight: 12,
   },
   successIconBg: {
-    backgroundColor: isDark ? 'rgba(16, 185, 129, 0.2)' : 'rgba(6, 182, 212, 0.15)',
-    borderColor: isDark ? 'rgba(16, 185, 129, 0.3)' : 'rgba(6, 182, 212, 0.25)',
+    backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.15)',
+    borderColor: isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.25)',
     borderWidth: 1,
   },
   warningIconBg: {
@@ -1155,8 +1155,8 @@ marginTop:10
     borderWidth: 1,
   },
   primaryIconBg: {
-    backgroundColor: isDark ? 'rgba(147, 51, 234, 0.2)' : 'rgba(99, 102, 241, 0.15)',
-    borderColor: isDark ? 'rgba(147, 51, 234, 0.3)' : 'rgba(99, 102, 241, 0.25)',
+    backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.15)',
+    borderColor: isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.25)',
     borderWidth: 1,
   },
   settingContent: {
@@ -3264,7 +3264,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             <Text style={{
                               fontSize: isTablet ? 16 : (isSmallScreen ? 11 : 13),
                               fontWeight: '600',
-                              color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
+                              color: isDark ? 'white' : '#1f2937',
                               marginBottom: isTablet ? 8 : (isSmallScreen ? 4 : 6),
                               textAlign: 'center',
                             }}>{t('maps.active_jobs')}</Text>
@@ -3336,11 +3336,11 @@ export default function MapLocation({ location, onNavigate }: Props) {
                       flex: 1,
                       borderRadius: isTablet ? 28 : (isSmallScreen ? 20 : 24),
                       padding: isTablet ? 22 : (isSmallScreen ? 10 : 18),
-                      backgroundColor: isDark ? 'rgba(52, 211, 153, 0.12)' : 'rgba(110, 231, 183, 0.25)',
+                      backgroundColor: isDark ? 'rgba(59, 130, 246, 0.12)' : 'rgba(59, 130, 246, 0.25)',
                       backdropFilter: 'blur(20px)',
                       borderWidth: 1.5,
-                      borderColor: isDark ? 'rgba(52, 211, 153, 0.25)' : 'rgba(16, 185, 129, 0.3)',
-                      shadowColor: '#10b981',
+                      borderColor: isDark ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.3)',
+                      shadowColor: '#3b82f6',
                       shadowOffset: { width: 0, height: 4 },
                       shadowOpacity: 0.15,
                       shadowRadius: 20,
@@ -3357,7 +3357,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     }}>
                             {shouldShowNormalWidgets && (
                       <Animated.View style={[animatedClockStyle, {
-                        backgroundColor: isDark ? 'rgba(52, 211, 153, 0.25)' : 'rgba(16, 185, 129, 0.2)',
+                        backgroundColor: isDark ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.2)',
                         borderRadius: isTablet ? 20 : 12,
                         padding: isTablet ? 16 : (isSmallScreen ? 8 : 10),
                         marginBottom: isTablet ? 0 : (isSmallScreen ? 4 : 8),
@@ -3370,12 +3370,12 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           width: isTablet ? 12 : 8,
                           height: isTablet ? 12 : 8,
                           borderRadius: isTablet ? 6 : 4,
-                          backgroundColor: autoTimer.state.isWaiting ? '#34C759' : (jobs.some(job => job.autoTimer?.enabled) ? '#34C759' : '#FF3B30'),
+                          backgroundColor: autoTimer.state.isWaiting ? '#3b82f6' : (jobs.some(job => job.autoTimer?.enabled) ? '#3ef63b7d' : '#3b82f6'),
                         }} />
                         <Text style={{
                           fontSize: isTablet ? 14 : (isSmallScreen ? 10 : 12),
                           fontWeight: '700',
-                          color: isDark ? '#6ee7b7' : '#059669',
+                          color: isDark ? '#93c5fd' : '#1d4ed8',
                         }}>
                           AutoTimer
                         </Text>
@@ -3385,23 +3385,12 @@ export default function MapLocation({ location, onNavigate }: Props) {
                       <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
                         {/* Show text only when AutoTimer is NOT active */}
       
-                          <Text style={{
-                            fontSize: isTablet ? 16 : (isSmallScreen ? 11 : 13),
-                            fontWeight: '700',
-                            color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
-                          }}>
-                            {autoTimer.state.isWaiting ? 'AutoTimer' : (lastAutoTimerSession ? (
-                              <>
-                                <Text style={{ fontWeight: '700' }}>{t('timer.last_session')}</Text>
-                                <Text style={{ fontWeight: '400', opacity: 0.7 }}> {lastAutoTimerSession.jobName}</Text>
-                              </>
-                            ) : t('maps.auto_timer'))}
-                          </Text>
-            
+                
+               
                         <Text style={{
-                          fontSize: isTablet ? 24 : (isSmallScreen ? 14 : 17),
+                          fontSize: isTablet ? 24 : (isSmallScreen ? 14 : 18),
                           fontWeight: '600',
-                          color: isDark ? 'white' : '#047857',
+                          color: isDark ? 'white' : '#1e40af',
                           marginTop: isTablet ? 0 : (isSmallScreen ? 2 : 4),
                           letterSpacing: isTablet ? 0.7 : (isSmallScreen ? 0.3 : 0.5),
                         }}>
@@ -3432,29 +3421,29 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             <TouchableOpacity
                               onPress={isAutoTimerPaused ? handleAutoTimerResume : handleAutoTimerPause}
                               style={{
-                                backgroundColor: isDark ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.15)',
+                                backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.15)',
                                 borderRadius: 12,
                                 padding: isSmallScreen ? 6 : 8,
                                 borderWidth: 1,
-                                borderColor: isDark ? 'rgba(52, 211, 153, 0.3)' : 'rgba(16, 185, 129, 0.3)',
+                                borderColor: isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.3)',
                               }}
                               activeOpacity={0.7}
                             >
                               <IconSymbol 
                                 size={isSmallScreen ? 16 : 18} 
                                 name={isAutoTimerPaused ? "play.fill" : "pause.fill"} 
-                                color={isDark ? '#6ee7b7' : '#059669'} 
+                                color={isDark ? '#bfdbfe' : '#1e40af'} 
                               />
                             </TouchableOpacity>
                             
                             <TouchableOpacity
                               onPress={handleAutoTimerWidgetStop}
                               style={{
-                                backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.15)',
+                                backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.15)',
                                 borderRadius: 12,
                                 padding: isSmallScreen ? 6 : 8,
                                 borderWidth: 1,
-                                borderColor: isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+                                borderColor: isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.3)',
                               }}
                               activeOpacity={0.7}
                             >
@@ -3590,7 +3579,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                   badgeIcon = 'briefcase';
                                   break;
                                 case 'free':
-                                  badgeColor = '#10b981';
+                                  badgeColor = '#3b82f6';
                                   badgeIcon = 'home';
                                   break;
                                 case 'vacation':
@@ -3598,7 +3587,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                   badgeIcon = 'sunny';
                                   break;
                                 case 'sick':
-                                  badgeColor = '#ef4444';
+                                  badgeColor = '#3b82f6';
                                   badgeIcon = 'medkit';
                                   break;
                               }
@@ -3759,13 +3748,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   <TouchableOpacity
                     style={{
                       flex: 1,
-                      backgroundColor: isDark ? 'rgba(139, 92, 246, 0.12)' : 'rgba(168, 85, 247, 0.25)',
+                      backgroundColor: isDark ? 'rgba(59, 130, 246, 0.12)' : 'rgba(59, 130, 246, 0.25)',
                       backdropFilter: 'blur(20px)',
                       borderWidth: 1.5,
-                      borderColor: isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(147, 51, 234, 0.3)',
+                      borderColor: isDark ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.3)',
                       borderRadius: isTablet ? 28 : (isSmallScreen ? 20 : 24),
                       padding: isTablet ? 22 : (isSmallScreen ? 12 : 18),
-                      shadowColor: '#8b5cf6',
+                      shadowColor: '#3b82f6',
                       shadowOffset: { width: 0, height: 4 },
                       shadowOpacity: 0.15,
                       shadowRadius: 20,
@@ -3804,28 +3793,28 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         
                         return (
                           <View style={{
-                            backgroundColor: isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(147, 51, 234, 0.2)',
+                            backgroundColor: isDark ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.2)',
                             borderRadius: 20,
                             padding: 16,
                             marginRight: 20,
                           }}>
-                            <IconSymbol size={36} name="clock.badge" color={isDark ? '#c084fc' : '#8b5cf6'} />
+                            <IconSymbol size={36} name="clock.badge" color={isDark ? '#93c5fd' : '#1d4ed8'} />
                           </View>
                         );
                       })()}
                       <View style={{ flex: isTablet ? 1 : undefined, alignItems: isTablet ? 'flex-start' : 'center' }}>
                         <View style={{
-                          backgroundColor: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(147, 51, 234, 0.2)',
+                          backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.2)',
                           borderRadius: 12,
                           padding: 8,
                           marginBottom: 8,
                         }}>
-                          <IconSymbol size={24} name="clock.fill" color={isDark ? '#a855f7' : '#8b5cf6'} />
+                          <IconSymbol size={24} name="clock.fill" color={isDark ? '#93c5fd' : '#1d4ed8'} />
                         </View>
                         <Text style={{
                           fontSize: isTablet ? 16 : 13,
                           fontWeight: '600',
-                          color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#581c87',
+                          color: isDark ? 'white' : '#1f2937',
                           marginBottom: isTablet ? 6 : 8,
                         }}>{t('settings.work_config.schedules')}</Text>
                         {(() => {
@@ -3835,7 +3824,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             <Text style={{
                               fontSize: 14,
                               fontWeight: '500',
-                              color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#7c3aed',
+                              color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#1d4ed8',
                               marginTop: 8,
                             }}>{t('maps.configure_schedule')}</Text>
                           );
@@ -3855,7 +3844,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                 <Text style={{
                                   fontSize: isTablet ? 18 : (isSmallScreen ? 14 : 16),
                                   fontWeight: '600',
-                                  color: isDark ? 'white' : '#581c87',
+                                  color: isDark ? 'white' : '#1d4ed8',
                                   textAlign: 'center',
                                 }}>
                                   {formatTimeCompact(firstSchedule.startTime)} - {formatTimeCompact(firstSchedule.endTime)}
@@ -3869,7 +3858,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                 {!hasSplitShift && (
                                   <Text style={{
                                     fontSize: 11,
-                                    color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#a855f7',
+                                    color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#1d4ed8',
                                     marginTop: 2,
                                     textAlign: 'center',
                                   }}>
@@ -3892,7 +3881,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                               <Text style={{
                                 fontSize: isTablet ? 18 : (isSmallScreen ? 14 : 16),
                                 fontWeight: '600',
-                                color: isDark ? 'white' : '#581c87',
+                                color: isDark ? 'white' : '#1d4ed8',
                                 textAlign: 'center',
                               }}>
                                 {formatTimeCompact(job.schedule.startTime)} - {formatTimeCompact(job.schedule.endTime)}
@@ -3906,7 +3895,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                               {!hasSplitShift && (
                                 <Text style={{
                                   fontSize: 11,
-                                  color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#a855f7',
+                                  color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#1d4ed8',
                                   marginTop: 2,
                                   textAlign: 'center',
                                 }}>
@@ -3924,13 +3913,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
                               <Text style={{
                                 fontSize: isTablet ? 22 : (isSmallScreen ? 16 : 18),
                                 fontWeight: '600',
-                                color: isDark ? 'white' : '#581c87',
+                                color: isDark ? 'white' : '#1d4ed8',
                               }}>
                                 {formatTimeCompact('09:00')} - {formatTimeCompact('17:00')}
                               </Text>
                               <Text style={{
                                 fontSize: 11,
-                                color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#a855f7',
+                                color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#1d4ed8',
                                 marginTop: 2,
                               }}>
                                 4 {t('calendar.days_per_week')}
@@ -3951,7 +3940,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             </Text>
                             <Text style={{
                               fontSize: 11,
-                              color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#a855f7',
+                              color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#1d4ed8',
                               marginTop: 2,
                             }}>
                               4 {t('calendar.days_per_week')}
@@ -4153,11 +4142,11 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   height: isTablet ? 90 : (isSmallScreen ? 90 : 80),
                           borderRadius: isTablet ? 32 : (isSmallScreen ? 24 : 28),
                           padding: isTablet ? 20 : (isSmallScreen ? 18 : 16),
-              backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(248, 113, 113, 0.18)',
+              backgroundColor: isDark ? 'rgba(59, 130, 246, 0.12)' : 'rgba(59, 130, 246, 0.18)',
                       borderWidth: 1.5,
-                    borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
+                    borderColor: isDark ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.25)',
 
-                     shadowColor: '#ef4444',
+                     shadowColor: '#3b82f6',
                       shadowOffset: { width: 0, height: 6 },
                       shadowOpacity: 0.1,
                       shadowRadius: 24,
@@ -4175,7 +4164,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             <Text style={{
                               fontSize: isTablet ? 14 : (isSmallScreen ? 11 : 14),
                               fontWeight: '700',
-                        color: isDark ? '#a7303092' : '#a7303092',
+                        color: isDark ? '#60a5fa' : '#1d4ed8',
                               marginBottom: isTablet ? 2 : 1,
                               letterSpacing: -0.5,
                             }}>{t('maps.overtime')}</Text>
@@ -4183,7 +4172,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             <Text style={{
                               fontSize: isTablet ? 10 : (isSmallScreen ? 9 : 9),
                               fontWeight: '500',
-                            color: isDark ? '#7b7b7bff' : '#7b7b7bff',
+                            color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#1d4ed8',
                               opacity: 0.9,
                             }}>{getMonthName(new Date())}</Text>
                             
@@ -4230,11 +4219,11 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                     <Text style={{
                                        fontSize: isTablet ? 16 :14,
                                       fontWeight: '700',
-                                     color: isDark ? '#4ade80' : '#16a34a',
+                                     color: isDark ? '#60a5fa' : '#1d4ed8',
                                     }}>{monthlyOvertime.toFixed(1)}</Text>
                                     <Text style={{
                                       fontSize: isTablet ? 14 : 10,
-                                      color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#15803d',
+                                      color: isDark ? 'rgba(255, 255, 255, 0.5)' : '#1d4ed8',
                                       fontWeight: '600',
                                     }}>{t('job_selector.time_periods.hour')}</Text>
                                   </View>
@@ -4265,11 +4254,11 @@ export default function MapLocation({ location, onNavigate }: Props) {
                           height: isTablet ? 90 : (isSmallScreen ? 90 : 80),
                           borderRadius: isTablet ? 32 : (isSmallScreen ? 24 : 28),
                           padding: isTablet ? 20 : (isSmallScreen ? 18 : 16),
-                     backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(248, 113, 113, 0.18)',
+                     backgroundColor: isDark ? 'rgba(59, 130, 246, 0.12)' : 'rgba(59, 130, 246, 0.18)',
                       borderWidth: 1.5,
-                    borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.25)',
+                    borderColor: isDark ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.25)',
 
-                     shadowColor: '#ef4444',
+                     shadowColor: '#3b82f6',
                           shadowOffset: { width: 0, height: 6 },
                           shadowOpacity: 0.1,
                           shadowRadius: 24,
@@ -4287,7 +4276,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             <Text style={{
                               fontSize: isTablet ? 14 : (isSmallScreen ? 11 : 14),
                               fontWeight: '700',
-                                 color: isDark ? '#a7303092' : '#a7303092',
+                                 color: isDark ? '#60a5fa' : '#1d4ed8',
                               marginBottom: isTablet ? 2 : 1,
                               letterSpacing: -0.5,
                             }}>{t('maps.total_hours')}</Text>
@@ -4295,7 +4284,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             <Text style={{
                               fontSize: isTablet ? 10 : (isSmallScreen ? 9 : 9),
                               fontWeight: '500',
-                           color: isDark ? '#7b7b7bff' : '#7b7b7bff',
+                           color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#1d4ed8',
                               opacity: 0.9,
                             }}>{getMonthName(new Date())}</Text>
                             
@@ -4344,7 +4333,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                     <Text style={{
                                       fontSize: isTablet ? 16 :14,
                                       fontWeight: '700',
-                                      color: isDark ? '#4ade80' : '#16a34a',
+                                      color: isDark ? '#60a5fa' : '#1d4ed8',
                                     }}>{formatHoursForDisplay(totalHours)}</Text>
                                   </View>
                                   {/* Max indicator */}
@@ -4389,9 +4378,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                   flex: 1,
                                   borderRadius: isTablet ? 20 : 16,
                                   padding: isTablet ? 16 : 14,
-                                  backgroundColor: isDark ? 'rgba(254, 226, 226, 0.08)' : 'rgba(254, 226, 226, 0.95)',
+                                  backgroundColor: isDark ? 'rgba(59, 130, 246, 0.12)' : 'rgba(59, 130, 246, 0.18)',
                                   borderWidth: 1,
-                                  borderColor: isDark ? 'rgba(252, 165, 165, 0.2)' : 'rgba(252, 165, 165, 0.3)',
+                                     borderColor: isDark ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.25)',
                                   shadowColor: '#000',
                                   shadowOffset: { width: 0, height: 2 },
                                   shadowOpacity: 0.05,
@@ -4406,9 +4395,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
                               >
                                 <View style={{ flex: 1 }}>
                                   <Text style={{
-                                    fontSize: isTablet ? 15 : 13,
+                                   fontSize: isTablet ? 18 : 16,
                                     fontWeight: '600',
-                                    color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#991b1b',
+                                    color: isDark ? 'white' : '#1f2937',
                                     marginBottom: 8,
                                       marginTop: isTablet ? 8 : 8,
                                   }}>{t('maps.total_hours')}</Text>
@@ -4416,9 +4405,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                     <View style={{ flex: 1 }}>
                                       <Text style={{
-                                        fontSize: isTablet ? 26 : 22,
+                                        fontSize: isTablet ? 22 : 18,
                                         fontWeight: '700',
-                                        color: isDark ? '#4ade80' : '#16a34a',
+                                        color: isDark ? '#60a5fa' : '#1d4ed8',
                                         marginBottom: 2,
                                       }}>
                                         {formatHoursForDisplay(monthlyTotalHours)}
@@ -4444,36 +4433,36 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                     
                                     {/* Mini circular progress */}
                                     <View style={{
-                                      width: isTablet ? 50 : 45,
-                                      height: isTablet ? 50 : 45,
+                                      width: isTablet ? 60 : 55,
+                                      height: isTablet ? 60 : 55,
                                       alignItems: 'center',
                                       justifyContent: 'center',
                                     }}>
-                                      <Svg width={isTablet ? 50 : 45} height={isTablet ? 50 : 45} style={{ position: 'absolute' }}>
+                                      <Svg width={isTablet ? 60 : 55} height={isTablet ? 60 : 55} style={{ position: 'absolute' }}>
                                         <SvgCircle
-                                          cx={(isTablet ? 50 : 45) / 2}
-                                          cy={(isTablet ? 50 : 45) / 2}
-                                          r={(isTablet ? 50 : 45) / 2 - 3}
+                                          cx={(isTablet ? 60 : 55) / 2}
+                                          cy={(isTablet ? 60 : 55) / 2}
+                                          r={(isTablet ? 60 : 55) / 2 - 4}
                                           stroke={isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}
-                                          strokeWidth={3}
+                                          strokeWidth={4}
                                           fill="none"
                                         />
                                         <SvgCircle
-                                          cx={(isTablet ? 50 : 45) / 2}
-                                          cy={(isTablet ? 50 : 45) / 2}
-                                          r={(isTablet ? 50 : 45) / 2 - 3}
+                                          cx={(isTablet ? 60 : 55) / 2}
+                                          cy={(isTablet ? 60 : 55) / 2}
+                                          r={(isTablet ? 60 : 55) / 2 - 4}
                                           stroke={isDark ? '#4ade80' : '#16a34a'}
-                                          strokeWidth={3}
+                                          strokeWidth={4}
                                           fill="none"
-                                          strokeDasharray={`${(progressPercentage / 100) * Math.PI * ((isTablet ? 50 : 45) - 6)} ${Math.PI * ((isTablet ? 50 : 45) - 6)}`}
+                                          strokeDasharray={`${(progressPercentage / 100) * Math.PI * ((isTablet ? 60 : 55) - 8)} ${Math.PI * ((isTablet ? 60 : 55) - 8)}`}
                                           strokeLinecap="round"
-                                          transform={`rotate(-90 ${(isTablet ? 50 : 45) / 2} ${(isTablet ? 50 : 45) / 2})`}
+                                          transform={`rotate(-90 ${(isTablet ? 60 : 55) / 2} ${(isTablet ? 60 : 55) / 2})`}
                                         />
                                       </Svg>
                                       <Text style={{
-                                        fontSize: isTablet ? 12 : 11,
+                                        fontSize: isTablet ? 14 : 12,
                                         fontWeight: '700',
-                                        color: isDark ? '#4ade80' : '#16a34a',
+                                        color: isDark ? '#60a5fa' : '#1d4ed8',
                                       }}>
                                         {Math.round(progressPercentage)}%
                                       </Text>
@@ -4496,9 +4485,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
                               flex: 1,
                               borderRadius: isTablet ? 20 : 16,
                               padding: isTablet ? 16 : 14,
-                              backgroundColor: isDark ? 'rgba(254, 226, 226, 0.08)' : 'rgba(254, 226, 226, 0.95)',
+                              backgroundColor: isDark ? 'rgba(59, 130, 246, 0.12)' : 'rgba(59, 130, 246, 0.18)',
                               borderWidth: 1,
-                              borderColor: isDark ? 'rgba(252, 165, 165, 0.2)' : 'rgba(252, 165, 165, 0.3)',
+                                 borderColor: isDark ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.25)',
                               shadowColor: '#000',
                               shadowOffset: { width: 0, height: 2 },
                               shadowOpacity: 0.05,
@@ -4512,20 +4501,21 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             activeOpacity={0.8}
                           >
                             <View style={{ flex: 1 }}>
-                              <Text style={{
-                                fontSize: isTablet ? 15 : 13,
-                                fontWeight: '600',
-                                color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#991b1b',
-                                marginBottom: 8,
-                                     marginTop: isTablet ? 8 : 8,
-                              }}>{t('maps.overtime')}</Text>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, marginTop: isTablet ? 8 : 8 }}>
+                                <Text style={{
+                                 fontSize: isTablet ? 18 : 16,
+                                  fontWeight: '600',
+                                   color: isDark ? 'white' : '#1f2937',
+                                }}>{t('maps.overtime')}</Text>
+                                <IconSymbol size={isTablet ? 20 : 18} name="clock.arrow.circlepath" color={isDark ? '#60a5fa' : '#1d4ed8'} />
+                              </View>
                               
                               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <View style={{ flex: 1 }}>
                                   <Text style={{
-                                    fontSize: isTablet ? 26 : 22,
+                                    fontSize: isTablet ? 22 : 18,
                                     fontWeight: '700',
-                                    color: isDark ? '#4ade80' : '#16a34a',
+                                   color: isDark ? '#60a5fa' : '#1d4ed8',
                                     marginBottom: 2,
                                
                                   }}>
@@ -4556,8 +4546,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                 
                                 {/* Mini bar chart for overtime */}
                                 <View style={{
-                                  width: isTablet ? 50 : 45,
-                                  height: isTablet ? 50 : 45,
+                                  width: isTablet ? 60 : 55,
+                                  height: isTablet ? 60 : 55,
                                   alignItems: 'center',
                                   justifyContent: 'flex-end',
                                   paddingBottom: 2,
@@ -4573,16 +4563,16 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                       <View
                                         key={index}
                                         style={{
-                                          width: isTablet ? 6 : 5,
+                                          width: isTablet ? 8 : 6,
                                           height: `${(monthlyOvertime > 0 ? height : 0.1) * 100}%`,
-                                          backgroundColor: index === 4 ? (isDark ? '#f87171' : '#ef4444') : (isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'),
+                                          backgroundColor: index === 4 ? (isDark ? '#60a5fa' : '#3b82f6') : (isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'),
                                           borderRadius: 2,
                                         }}
                                       />
                                     ))}
                                   </View>
                                   <Text style={{
-                                    fontSize: 9,
+                                    fontSize: isTablet ? 11 : 10,
                                     color: isDark ? 'rgba(255, 255, 255, 0.4)' : '#9ca3af',
                                     marginTop: 2,
                                   }}>+{Math.round((monthlyOvertime / monthlyTotalHours) * 100)}%</Text>
@@ -5072,6 +5062,12 @@ export default function MapLocation({ location, onNavigate }: Props) {
           job={jobs[0]}
           monthlyTotalHours={monthlyTotalHours}
           monthlyOvertime={monthlyOvertime}
+          onDataChange={() => {
+            // Reload data to update widgets
+            loadJobs();
+            calculateMonthlyTotalHours().then(setMonthlyTotalHours);
+            loadMiniCalendarData(currentWeekStart, isIPadPortrait);
+          }}
         />
       )}
 
@@ -5086,6 +5082,12 @@ export default function MapLocation({ location, onNavigate }: Props) {
           }}
           job={jobs[0]}
           monthlyOvertime={monthlyOvertime}
+          onDataChange={() => {
+            // Reload data to update widgets
+            loadJobs();
+            calculateMonthlyTotalHours().then(setMonthlyTotalHours);
+            loadMiniCalendarData(currentWeekStart, isIPadPortrait);
+          }}
         />
       )}
 
