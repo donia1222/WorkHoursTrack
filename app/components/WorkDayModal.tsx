@@ -614,6 +614,15 @@ export default function WorkDayModal({
       
               </TouchableOpacity>
           )}
+          
+          {/* Cancel button - always show */}
+          <TouchableOpacity
+            style={styles.dayTypeButton}
+            onPress={onClose}
+          >
+            <IconSymbol size={20} name="xmark.circle.fill" color={Theme.colors.error} />
+            <Text style={[styles.dayTypeButtonText, { color: Theme.colors.error }]}>{t('calendar.cancel')}</Text>
+          </TouchableOpacity>
               </View>
               
             </BlurView>
