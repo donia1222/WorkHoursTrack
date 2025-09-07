@@ -180,6 +180,7 @@ function LayoutContent() {
                       {currentScreen === 'calendar' && <IconSymbol size={23} name="calendar" color="#6366F1" />}
                       {currentScreen === 'settings' && <IconSymbol size={23} name="gear" color="#8E8E93" />}
                       {currentScreen === 'subscription' && <IconSymbol size={23} name="crown.fill" color="#FFD700" />}
+                      {currentScreen === 'chatbot' && <IconSymbol size={23} name="bubble.left.and.bubble.right.fill" color="#007AFF" />}
                       <Text style={{ fontSize: 20, fontWeight: '600', color: colors.text || '#000000', marginLeft: 8 }}>{title}</Text>
                     </View>
                   );

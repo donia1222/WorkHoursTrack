@@ -98,14 +98,14 @@ export class EnhancedAIService {
       realJobs: 'ECHTE JOBS',
       detectedLocation: 'Erkannter Standort',
       updated: 'Aktualisiert',
-      realTimeOffersFound: 'Echtzeitangebote gefunden',
+      realTimeOffersFound: 'Echtzeit-Angebote gefunden',
       currentOffers: 'AKTUELLE ANGEBOTE',
       apply: 'Bewerben',
       findMoreOffers: 'Weitere Angebote finden',
-      theseAreRealOffers: 'Das sind ECHTE Angebote, die heute aktualisiert wurden.',
+      theseAreRealOffers: 'Dies sind ECHTE Angebote, die heute aktualisiert wurden.',
       totalFound: 'Gesamt',
       offersFound: 'Angebote gefunden',
-      realOffersUpdated: 'Das sind echte Angebote von aktualisierten Jobportalen.'
+      realOffersUpdated: 'Dies sind echte Angebote von aktualisierten Jobportalen.'
     },
     'fr': {
       realJobs: 'VRAIS EMPLOIS',
@@ -132,6 +132,71 @@ export class EnhancedAIService {
       totalFound: 'Totale',
       offersFound: 'offerte trovate',
       realOffersUpdated: 'Queste sono offerte reali da portali di lavoro aggiornati.'
+    },
+    'pt': {
+      realJobs: 'EMPREGOS REAIS',
+      detectedLocation: 'Localização detectada',
+      updated: 'Atualizado',
+      realTimeOffersFound: 'Ofertas em tempo real encontradas',
+      currentOffers: 'OFERTAS ATUAIS',
+      apply: 'Candidatar',
+      findMoreOffers: 'Encontrar mais ofertas',
+      theseAreRealOffers: 'Estas são ofertas REAIS atualizadas hoje.',
+      totalFound: 'Total',
+      offersFound: 'ofertas encontradas',
+      realOffersUpdated: 'Estas são ofertas reais de portais de emprego atualizados.'
+    },
+    'nl': {
+      realJobs: 'ECHTE BANEN',
+      detectedLocation: 'Gedetecteerde locatie',
+      updated: 'Bijgewerkt',
+      realTimeOffersFound: 'Realtime aanbiedingen gevonden',
+      currentOffers: 'HUIDIGE AANBIEDINGEN',
+      apply: 'Solliciteren',
+      findMoreOffers: 'Meer aanbiedingen vinden',
+      theseAreRealOffers: 'Dit zijn ECHTE aanbiedingen die vandaag zijn bijgewerkt.',
+      totalFound: 'Totaal',
+      offersFound: 'aanbiedingen gevonden',
+      realOffersUpdated: 'Dit zijn echte aanbiedingen van bijgewerkte vacatureportalen.'
+    },
+    'tr': {
+      realJobs: 'GERÇEK İŞLER',
+      detectedLocation: 'Tespit edilen konum',
+      updated: 'Güncellendi',
+      realTimeOffersFound: 'Gerçek zamanlı teklifler bulundu',
+      currentOffers: 'GÜNCEL TEKLİFLER',
+      apply: 'Başvur',
+      findMoreOffers: 'Daha fazla teklif bul',
+      theseAreRealOffers: 'Bunlar bugün güncellenen GERÇEK tekliflerdir.',
+      totalFound: 'Toplam',
+      offersFound: 'teklif bulundu',
+      realOffersUpdated: 'Bunlar güncellenmiş iş portallarından gerçek tekliflerdir.'
+    },
+    'ja': {
+      realJobs: 'リアル求人',
+      detectedLocation: '検出された場所',
+      updated: '更新',
+      realTimeOffersFound: 'リアルタイムオファーが見つかりました',
+      currentOffers: '現在のオファー',
+      apply: '応募',
+      findMoreOffers: 'より多くのオファーを見つける',
+      theseAreRealOffers: 'これらは本日更新された本物のオファーです。',
+      totalFound: '合計',
+      offersFound: 'オファーが見つかりました',
+      realOffersUpdated: 'これらは更新された求人ポータルからの本物のオファーです。'
+    },
+    'ru': {
+      realJobs: 'РЕАЛЬНАЯ РАБОТА',
+      detectedLocation: 'Обнаруженное местоположение',
+      updated: 'Обновлено',
+      realTimeOffersFound: 'Найдены предложения в реальном времени',
+      currentOffers: 'ТЕКУЩИЕ ПРЕДЛОЖЕНИЯ',
+      apply: 'Подать заявку',
+      findMoreOffers: 'Найти больше предложений',
+      theseAreRealOffers: 'Это РЕАЛЬНЫЕ предложения, обновленные сегодня.',
+      totalFound: 'Всего',
+      offersFound: 'предложений найдено',
+      realOffersUpdated: 'Это реальные предложения с обновленных порталов вакансий.'
     }
   };
 

@@ -44,7 +44,7 @@ const detectLanguageFromText = (text: string): SupportedLanguage => {
   // Palabras clave por idioma para detección básica
   const languageKeywords = {
     'es': ['trabajo', 'empleo', 'buscar', 'donde', 'país', 'salario', 'laboral', 'sueldo', 'empresa', 'jefe', 'horario'],
-    'en': ['work', 'job', 'employment', 'where', 'country', 'salary', 'labor', 'company', 'boss', 'schedule'],
+    'en': ['work', 'job', 'employment', 'where', 'country', 'salary', 'labor', 'company', 'boss', 'schedule', 'how', 'can', 'check', 'minimum', 'wage', 'france', 'spain', 'germany', 'find', 'search', 'looking', 'what', 'when', 'why', 'which', 'hours', 'pay', 'rate', 'contract', 'employee', 'employer', 'workplace', 'office', 'career', 'position'],
     'de': ['arbeit', 'job', 'beschäftigung', 'wo', 'land', 'gehalt', 'arbeits', 'unternehmen', 'chef', 'zeitplan', 'kann', 'ich', 'mein', 'meinem'],
     'fr': ['travail', 'emploi', 'où', 'pays', 'salaire', 'entreprise', 'patron', 'horaire'],
     'it': ['lavoro', 'impiego', 'dove', 'paese', 'stipendio', 'azienda', 'capo', 'orario'],
