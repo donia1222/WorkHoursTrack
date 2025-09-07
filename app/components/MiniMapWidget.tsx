@@ -11,6 +11,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useTimeFormat } from '../hooks/useTimeFormat';
 import { Job } from '../types/WorkTypes';
 import StopAutoTimerModal from './StopAutoTimerModal';
+import AutoTimerModeService, { AutoTimerMode } from '../services/AutoTimerModeService';
 
 // Variable global para evitar mostrar Alert cuando se confirma desde el modal
 let skipNextAutoTimerAlert = false;
@@ -387,6 +388,18 @@ marginTop: -10,
     textTransform: 'uppercase',
     marginTop: 2,
   },
+  modeIndicator: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginLeft: 8,
+  },
+  modeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
 });
 };
 
@@ -438,7 +451,50 @@ export default function MiniMapWidget({
   // Estado para el tipo de mapa
   const [mapType, setMapType] = useState<'standard' | 'satellite'>('standard');
   
+  // Estado para el modo del AutoTimer
+  const [autoTimerMode, setAutoTimerMode] = useState<AutoTimerMode>('foreground-only');
+  
+  // Función para obtener datos del modo usando traducciones
+  const getModeData = (mode: AutoTimerMode) => {
+    const modeConfig = {
+      'foreground-only': {
+        icon: '📱',
+        titleKey: 'job_form.auto_timer.mode_foreground_title'
+      },
+      'background-allowed': {
+        icon: '🔄', 
+        titleKey: 'job_form.auto_timer.mode_background_title'
+      },
+      'full-background': {
+        icon: '🌍',
+        titleKey: 'job_form.auto_timer.mode_full_background_title'
+      }
+    };
+    
+    const config = modeConfig[mode];
+    return {
+      icon: config.icon,
+      title: t(config.titleKey)
+    };
+  };
+
   useEffect(() => {
+    // Cargar modo del AutoTimer
+    const loadAutoTimerMode = async () => {
+      try {
+        const modeService = AutoTimerModeService.getInstance();
+        const settings = await modeService.getAutoTimerModeSettings();
+        
+        setAutoTimerMode(settings.mode);
+        
+        logMiniMapWidget('AutoTimer mode loaded:', settings.mode);
+      } catch (error) {
+        console.error('Error loading AutoTimer mode:', error);
+      }
+    };
+
+    loadAutoTimerMode();
+
     // Animación de entrada suave como ReportsScreen
     RNAnimated.parallel([
       RNAnimated.timing(fadeAnim, {
@@ -583,7 +639,14 @@ export default function MiniMapWidget({
         <View style={styles.autoTimerHeader}>
           <View style={styles.autoTimerChip}>
             <Animated.View style={[styles.greenDot, animatedDotStyle]} />
-            <Text style={styles.autoTimerText}>AutoTimer</Text>
+            <Text style={styles.autoTimerText}>
+              {getModeData(autoTimerMode).icon} AutoTimer
+            </Text>
+            <View style={[styles.modeIndicator, { backgroundColor: colors.primary + '20', borderColor: colors.primary + '40' }]}>
+              <Text style={[styles.modeText, { color: colors.primary }]}>
+                {getModeData(autoTimerMode).title}
+              </Text>
+            </View>
           </View>
           
         </View>
