@@ -13,8 +13,13 @@ import Animated, {
   useAnimatedStyle, 
   withTiming, 
   withDelay,
-  Easing 
+  Easing,
+  withSpring,
+  runOnJS,
+  interpolate,
+  Extrapolate
 } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -74,9 +79,17 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
   const lineChartOpacity = useSharedValue(0);
   const lineChartTranslateX = useSharedValue(50);
 
+  // Animation values for drag gesture
+  const translateY = useSharedValue(0);
+  const modalOpacity = useSharedValue(1);
+
   useEffect(() => {
     if (visible) {
       loadJobsAndData();
+      
+      // Reset drag gesture values
+      translateY.value = 0;
+      modalOpacity.value = 1;
       
       // Start chart animations with delays
       chartOpacity.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.quad) });
@@ -97,6 +110,49 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
       lineChartTranslateX.value = 50;
     }
   }, [visible]);
+
+  // Pan gesture for drag to close
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      // Only allow downward dragging
+      if (event.translationY > 0) {
+        translateY.value = event.translationY;
+        // Fade out as user drags down
+        modalOpacity.value = interpolate(
+          event.translationY,
+          [0, 200],
+          [1, 0.3],
+          Extrapolate.CLAMP
+        );
+      }
+    })
+    .onEnd((event) => {
+      // If dragged down enough or velocity is high, close modal
+      if (event.translationY > 120 || event.velocityY > 500) {
+        // Close modal
+        translateY.value = withSpring(600);
+        modalOpacity.value = withSpring(0);
+        runOnJS(onClose)();
+      } else {
+        // Snap back to original position
+        translateY.value = withSpring(0);
+        modalOpacity.value = withSpring(1);
+      }
+    });
+
+  // Animated styles
+  const animatedModalStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: translateY.value }],
+      opacity: modalOpacity.value,
+    };
+  });
+
+  const animatedOverlayStyle = useAnimatedStyle(() => {
+    return {
+      opacity: modalOpacity.value,
+    };
+  });
 
   useEffect(() => {
     if (visible && jobs.length > 0 && workDays.length > 0) {
@@ -726,33 +782,50 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
   return (
     <Modal
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
+      animationType="fade"
+      transparent={true}
       onRequestClose={onClose}
     >
-      <View style={[
-        styles.container,
-        { backgroundColor: isDark ? '#0f172a' : '#ffffff' }
+      <Animated.View style={[
+        { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.6)' },
+        animatedOverlayStyle
       ]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerTitle}>
-            <Ionicons 
-              name="analytics" 
-              size={24} 
-              color={isDark ? '#ef4444' : '#f87171'} 
-            />
-            <Text style={[
-              styles.title,
-              { color: isDark ? '#ffffff' : '#1f2937' }
-            ]}>
-              {t('reports.salary_statistics')}
-            </Text>
-          </View>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color={isDark ? '#ffffff' : '#1f2937'} />
-          </TouchableOpacity>
-        </View>
+        <GestureDetector gesture={panGesture}>
+          <Animated.View style={[
+            styles.container,
+            { 
+              backgroundColor: isDark ? '#0f172a' : '#ffffff',
+              height: screenHeight * 0.9,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              alignSelf: 'flex-end',
+              width: '100%',
+              marginTop: screenHeight * 0.1
+            },
+            animatedModalStyle
+          ]}>
+            {/* Drag handle */}
+            <View style={styles.dragHandle} />
+            
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.headerTitle}>
+                <Ionicons 
+                  name="analytics" 
+                  size={24} 
+                  color={isDark ? '#ef4444' : '#f87171'} 
+                />
+                <Text style={[
+                  styles.title,
+                  { color: isDark ? '#ffffff' : '#1f2937' }
+                ]}>
+                  {t('reports.salary_statistics')}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color={isDark ? '#ffffff' : '#1f2937'} />
+              </TouchableOpacity>
+            </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Job Filter - Copy exact style from ReportsScreen */}
@@ -1115,7 +1188,9 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </View>
+          </Animated.View>
+        </GestureDetector>
+      </Animated.View>
       
       {/* Edit Work Day Modal */}
       <EditWorkDayModal
@@ -1147,7 +1222,6 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginBottom: 25,
   },
   compactJobSelector: {
     marginVertical: 16,
@@ -1200,7 +1274,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 20,
+
     paddingBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(156, 163, 175, 0.2)',
@@ -1403,5 +1477,15 @@ const styles = StyleSheet.create({
   emptySubtext: {
     fontSize: 14,
     textAlign: 'center',
+  },
+  dragHandle: {
+    width: 36,
+    height: 4,
+    backgroundColor: '#6b7280',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 12,
+    marginBottom: 16,
+    opacity: 0.5,
   },
 });

@@ -4412,7 +4412,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                       <Text style={{
                                         fontSize: isTablet ? 22 : 18,
                                         fontWeight: '700',
-                                        color: isDark ? '#60a5fa' : '#10204fac',
+                                        color: isDark ? '#60a5fa' : '#791322ca',
                                         marginBottom: 2,
                                       }}>
                                         {formatHoursForDisplay(monthlyTotalHours)}

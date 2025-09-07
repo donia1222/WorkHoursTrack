@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, ToastAndroid, Platform, Linking } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, ToastAndroid, Platform, Linking, Clipboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 
 import Animated, { 
   useSharedValue, 
@@ -166,6 +168,27 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   copyButtonBot: {
     backgroundColor: isDark ? colors.primary + '15' : colors.primary + '08',
   },
+  messageRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    width: '100%',
+  },
+  messageContent: {
+    flex: 1,
+  },
+  copyShareButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: isDark ? colors.surface + '80' : '#FFFFFF80',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
   linkText: {
     color: colors.primary,
     textDecorationLine: 'underline',
@@ -199,6 +222,31 @@ export default function ChatMessage({ message, jobs = [], onExportToCalendar, on
     } catch (error) {
       console.error('Error opening link:', error);
       Alert.alert('Error', 'No se pudo abrir el enlace');
+    }
+  };
+
+  // Function to share message content directly
+  const handleCopyShare = async () => {
+    try {
+      // Create a temporary file with the message content
+      const fileName = `respuesta_${Date.now()}.txt`;
+      const fileUri = FileSystem.documentDirectory + fileName;
+      
+      await FileSystem.writeAsStringAsync(fileUri, message.text, {
+        encoding: FileSystem.EncodingType.UTF8
+      });
+      
+      // Share the file
+      await Sharing.shareAsync(fileUri, {
+        dialogTitle: 'Compartir respuesta',
+        mimeType: 'text/plain'
+      });
+      
+      // Clean up the temporary file
+      await FileSystem.deleteAsync(fileUri, { idempotent: true });
+      
+    } catch (error) {
+      console.error('Error sharing message:', error);
     }
   };
   
@@ -483,12 +531,36 @@ export default function ChatMessage({ message, jobs = [], onExportToCalendar, on
         </View>
       ) : null}
       
-      <Text style={[
-        styles.timestamp,
-        message.isUser ? styles.userTimestamp : styles.botTimestamp
+      {/* Fila con timestamp y botón de compartir */}
+      <View style={[
+        !message.isUser ? { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 } : {}
       ]}>
-        {messageTime}
-      </Text>
+        <Text style={[
+          styles.timestamp,
+          message.isUser ? styles.userTimestamp : styles.botTimestamp,
+          !message.isUser ? { flex: 1 } : {}
+        ]}>
+          {messageTime}
+        </Text>
+        
+        {/* Botón de copiar/compartir solo para mensajes del bot */}
+        {!message.isUser && message.text && (
+          <TouchableOpacity 
+            onPress={handleCopyShare}
+            activeOpacity={0.7}
+            style={{
+              padding: 4,
+              marginLeft: 8,
+            }}
+          >
+            <Ionicons 
+              name="copy" 
+              size={14} 
+              color={isDark ? colors.textSecondary : '#666666'} 
+            />
+          </TouchableOpacity>
+        )}
+      </View>
 
       {/* Botón de exportación para mensajes del bot con datos de horarios */}
       {hasWorkScheduleData && (

@@ -13,8 +13,13 @@ import Animated, {
   useAnimatedStyle, 
   withTiming, 
   withDelay,
-  Easing 
+  Easing,
+  withSpring,
+  runOnJS,
+  interpolate,
+  Extrapolate
 } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,7 +34,7 @@ import * as Print from 'expo-print';
 import EditWorkDayModal from './EditWorkDayModal';
 import DeleteWorkDayModal from './DeleteWorkDayModal';
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 interface OvertimeStatsModalProps {
   visible: boolean;
@@ -71,9 +76,17 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
   const lineChartOpacity = useSharedValue(0);
   const lineChartTranslateX = useSharedValue(50);
 
+  // Animation values for drag gesture
+  const translateY = useSharedValue(0);
+  const modalOpacity = useSharedValue(1);
+
   useEffect(() => {
     if (visible) {
       loadJobsAndData();
+      
+      // Reset drag gesture values
+      translateY.value = 0;
+      modalOpacity.value = 1;
       
       // Start chart animations with delays
       chartOpacity.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.quad) });
@@ -94,6 +107,49 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
       lineChartTranslateX.value = 50;
     }
   }, [visible]);
+
+  // Pan gesture for drag to close
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      // Only allow downward dragging
+      if (event.translationY > 0) {
+        translateY.value = event.translationY;
+        // Fade out as user drags down
+        modalOpacity.value = interpolate(
+          event.translationY,
+          [0, 200],
+          [1, 0.3],
+          Extrapolate.CLAMP
+        );
+      }
+    })
+    .onEnd((event) => {
+      // If dragged down enough or velocity is high, close modal
+      if (event.translationY > 120 || event.velocityY > 500) {
+        // Close modal
+        translateY.value = withSpring(600);
+        modalOpacity.value = withSpring(0);
+        runOnJS(onClose)();
+      } else {
+        // Snap back to original position
+        translateY.value = withSpring(0);
+        modalOpacity.value = withSpring(1);
+      }
+    });
+
+  // Animated styles
+  const animatedModalStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: translateY.value }],
+      opacity: modalOpacity.value,
+    };
+  });
+
+  const animatedOverlayStyle = useAnimatedStyle(() => {
+    return {
+      opacity: modalOpacity.value,
+    };
+  });
 
   useEffect(() => {
     if (visible && jobs.length > 0 && workDays.length > 0) {
@@ -731,33 +787,35 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
   return (
     <Modal
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
+      transparent={true}
+      animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={[
-        styles.container,
-        { backgroundColor: isDark ? '#0f172a' : '#ffffff' }
-      ]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerTitle}>
-            <Ionicons 
-              name="time" 
-              size={24} 
-              color={isDark ? '#fbbf24' : '#f59e0b'} 
-            />
-            <Text style={[
-              styles.title,
-              { color: isDark ? '#ffffff' : '#1f2937' }
-            ]}>
-            {t('reports.overtime')}
-            </Text>
-          </View>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color={isDark ? '#ffffff' : '#1f2937'} />
-          </TouchableOpacity>
-        </View>
+      <Animated.View style={[styles.modalOverlay, animatedOverlayStyle]}>
+        <GestureDetector gesture={panGesture}>
+          <Animated.View style={[styles.modalContainer, animatedModalStyle]}>
+            {/* Drag handle */}
+            <View style={styles.dragHandle} />
+            
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.headerTitle}>
+                <Ionicons 
+                  name="time" 
+                  size={24} 
+                  color={isDark ? '#fbbf24' : '#f59e0b'} 
+                />
+                <Text style={[
+                  styles.title,
+                  { color: isDark ? '#ffffff' : '#1f2937' }
+                ]}>
+                {t('reports.overtime')}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color={isDark ? '#ffffff' : '#1f2937'} />
+              </TouchableOpacity>
+            </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Job Filter - Copy exact style from ReportsScreen */}
@@ -1121,7 +1179,9 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </View>
+          </Animated.View>
+        </GestureDetector>
+      </Animated.View>
       
       {/* Edit Work Day Modal */}
       <EditWorkDayModal
@@ -1151,6 +1211,27 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
 };
 
 const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: screenHeight * 0.9,
+    overflow: 'hidden',
+  },
+  dragHandle: {
+    width: 36,
+    height: 4,
+    backgroundColor: '#ccc',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 12,
+  },
   container: {
     flex: 1,
      marginBottom: 25,
@@ -1160,7 +1241,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 20,
+
     paddingBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(156, 163, 175, 0.2)',
