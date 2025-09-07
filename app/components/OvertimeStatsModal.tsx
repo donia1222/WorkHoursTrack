@@ -879,7 +879,7 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
             ]}>
               <Ionicons 
                 name="time" 
-                size={28} 
+                size={38} 
                 color={isDark ? '#fbbf24' : '#f59e0b'} 
                 style={{ marginBottom: 4 }}
               />
@@ -887,7 +887,7 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
                 styles.summaryLabel,
                 { color: isDark ? '#d1d5db' : '#6b7280' }
               ]}>
-                {t('reports.overtime')} {t('reports.total_hours')}
+                {t('maps.total_hours')}
               </Text>
               <Text style={[
                 styles.summaryValue,

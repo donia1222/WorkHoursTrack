@@ -77,7 +77,7 @@ const getDefaultCurrencyByCountry = async () => {
         'EG': 'EGP', 'NG': 'NGN', 'KE': 'KES',
       };
 
-      return countryToCurrency[country] || 'EUR'; // Default to EUR if country not found
+      return country ? countryToCurrency[country] || 'EUR' : 'EUR'; // Default to EUR if country not found
     }
   } catch (error) {
     console.log('Could not detect location for currency:', error);
@@ -1598,10 +1598,12 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             setFormData(prev => ({
               ...prev,
               currency: detectedCurrency,
-              salary: {
-                ...prev.salary,
-                currency: detectedCurrency,
-              },
+              ...(prev.salary && {
+                salary: {
+                  ...prev.salary,
+                  currency: detectedCurrency,
+                }
+              }),
             }));
             console.log('💱 Applied detected currency:', detectedCurrency);
             
