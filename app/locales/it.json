@@ -439,7 +439,8 @@
     "extra_earnings": "Guadagni extra",
     "average_daily": "Media giornaliera",
     "per_day": "al giorno",
-    "days_with_overtime": "Giorni con straordinari"
+    "days_with_overtime": "Giorni con straordinari",
+    "delete_work_day_error": "Impossibile eliminare il giorno lavorativo"
   },
   "calendar": {
     "title": "Il Mio Calendario",
@@ -517,6 +518,8 @@
     "sync_success": "{{count}} giorni sincronizzati con successo",
     "sync_error": "Errore durante la sincronizzazione del calendario",
     "no_work_days": "Nessun giorno lavorativo in questo mese da sincronizzare",
+    "event_add_error": "Impossibile aggiungere l'evento al calendario: {{error}}",
+    "no_work_days_to_sync": "Nessun giorno lavorativo da sincronizzare questo mese",
     "clear_month_title": "Pulisci intero mese",
     "clear_month_message": "Sei sicuro di voler eliminare tutti i {{count}} giorni registrati in questo mese? Questa azione non può essere annullata.",
     "clear_month_message_job": "Sei sicuro di voler eliminare tutti i {{count}} giorni di lavoro da \"{{jobName}}\" in questo mese? Questa azione non può essere annullata.",

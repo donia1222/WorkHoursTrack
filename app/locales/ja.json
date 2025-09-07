@@ -452,7 +452,8 @@
     "extra_earnings": "追加収入",
     "average_daily": "日平均",
     "per_day": "日あたり",
-    "days_with_overtime": "残業のある日"
+    "days_with_overtime": "残業のある日",
+    "delete_work_day_error": "勤務日を削除できませんでした"
   },
   "calendar": {
     "title": "マイカレンダー",
@@ -514,6 +515,8 @@
     "sync_success": "{{count}}日が正常に同期されました",
     "sync_error": "カレンダー同期エラー",
     "no_work_days": "この月に同期する勤務日がありません",
+    "event_add_error": "カレンダーにイベントを追加できませんでした：{{error}}",
+    "no_work_days_to_sync": "今月同期する勤務日がありません",
     "clear_month_title": "月全体をクリア",
     "clear_month_message": "この月の登録済み{{count}}日をすべて削除してもよろしいですか？この操作は元に戻せません。",
     "clear_month_message_job": "この月の「{{jobName}}」の勤務日{{count}}日をすべて削除してもよろしいですか？この操作は元に戻せません。",

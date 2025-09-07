@@ -460,7 +460,8 @@
     "no_salary_config": "Sem configuração salarial",
     "no_salary_config_desc": "Ative a configuração salarial no seu trabalho para incluir cálculos automáticos",
     "activate_salary_config": "Ativar configuração salarial",
-    "configure_amounts_message": "Configure os valores para ver o total"
+    "configure_amounts_message": "Configure os valores para ver o total",
+    "delete_work_day_error": "Não foi possível excluir o dia de trabalho"
   },
   "calendar": {
     "title": "Meu Calendário",
@@ -532,6 +533,8 @@
     "sync_success": "{{count}} dias sincronizados corretamente",
     "sync_error": "Erro ao sincronizar o calendário",
     "no_work_days": "Não há dias de trabalho neste mês para sincronizar",
+    "event_add_error": "Não foi possível adicionar evento ao calendário: {{error}}",
+    "no_work_days_to_sync": "Nenhum dia de trabalho para sincronizar este mês",
     "clear_month_title": "Limpar mês completo",
     "clear_month_message": "Tem certeza de que deseja excluir todos os {{count}} dias registrados neste mês? Esta ação não pode ser desfeita.",
     "clear_month_message_job": "Tem certeza de que deseja excluir todos os {{count}} dias de trabalho de \"{{jobName}}\" neste mês? Esta ação não pode ser desfeita.",

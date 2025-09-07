@@ -35,6 +35,7 @@ import EditWorkDayModal from '../components/EditWorkDayModal';
 import DeleteWorkDayModal from '../components/DeleteWorkDayModal';
 import SubscriptionModal from '../components/SubscriptionModal';
 import { useSubscription } from '../hooks/useSubscription';
+import { OvertimeStatsModal } from '../components/OvertimeStatsModal';
 
 interface ReportsScreenProps {
   onNavigate: (screen: string) => void;
@@ -167,6 +168,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const [deletingWorkDay, setDeletingWorkDay] = useState<WorkDay | null>(null);
   const [skipAnimations, setSkipAnimations] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showOvertimeStatsModal, setShowOvertimeStatsModal] = useState(false);
   
   const { handleBack } = useBackNavigation();
   const navigation = useNavigation();
@@ -795,7 +797,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
       console.error('Error deleting work day:', error);
       // If deletion failed, reload to restore correct state
       await loadData();
-      Alert.alert('Error', 'No se pudo eliminar el día de trabajo');
+      Alert.alert(t('common.error'), t('reports.delete_work_day_error'));
     } finally {
       setDeleteWorkDayModal(false);
       setDeletingWorkDay(null);
@@ -1766,12 +1768,18 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
                   <Text style={styles.modernStatLabel}>{t('reports.average_per_day')}</Text>
                 </View>
               </View>
-              {periodStats.overtimeHours > 0 && (
+              {periodStats && periodStats.overtimeHours > 0 && (
                 <Animated.View style={[styles.overtimeInfo, { opacity: fadeAnim }]}>
-                  <AnimatedIcon size={24} name="clock.fill" color={colors.warning} />
-                  <Text style={styles.overtimeText}>
-                    {t('reports.overtime_hours', { hours: periodStats.overtimeHours.toFixed(1) })}
-                  </Text>
+                  <TouchableOpacity 
+                    style={styles.overtimeButton} 
+                    onPress={() => setShowOvertimeStatsModal(true)}
+                    activeOpacity={0.7}
+                  >
+                    <AnimatedIcon size={24} name="clock.fill" color={colors.warning} />
+                    <Text style={styles.overtimeText}>
+                      {t('reports.overtime_hours', { hours: periodStats.overtimeHours.toFixed(1) })}
+                    </Text>
+                  </TouchableOpacity>
                 </Animated.View>
               )}
             </BlurView>
@@ -2338,6 +2346,18 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         onClose={() => setShowSubscriptionModal(false)}
         feature={t('reports.export_pdf')}
       />
+      
+      <OvertimeStatsModal
+        visible={showOvertimeStatsModal}
+        onClose={() => setShowOvertimeStatsModal(false)}
+        onEditSalary={() => {
+          setShowOvertimeStatsModal(false);
+          setShowJobFormModal(true);
+        }}
+        job={jobs.find(j => j.id === selectedJobId) || jobs[0]}
+        monthlyOvertime={periodStats?.overtimeHours || 0}
+        onDataChange={loadData}
+      />
     </SafeAreaView>
   );
 }
@@ -2706,6 +2726,17 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginLeft: 4,
     fontWeight: '600',
     color: colors.warning,
+  },
+  overtimeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: `${colors.warning}15`,
+    borderWidth: 1,
+    borderColor: `${colors.warning}25`,
   },
   jobBreakdownCard: {
     marginVertical: 20,

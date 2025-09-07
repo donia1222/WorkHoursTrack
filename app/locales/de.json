@@ -418,7 +418,8 @@
     "extra_earnings": "Zusatzverdienst",
     "average_daily": "Täglich Durchschnitt",
     "per_day": "pro Tag",
-    "days_with_overtime": "Tage mit Überstunden"
+    "days_with_overtime": "Tage mit Überstunden",
+    "delete_work_day_error": "Arbeitstag konnte nicht gelöscht werden"
   },
   "calendar": {
     "title": "Mein Kalender",
@@ -476,6 +477,8 @@
     "sync_success": "{{count}} Tage erfolgreich synchronisiert",
     "sync_error": "Fehler beim Synchronisieren des Kalenders",
     "no_work_days": "Keine Arbeitstage in diesem Monat zum Synchronisieren",
+    "event_add_error": "Ereignis konnte nicht zum Kalender hinzugefügt werden: {{error}}",
+    "no_work_days_to_sync": "Keine Arbeitstage zur Synchronisation diesen Monat",
     "clear_month_title": "Gesamten Monat löschen",
     "clear_month_message": "Sind Sie sicher, dass Sie alle {{count}} registrierten Tage in diesem Monat löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "clear_month_message_job": "Sind Sie sicher, dass Sie alle {{count}} Arbeitstage von \"{{jobName}}\" in diesem Monat löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",

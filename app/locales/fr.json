@@ -432,7 +432,8 @@
     "extra_earnings": "Revenus supplémentaires",
     "average_daily": "Moyenne quotidienne",
     "per_day": "par jour",
-    "days_with_overtime": "Jours avec heures supplémentaires"
+    "days_with_overtime": "Jours avec heures supplémentaires",
+    "delete_work_day_error": "Impossible de supprimer la journée de travail"
   },
   "calendar": {
     "title": "Mon Calendrier",
@@ -510,6 +511,8 @@
     "sync_success": "{{count}} jours synchronisés avec succès",
     "sync_error": "Erreur lors de la synchronisation du calendrier",
     "no_work_days": "Aucun jour de travail ce mois-ci à synchroniser",
+    "event_add_error": "Impossible d'ajouter l'événement au calendrier: {{error}}",
+    "no_work_days_to_sync": "Aucun jour de travail à synchroniser ce mois",
     "clear_month_title": "Vider tout le mois",
     "clear_month_message": "Êtes-vous sûr de vouloir supprimer tous les {{count}} jours enregistrés ce mois-ci ? Cette action ne peut pas être annulée.",
     "clear_month_message_job": "Êtes-vous sûr de vouloir supprimer tous les {{count}} jours de travail de \"{{jobName}}\" ce mois-ci ? Cette action ne peut pas être annulée.",

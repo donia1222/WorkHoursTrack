@@ -468,7 +468,8 @@
     "extra_earnings": "Extra earnings",
     "average_daily": "Daily average",
     "per_day": "per day",
-    "days_with_overtime": "Days with overtime"
+    "days_with_overtime": "Days with overtime",
+    "delete_work_day_error": "Could not delete work day"
   },
   "calendar": {
     "title": "My Calendar",
@@ -530,6 +531,8 @@
     "sync_success": "{{count}} days synced successfully",
     "sync_error": "Error syncing calendar",
     "no_work_days": "No work days in this month to sync",
+    "event_add_error": "Could not add event to calendar: {{error}}",
+    "no_work_days_to_sync": "No work days to sync this month",
     "clear_month_title": "Clear entire month",
     "clear_month_message": "Are you sure you want to delete all {{count}} registered days in this month? This action cannot be undone.",
     "clear_month_message_job": "Are you sure you want to delete all {{count}} work days from \"{{jobName}}\" in this month? This action cannot be undone.",

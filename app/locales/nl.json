@@ -460,7 +460,8 @@
     "no_salary_config": "Geen salaris configuratie",
     "no_salary_config_desc": "Activeer salaris configuratie in je baan om automatische berekeningen op te nemen",
     "activate_salary_config": "Salaris configuratie activeren",
-    "configure_amounts_message": "Configureer bedragen om totaal te zien"
+    "configure_amounts_message": "Configureer bedragen om totaal te zien",
+    "delete_work_day_error": "Kon werkdag niet verwijderen"
   },
   "calendar": {
     "title": "Mijn Kalender",
@@ -532,6 +533,8 @@
     "sync_success": "{{count}} dagen succesvol gesynchroniseerd",
     "sync_error": "Fout bij synchroniseren kalender",
     "no_work_days": "Geen werkdagen deze maand om te synchroniseren",
+    "event_add_error": "Kon gebeurtenis niet aan kalender toevoegen: {{error}}",
+    "no_work_days_to_sync": "Geen werkdagen om te synchroniseren deze maand",
     "clear_month_title": "Volledige maand wissen",
     "clear_month_message": "Weet je zeker dat je alle {{count}} geregistreerde dagen in deze maand wilt verwijderen? Deze actie kan niet ongedaan gemaakt worden.",
     "clear_month_message_job": "Weet je zeker dat je alle {{count}} werkdagen van \"{{jobName}}\" in deze maand wilt verwijderen? Deze actie kan niet ongedaan gemaakt worden.",

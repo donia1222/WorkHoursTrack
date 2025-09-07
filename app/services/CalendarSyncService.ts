@@ -206,7 +206,7 @@ export class CalendarSyncService {
       // Validate input data
       if (!workDay || !workDay.date || !job || !job.name) {
         console.error('Invalid workDay or job data provided');
-        Alert.alert('Error', 'Datos del día de trabajo no válidos');
+        Alert.alert(await this.getTranslation('common.error'), await this.getTranslation('calendar.invalid_work_day_data'));
         return false;
       }
 
@@ -214,7 +214,7 @@ export class CalendarSyncService {
       const calendarId = await this.getDefaultCalendar();
       if (!calendarId) {
         console.warn('No calendar available for creating event');
-        Alert.alert('Error', 'No se pudo encontrar un calendario disponible');
+        Alert.alert(await this.getTranslation('common.error'), await this.getTranslation('calendar.no_calendar_available'));
         return false;
       }
 
@@ -222,7 +222,7 @@ export class CalendarSyncService {
       const workDate = new Date(workDay.date + 'T00:00:00');
       if (isNaN(workDate.getTime())) {
         console.error('Invalid date format:', workDay.date);
-        Alert.alert('Error', 'Fecha del día de trabajo no válida');
+        Alert.alert(await this.getTranslation('common.error'), await this.getTranslation('calendar.invalid_work_day_date'));
         return false;
       }
 
@@ -282,7 +282,7 @@ export class CalendarSyncService {
         }
       }
       
-      Alert.alert('Error', `No se pudo añadir el evento al calendario: ${errorMessage}`);
+      Alert.alert(await this.getTranslation('common.error'), await this.getTranslation('calendar.event_add_error', { error: errorMessage }));
       return false;
     }
   }
@@ -295,7 +295,7 @@ export class CalendarSyncService {
       console.log('Starting calendar sync for workDay:', workDay.date);
       
       if (workDay.type !== 'work') {
-        Alert.alert('Error', 'Solo se pueden sincronizar días de trabajo');
+        Alert.alert(await this.getTranslation('common.error'), await this.getTranslation('calendar.only_work_days_sync'));
         return false;
       }
 
@@ -303,21 +303,21 @@ export class CalendarSyncService {
       console.log('Checking calendar permissions...');
       const hasPermission = await this.checkCalendarPermissions();
       if (!hasPermission) {
-        Alert.alert('Error', 'Se necesitan permisos de calendario para sincronizar eventos');
+        Alert.alert(await this.getTranslation('common.error'), await this.getTranslation('calendar.permissions_needed_sync'));
         return false;
       }
       console.log('Calendar permissions granted');
 
       // Validate work day data
       if (!workDay.date || workDay.hours <= 0) {
-        Alert.alert('Error', 'Datos del día de trabajo no válidos');
+        Alert.alert(await this.getTranslation('common.error'), await this.getTranslation('calendar.invalid_work_day_data'));
         return false;
       }
 
       // Try direct calendar integration first
       const success = await this.addEventToCalendar(workDay, job);
       if (success) {
-        Alert.alert('Éxito', 'Evento añadido al calendario correctamente');
+        Alert.alert(await this.getTranslation('common.success'), await this.getTranslation('calendar.event_added_success'));
         return true;
       }
 
@@ -475,7 +475,7 @@ export class CalendarSyncService {
       return true;
     } catch (error) {
       console.error('Fallback calendar error:', error);
-      Alert.alert('Error', 'No se pudo abrir la aplicación de calendario');
+      Alert.alert(await this.getTranslation('common.error'), await this.getTranslation('calendar.could_not_open_calendar'));
       return false;
     }
   }
@@ -579,7 +579,7 @@ END:VCALENDAR`;
       }
     } catch (error) {
       console.error('Error opening calendar app:', error);
-      Alert.alert('Error', 'No se pudo abrir la aplicación de calendario');
+      Alert.alert(await this.getTranslation('common.error'), await this.getTranslation('calendar.could_not_open_calendar'));
     }
   }
 
@@ -649,7 +649,7 @@ END:VCALENDAR`;
     const onlyWorkDays = workDays.filter(day => day.type === 'work');
     
     if (onlyWorkDays.length === 0) {
-      Alert.alert('Información', 'No hay días de trabajo para sincronizar en este mes');
+      Alert.alert(await this.getTranslation('common.information'), await this.getTranslation('calendar.no_work_days_to_sync'));
       return 0;
     }
 
@@ -684,7 +684,7 @@ END:VCALENDAR`;
       }
       
       if (successCount === 0) {
-        Alert.alert('Error', 'No se pudo añadir ningún evento al calendario');
+        Alert.alert(await this.getTranslation('common.error'), await this.getTranslation('calendar.no_events_added'));
       }
       
       return successCount;

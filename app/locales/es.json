@@ -475,7 +475,8 @@
     "no_salary_config": "Sin configuración salarial",
     "no_salary_config_desc": "Activa la configuración salarial en tu trabajo para incluir cálculos automáticos",
     "activate_salary_config": "Activar configuración salarial",
-    "configure_amounts_message": "Configura las cantidades para ver el total"
+    "configure_amounts_message": "Configura las cantidades para ver el total",
+    "delete_work_day_error": "No se pudo eliminar el día de trabajo"
   },
   "calendar": {
     "title": "Mi Calendario",
@@ -635,7 +636,9 @@
     "events_added": "Eventos añadidos",
     "events_added_message": "Se han añadido {{count}} eventos de trabajo al calendario.",
     "perfect": "Perfecto",
-    "no_events_added": "No se pudo añadir ningún evento al calendario"
+    "no_events_added": "No se pudo añadir ningún evento al calendario",
+    "event_add_error": "No se pudo añadir el evento al calendario: {{error}}",
+    "no_work_days_to_sync": "No hay días de trabajo para sincronizar en este mes"
   },
   "job_statistics": {
     "title": "Estadísticas de {{jobName}}",

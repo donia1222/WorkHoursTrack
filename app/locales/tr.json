@@ -461,7 +461,8 @@
     "no_salary_config": "Maaş yapılandırması yok",
     "no_salary_config_desc": "Otomatik hesaplamalar dahil etmek için işinizde maaş yapılandırmasını etkinleştirin",
     "activate_salary_config": "Maaş yapılandırmasını etkinleştir",
-    "configure_amounts_message": "Toplamı görmek için tutarları yapılandırın"
+    "configure_amounts_message": "Toplamı görmek için tutarları yapılandırın",
+    "delete_work_day_error": "İş günü silinemedi"
   },
   "calendar": {
     "title": "Takvimim",
@@ -533,6 +534,8 @@
     "sync_success": "{{count}} gün başarıyla senkronize edildi",
     "sync_error": "Takvim senkronizasyonunda hata",
     "no_work_days": "Bu ayda senkronize edilecek iş günü yok",
+    "event_add_error": "Etkinlik takvime eklenemedi: {{error}}",
+    "no_work_days_to_sync": "Bu ay senkronize edilecek iş günü yok",
     "clear_month_title": "Tüm ayı temizle",
     "clear_month_message": "Bu aydaki tüm {{count}} kayıtlı günü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
     "clear_month_message_job": "\"{{jobName}}\" işinin bu aydaki tüm {{count}} çalışma gününü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
