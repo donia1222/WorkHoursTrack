@@ -24,7 +24,7 @@ import { EnhancedAIService, WebSearchResult } from '@/app/services/EnhancedAISer
 import ChatMessage, { ChatMessageData } from '@/app/components/ChatMessage';
 import ImagePreview from '@/app/components/ImagePreview';
 import WelcomeMessage from '@/app/components/WelcomeMessage';
-import { useLanguage } from '@/app/contexts/LanguageContext';
+import { useLanguage, SupportedLanguage } from '@/app/contexts/LanguageContext';
 import { useTheme, ThemeColors } from '@/app/contexts/ThemeContext';
 import { useNavigation, useBackNavigation } from '@/app/context/NavigationContext';
 import { useSubscription } from '@/app/hooks/useSubscription';
@@ -36,6 +36,53 @@ import ChatHistoryModal, { ChatSession } from '@/app/components/ChatHistoryModal
 
 const CHAT_HISTORY_KEY = 'chatbot_history_sessions';
 const MAX_SESSIONS = 10;
+
+// Función para detectar automáticamente el idioma del mensaje
+const detectLanguageFromText = (text: string): SupportedLanguage => {
+  const lowerText = text.toLowerCase();
+  
+  // Palabras clave por idioma para detección básica
+  const languageKeywords = {
+    'es': ['trabajo', 'empleo', 'buscar', 'donde', 'país', 'salario', 'laboral', 'sueldo', 'empresa', 'jefe', 'horario'],
+    'en': ['work', 'job', 'employment', 'where', 'country', 'salary', 'labor', 'company', 'boss', 'schedule'],
+    'de': ['arbeit', 'job', 'beschäftigung', 'wo', 'land', 'gehalt', 'arbeits', 'unternehmen', 'chef', 'zeitplan', 'kann', 'ich', 'mein', 'meinem'],
+    'fr': ['travail', 'emploi', 'où', 'pays', 'salaire', 'entreprise', 'patron', 'horaire'],
+    'it': ['lavoro', 'impiego', 'dove', 'paese', 'stipendio', 'azienda', 'capo', 'orario'],
+    'pt': ['trabalho', 'emprego', 'onde', 'país', 'salário', 'empresa', 'chefe', 'horário'],
+    'nl': ['werk', 'baan', 'waar', 'land', 'salaris', 'bedrijf', 'baas', 'schema'],
+    'tr': ['iş', 'çalışma', 'nerede', 'ülke', 'maaş', 'şirket', 'patron', 'program'],
+    'ja': ['仕事', '就職', 'どこ', '国', '給料', '会社', '上司', 'スケジュール'],
+    'ru': ['работа', 'работу', 'где', 'страна', 'зарплата', 'компания', 'начальник', 'график']
+  };
+  
+  const scores: Record<SupportedLanguage, number> = {
+    'es': 0, 'en': 0, 'de': 0, 'fr': 0, 'it': 0, 'pt': 0, 'nl': 0, 'tr': 0, 'ja': 0, 'ru': 0
+  };
+  
+  // Contar coincidencias para cada idioma
+  for (const [lang, keywords] of Object.entries(languageKeywords)) {
+    for (const keyword of keywords) {
+      if (lowerText.includes(keyword)) {
+        scores[lang as SupportedLanguage]++;
+      }
+    }
+  }
+  
+  // Encontrar el idioma con más coincidencias
+  let maxScore = 0;
+  let detectedLanguage: SupportedLanguage = 'es'; // fallback por defecto
+  
+  for (const [lang, score] of Object.entries(scores)) {
+    if (score > maxScore) {
+      maxScore = score;
+      detectedLanguage = lang as SupportedLanguage;
+    }
+  }
+  
+  console.log(`🔍 [LANGUAGE-DETECTION] Text: "${text}" -> Detected: ${detectedLanguage} (score: ${maxScore})`);
+  
+  return detectedLanguage;
+};
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
@@ -942,14 +989,32 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
             // First check if this is a labor question before adding location context
             const detectionResult = EnhancedAIService.detectQuestionType(inputText, history);
             
-            // Add location context only if it's a labor question, we have location data, and it's NOT asking about multiple countries
-            const messageToSend = (locationContextRef.current && detectionResult.isLaborQuestion && !detectionResult.isMultipleCountriesQuestion) 
+            // Check if user specified a country in their message - be more precise
+            const hasCountryInMessage = detectionResult.country || 
+              // Major cities that clearly indicate a specific country
+              /(new york|nueva york|los angeles|san francisco|chicago|miami|boston|seattle|philadelphia|houston|dallas|atlanta|phoenix|denver|las vegas|detroit|minneapolis|cleveland|orlando|tampa|pittsburgh|baltimore|washington dc|nashville|charlotte|memphis|milwaukee|columbus|indianapolis|kansas city|virginia beach|sacramento|jacksonville|san diego|san jose|austin|fort worth|cincinnati|cleveland|tucson|tulsa|oakland|louisville|portland|oklahoma city|raleigh|miami|richmond|new orleans|birmingham|salt lake city|rochester|spokane|anchorage|honolulu)/i.test(inputText) ||
+              /(london|londres|manchester|birmingham|liverpool|glasgow|edinburgh|cardiff|belfast|bristol|leeds|sheffield|nottingham|cambridge|oxford)/i.test(inputText) ||
+              /(paris|parís|lyon|marseille|toulouse|nice|strasbourg|nantes|montpellier|bordeaux|lille|rennes|reims|toulon|saint-étienne|le havre|grenoble|dijon|angers|villeurbanne)/i.test(inputText) ||
+              /(madrid|barcelona|sevilla|valencia|bilbao|málaga|murcia|palma|las palmas|valladolid|córdoba|vigo|gijón|hospitalet|vitoria|coruña|elche|oviedo|badalona|cartagena)/i.test(inputText) ||
+              /(berlin|berlín|hamburg|munich|múnich|cologne|frankfurt|stuttgart|düsseldorf|dortmund|essen|leipzig|bremen|dresden|hannover|nürnberg|duisburg|bochum|wuppertal|bielefeld)/i.test(inputText) ||
+              /(tokyo|tokio|osaka|kyoto|yokohama|nagoya|kobe|fukuoka|kawasaki|saitama|hiroshima|sendai|kitakyushu|chiba|sakai|niigata|hamamatsu|shizuoka|sagamihara|okayama)/i.test(inputText) ||
+              /(sydney|melbourne|brisbane|perth|adelaide|canberra|darwin|hobart|townsville|cairns|toowoomba|ballarat|bendigo|albury|launceston|mackay|rockhampton|bundaberg|coffs harbour|wagga wagga)/i.test(inputText) ||
+              /(toronto|montreal|vancouver|calgary|edmonton|ottawa|winnipeg|quebec city|hamilton|london|kitchener|halifax|victoria|windsor|oshawa|saskatoon|regina|sherbrooke|barrie|kelowna)/i.test(inputText) ||
+              /(zurich|geneva|basel|bern|lausanne|winterthur|lucerne|st\. gallen|lugano|biel|thun|köniz|la chaux-de-fonds|fribourg|schaffhausen|chur|vernier|neuchâtel|uster|sion)/i.test(inputText) ||
+              /(vienna|salzburg|innsbruck|graz|linz|klagenfurt|villach|wels|sankt pölten|dornbirn|steyr|wiener neustadt|feldkirch|bregenz|leonding|krems|traun|amstetten|kapfenberg|hallein)/i.test(inputText);
+            
+            // Add location context only if it's a labor question, we have location data, it's NOT asking about multiple countries, AND user didn't specify a country
+            const messageToSend = (locationContextRef.current && detectionResult.isLaborQuestion && !detectionResult.isMultipleCountriesQuestion && !hasCountryInMessage) 
               ? `${inputText}\n\n${locationContextRef.current.contextMessage}`
               : inputText;
             
+            // Detect the language from the user's message instead of using app language
+            const detectedLanguage = detectLanguageFromText(inputText);
+            const responseLanguage = detectedLanguage;
+            
             const response = await EnhancedAIService.sendMessage(
               messageToSend,
-              language,
+              responseLanguage,
               history,
               (sources) => {
                 // Solo mostrar indicador de búsqueda si hay fuentes

@@ -159,7 +159,7 @@ function LayoutContent() {
                              currentScreen === 'calendar' ? (t('calendar.title') || 'Calendario') :
                              currentScreen === 'settings' ? (t('settings.title') || 'Configuración') :
                              currentScreen === 'subscription' ? (t('subscription.title') || 'Premium') :
-                             currentScreen === 'chatbot' ? (t('chatbot.title') || 'Chatbot IA') :
+                             currentScreen === 'chatbot' ? ( 'Vix-Chat' ) :
                              'VixTime';
                 
                 if (currentScreen === 'mapa') {

@@ -65,10 +65,89 @@ export class EnhancedAIService {
   private static readonly CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
   /**
+   * Translations for job search response templates
+   */
+  private static translations = {
+    'es': {
+      realJobs: 'EMPLEOS REALES',
+      detectedLocation: 'Ubicación detectada',
+      updated: 'Actualizado',
+      realTimeOffersFound: 'Ofertas en tiempo real encontradas',
+      currentOffers: 'OFERTAS ACTUALES',
+      apply: 'Aplicar',
+      findMoreOffers: 'Buscar más ofertas',
+      theseAreRealOffers: 'Estas son ofertas REALES actualizadas hoy.',
+      totalFound: 'Total',
+      offersFound: 'ofertas encontradas',
+      realOffersUpdated: 'Estas son ofertas reales de portales de empleo actualizadas.'
+    },
+    'en': {
+      realJobs: 'REAL JOBS',
+      detectedLocation: 'Detected location',
+      updated: 'Updated',
+      realTimeOffersFound: 'Real-time offers found',
+      currentOffers: 'CURRENT OFFERS',
+      apply: 'Apply',
+      findMoreOffers: 'Find more offers',
+      theseAreRealOffers: 'These are REAL offers updated today.',
+      totalFound: 'Total',
+      offersFound: 'offers found',
+      realOffersUpdated: 'These are real offers from updated job portals.'
+    },
+    'de': {
+      realJobs: 'ECHTE JOBS',
+      detectedLocation: 'Erkannter Standort',
+      updated: 'Aktualisiert',
+      realTimeOffersFound: 'Echtzeitangebote gefunden',
+      currentOffers: 'AKTUELLE ANGEBOTE',
+      apply: 'Bewerben',
+      findMoreOffers: 'Weitere Angebote finden',
+      theseAreRealOffers: 'Das sind ECHTE Angebote, die heute aktualisiert wurden.',
+      totalFound: 'Gesamt',
+      offersFound: 'Angebote gefunden',
+      realOffersUpdated: 'Das sind echte Angebote von aktualisierten Jobportalen.'
+    },
+    'fr': {
+      realJobs: 'VRAIS EMPLOIS',
+      detectedLocation: 'Lieu détecté',
+      updated: 'Mis à jour',
+      realTimeOffersFound: 'Offres en temps réel trouvées',
+      currentOffers: 'OFFRES ACTUELLES',
+      apply: 'Postuler',
+      findMoreOffers: 'Trouver plus d\'offres',
+      theseAreRealOffers: 'Ce sont de VRAIES offres mises à jour aujourd\'hui.',
+      totalFound: 'Total',
+      offersFound: 'offres trouvées',
+      realOffersUpdated: 'Ce sont de vraies offres de portails d\'emploi mis à jour.'
+    },
+    'it': {
+      realJobs: 'LAVORI REALI',
+      detectedLocation: 'Posizione rilevata',
+      updated: 'Aggiornato',
+      realTimeOffersFound: 'Offerte in tempo reale trovate',
+      currentOffers: 'OFFERTE ATTUALI',
+      apply: 'Candidati',
+      findMoreOffers: 'Trova più offerte',
+      theseAreRealOffers: 'Queste sono offerte REALI aggiornate oggi.',
+      totalFound: 'Totale',
+      offersFound: 'offerte trovate',
+      realOffersUpdated: 'Queste sono offerte reali da portali di lavoro aggiornati.'
+    }
+  };
+
+  /**
+   * Get translations for a specific language
+   */
+  private static getTranslations(language: SupportedLanguage) {
+    return this.translations[language as keyof typeof this.translations] || this.translations['es'];
+  }
+
+  /**
    * Extract country from message text
    */
   private static extractCountryFromMessage(message: string): string | undefined {
     const messageLower = message.toLowerCase();
+    console.log(`🔍 [DEBUG-EXTRACT] Extracting country from: "${messageLower}"`);
     
     // Country mappings with multiple variations
     const countryMappings: { [key: string]: string } = {
@@ -117,6 +196,29 @@ export class EnhancedAIService {
       'turquía': 'Turkey',
       'turquia': 'Turkey',
       'grecia': 'Greece',
+      
+      // Cities that should map to countries
+      'nueva york': 'USA',
+      'new york': 'USA',
+      'los angeles': 'USA',
+      'san francisco': 'USA',
+      'chicago': 'USA',
+      'miami': 'USA',
+      'london': 'UK',
+      'londres': 'UK',
+      'paris': 'France',
+      'parís': 'France',
+      'berlin': 'Germany',
+      'berlín': 'Germany',
+      'madrid': 'España',
+      'barcelona': 'España',
+      'roma': 'Italy',
+      'rome': 'Italy',
+      'milan': 'Italy',
+      'milán': 'Italy',
+      'zurich': 'Switzerland',
+      'geneva': 'Switzerland',
+      'ginebra': 'Switzerland',
       'corea': 'South Korea',
       'corea del sur': 'South Korea',
       // English variations
@@ -333,7 +435,28 @@ export class EnhancedAIService {
     for (const [lang, pattern] of Object.entries(generalJobInCountryPatterns)) {
       const match = messageLower.match(pattern);
       if (match) {
-        const country = match[1].trim();
+        let country = match[1].trim();
+        
+        // Replace generic country references with actual user country
+        const genericCountryTerms = [
+          'my country', 'mi país', 'mi pais', 'mon pays', 'mein land', 
+          'il mio paese', 'meu país', 'meu pais', 'мою страну', 'わが国',
+          'mijn land', 'ülkem'
+        ];
+        
+        if (genericCountryTerms.includes(country)) {
+          // This will be replaced with actual user country later in the flow
+          console.log(`🎯 [DETECT] Generic country reference detected: "${country}" - will use user location`);
+          return {
+            isLaborQuestion: true,
+            isLocationQuestion: false,
+            topics: ['job_search_with_user_country'],
+            isSpecificJobSearch: false, // Mark as false so it uses general flow with user country
+            specificJobSearch: 'general',
+            country: undefined // Don't set country here, let it use user location
+          };
+        }
+        
         console.log(`🎯 [DETECT] General job search in country detected: "${country}" in ${lang}`);
         return {
           isLaborQuestion: true,
@@ -349,9 +472,9 @@ export class EnhancedAIService {
     const specificJobPatterns = {
       es: /(?:busca(?:me|r)?|encuentra(?:me)?|quiero|necesito)\s+(?:un\s+)?(?:trabajo|empleo|puesto)\s+(?:de|como)\s+(\w+(?:\s+\w+)*)/i,
       en: /(?:find|search|look(?:ing)?|want|need)\s+(?:a\s+)?(?:job|work|position)\s+(?:as|of|for)\s+(?:a\s+)?(\w+(?:\s+\w+)*)/i,
-      de: /(?:suche|finde|brauche|will)\s+(?:eine?\s+)?(?:arbeit|job|stelle)\s+(?:als|für)\s+(\w+(?:\s+\w+)*)/i,
-      fr: /(?:cherche|trouve|veux|besoin)\s+(?:un\s+)?(?:travail|emploi|poste)\s+(?:de|comme)\s+(\w+(?:\s+\w+)*)/i,
-      it: /(?:cerca|trova|voglio|bisogno)\s+(?:un\s+)?(?:lavoro|impiego|posto)\s+(?:di|come)\s+(\w+(?:\s+\w+)*)/i,
+      de: /(?:(?:suche|finde|brauche|will)\s+(?:eine?\s+)?(?:arbeit|job|stelle)\s+(?:als|für)\s+(\w+(?:\s+\w+)*)|(?:arbeit|job|stelle)\s+als\s+(\w+(?:\s+\w+)*)|als\s+(\w+(?:\s+\w+)*)\s+(?:suchen|arbeiten|in))/i,
+      fr: /(?:cherche|chercher|trouve|trouver|veux|vouloir|besoin|avoir\s+besoin|recherche|rechercher)\s+(?:un\s+|du\s+)?(?:travail|emploi|poste|job)\s+(?:de|comme|en\s+tant\s+que)\s+(\w+(?:\s+\w+)*)/i,
+      it: /(?:cerca|cercare|trova|trovare|voglio|volere|bisogno|avere\s+bisogno)\s+(?:un\s+)?(?:lavoro|impiego|posto)\s+(?:di|come)\s+(\w+(?:\s+\w+)*)/i,
       pt: /(?:procura|busca|encontra|quero|preciso)\s+(?:um\s+)?(?:trabalho|emprego|vaga)\s+(?:de|como)\s+(\w+(?:\s+\w+)*)/i,
       ru: /(?:ищу|найди|нужна|хочу)\s+(?:работу|вакансию)\s+(\w+(?:\s+\w+)*)/i,
       ja: /(\w+)の(?:仕事|求人|職)を(?:探|見つけ|検索)/i,
@@ -359,17 +482,17 @@ export class EnhancedAIService {
       tr: /(\w+(?:\s+\w+)*)\s+(?:iş|işi|pozisyon)\s+(?:arıyorum|bul|ara)/i
     };
 
-    // Additional patterns for "trabajo/empleo de X"
+    // Additional patterns for "trabajo/empleo de X" and "work as X"
     const alternativeJobPatterns = {
       es: /(?:trabajo|empleo|puesto|vacante)\s+de\s+(\w+(?:\s+\w+)*)/i,
-      en: /(\w+(?:\s+\w+)*)\s+(?:job|position|work)/i,
-      de: /(\w+(?:\s+\w+)*)\s+(?:stelle|job|arbeit)/i,
-      fr: /(?:emploi|travail|poste)\s+de\s+(\w+(?:\s+\w+)*)/i,
-      it: /(?:lavoro|impiego|posto)\s+di\s+(\w+(?:\s+\w+)*)/i,
+      en: /(?:work|job|position)\s+as\s+(?:a\s+)?(\w+(?:\s+\w+)*)/i,
+      de: /(?:arbeit|job|stelle)\s+als\s+(\w+(?:\s+\w+)*)/i,
+      fr: /(?:emploi|travail|poste|job)\s+(?:de|comme|en\s+tant\s+que)\s+(\w+(?:\s+\w+)*)/i,
+      it: /(?:lavoro|impiego|posto)\s+(?:di|come)\s+(\w+(?:\s+\w+)*)/i,
       pt: /(?:trabalho|emprego|vaga)\s+de\s+(\w+(?:\s+\w+)*)/i,
       ru: /работа\s+(\w+(?:\s+\w+)*)/i,
       ja: /(\w+)の仕事/i,
-      nl: /(\w+(?:\s+\w+)*)\s+(?:baan|werk)/i,
+      nl: /(?:werk|baan)\s+als\s+(\w+(?:\s+\w+)*)/i,
       tr: /(\w+(?:\s+\w+)*)\s+işi/i
     };
 
@@ -377,15 +500,25 @@ export class EnhancedAIService {
     for (const [lang, pattern] of Object.entries(specificJobPatterns)) {
       const match = messageLower.match(pattern);
       if (match) {
-        const jobType = match[1].trim();
-        console.log(`🎯 [DETECT] Specific job search detected: "${jobType}" in ${lang}`);
-        return {
-          isLaborQuestion: true,
-          isLocationQuestion: false,
-          topics: ['specific_job_search'],
-          isSpecificJobSearch: true,
-          specificJobSearch: jobType
-        };
+        // For regex with multiple capture groups, find the first non-empty one
+        let jobType = '';
+        for (let i = 1; i < match.length; i++) {
+          if (match[i] && match[i].trim()) {
+            jobType = match[i].trim();
+            break;
+          }
+        }
+        
+        if (jobType) {
+          console.log(`🎯 [DETECT] Specific job search detected: "${jobType}" in ${lang}`);
+          return {
+            isLaborQuestion: true,
+            isLocationQuestion: false,
+            topics: ['specific_job_search'],
+            isSpecificJobSearch: true,
+            specificJobSearch: jobType
+          };
+        }
       }
     }
 
@@ -393,15 +526,25 @@ export class EnhancedAIService {
     for (const [lang, pattern] of Object.entries(alternativeJobPatterns)) {
       const match = messageLower.match(pattern);
       if (match) {
-        const jobType = match[1].trim();
-        console.log(`🎯 [DETECT] Specific job search detected (alt): "${jobType}" in ${lang}`);
-        return {
-          isLaborQuestion: true,
-          isLocationQuestion: false,
-          topics: ['specific_job_search'],
-          isSpecificJobSearch: true,
-          specificJobSearch: jobType
-        };
+        // For regex with multiple capture groups, find the first non-empty one
+        let jobType = '';
+        for (let i = 1; i < match.length; i++) {
+          if (match[i] && match[i].trim()) {
+            jobType = match[i].trim();
+            break;
+          }
+        }
+        
+        if (jobType) {
+          console.log(`🎯 [DETECT] Specific job search detected (alt): "${jobType}" in ${lang}`);
+          return {
+            isLaborQuestion: true,
+            isLocationQuestion: false,
+            topics: ['specific_job_search'],
+            isSpecificJobSearch: true,
+            specificJobSearch: jobType
+          };
+        }
       }
     }
 
@@ -840,23 +983,22 @@ export class EnhancedAIService {
         'enfermero': { en: 'nurse healthcare', de: 'krankenpfleger pfleger', fr: 'infirmier infirmière', it: 'infermiere' }
       };
       
-      // Determine search language based on country
-      let searchLang = 'es';
-      let localJobTerm = jobType;
+      // Use the detected user language, not the country language
+      let searchLang = language; // Use the language detected from user's message
       
+      // Translate job term for search optimization in the target country
+      // but keep response language as detected from user
+      let localJobTerm = jobType;
       if (country) {
         const countryLower = country.toLowerCase();
         if (countryLower.includes('switzerland') || countryLower.includes('suiza')) {
-          searchLang = 'de';
-          localJobTerm = jobTranslations[jobType.toLowerCase()]?.de || jobType;
+          // For Swiss portals, use German/French job terms for better search results
+          localJobTerm = jobTranslations[jobType.toLowerCase()]?.de || jobTranslations[jobType.toLowerCase()]?.fr || jobType;
         } else if (countryLower.includes('france') || countryLower.includes('francia')) {
-          searchLang = 'fr';
           localJobTerm = jobTranslations[jobType.toLowerCase()]?.fr || jobType;
         } else if (countryLower.includes('uk') || countryLower.includes('reino unido')) {
-          searchLang = 'en';
           localJobTerm = jobTranslations[jobType.toLowerCase()]?.en || jobType;
         } else if (countryLower.includes('italy') || countryLower.includes('italia')) {
-          searchLang = 'it';
           localJobTerm = jobTranslations[jobType.toLowerCase()]?.it || jobType;
         } else {
           localJobTerm = jobTranslations[jobType.toLowerCase()]?.es || jobType;
@@ -899,19 +1041,21 @@ export class EnhancedAIService {
             formattedOffers += `\n`;
           });
           
+          const t = this.getTranslations(language);
           formattedOffers += `---\n\n`;
-          formattedOffers += `✅ **Total**: ${searchResult.offers.length} ofertas encontradas\n`;
-          formattedOffers += `💡 Estas son ofertas reales de portales de empleo actualizadas.`;
+          formattedOffers += `✅ **${t.totalFound}**: ${searchResult.offers.length} ${t.offersFound}\n`;
+          formattedOffers += `💡 ${t.realOffersUpdated}`;
           
         } else {
-          formattedOffers = `🔍 **REAL JOBS: ${jobType.toUpperCase()}**
-📍 **Detected location**: ${country}
-📅 **Updated**: ${dateStr}
-⚡ **Real-time offers found**
+          const t = this.getTranslations(language);
+          formattedOffers = `🔍 **${t.realJobs}: ${jobType.toUpperCase()}**
+📍 **${t.detectedLocation}**: ${country}
+📅 **${t.updated}**: ${dateStr}
+⚡ **${t.realTimeOffersFound}**
 
 ---
 
-**CURRENT OFFERS:**\n\n`;
+**${t.currentOffers}:**\n\n`;
           
           searchResult.offers.forEach((offer: any, index: number) => {
             formattedOffers += `**${index + 1}. ${offer.company || 'Company'} - ${offer.title}**\n`;
@@ -919,13 +1063,13 @@ export class EnhancedAIService {
             if (offer.salary) formattedOffers += `💰 ${offer.salary}\n`;
             if (offer.posted) formattedOffers += `📅 ${offer.posted}\n`;
             if (offer.description) formattedOffers += `📝 ${offer.description.substring(0, 100)}...\n`;
-            formattedOffers += `🔗 Apply: ${offer.url || 'See on job portal'}\n\n`;
+            formattedOffers += `🔗 ${t.apply}: ${offer.url || 'See on job portal'}\n\n`;
           });
           
-          formattedOffers += `---\n\n💡 **Find more offers:**\n`;
+          formattedOffers += `---\n\n💡 **${t.findMoreOffers}:**\n`;
           formattedOffers += `• Indeed: https://www.indeed.com/jobs?q=${encodeURIComponent(jobType)}\n`;
           formattedOffers += `• LinkedIn: https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(jobType)}\n\n`;
-          formattedOffers += `✅ These are REAL offers updated today.`;
+          formattedOffers += `✅ ${t.theseAreRealOffers}`;
         }
         
         // Add sources
@@ -993,7 +1137,7 @@ export class EnhancedAIService {
       }
       
       // Try to fetch real job offers
-      const realOffers = await this.fetchRealJobOffers(jobTerm, countryCode, country);
+      const realOffers = await this.fetchRealJobOffers(jobTerm, countryCode, country, lang as SupportedLanguage);
       
       if (realOffers && realOffers.length > 0) {
         console.log(`✅ [REAL-SEARCH] Encontradas ${realOffers.length} ofertas reales`);
@@ -1020,7 +1164,8 @@ export class EnhancedAIService {
   private static async fetchRealJobOffers(
     jobTerm: string, 
     countryCode: string, 
-    country: string
+    country: string,
+    language: SupportedLanguage = 'es'
   ): Promise<any[]> {
     const offers: any[] = [];
     
@@ -1080,12 +1225,12 @@ export class EnhancedAIService {
       
       // If no real results, generate direct portal search links
       console.log(`⚠️ [REAL-SEARCH] No se encontraron ofertas reales, generando enlaces directos a portales...`);
-      return this.generatePortalSearchLinks(jobTerm, countryCode, country);
+      return this.generatePortalSearchLinks(jobTerm, countryCode, country, language);
       
     } catch (error) {
       console.error('❌ [FETCH-OFFERS] Error en búsqueda real:', error);
       // Fallback to portal search links
-      return this.generatePortalSearchLinks(jobTerm, countryCode, country);
+      return this.generatePortalSearchLinks(jobTerm, countryCode, country, language);
     }
   }
   
@@ -1222,14 +1367,14 @@ export class EnhancedAIService {
   /**
    * Generate portal search links using international configuration
    */
-  private static generatePortalSearchLinks(jobTerm: string, countryCode: string, country: string): any[] {
+  private static generatePortalSearchLinks(jobTerm: string, countryCode: string, country: string, language: SupportedLanguage = 'es'): any[] {
     console.log(`🌍 [INTERNATIONAL-PORTALS] Using new international system for ${country} (${countryCode})`);
     
     // Use the new international portal manager
-    const portalOffers = InternationalJobPortalManager.generateSearchLinks(jobTerm, countryCode, country);
+    const portalOffers = InternationalJobPortalManager.generateSearchLinks(jobTerm, countryCode, country, language);
     
     // Add some simulated offers for better user experience
-    const simulatedOffers = InternationalJobPortalManager.addSimulatedOffers(jobTerm, countryCode, country, 4);
+    const simulatedOffers = InternationalJobPortalManager.addSimulatedOffers(jobTerm, countryCode, country, 4, language);
     
     // Combine portal links and simulated offers
     const allOffers = [...portalOffers, ...simulatedOffers];
@@ -3495,8 +3640,22 @@ ${localPrompts.locationAsk}`;
           // Clean job type - remove country from job search term
           let cleanJobType = laborCheck.specificJobSearch;
           
-          // FIRST: Check if user specified a country in the message
-          const countryInMessage = this.extractCountryFromMessage(message);
+          // FIRST: Check if user specified a country in the original message (without context)
+          // Extract only the original user message, ignoring any location context that may have been added
+          let originalMessage = message;
+          
+          // Remove location context in any language
+          if (message.includes('[Context:')) {
+            originalMessage = message.split('[Context:')[0].trim();
+          } else if (message.includes('[Contexto:')) {
+            originalMessage = message.split('[Contexto:')[0].trim();
+          } else if (message.includes('[Contexte:')) {
+            originalMessage = message.split('[Contexte:')[0].trim();
+          }
+          
+          console.log(`🔍 [DEBUG-ORIGINAL] Full message: "${message}"`);
+          console.log(`🔍 [DEBUG-ORIGINAL] Original message: "${originalMessage}"`);
+          const countryInMessage = this.extractCountryFromMessage(originalMessage);
           if (countryInMessage) {
             targetCountry = countryInMessage;
             console.log(`🌍 [JOB-SEARCH] País ESPECIFICADO por usuario: ${targetCountry}`);
