@@ -825,49 +825,6 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
           </ScrollView>
         </BlurView>
 
-        {/* Haptic Feedback Section */}
-        {Platform.OS === 'ios' && (
-          <TouchableOpacity 
-            style={[{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingHorizontal: Theme.spacing.lg,
-              paddingVertical: Theme.spacing.md,
-              marginVertical: Theme.spacing.sm,
-              backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-              borderRadius: Theme.borderRadius.md,
-            }]}
-            onPress={() => updateHapticEnabled(!hapticEnabled)}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{
-                width: 32,
-                height: 32,
-                borderRadius: 16,
-                backgroundColor: 'rgba(255, 45, 85, 0.15)',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-                <IconSymbol size={18} name="hand.tap.fill" color="#FF2D55" />
-              </View>
-              <Text style={{
-                fontSize: 16,
-                fontWeight: '600',
-                color: colors.text,
-              }}>
-                Haptic Feedback
-              </Text>
-            </View>
-            <Switch
-              value={hapticEnabled}
-              onValueChange={updateHapticEnabled}
-              trackColor={{ false: colors.separator, true: colors.primary }}
-              thumbColor={hapticEnabled ? '#FFFFFF' : colors.textSecondary}
-            />
-          </TouchableOpacity>
-        )}
-
         {/* Time Format Section */}
         <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>{t('preferences.time_format.title')}</Text>
@@ -1157,6 +1114,49 @@ export default function PreferencesScreen({ onClose, scrollToNotifications, onNa
           
         </BlurView>
         </View>
+
+        {/* Haptic Feedback Section */}
+        {Platform.OS === 'ios' && (
+          <TouchableOpacity 
+            style={[{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingHorizontal: Theme.spacing.lg,
+              paddingVertical: Theme.spacing.md,
+              marginVertical: Theme.spacing.sm,
+              backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+              borderRadius: Theme.borderRadius.md,
+            }]}
+            onPress={() => updateHapticEnabled(!hapticEnabled)}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: 'rgba(255, 45, 85, 0.15)',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+                <IconSymbol size={18} name="hand.tap.fill" color="#FF2D55" />
+              </View>
+              <Text style={{
+                fontSize: 16,
+                fontWeight: '600',
+                color: colors.text,
+              }}>
+                Haptic Feedback
+              </Text>
+            </View>
+            <Switch
+              value={hapticEnabled}
+              onValueChange={updateHapticEnabled}
+              trackColor={{ false: colors.separator, true: colors.primary }}
+              thumbColor={hapticEnabled ? '#FFFFFF' : colors.textSecondary}
+            />
+          </TouchableOpacity>
+        )}
 
         {/* Widget Section - Only iOS */}
         {Platform.OS === 'ios' && (

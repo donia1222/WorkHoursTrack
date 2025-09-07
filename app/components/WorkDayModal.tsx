@@ -1021,6 +1021,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Theme.colors.background,
+    marginBottom: 60,
   },
   header: {
     borderBottomWidth: 1,
@@ -1146,7 +1147,8 @@ const styles = StyleSheet.create({
     marginRight: Theme.spacing.xs,
   },
   syncButton: {
-    marginBottom: Theme.spacing.sm,
+    marginBottom: 20,
+    
   },
   syncButtonInner: {
     flexDirection: 'row',

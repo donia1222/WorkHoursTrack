@@ -405,72 +405,7 @@ function AppContent() {
 
       <BottomNavigation />
 
-      {/* Features Modal */}
-      <Modal visible={showFeaturesModal} transparent animationType="fade" onRequestClose={handleFeaturesModalClose}>
-        <View style={featuresModalStyles.overlay}>
-          <BlurView
-            intensity={80}
-            tint={isDark ? 'dark' : 'light'}
-            style={[featuresModalStyles.container, { backgroundColor: isDark ? colors.surface : '#FFFFFF' }]}
-          >
-            <View style={featuresModalStyles.header}>
-              <Text style={[featuresModalStyles.title, { color: colors.text }]}>News! 🎉</Text>
-              <TouchableOpacity style={featuresModalStyles.closeButton} onPress={handleFeaturesModalClose} activeOpacity={0.7}>
-                <Ionicons name="close" size={24} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
 
-            <View style={featuresModalStyles.content}>
-              <View style={featuresModalStyles.featuresList}>
-                <View style={featuresModalStyles.featureItem}>
-                  <View style={[featuresModalStyles.featureIcon, { backgroundColor: isDark ? colors.primary + '15' : colors.primary + '10' }]}>
-                    <Ionicons name="document-text" size={16} color={colors.primary} />
-                  </View>
-                  <Text style={[featuresModalStyles.featureText, { color: colors.text }]}>{t('chatbot.feature_analyze')}</Text>
-                </View>
-                <View style={featuresModalStyles.featureItem}>
-                  <View style={[featuresModalStyles.featureIcon, { backgroundColor: isDark ? colors.primary + '15' : colors.primary + '10' }]}>
-                    <Ionicons name="search" size={16} color={colors.primary} />
-                  </View>
-                  <Text style={[featuresModalStyles.featureText, { color: colors.text }]}>{t('chatbot.feature_extract')}</Text>
-                </View>
-                <View style={featuresModalStyles.featureItem}>
-                  <View style={[featuresModalStyles.featureIcon, { backgroundColor: isDark ? colors.primary + '15' : colors.primary + '10' }]}>
-                    <Ionicons name="calendar" size={16} color={colors.primary} />
-                  </View>
-                  <Text style={[featuresModalStyles.featureText, { color: colors.text }]}>{t('chatbot.feature_identify')}</Text>
-                </View>
-                <View style={featuresModalStyles.featureItem}>
-                  <View style={[featuresModalStyles.featureIcon, { backgroundColor: isDark ? colors.primary + '15' : colors.primary + '10' }]}>
-                    <Ionicons name="people" size={16} color={colors.primary} />
-                  </View>
-                  <Text style={[featuresModalStyles.featureText, { color: colors.text }]}>{t('chatbot.feature_detect')}</Text>
-                </View>
-                <View style={featuresModalStyles.featureItem}>
-                  <View style={[featuresModalStyles.featureIcon, { backgroundColor: isDark ? colors.primary + '15' : colors.primary + '10' }]}>
-                    <Ionicons name="download" size={16} color={colors.primary} />
-                  </View>
-                  <Text style={[featuresModalStyles.featureText, { color: colors.text }]}>{t('chatbot.feature_export')}</Text>
-                </View>
-                <View style={featuresModalStyles.featureItem}>
-                  <View style={[featuresModalStyles.featureIcon, { backgroundColor: isDark ? colors.primary + '15' : colors.primary + '10' }]}>
-                    <Ionicons name="sync" size={16} color={colors.primary} />
-                  </View>
-                  <Text style={[featuresModalStyles.featureText, { color: colors.text }]}>{t('chatbot.feature_sync')}</Text>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={[featuresModalStyles.analyzeButton, { backgroundColor: colors.primary }]}
-                onPress={handleAnalyzeBotPress}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="sparkles" size={20} color="#FFFFFF" />
-                <Text style={featuresModalStyles.analyzeButtonText}>Analyze bot</Text>
-              </TouchableOpacity>
-            </View>
-          </BlurView>
-        </View>
-      </Modal>
 
       {/* Help Support Modal */}
       <Modal

@@ -439,7 +439,7 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
           {
             name: `${t('reports.regular_hours')}: ${regularHours.toFixed(1)}h`,
             population: parseFloat(regularHours.toFixed(1)),
-            color: isDark ? '#4ade80' : '#16a34a',
+            color: isDark ? '#ef4444' : '#f87171',
             legendFontColor: isDark ? '#ffffff' : '#000000',
             legendFontSize: 11,
           },
@@ -711,7 +711,7 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
     backgroundGradientFromOpacity: 1,
     backgroundGradientTo: isDark ? '#111827' : '#f9fafb',
     backgroundGradientToOpacity: 1,
-    color: (opacity = 1) => isDark ? `rgba(74, 222, 128, ${opacity})` : `rgba(22, 163, 74, ${opacity})`,
+    color: (opacity = 1) => isDark ? `rgba(239, 68, 68, ${opacity})` : `rgba(248, 113, 113, ${opacity})`,
     strokeWidth: 3,
     barPercentage: 0.7,
     useShadowColorFromDataset: false,
@@ -719,7 +719,7 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
     propsForDots: {
       r: "6",
       strokeWidth: "2",
-      stroke: isDark ? "#4ade80" : "#16a34a"
+      stroke: isDark ? "#ef4444" : "#f87171"
     }
   };
 
@@ -740,7 +740,7 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
             <Ionicons 
               name="analytics" 
               size={24} 
-              color={isDark ? '#4ade80' : '#16a34a'} 
+              color={isDark ? '#ef4444' : '#f87171'} 
             />
             <Text style={[
               styles.title,
@@ -833,31 +833,31 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
           {/* Summary Cards */}
           <View style={styles.summaryContainer}>
             <LinearGradient
-              colors={isDark ? ['#1e40af', '#3b82f6'] : ['#dbeafe', '#93c5fd']}
+              colors={isDark ? ['#991b1b', '#ef4444'] : ['#fee2e2', '#fca5a5']}
               style={styles.summaryCard}
             >
               <Ionicons 
                 name="wallet" 
                 size={20} 
-                color={isDark ? '#ffffff' : '#1e40af'} 
+                color={isDark ? '#ffffff' : '#991b1b'} 
                 style={{ marginBottom: 4 }}
               />
               <Text style={[
                 styles.summaryLabel,
-                { color: isDark ? '#ffffff' : '#1e40af' }
+                { color: isDark ? '#ffffff' : '#991b1b' }
               ]}>
                 {t('reports.monthly_earnings')}
               </Text>
               <Text style={[
                 styles.summaryValue,
-                { color: isDark ? '#ffffff' : '#1e40af' }
+                { color: isDark ? '#ffffff' : '#991b1b' }
               ]}>
                 {getCurrencySymbol()}{calculateTotalEarnings().toFixed(2)}
               </Text>
                          <TouchableOpacity
               style={[
                 styles.actionButtone,
-                { backgroundColor: isDark ? '#1e40af' : '#3b82f6' }
+                { backgroundColor: isDark ? '#991b1b' : '#ef4444' }
               ]}
               onPress={onEditSalary}
             >
@@ -874,7 +874,7 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
               <Ionicons 
                 name="time" 
                 size={28} 
-                color={isDark ? '#4ade80' : '#16a34a'} 
+                color={isDark ? '#ef4444' : '#f87171'} 
                 style={{ marginBottom: 4 }}
               />
               <Text style={[
@@ -885,7 +885,7 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
               </Text>
               <Text style={[
                 styles.summaryValue,
-                { color: isDark ? '#4ade80' : '#16a34a' }
+                { color: isDark ? '#ef4444' : '#f87171' }
               ]}>
                 {calculatedTotalHours.toFixed(1)}h
               </Text>
