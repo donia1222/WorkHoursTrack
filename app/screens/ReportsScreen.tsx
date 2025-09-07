@@ -382,8 +382,13 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     // Count unique days only (multiple sessions on same day count as 1 day)
     const uniqueDates = new Set(monthWorkDays.map(day => day.date.split('T')[0]));
     const totalDays = uniqueDates.size;
-    const overtimeHours = monthWorkDays.reduce((sum, day) => 
-      sum + (day.overtime ? Math.max(0, getNetHours(day) - 8) : 0), 0);
+    const overtimeHours = monthWorkDays.reduce((sum, day) => {
+      if (day.overtime) {
+        const standardHours = day.standardHours || 8;
+        return sum + Math.max(0, getNetHours(day) - standardHours);
+      }
+      return sum;
+    }, 0);
     const avgHoursPerDay = totalDays > 0 ? totalHours / totalDays : 0;
     
     console.log('🎉 FINAL NUMBERS:', { 
@@ -516,8 +521,13 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
     // Count unique days only (multiple sessions on same day count as 1 day)
     const uniqueDates = new Set(filteredWorkDays.map(day => day.date.split('T')[0]));
     const totalDays = uniqueDates.size;
-    const overtimeHours = filteredWorkDays.reduce((sum, day) => 
-      sum + (day.overtime ? getNetHours(day) - 8 : 0), 0);
+    const overtimeHours = filteredWorkDays.reduce((sum, day) => {
+      if (day.overtime) {
+        const standardHours = day.standardHours || 8;
+        return sum + Math.max(0, getNetHours(day) - standardHours);
+      }
+      return sum;
+    }, 0);
     const avgHoursPerDay = totalDays > 0 ? totalHours / totalDays : 0;
 
     // Job breakdown
@@ -1890,8 +1900,8 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
           ) : null}
         </BlurView>
 </Animated.View>
-        {/* Action Buttons */}
-        {!isLoadingJobs && (
+        {/* Action Buttons - Only show when there is data to export */}
+        {!isLoadingJobs && periodStats && periodStats.totalDays > 0 && (
         <View style={styles.actionButtonsContainer}>
 
 

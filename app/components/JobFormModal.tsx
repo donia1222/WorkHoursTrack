@@ -38,6 +38,54 @@ import { FreeAddressSearch } from './FreeAddressSearch';
 import AddressAutocompleteDropdown from './AddressAutocompleteDropdown';
 import * as Updates from 'expo-updates';
 
+// Function to get default currency based on country
+const getDefaultCurrencyByCountry = async () => {
+  try {
+    // Get current location
+    const location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Lowest
+    });
+    
+    // Reverse geocode to get country
+    const geocoded = await Location.reverseGeocodeAsync({
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    });
+
+    if (geocoded && geocoded.length > 0) {
+      const country = geocoded[0].isoCountryCode;
+      console.log('🌍 Detected country:', country);
+      
+      // Map countries to their currencies
+      const countryToCurrency: { [key: string]: string } = {
+        // Eurozone countries
+        'AT': 'EUR', 'BE': 'EUR', 'CY': 'EUR', 'EE': 'EUR', 'FI': 'EUR',
+        'FR': 'EUR', 'DE': 'EUR', 'GR': 'EUR', 'IE': 'EUR', 'IT': 'EUR',
+        'LV': 'EUR', 'LT': 'EUR', 'LU': 'EUR', 'MT': 'EUR', 'NL': 'EUR',
+        'PT': 'EUR', 'SK': 'EUR', 'SI': 'EUR', 'ES': 'EUR', 'HR': 'EUR',
+        // Other European countries
+        'CH': 'CHF', 'GB': 'GBP', 'SE': 'SEK', 'NO': 'NOK', 'DK': 'DKK',
+        'PL': 'PLN', 'CZ': 'CZK', 'HU': 'HUF', 'RO': 'RON', 'BG': 'BGN',
+        // Americas
+        'US': 'USD', 'CA': 'CAD', 'MX': 'MXN', 'BR': 'BRL', 'AR': 'ARS',
+        'CL': 'CLP', 'CO': 'COP', 'PE': 'PEN', 
+        // Asia-Pacific
+        'JP': 'JPY', 'CN': 'CNY', 'KR': 'KRW', 'IN': 'INR', 'AU': 'AUD',
+        'NZ': 'NZD', 'SG': 'SGD', 'HK': 'HKD', 'TW': 'TWD', 'TH': 'THB',
+        // Middle East & Africa
+        'IL': 'ILS', 'TR': 'TRY', 'ZA': 'ZAR', 'AE': 'AED', 'SA': 'SAR',
+        'EG': 'EGP', 'NG': 'NGN', 'KE': 'KES',
+      };
+
+      return countryToCurrency[country] || 'EUR'; // Default to EUR if country not found
+    }
+  } catch (error) {
+    console.log('Could not detect location for currency:', error);
+  }
+  
+  return 'EUR'; // Default fallback
+};
+
 // Main currencies list
 const CURRENCIES = [
   { code: 'EUR', symbol: '€', name: 'Euro' },
@@ -1398,6 +1446,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [notificationSettings, setNotificationSettings] = useState({ enabled: false, autoTimer: false });
   const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
   const [jobCoordinates, setJobCoordinates] = useState<{latitude: number; longitude: number} | null>(null);
+  const [hasDetectedCurrency, setHasDetectedCurrency] = useState(false);
+  const [detectedCurrency, setDetectedCurrency] = useState<string>('EUR');
   const [mapRegion, setMapRegion] = useState<{
     latitude: number;
     longitude: number;
@@ -1414,7 +1464,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     city: '',
     postalCode: '',
     hourlyRate: 0,
-    currency: 'EUR',
+    currency: detectedCurrency || 'EUR',
     color: DEFAULT_COLORS[0],
     defaultHours: 8,
     isActive: true,
@@ -1425,7 +1475,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     salary: {
       type: 'hourly',
       amount: 0,
-      currency: 'EUR',
+      currency: detectedCurrency || 'EUR',
     },
     schedule: {
       enabled: false, // Schedule disabled by default
@@ -1481,6 +1531,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [selectedSyncMonths, setSelectedSyncMonths] = useState<number[]>([new Date().getMonth()]); // Current month as default
   const monthScrollViewRef = useRef<ScrollView>(null);
   const nameInputRef = useRef<TextInput>(null);
+  const currencyScrollRef = useRef<ScrollView>(null);
   
   const styles = getStyles(colors, isDark);
 
@@ -1511,13 +1562,60 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     checkFirstTimeUser();
   }, [visible, hasCheckedFirstTime, editingJob]);
 
-  // Verificar permisos de ubicación cuando se abre el modal
+  // Detectar moneda basada en ubicación al montar el componente
+  useEffect(() => {
+    const detectCurrency = async () => {
+      if (!editingJob && !hasDetectedCurrency) {
+        try {
+          const { status } = await Location.getForegroundPermissionsAsync();
+          if (status === 'granted') {
+            const detected = await getDefaultCurrencyByCountry();
+            if (detected) {
+              setDetectedCurrency(detected);
+              setHasDetectedCurrency(true);
+              console.log('💱 Pre-detected currency:', detected);
+            }
+          }
+        } catch (error) {
+          console.log('Could not pre-detect currency:', error);
+        }
+      }
+    };
+    
+    detectCurrency();
+  }, []);
+
+  // Verificar permisos de ubicación cuando se abre el modal y actualizar moneda
   useEffect(() => {
     const checkLocationPermission = async () => {
       if (visible) {
         try {
           const { status } = await Location.getForegroundPermissionsAsync();
           setHasLocationPermission(status === 'granted');
+          
+          // Update currency for new jobs if detected
+          if (!editingJob && detectedCurrency !== 'EUR') {
+            setFormData(prev => ({
+              ...prev,
+              currency: detectedCurrency,
+              salary: {
+                ...prev.salary,
+                currency: detectedCurrency,
+              },
+            }));
+            console.log('💱 Applied detected currency:', detectedCurrency);
+            
+            // Scroll to the detected currency after a short delay
+            setTimeout(() => {
+              if (currencyScrollRef.current) {
+                const index = CURRENCIES.findIndex(c => c.code === detectedCurrency);
+                if (index !== -1) {
+                  // Approximate scroll position (each currency option is about 80px wide)
+                  currencyScrollRef.current.scrollTo({ x: Math.max(0, index * 80 - 50), animated: true });
+                }
+              }
+            }, 500);
+          }
         } catch (error) {
           console.error('Error checking location permission:', error);
           setHasLocationPermission(false);
@@ -1526,7 +1624,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     };
 
     checkLocationPermission();
-  }, [visible]);
+  }, [visible, detectedCurrency]);
 
   // Cargar configuración actual del modo AutoTimer
   useEffect(() => {
@@ -1660,6 +1758,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         autoTimer: autoTimerToUse,
       });
     } else {
+      // For new jobs, use detected currency
       setFormData({
         name: '',
         company: '',
@@ -1668,7 +1767,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         city: '',
         postalCode: '',
         hourlyRate: 0,
-        currency: 'EUR',
+        currency: detectedCurrency,
         color: DEFAULT_COLORS[0],
         defaultHours: 8,
         isActive: true,
@@ -1679,7 +1778,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         salary: {
           type: 'hourly',
           amount: 0,
-          currency: 'EUR',
+          currency: detectedCurrency,
         },
         schedule: scheduleToUse,
         billing: {
@@ -1720,7 +1819,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     setPreviousAutoSchedule(scheduleToUse?.autoSchedule || false);
     
     console.log('🔧 JobFormModal useEffect completed, current formData.autoTimer:', formData.autoTimer);
-  }, [editingJob, visible]);
+  }, [editingJob, visible, detectedCurrency]);
 
   // Get user location when auto-timer is enabled
   useEffect(() => {
@@ -3145,9 +3244,30 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                 <IconSymbol size={20} name="dollarsign.circle.fill" color={colors.primary} />
                 <Text style={styles.financialCardTitle}>{t('job_form.financial.currency_label')}</Text>
               </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.currencySelectorContainer}>
+              <ScrollView 
+                ref={currencyScrollRef}
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                style={styles.currencySelectorContainer}
+                contentContainerStyle={{ paddingHorizontal: 8 }}
+              >
                 <View style={styles.currencySelector}>
-                  {CURRENCIES.map((currency) => (
+                  {(() => {
+                    // Sort currencies to show detected currency first
+                    const sortedCurrencies = [...CURRENCIES].sort((a, b) => {
+                      if (a.code === detectedCurrency) return -1;
+                      if (b.code === detectedCurrency) return 1;
+                      // Then show popular currencies
+                      const popularOrder = ['EUR', 'USD', 'GBP', 'CHF'];
+                      const aIndex = popularOrder.indexOf(a.code);
+                      const bIndex = popularOrder.indexOf(b.code);
+                      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+                      if (aIndex !== -1) return -1;
+                      if (bIndex !== -1) return 1;
+                      return 0;
+                    });
+                    return sortedCurrencies;
+                  })().map((currency) => (
                     <TouchableOpacity
                       key={currency.code}
                       style={[

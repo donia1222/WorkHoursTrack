@@ -110,6 +110,8 @@ export interface WorkDay {
   actualEndTime?: string; // HH:MM:SS format (actual end time from timer/autotimer)
   // Break time tracking
   breakHours?: number; // Hours spent on breaks/pauses during the work day
+  // Standard hours for overtime calculation
+  standardHours?: number; // Standard hours configured when work day was created (default 8)
   createdAt: string;
   updatedAt: string;
 }

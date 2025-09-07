@@ -1490,9 +1490,21 @@ export default function CalendarScreen({ onNavigate, viewMode: externalViewMode,
 
     const totalDays = monthWorkDays.length;
     const totalHours = workDaysOnly.reduce((sum, day) => sum + day.hours, 0);
-    // Calculate overtime hours, not days - same as ReportsScreen
-    const overtimeHours = workDaysOnly.reduce((sum, day) => 
-      sum + (day.overtime ? Math.max(0, day.hours - 8) : 0), 0);
+    // Calculate overtime hours using saved standard hours or default to 8
+    const overtimeHours = workDaysOnly.reduce((sum, day) => {
+      if (day.overtime) {
+        const standardHours = day.standardHours || 8;
+        const overtimeCalc = Math.max(0, day.hours - standardHours);
+        
+        console.log('📅 CalendarScreen - Day:', day.date);
+        console.log('   Total hours:', day.hours);
+        console.log('   Standard hours:', standardHours, '(saved:', day.standardHours, ')');
+        console.log('   Overtime calc:', overtimeCalc);
+        
+        return sum + overtimeCalc;
+      }
+      return sum;
+    }, 0);
     
     // Count unique work days only (multiple sessions on same day count as 1 day) - like ReportsScreen
     const uniqueWorkDates = new Set(workDaysOnly.map(day => day.date.split('T')[0]));

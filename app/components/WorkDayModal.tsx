@@ -313,15 +313,24 @@ export default function WorkDayModal({
 
   useEffect(() => {
     if (existingWorkDay) {
+      console.log('📖 WorkDayModal - Loading existing WorkDay:');
+      console.log('   Date:', existingWorkDay.date);
+      console.log('   Hours:', existingWorkDay.hours);
+      console.log('   Saved Standard Hours:', existingWorkDay.standardHours);
+      console.log('   Overtime flag:', existingWorkDay.overtime);
+      
       // For existing work days, ALWAYS use the original jobId, ignore preselectedJobId
       setSelectedJobId(existingWorkDay.jobId || '');
       setHours(existingWorkDay.hours);
       setNotes(existingWorkDay.notes || '');
       setDayType(existingWorkDay.type);
       
-      // Set custom standard hours from job
+      // Use saved standard hours if available, otherwise use job default or 8
       const job = jobs.find(j => j.id === existingWorkDay.jobId);
-      setCustomStandardHours(job?.defaultHours || 8);
+      const standardHoursToUse = existingWorkDay.standardHours || job?.defaultHours || 8;
+      setCustomStandardHours(standardHoursToUse);
+      
+      console.log('   Using Standard Hours:', standardHoursToUse);
       
       // Set schedule mode and times based on existing data
       if (existingWorkDay.startTime && existingWorkDay.endTime) {
@@ -413,7 +422,16 @@ export default function WorkDayModal({
       endTime: dayType === 'work' && scheduleMode !== 'manual' ? endTime : undefined,
       secondStartTime: dayType === 'work' && scheduleMode !== 'manual' && hasSplitShift ? secondStartTime : undefined,
       secondEndTime: dayType === 'work' && scheduleMode !== 'manual' && hasSplitShift ? secondEndTime : undefined,
+      standardHours: dayType === 'work' && !isPaidByHour ? customStandardHours : undefined,
     };
+
+    console.log('💾 WorkDayModal - Saving WorkDay:');
+    console.log('   Date:', date);
+    console.log('   Hours:', hours);
+    console.log('   Custom Standard Hours:', customStandardHours);
+    console.log('   Is Paid By Hour:', isPaidByHour);
+    console.log('   Overtime:', workDay.overtime);
+    console.log('   Standard Hours saved:', workDay.standardHours);
 
     onSave(workDay);
     onClose();

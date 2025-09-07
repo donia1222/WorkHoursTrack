@@ -2286,8 +2286,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
             dayDate.getFullYear() === currentYear && 
             (day.type === 'work' || !day.type) && 
             day.overtime) {
-          // Overtime is hours over 8
-          totalOvertime += Math.max(0, (day.hours || 0) - 8);
+          // Overtime is hours over standard hours
+          const standardHours = day.standardHours || 8;
+          totalOvertime += Math.max(0, (day.hours || 0) - standardHours);
         }
       });
       
@@ -2985,12 +2986,14 @@ export default function MapLocation({ location, onNavigate }: Props) {
                   
                   // Guardar el día de trabajo antes de limpiar la sesión
                   const today = new Date().toISOString().split('T')[0];
+                  const standardHours = activeJob.defaultHours || 8;
                   const workDay = {
                     date: today,
                     jobId: activeJob.id,
                     hours: elapsedHours,
                     notes: activeSession.notes || 'Auto-stopped (AutoTimer disabled)',
-                    overtime: elapsedHours > 8,
+                    overtime: elapsedHours > standardHours,
+                    standardHours: standardHours,
                     type: 'work' as const,
                     // Add actual start and end times for display in reports
                     actualStartTime: sessionStart.toTimeString().substring(0, 5), // HH:MM format

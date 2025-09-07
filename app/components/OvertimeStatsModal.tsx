@@ -167,7 +167,8 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
       const totalOvertimeHours = overtimeWorkDays.reduce((sum: number, day: any) => {
         if (day.overtime) {
           const netHours = Math.max(0, (day.hours || 0) - (day.breakHours || 0));
-          return sum + Math.max(0, netHours - 8); // Net hours over 8 = overtime
+          const standardHours = day.standardHours || 8;
+          return sum + Math.max(0, netHours - standardHours); // Net hours over standard = overtime
         }
         return sum;
       }, 0);
@@ -380,7 +381,16 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
         if (isCurrentMonth && isWorkDay && matchesJobFilter && day.overtime) {
           const weekNumber = Math.floor(dayDate.getDate() / 7);
           const netHours = Math.max(0, (day.hours || 0) - (day.breakHours || 0));
-          const overtimeHours = Math.max(0, netHours - 8); // Net hours over 8 = overtime
+          const standardHours = day.standardHours || 8; // Use saved standard hours or default to 8
+          const overtimeHours = Math.max(0, netHours - standardHours); // Net hours over standard = overtime
+          
+          console.log('🔍 OvertimeStatsModal - Day:', day.date);
+          console.log('   Total hours:', day.hours);
+          console.log('   Break hours:', day.breakHours || 0);
+          console.log('   Net hours:', netHours);
+          console.log('   Standard hours:', standardHours, '(saved:', day.standardHours, ')');
+          console.log('   Overtime hours calculated:', overtimeHours);
+          
           weeklyOvertimeHours[Math.min(weekNumber, 3)] += overtimeHours;
           totalMonthlyOvertime += overtimeHours;
         }
@@ -403,7 +413,8 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
               matchesJobFilter &&
               day.overtime) {
             const netHours = Math.max(0, (day.hours || 0) - (day.breakHours || 0));
-            const overtimeHours = Math.max(0, netHours - 8);
+            const standardHours = day.standardHours || 8;
+            const overtimeHours = Math.max(0, netHours - standardHours);
             monthOvertimeHours += overtimeHours;
           }
         });
@@ -1016,7 +1027,7 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
                             styles.recentHours,
                             { color: isDark ? '#fbbf24' : '#f59e0b', fontSize: 16 }
                           ]}>
-                            {Math.max(0, Math.max(0, day.hours - (day.breakHours || 0)) - 8).toFixed(1)}h
+                            {Math.max(0, Math.max(0, day.hours - (day.breakHours || 0)) - (day.standardHours || 8)).toFixed(1)}h
                           </Text>
                           <View style={styles.actionButtons}>
                             {day.notes && (
@@ -1087,12 +1098,7 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
                          ]}>
                            {t('reports.no_records')}
                          </Text>
-               <Text style={[
-                       styles.emptyText,
-                       { color: isDark ? '#9ca3af' : '#6b7280' }
-                     ]}>
-                       {t('reports.no_records')}
-                     </Text>
+      
               </View>
             )}
           </View>
