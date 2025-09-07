@@ -981,7 +981,18 @@
       "advanced_reports": "✓ Erweiterte Berichte und Statistiken",
       "data_export": "✓ Datenexport in mehreren Formaten",
       "no_ads": "✓ Keine Werbung",
-      "priority_support": "✓ Prioritäts-Support"
+      "priority_support": "✓ Prioritäts-Support",
+      "unlimited_jobs": "Unbegrenzte Arbeitsplätze",
+      "auto_timer": "Auto-Timer mit Geolokalisierung",
+      "ai_chatbot": "Fortgeschrittener KI-Chatbot",
+      "pdf_export": "Professioneller PDF-Export",
+      "calendar_sync": "Kalendersynchronisierung"
+    },
+    "modal": {
+      "title": "Premium-Funktion",
+      "description": "Diese Funktion erfordert ein Premium-Abonnement",
+      "feature_description": "{{feature}} ist eine Premium-Funktion",
+      "subscribe_button": "Premium erhalten"
     },
     "buttons": {
       "restore": "Käufe Wiederherstellen",
@@ -1179,6 +1190,8 @@
       "maximum_work_hours_spain": "Wie viele maximale Arbeitsstunden sind in Spanien erlaubt?",
       "collective_agreements": "Welche Tarifverträge gelten in meinem Sektor?",
       "find_work_country": "Wo kann ich Arbeit in meinem Land finden?",
+      "find_work_chef": "Arbeit als Koch in meinem Land suchen",
+      "find_work_programmer_ny": "Arbeit als Programmierer in New York suchen",
       "labor_laws_countries": "Welche Arbeitsgesetze kennen Sie aus verschiedenen Ländern?",
       "infer_intentions": "Können Sie meine Absichten ohne spezifische Wörter ableiten?",
       "sync_native_calendar": "Wie synchronisiere ich meine Daten mit dem nativen Kalender?",

@@ -1207,7 +1207,18 @@
       "advanced_reports": "✓ Gelişmiş raporlar ve istatistikler",
       "data_export": "✓ Birden fazla formatta veri dışa aktarma",
       "no_ads": "✓ Reklamsız",
-      "priority_support": "✓ Öncelikli destek"
+      "priority_support": "✓ Öncelikli destek",
+      "unlimited_jobs": "Sınırsız işler",
+      "auto_timer": "Jeolokasyon ile otomatik zamanlayıcı",
+      "ai_chatbot": "Gelişmiş AI sohbet botu",
+      "pdf_export": "Profesyonel PDF dışa aktarma",
+      "calendar_sync": "Takvim senkronizasyonu"
+    },
+    "modal": {
+      "title": "Premium Özellik",
+      "description": "Bu özellik erişim için premium abonelik gerektirir",
+      "feature_description": "{{feature}} premium bir özelliktir",
+      "subscribe_button": "Premium Al"
     },
     "processing": "Satın alma işleniyor...",
     "success": {
@@ -1394,6 +1405,8 @@
       "maximum_work_hours_spain": "İspanya'da izin verilen maksimum çalışma saatleri nelerdir?",
       "collective_agreements": "Sektörümde hangi toplu iş sözleşmeleri geçerli?",
       "find_work_country": "Ülkemde nerede iş bulabilirim?",
+      "find_work_chef": "Ülkemde aşçı olarak iş aramak",
+      "find_work_programmer_ny": "New York'ta programcı olarak iş aramak",
       "labor_laws_countries": "Farklı ülkelerden hangi iş kanunlarını biliyorsunuz?",
       "infer_intentions": "Belirli kelimeler olmadan niyetlerimi anlayabilir misiniz?",
       "sync_native_calendar": "Verilerimi yerel takvimle nasıl senkronize ederim?",

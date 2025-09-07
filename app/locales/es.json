@@ -1229,7 +1229,18 @@
       "advanced_reports": "✓ Reportes avanzados y estadísticas",
       "data_export": "✓ Exportación de datos en múltiples formatos",
       "no_ads": "✓ Sin anuncios",
-      "priority_support": "✓ Soporte prioritario"
+      "priority_support": "✓ Soporte prioritario",
+      "unlimited_jobs": "Trabajos ilimitados",
+      "auto_timer": "Auto-timer con geolocalización",
+      "ai_chatbot": "Chatbot IA avanzado",
+      "pdf_export": "Exportación profesional PDF",
+      "calendar_sync": "Sincronización con calendario"
+    },
+    "modal": {
+      "title": "Función Premium",
+      "description": "Esta función requiere una suscripción premium para acceder",
+      "feature_description": "{{feature}} es una función premium",
+      "subscribe_button": "Obtener Premium"
     },
     "processing": "Procesando compra...",
     "processing_note": "Esto puede tomar unos momentos...",
@@ -1422,6 +1433,8 @@
       "maximum_work_hours_spain": "¿Cuáles son las horas máximas de trabajo permitidas en España?",
       "collective_agreements": "¿Qué convenios colectivos se aplican en mi sector?",
       "find_work_country": "¿Dónde puedo encontrar trabajo en mi país?",
+      "find_work_chef": "Busca trabajo como cocinero en mi país",
+      "find_work_programmer_ny": "Busca trabajo como programador en Nueva York",
       "labor_laws_countries": "¿Qué leyes laborales conoces de diferentes países?",
       "infer_intentions": "¿Puedes inferir mis intenciones sin palabras específicas?",
       "sync_native_calendar": "¿Cómo sincronizo mis datos con el calendario nativo?",

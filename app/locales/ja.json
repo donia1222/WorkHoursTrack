@@ -1179,7 +1179,18 @@
       "advanced_reports": "✓ 高度なレポートと統計",
       "data_export": "✓ 複数形式でのデータエクスポート",
       "no_ads": "✓ 広告なし",
-      "priority_support": "✓ 優先サポート"
+      "priority_support": "✓ 優先サポート",
+      "unlimited_jobs": "無制限の仕事",
+      "auto_timer": "位置情報付き自動タイマー",
+      "ai_chatbot": "高度なAIチャットボット",
+      "pdf_export": "プロフェッショナルPDFエクスポート",
+      "calendar_sync": "カレンダー同期"
+    },
+    "modal": {
+      "title": "プレミアム機能",
+      "description": "この機能にはプレミアム購読が必要です",
+      "feature_description": "{{feature}}はプレミアム機能です",
+      "subscribe_button": "プレミアムを取得"
     },
     "processing": "購入を処理中...",
     "success": {
@@ -1366,6 +1377,8 @@
       "maximum_work_hours_spain": "スペインで許可されている最大労働時間は？",
       "collective_agreements": "私の業界ではどの労働協約が適用されますか？",
       "find_work_country": "自国でどこで仕事を見つけることができますか？",
+      "find_work_chef": "自国でシェフとしての仕事を探す",
+      "find_work_programmer_ny": "ニューヨークでプログラマーとしての仕事を探す",
       "labor_laws_countries": "さまざまな国のどのような労働法をご存知ですか？",
       "infer_intentions": "具体的な言葉なしに私の意図を推測できますか？",
       "sync_native_calendar": "データをネイティブカレンダーと同期するには？",

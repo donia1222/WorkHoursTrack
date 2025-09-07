@@ -1207,7 +1207,18 @@
       "advanced_reports": "✓ Geavanceerde rapporten en statistieken",
       "data_export": "✓ Gegevens export in meerdere formaten",
       "no_ads": "✓ Geen advertenties",
-      "priority_support": "✓ Prioriteit ondersteuning"
+      "priority_support": "✓ Prioriteit ondersteuning",
+      "unlimited_jobs": "Onbeperkte banen",
+      "auto_timer": "Automatische timer met geolocatie",
+      "ai_chatbot": "Geavanceerde AI chatbot",
+      "pdf_export": "Professionele PDF export",
+      "calendar_sync": "Kalender synchronisatie"
+    },
+    "modal": {
+      "title": "Premium Functie",
+      "description": "Deze functie vereist een premium abonnement om toegang te krijgen",
+      "feature_description": "{{feature}} is een premium functie",
+      "subscribe_button": "Premium Verkrijgen"
     },
     "processing": "Aankoop verwerken...",
     "success": {
@@ -1394,6 +1405,8 @@
       "maximum_work_hours_spain": "Wat zijn de maximaal toegestane werkuren in Spanje?",
       "collective_agreements": "Welke collectieve arbeidsovereenkomsten gelden in mijn sector?",
       "find_work_country": "Waar kan ik werk vinden in mijn land?",
+      "find_work_chef": "Werk zoeken als kok in mijn land",
+      "find_work_programmer_ny": "Werk zoeken als programmeur in New York",
       "labor_laws_countries": "Welke arbeidswetten ken je van verschillende landen?",
       "infer_intentions": "Kun je mijn bedoelingen afleiden zonder specifieke woorden?",
       "sync_native_calendar": "Hoe synchroniseer ik mijn gegevens met de standaard kalender?",

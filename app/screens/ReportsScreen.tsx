@@ -33,6 +33,8 @@ import * as FileSystem from 'expo-file-system';
 import JobFormModal from '../components/JobFormModal';
 import EditWorkDayModal from '../components/EditWorkDayModal';
 import DeleteWorkDayModal from '../components/DeleteWorkDayModal';
+import SubscriptionModal from '../components/SubscriptionModal';
+import { useSubscription } from '../hooks/useSubscription';
 
 interface ReportsScreenProps {
   onNavigate: (screen: string) => void;
@@ -164,6 +166,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const [deleteWorkDayModal, setDeleteWorkDayModal] = useState(false);
   const [deletingWorkDay, setDeletingWorkDay] = useState<WorkDay | null>(null);
   const [skipAnimations, setSkipAnimations] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   
   const { handleBack } = useBackNavigation();
   const navigation = useNavigation();
@@ -171,6 +174,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const { t, language } = useLanguage();
   const { triggerHaptic } = useHapticFeedback();
   const { formatTimeWithPreferences } = useTimeFormatHook();
+  const { isSubscribed } = useSubscription();
   
   // Function to format time compactly for reports
   const formatTimeCompact = (time: string): string => {
@@ -866,6 +870,10 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   };
 
   const showBillingDataModal = () => {
+    if (!isSubscribed) {
+      setShowSubscriptionModal(true);
+      return;
+    }
     setShowBillingModal(true);
   };
 
@@ -2323,6 +2331,12 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         workDay={deletingWorkDay}
         jobName={deletingWorkDay ? jobs.find(j => j.id === deletingWorkDay.jobId)?.name || '' : ''}
         formatDate={formatDate}
+      />
+      
+      <SubscriptionModal
+        visible={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        feature={t('reports.export_pdf')}
       />
     </SafeAreaView>
   );

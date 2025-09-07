@@ -33,6 +33,8 @@ import * as FileSystem from 'expo-file-system';
 import * as Print from 'expo-print';
 import EditWorkDayModal from './EditWorkDayModal';
 import DeleteWorkDayModal from './DeleteWorkDayModal';
+import SubscriptionModal from './SubscriptionModal';
+import { useSubscription } from '../hooks/useSubscription';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -55,6 +57,7 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
 }) => {
   const { isDark, colors } = useTheme();
   const { t } = useLanguage();
+  const { isSubscribed } = useSubscription();
   const [weeklyOvertimeData, setWeeklyOvertimeData] = useState<number[]>([]);
   const [monthlyOvertimeComparison, setMonthlyOvertimeComparison] = useState<number[]>([]);
   const [earningsBreakdown, setEarningsBreakdown] = useState<any[]>([]);
@@ -67,6 +70,7 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
   const [selectedWorkDay, setSelectedWorkDay] = useState<WorkDay | null>(null);
   const [deleteWorkDayModal, setDeleteWorkDayModal] = useState(false);
   const [workDayToDelete, setWorkDayToDelete] = useState<WorkDay | null>(null);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   // Animation values for charts
   const chartOpacity = useSharedValue(0);
@@ -200,6 +204,11 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
   };
 
   const handleExportReport = async () => {
+    if (!isSubscribed) {
+      setShowSubscriptionModal(true);
+      return;
+    }
+    
     try {
       const now = new Date();
       const currentMonth = now.getMonth() + 1;
@@ -1205,6 +1214,12 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
           month: 'long', 
           day: 'numeric' 
         })}
+      />
+      
+      <SubscriptionModal
+        visible={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        feature={t('reports.export_report')}
       />
     </Modal>
   );

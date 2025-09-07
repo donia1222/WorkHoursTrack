@@ -33,6 +33,8 @@ import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import EditWorkDayModal from './EditWorkDayModal';
 import DeleteWorkDayModal from './DeleteWorkDayModal';
+import SubscriptionModal from './SubscriptionModal';
+import { useSubscription } from '../hooks/useSubscription';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -57,6 +59,7 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
 }) => {
   const { isDark, colors } = useTheme();
   const { t } = useLanguage();
+  const { isSubscribed } = useSubscription();
   const [weeklyData, setWeeklyData] = useState<number[]>([]);
   const [monthlyComparison, setMonthlyComparison] = useState<number[]>([]);
   const [earningsBreakdown, setEarningsBreakdown] = useState<any[]>([]);
@@ -70,6 +73,7 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
   const [selectedWorkDay, setSelectedWorkDay] = useState<WorkDay | null>(null);
   const [deleteWorkDayModal, setDeleteWorkDayModal] = useState(false);
   const [workDayToDelete, setWorkDayToDelete] = useState<WorkDay | null>(null);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   // Animation values for charts
   const chartOpacity = useSharedValue(0);
@@ -203,6 +207,11 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
   };
 
   const handleExportReport = async () => {
+    if (!isSubscribed) {
+      setShowSubscriptionModal(true);
+      return;
+    }
+    
     try {
       const now = new Date();
       const currentMonth = now.getMonth() + 1; // January = 1
@@ -1214,6 +1223,12 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
           month: 'long', 
           day: 'numeric' 
         })}
+      />
+      
+      <SubscriptionModal
+        visible={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        feature={t('reports.export_report')}
       />
     </Modal>
   );
