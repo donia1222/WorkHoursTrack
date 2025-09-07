@@ -279,6 +279,7 @@ struct WorkTrackSmall: View {
                         .font(.system(size: 16, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Purple
                 }
+                .padding(.leading, 25)  // Move VixTime more to the right
                 Spacer()
             }
             
@@ -303,6 +304,7 @@ struct WorkTrackSmall: View {
                             .lineLimit(1)
                         Spacer()
                     }
+                    .padding(.trailing, 8)  // Add right margin to prevent cutoff
                 }
                 
                 Spacer(minLength: 0)
@@ -342,6 +344,7 @@ struct WorkTrackMedium: View {
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Purple
                 }
+                .padding(.leading, 25)  // Move VixTime more to the right
                 
                 Spacer()
                 
@@ -360,6 +363,7 @@ struct WorkTrackMedium: View {
                             }
                         }
                     }
+                    .padding(.trailing, 20)  // Add right margin to prevent title cutoff
                 }
             }
             
@@ -553,6 +557,7 @@ struct WorkTrackLarge: View {
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Purple
                 }
+                .padding(.leading, 25)  // Move VixTime more to the right
                 
                 Spacer()
                 
@@ -565,6 +570,7 @@ struct WorkTrackLarge: View {
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(Color(red: 0.2, green: 0.3, blue: 0.5))
                             .lineLimit(1)
+                            .truncationMode(.tail)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
@@ -586,7 +592,8 @@ struct WorkTrackLarge: View {
                             }
                         }
                     }
-                    .padding(.trailing, 10)  // Add margin to the right
+                    .padding(.leading, 25)  // Add left margin for spacing
+                    .padding(.trailing, 15)  // Add right margin to prevent cutoff
                 }
             }
             

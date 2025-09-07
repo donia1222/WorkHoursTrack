@@ -1367,6 +1367,38 @@
       "october": "Outubro",
       "november": "Novembro",
       "december": "Dezembro"
+    },
+    "modal": {
+      "title": "Como posso ajudá-lo?",
+      "loading": "Carregando perguntas...",
+      "loading_desc": "Preparando opções disponíveis",
+      "questions": "perguntas"
+    },
+    "sections": {
+      "work_plans": "Planos de Trabalho",
+      "labor_queries": "Consultas Trabalhistas",
+      "my_work": "Sobre o Meu Trabalho",
+      "app_features": "Recursos do App"
+    },
+    "questions": {
+      "analyze_pdf_schedule": "Pode analisar meu cronograma de trabalho em PDF?",
+      "detect_multiple_people": "Pode detectar várias pessoas num plano de trabalho?",
+      "identify_free_days": "Como identifica dias livres e férias em documentos?",
+      "analyze_multiple_employees": "Como analisa documentos com vários funcionários?",
+      "minimum_wage_france": "Como posso verificar o salário mínimo na França?",
+      "labor_information_search": "Que informações trabalhistas pode pesquisar na internet?",
+      "legal_queries_work": "Que consultas jurídicas pode resolver sobre trabalho?",
+      "labor_legislation_italy": "Pode pesquisar legislação trabalhista atualizada da Itália?",
+      "official_sources_labor": "Que fontes oficiais consulta para informações trabalhistas?",
+      "countries_labor_rights": "Que países cobre para consultas de direitos trabalhistas?",
+      "maximum_work_hours_spain": "Quais são as horas máximas de trabalho permitidas na Espanha?",
+      "collective_agreements": "Que acordos coletivos se aplicam no meu setor?",
+      "find_work_country": "Onde posso encontrar trabalho no meu país?",
+      "labor_laws_countries": "Que leis trabalhistas conhece de diferentes países?",
+      "infer_intentions": "Pode inferir minhas intenções sem palavras específicas?",
+      "sync_native_calendar": "Como sincronizo meus dados com o calendário nativo?",
+      "export_app_calendar": "Como exporto minhas informações para o calendário do app?",
+      "remember_context": "Pode lembrar do contexto das nossas conversas?"
     }
   },
   "privacy_policy": {

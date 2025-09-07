@@ -1339,6 +1339,38 @@
       "october": "10月",
       "november": "11月",
       "december": "12月"
+    },
+    "modal": {
+      "title": "どのようにお手伝いできますか？",
+      "loading": "質問を読み込み中...",
+      "loading_desc": "利用可能なオプションを準備中",
+      "questions": "質問"
+    },
+    "sections": {
+      "work_plans": "勤務計画",
+      "labor_queries": "労務相談",
+      "my_work": "私の勤務について",
+      "app_features": "アプリ機能"
+    },
+    "questions": {
+      "analyze_pdf_schedule": "勤務スケジュールのPDFを分析できますか？",
+      "detect_multiple_people": "勤務計画で複数の人を検出できますか？",
+      "identify_free_days": "文書内の休日と休暇をどのように識別しますか？",
+      "analyze_multiple_employees": "複数の従業員がいる文書をどのように分析しますか？",
+      "minimum_wage_france": "フランスの最低賃金をどのように確認できますか？",
+      "labor_information_search": "インターネットでどのような労働情報を検索できますか？",
+      "legal_queries_work": "労働に関してどのような法的質問を解決できますか？",
+      "labor_legislation_italy": "イタリアの最新労働法を検索できますか？",
+      "official_sources_labor": "労働情報のためにどのような公式情報源を参照しますか？",
+      "countries_labor_rights": "労働権に関する質問でどの国をカバーしていますか？",
+      "maximum_work_hours_spain": "スペインで許可されている最大労働時間は？",
+      "collective_agreements": "私の業界ではどの労働協約が適用されますか？",
+      "find_work_country": "自国でどこで仕事を見つけることができますか？",
+      "labor_laws_countries": "さまざまな国のどのような労働法をご存知ですか？",
+      "infer_intentions": "具体的な言葉なしに私の意図を推測できますか？",
+      "sync_native_calendar": "データをネイティブカレンダーと同期するには？",
+      "export_app_calendar": "情報をアプリカレンダーにエクスポートするには？",
+      "remember_context": "会話の文脈を覚えていることができますか？"
     }
   },
   "privacy_policy": {

@@ -1217,6 +1217,38 @@
       "october": "Octobre",
       "november": "Novembre",
       "december": "Décembre"
+    },
+    "modal": {
+      "title": "Comment puis-je vous aider ?",
+      "loading": "Chargement des questions...",
+      "loading_desc": "Préparation des options disponibles",
+      "questions": "questions"
+    },
+    "sections": {
+      "work_plans": "Plans de Travail",
+      "labor_queries": "Requêtes Professionnelles",
+      "my_work": "À Propos de Mon Travail",
+      "app_features": "Fonctionnalités de l'App"
+    },
+    "questions": {
+      "analyze_pdf_schedule": "Pouvez-vous analyser mon planning de travail en PDF ?",
+      "detect_multiple_people": "Pouvez-vous détecter plusieurs personnes dans un plan de travail ?",
+      "identify_free_days": "Comment identifiez-vous les jours libres et les vacances dans les documents ?",
+      "analyze_multiple_employees": "Comment analysez-vous les documents avec plusieurs employés ?",
+      "minimum_wage_france": "Comment puis-je vérifier le salaire minimum en France ?",
+      "labor_information_search": "Quelles informations professionnelles pouvez-vous rechercher sur Internet ?",
+      "legal_queries_work": "Quelles questions juridiques pouvez-vous résoudre concernant le travail ?",
+      "labor_legislation_italy": "Pouvez-vous rechercher la législation du travail mise à jour en Italie ?",
+      "official_sources_labor": "Quelles sources officielles consultez-vous pour les informations professionnelles ?",
+      "countries_labor_rights": "Quels pays couvrez-vous pour les questions de droits du travail ?",
+      "maximum_work_hours_spain": "Quelles sont les heures de travail maximales autorisées en Espagne ?",
+      "collective_agreements": "Quelles conventions collectives s'appliquent à mon secteur ?",
+      "find_work_country": "Où puis-je trouver du travail dans mon pays ?",
+      "labor_laws_countries": "Quelles lois du travail connaissez-vous de différents pays ?",
+      "infer_intentions": "Pouvez-vous déduire mes intentions sans mots spécifiques ?",
+      "sync_native_calendar": "Comment synchroniser mes données avec le calendrier natif ?",
+      "export_app_calendar": "Comment exporter mes informations vers le calendrier de l'app ?",
+      "remember_context": "Pouvez-vous vous souvenir du contexte de nos conversations ?"
     }
   },
   "onboarding": {

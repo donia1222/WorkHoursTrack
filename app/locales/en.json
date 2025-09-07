@@ -1362,6 +1362,38 @@
       "october": "October",
       "november": "November",
       "december": "December"
+    },
+    "modal": {
+      "title": "How can I help you?",
+      "loading": "Loading questions...",
+      "loading_desc": "Preparing available options",
+      "questions": "questions"
+    },
+    "sections": {
+      "work_plans": "Work Plans",
+      "labor_queries": "Labor Queries", 
+      "my_work": "About My Work",
+      "app_features": "App Features"
+    },
+    "questions": {
+      "analyze_pdf_schedule": "Can you analyze my work schedule PDF?",
+      "detect_multiple_people": "Can you detect multiple people in a work plan?",
+      "identify_free_days": "How do you identify free days and vacations in documents?",
+      "analyze_multiple_employees": "How do you analyze documents with multiple employees?",
+      "minimum_wage_france": "How can I check the minimum wage in France?",
+      "labor_information_search": "What labor information can you search on the internet?",
+      "legal_queries_work": "What legal queries can you resolve about work?",
+      "labor_legislation_italy": "Can you search for updated labor legislation in Italy?",
+      "official_sources_labor": "What official sources do you consult for labor information?",
+      "countries_labor_rights": "Which countries do you cover for labor rights queries?",
+      "maximum_work_hours_spain": "What are the maximum work hours allowed in Spain?",
+      "collective_agreements": "What collective agreements apply in my sector?",
+      "find_work_country": "Where can I find work in my country?",
+      "labor_laws_countries": "What labor laws do you know from different countries?",
+      "infer_intentions": "Can you infer my intentions without specific words?",
+      "sync_native_calendar": "How do I sync my data with the native calendar?",
+      "export_app_calendar": "How do I export my information to the app calendar?",
+      "remember_context": "Can you remember the context of our conversations?"
     }
   },
   "privacy_policy": {

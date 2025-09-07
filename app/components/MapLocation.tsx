@@ -28,6 +28,7 @@ import AutoTimerService, { AutoTimerStatus, AutoTimerState } from '../services/A
 import { JobCardsSwiper } from './JobCardsSwiper';
 import { useFocusEffect } from '@react-navigation/native';
 import WidgetSyncService from '../services/WidgetSyncService';
+import ChatbotQuestionsModal from './ChatbotQuestionsModal';
 import MiniMapWidget from './MiniMapWidget';
 import { SalaryStatsModal } from './SalaryStatsModal';
 import { OvertimeStatsModal } from './OvertimeStatsModal';
@@ -1286,6 +1287,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [selectedDaySchedule, setSelectedDaySchedule] = useState<number | null>(null);
   const [monthlyOvertime, setMonthlyOvertime] = useState<number>(0);
   const [dynamicChatbotQuestion, setDynamicChatbotQuestion] = useState<string>('');
+  const [showChatbotQuestionsModal, setShowChatbotQuestionsModal] = useState(false);
   const mapRef = useRef<MapView>(null);
     const [monthlyTotalHours, setMonthlyTotalHours] = useState<number>(0);
     const [monthlyTotalEarnings, setMonthlyTotalEarnings] = useState<number>(0);
@@ -4614,64 +4616,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     elevation: 5,
                     overflow: 'hidden',
                   }}
-                  onPress={async () => {
-                    if (dynamicChatbotQuestion && location) {
-                      try {
-                        // Detect current country
-                        const coordinates = { 
-                          latitude: location.latitude, 
-                          longitude: location.longitude 
-                        };
-                        
-                        // Get country info
-                        const detectedCountry = await detectCountryFromCoordinates(coordinates.latitude, coordinates.longitude);
-                        const localizedCountry = getLocalizedCountryName(detectedCountry, language);
-                        
-                        // Store just the question for the user to see
-                        await AsyncStorage.setItem('chatbot_initial_question', dynamicChatbotQuestion);
-                        
-                        // Create context message in the user's language
-                        const contextMessages = {
-                          es: `[Contexto: Usuario ubicado en ${localizedCountry}. Si la pregunta es sobre legislación laboral o información específica de país, proporciona información relevante para ${localizedCountry}.]`,
-                          en: `[Context: User located in ${localizedCountry}. If the question is about labor legislation or country-specific information, provide relevant information for ${localizedCountry}.]`,
-                          de: `[Kontext: Benutzer befindet sich in ${localizedCountry}. Wenn die Frage über Arbeitsgesetzgebung oder landesspezifische Informationen ist, geben Sie relevante Informationen für ${localizedCountry}.]`,
-                          fr: `[Contexte: Utilisateur situé en ${localizedCountry}. Si la question concerne la législation du travail ou des informations spécifiques au pays, fournissez des informations pertinentes pour ${localizedCountry}.]`,
-                          it: `[Contesto: Utente situato in ${localizedCountry}. Se la domanda riguarda la legislazione del lavoro o informazioni specifiche del paese, fornire informazioni rilevanti per ${localizedCountry}.]`,
-                          pt: `[Contexto: Usuário localizado em ${localizedCountry}. Se a pergunta é sobre legislação trabalhista ou informações específicas do país, forneça informações relevantes para ${localizedCountry}.]`,
-                          nl: `[Context: Gebruiker bevindt zich in ${localizedCountry}. Als de vraag gaat over arbeidswetgeving of landspecifieke informatie, geef dan relevante informatie voor ${localizedCountry}.]`,
-                          tr: `[Bağlam: Kullanıcı ${localizedCountry}'de bulunuyor. Soru iş mevzuatı veya ülkeye özgü bilgiler hakkındaysa, ${localizedCountry} için ilgili bilgi sağlayın.]`,
-                          ja: `[コンテキスト: ユーザーは${localizedCountry}にいます。質問が労働法や国固有の情報に関するものの場合、${localizedCountry}に関連する情報を提供してください。]`,
-                          ru: `[Контекст: Пользователь находится в ${localizedCountry}. Если вопрос касается трудового законодательства или информации, специфичной для страны, предоставьте актуальную информацию для ${localizedCountry}.]`
-                        };
-                        
-                        const contextMessage = contextMessages[language as keyof typeof contextMessages] || contextMessages['en'];
-                        
-                        // Also store location info separately for the chatbot
-                        await AsyncStorage.setItem('chatbot_user_location', JSON.stringify({
-                          country: detectedCountry,
-                          localizedCountry: localizedCountry,
-                          coordinates: coordinates,
-                          language: language,
-                          contextMessage: contextMessage
-                        }));
-                      } catch (error) {
-                        console.warn('Failed to store initial question with location:', error);
-                        // Fallback to basic question storage
-                        try {
-                          await AsyncStorage.setItem('chatbot_initial_question', dynamicChatbotQuestion);
-                        } catch (fallbackError) {
-                          console.warn('Failed to store basic initial question:', fallbackError);
-                        }
-                      }
-                    } else if (dynamicChatbotQuestion) {
-                      // No location available, store just the question
-                      try {
-                        await AsyncStorage.setItem('chatbot_initial_question', dynamicChatbotQuestion);
-                      } catch (error) {
-                        console.warn('Failed to store initial question:', error);
-                      }
-                    }
-                    onNavigate?.('chatbot');
+                  onPress={() => {
+                    // Open the questions modal instead of navigating directly
+                    setShowChatbotQuestionsModal(true);
                   }}
                   activeOpacity={0.9}
                 >
@@ -5107,6 +5054,14 @@ export default function MapLocation({ location, onNavigate }: Props) {
           onDelete={editingWorkDay ? handleWorkDayModalDelete : undefined}
         />
       )}
+
+      {/* Chatbot Questions Modal */}
+      <ChatbotQuestionsModal
+        visible={showChatbotQuestionsModal}
+        onClose={() => setShowChatbotQuestionsModal(false)}
+        onNavigateToChatbot={() => onNavigate?.('chatbot')}
+        userLocation={location}
+      />
     </View>
   );
 }

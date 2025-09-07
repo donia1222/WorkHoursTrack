@@ -1152,6 +1152,38 @@
       "october": "Oktober",
       "november": "November",
       "december": "Dezember"
+    },
+    "modal": {
+      "title": "Womit kann ich Ihnen helfen?",
+      "loading": "Lade Fragen...",
+      "loading_desc": "Verfügbare Optionen werden vorbereitet",
+      "questions": "Fragen"
+    },
+    "sections": {
+      "work_plans": "Arbeitspläne",
+      "labor_queries": "Arbeitsrechtliche Anfragen",
+      "my_work": "Über meine Arbeit",
+      "app_features": "App-Funktionen"
+    },
+    "questions": {
+      "analyze_pdf_schedule": "Können Sie meinen Arbeitsplan als PDF analysieren?",
+      "detect_multiple_people": "Können Sie mehrere Personen in einem Arbeitsplan erkennen?",
+      "identify_free_days": "Wie identifizieren Sie freie Tage und Urlaub in Dokumenten?",
+      "analyze_multiple_employees": "Wie analysieren Sie Dokumente mit mehreren Mitarbeitern?",
+      "minimum_wage_france": "Wie kann ich den Mindestlohn in Frankreich prüfen?",
+      "labor_information_search": "Welche Arbeitsinformationen können Sie im Internet suchen?",
+      "legal_queries_work": "Welche rechtlichen Fragen können Sie zur Arbeit beantworten?",
+      "labor_legislation_italy": "Können Sie nach aktueller Arbeitsgesetzgebung in Italien suchen?",
+      "official_sources_labor": "Welche offiziellen Quellen konsultieren Sie für Arbeitsinformationen?",
+      "countries_labor_rights": "Welche Länder decken Sie für Arbeitsrechtsanfragen ab?",
+      "maximum_work_hours_spain": "Wie viele maximale Arbeitsstunden sind in Spanien erlaubt?",
+      "collective_agreements": "Welche Tarifverträge gelten in meinem Sektor?",
+      "find_work_country": "Wo kann ich Arbeit in meinem Land finden?",
+      "labor_laws_countries": "Welche Arbeitsgesetze kennen Sie aus verschiedenen Ländern?",
+      "infer_intentions": "Können Sie meine Absichten ohne spezifische Wörter ableiten?",
+      "sync_native_calendar": "Wie synchronisiere ich meine Daten mit dem nativen Kalender?",
+      "export_app_calendar": "Wie exportiere ich meine Informationen in den App-Kalender?",
+      "remember_context": "Können Sie sich an den Kontext unserer Gespräche erinnern?"
     }
   },
   "onboarding": {

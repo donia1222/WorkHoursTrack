@@ -1,0 +1,741 @@
+{
+  "portals": {
+    "global": [
+      {
+        "name": "LinkedIn",
+        "url": "https://www.linkedin.com/jobs/search/?keywords={query}&location={country}",
+        "type": "Global"
+      },
+      {
+        "name": "Indeed International",
+        "url": "https://{domain}/jobs?q={query}",
+        "type": "Global",
+        "usesDomain": true
+      },
+      {
+        "name": "Glassdoor",
+        "url": "https://www.glassdoor.com/Job/jobs.htm?sc.keyword={query}&locT=N&locId=0&locKeyword={country}",
+        "type": "Global"
+      },
+      {
+        "name": "Monster",
+        "url": "https://www.monster.com/jobs/search?q={query}&where={country}",
+        "type": "Global"
+      },
+      {
+        "name": "SimplyHired",
+        "url": "https://www.simplyhired.com/search?q={query}&l={country}",
+        "type": "Global"
+      }
+    ],
+    "countries": {
+      "ES": {
+        "name": "España",
+        "portals": [
+          {
+            "name": "InfoJobs España",
+            "url": "https://www.infojobs.net/ofertas-trabajo/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "Trabajos.com",
+            "url": "https://www.trabajos.com/ofertas/?q={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Jobtoday España",
+            "url": "https://es.jobtoday.com/empleos?query={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Randstad España",
+            "url": "https://www.randstad.es/candidatos/ofertas-empleo/buscar/?query={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Adecco España",
+            "url": "https://www.adecco.es/ofertas-trabajo/{query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "DE": {
+        "name": "Alemania",
+        "portals": [
+          {
+            "name": "StepStone Deutschland",
+            "url": "https://www.stepstone.de/jobs/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "Arbeitsagentur",
+            "url": "https://www.arbeitsagentur.de/jobsuche/?angebotsart=1&was={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Xing Jobs",
+            "url": "https://www.xing.com/jobs/search?keywords={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Jobs.de",
+            "url": "https://www.jobs.de/stellenangebote/{query}/",
+            "type": "Local"
+          }
+        ]
+      },
+      "FR": {
+        "name": "Francia",
+        "portals": [
+          {
+            "name": "Pôle Emploi",
+            "url": "https://candidat.pole-emploi.fr/offres/recherche?motsCles={query}",
+            "type": "Local"
+          },
+          {
+            "name": "APEC France",
+            "url": "https://www.apec.fr/candidat/recherche-emploi.html#/emplois?motsCles={query}",
+            "type": "Local"
+          },
+          {
+            "name": "LeBonCoin Emploi",
+            "url": "https://www.leboncoin.fr/offres_d_emploi/offres/?q={query}",
+            "type": "Local"
+          },
+          {
+            "name": "RegionsJob",
+            "url": "https://www.regionsjob.com/emplois/{query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "CH": {
+        "name": "Suiza",
+        "portals": [
+          {
+            "name": "Jobs.ch",
+            "url": "https://www.jobs.ch/de/stellenangebote/?term={query}&canton=",
+            "type": "Local"
+          },
+          {
+            "name": "JobScout24",
+            "url": "https://www.jobscout24.ch/de/jobs/?keywords={query}&location=schweiz",
+            "type": "Local"
+          },
+          {
+            "name": "StepStone Schweiz",
+            "url": "https://www.stepstone.ch/stellenangebote--{query}-k",
+            "type": "Local"
+          },
+          {
+            "name": "JobCloud",
+            "url": "https://www.jobcloud.ch/c/de-ch/jobs-search?term={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Indeed Schweiz",
+            "url": "https://ch.indeed.com/jobs?q={query}&l=schweiz",
+            "type": "Local"
+          }
+        ]
+      },
+      "GB": {
+        "name": "Reino Unido",
+        "portals": [
+          {
+            "name": "Reed UK",
+            "url": "https://www.reed.co.uk/jobs/{query}-jobs",
+            "type": "Local"
+          },
+          {
+            "name": "Totaljobs",
+            "url": "https://www.totaljobs.com/jobs/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "CV-Library",
+            "url": "https://www.cv-library.co.uk/search-jobs/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "JobSite UK",
+            "url": "https://www.jobsite.co.uk/jobs/{query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "IT": {
+        "name": "Italia",
+        "portals": [
+          {
+            "name": "InfoJobs Italia",
+            "url": "https://www.infojobs.it/lavoro.xhtml?kw={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Subito Lavoro",
+            "url": "https://www.subito.it/annunci-italia/vendita/offerte-lavoro/?q={query}",
+            "type": "Local"
+          },
+          {
+            "name": "JobRapido Italia",
+            "url": "https://it.jobrapido.com/jobsearch/trovare-lavoro/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "Bakeca Lavoro",
+            "url": "https://www.bakeca.it/annunci/lavoro/?keywords={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "PL": {
+        "name": "Polonia",
+        "portals": [
+          {
+            "name": "Pracuj.pl",
+            "url": "https://www.pracuj.pl/praca/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "OLX Praca",
+            "url": "https://www.olx.pl/praca/q-{query}/",
+            "type": "Local"
+          },
+          {
+            "name": "Infopraca.pl",
+            "url": "https://www.infopraca.pl/praca/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "JobTiger.pl",
+            "url": "https://jobtiger.pl/oferty-pracy/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "Praca.pl",
+            "url": "https://www.praca.pl/praca/{query}.html",
+            "type": "Local"
+          }
+        ]
+      },
+      "NL": {
+        "name": "Países Bajos",
+        "portals": [
+          {
+            "name": "Nationale Vacaturebank",
+            "url": "https://www.nationalevacaturebank.nl/vacature/zoeken?keywords={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Monsterboard Nederland",
+            "url": "https://www.monsterboard.nl/banen/zoeken/?q={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Jobbird",
+            "url": "https://www.jobbird.com/nl/vacatures?q={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "PT": {
+        "name": "Portugal",
+        "portals": [
+          {
+            "name": "Net-Empregos",
+            "url": "https://www.net-empregos.com/pesquisa-empregos.asp?palavrachave={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Sapo Emprego",
+            "url": "https://emprego.sapo.pt/pesquisar/?q={query}",
+            "type": "Local"
+          },
+          {
+            "name": "ExpressoEmprego",
+            "url": "https://expressoemprego.pt/pesquisar-ofertas?keywords={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "BE": {
+        "name": "Bélgica",
+        "portals": [
+          {
+            "name": "Jobat.be",
+            "url": "https://www.jobat.be/nl/jobs?keywords={query}",
+            "type": "Local"
+          },
+          {
+            "name": "StepStone België",
+            "url": "https://www.stepstone.be/jobs/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "References.be",
+            "url": "https://www.references.be/jobs?q={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "AT": {
+        "name": "Austria",
+        "portals": [
+          {
+            "name": "Jobs.at",
+            "url": "https://www.jobs.at/jobs/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "StepStone Österreich",
+            "url": "https://www.stepstone.at/jobs/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "AMS Österreich",
+            "url": "https://jobroom.ams.or.at/jobroom/klf/step1?as={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "SE": {
+        "name": "Suecia",
+        "portals": [
+          {
+            "name": "Arbetsförmedlingen",
+            "url": "https://arbetsformedlingen.se/jobb?q={query}",
+            "type": "Local"
+          },
+          {
+            "name": "TheHub.io",
+            "url": "https://thehub.se/jobs?search={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Blocket Jobb",
+            "url": "https://jobb.blocket.se/lediga-jobb?keywords={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "NO": {
+        "name": "Noruega",
+        "portals": [
+          {
+            "name": "Nav.no",
+            "url": "https://arbeidsplassen.nav.no/stillinger?q={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Finn.no Jobb",
+            "url": "https://www.finn.no/job/fulltime/search.html?q={query}",
+            "type": "Local"
+          },
+          {
+            "name": "StepStone Norge",
+            "url": "https://www.stepstone.no/jobb/{query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "DK": {
+        "name": "Dinamarca",
+        "portals": [
+          {
+            "name": "Jobindex.dk",
+            "url": "https://www.jobindex.dk/jobsoegning?q={query}",
+            "type": "Local"
+          },
+          {
+            "name": "StepStone Danmark",
+            "url": "https://www.stepstone.dk/job/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "Jobnet.dk",
+            "url": "https://job.jobnet.dk/CV/FindWork/Search?Searchword={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "FI": {
+        "name": "Finlandia",
+        "portals": [
+          {
+            "name": "Mol.fi",
+            "url": "https://paikat.te-palvelut.fi/tpt/?professions={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Oikotie Työpaikat",
+            "url": "https://tyopaikat.oikotie.fi/haku?jq={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Monster Suomi",
+            "url": "https://www.monster.fi/tyohaku/?q={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "CZ": {
+        "name": "República Checa",
+        "portals": [
+          {
+            "name": "Jobs.cz",
+            "url": "https://www.jobs.cz/prace/{query}/",
+            "type": "Local"
+          },
+          {
+            "name": "Práce.cz",
+            "url": "https://www.prace.cz/hledat/?q%5B%5D={query}",
+            "type": "Local"
+          },
+          {
+            "name": "StartupJobs.cz",
+            "url": "https://www.startupjobs.cz/nabidky?search={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "HU": {
+        "name": "Hungría",
+        "portals": [
+          {
+            "name": "Profession.hu",
+            "url": "https://profession.hu/allasok/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "CV Online Magyarország",
+            "url": "https://www.cvonline.hu/hu/munka/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "AllasPont",
+            "url": "https://www.allaspont.hu/allasok?q={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "RO": {
+        "name": "Rumania",
+        "portals": [
+          {
+            "name": "BestJobs.ro",
+            "url": "https://www.bestjobs.eu/ro/locuri-de-munca/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "eJobs.ro",
+            "url": "https://www.ejobs.ro/locuri-de-munca/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "Hipo.ro",
+            "url": "https://www.hipo.ro/locuri-de-munca/{query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "BG": {
+        "name": "Bulgaria",
+        "portals": [
+          {
+            "name": "Jobs.bg",
+            "url": "https://www.jobs.bg/front_job_search.php?keywords={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Zaplata.bg",
+            "url": "https://www.zaplata.bg/search/?q={query}",
+            "type": "Local"
+          },
+          {
+            "name": "JobTiger.bg",
+            "url": "https://www.jobtiger.bg/search?keywords={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "HR": {
+        "name": "Croacia",
+        "portals": [
+          {
+            "name": "MojPosao.hr",
+            "url": "https://www.mojposao.hr/posao/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "Posao.hr",
+            "url": "https://www.posao.hr/poslovi/{query}/",
+            "type": "Local"
+          }
+        ]
+      },
+      "SK": {
+        "name": "Eslovaquia",
+        "portals": [
+          {
+            "name": "Profesia.sk",
+            "url": "https://www.profesia.sk/praca/{query}/",
+            "type": "Local"
+          },
+          {
+            "name": "PracaZaSeba.sk",
+            "url": "https://www.pracazaseba.sk/praca/{query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "SI": {
+        "name": "Eslovenia",
+        "portals": [
+          {
+            "name": "MojeDelo.com",
+            "url": "https://www.mojedelo.com/prosta-dela/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "Zaposlitev.net",
+            "url": "https://www.zaposlitev.net/search?q={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "LT": {
+        "name": "Lituania",
+        "portals": [
+          {
+            "name": "CV.lt",
+            "url": "https://www.cv.lt/darbo-skelbimai/{query}",
+            "type": "Local"
+          },
+          {
+            "name": "Cvbankas.lt",
+            "url": "https://www.cvbankas.lt/?keyw={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "LV": {
+        "name": "Letonia",
+        "portals": [
+          {
+            "name": "CV.lv",
+            "url": "https://www.cv.lv/lv/search?keywords={query}",
+            "type": "Local"
+          },
+          {
+            "name": "SS.com Darbs",
+            "url": "https://www.ss.com/lv/work/vacancy/search/?txt%5B%5D={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "EE": {
+        "name": "Estonia",
+        "portals": [
+          {
+            "name": "CV Online Eesti",
+            "url": "https://www.cvkeskus.ee/kandidaadile/toopaigad/otsing?keywords={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Töö24.ee",
+            "url": "https://www.too24.ee/toopaigad?keywords={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "GR": {
+        "name": "Grecia",
+        "portals": [
+          {
+            "name": "Kariera.gr",
+            "url": "https://www.kariera.gr/en/jobs?query={query}",
+            "type": "Local"
+          },
+          {
+            "name": "XE.gr",
+            "url": "https://www.xe.gr/jobs/search?q={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "CY": {
+        "name": "Chipre",
+        "portals": [
+          {
+            "name": "JobsCyprus",
+            "url": "https://www.jobscyprus.com/search/jobs?q={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "MT": {
+        "name": "Malta",
+        "portals": [
+          {
+            "name": "Keepmeposted.com",
+            "url": "https://www.keepmeposted.com/search-jobs?q={query}",
+            "type": "Local"
+          },
+          {
+            "name": "JobsMalta.com",
+            "url": "https://www.jobsmalta.com/search-jobs/?query={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "IE": {
+        "name": "Irlanda",
+        "portals": [
+          {
+            "name": "Jobs.ie",
+            "url": "https://www.jobs.ie/search/?q={query}",
+            "type": "Local"
+          },
+          {
+            "name": "IrishJobs.ie",
+            "url": "https://www.irishjobs.ie/ShowResults.aspx?Keywords={query}",
+            "type": "Local"
+          }
+        ]
+      },
+      "LU": {
+        "name": "Luxemburgo",
+        "portals": [
+          {
+            "name": "Jobs.lu",
+            "url": "https://www.jobs.lu/searches/results/?keywords={query}",
+            "type": "Local"
+          },
+          {
+            "name": "Monster Luxembourg",
+            "url": "https://www.monster.lu/emploi/recherche/?q={query}",
+            "type": "Local"
+          }
+        ]
+      }
+    },
+    "indeedDomains": {
+      "ES": "www.indeed.es",
+      "FR": "www.indeed.fr", 
+      "DE": "www.indeed.de",
+      "IT": "www.indeed.it",
+      "PT": "www.indeed.pt",
+      "UK": "www.indeed.co.uk",
+      "GB": "www.indeed.co.uk", 
+      "US": "www.indeed.com",
+      "CA": "ca.indeed.com",
+      "AU": "au.indeed.com",
+      "MX": "www.indeed.com.mx",
+      "BR": "www.indeed.com.br",
+      "AR": "ar.indeed.com",
+      "NL": "nl.indeed.com",
+      "BE": "be.indeed.com",
+      "CH": "ch.indeed.com",
+      "AT": "at.indeed.com", 
+      "SE": "se.indeed.com",
+      "PL": "pl.indeed.com",
+      "NO": "no.indeed.com",
+      "DK": "dk.indeed.com",
+      "FI": "www.indeed.fi",
+      "CZ": "cz.indeed.com",
+      "HU": "hu.indeed.com",
+      "RO": "ro.indeed.com",
+      "BG": "bg.indeed.com",
+      "HR": "hr.indeed.com",
+      "SK": "sk.indeed.com",
+      "SI": "si.indeed.com",
+      "LT": "lt.indeed.com",
+      "LV": "lv.indeed.com", 
+      "EE": "ee.indeed.com",
+      "GR": "gr.indeed.com",
+      "CY": "cy.indeed.com",
+      "MT": "mt.indeed.com",
+      "IE": "ie.indeed.com",
+      "LU": "lu.indeed.com"
+    },
+    "jobTranslations": {
+      "camarero": {
+        "ES": "camarero mesero",
+        "DE": "kellner servicekraft restaurant bedienung",
+        "FR": "serveur serveuse restaurant",
+        "IT": "cameriere ristorante",
+        "PT": "garçom restaurante",
+        "GB": "waiter waitress server restaurant",
+        "PL": "kelner restauracja obsługa",
+        "NL": "ober restaurant bediening",
+        "CZ": "číšník restaurace obsluha",
+        "HU": "pincér étterem kiszolgálás",
+        "RO": "ospătar restaurant",
+        "BG": "сервитьор ресторант",
+        "HR": "konobar restoran usluga",
+        "SK": "čašník reštaurácia obsluha",
+        "SI": "natakar restavracija",
+        "LT": "padavėjas restoranas",
+        "LV": "oficiant restorāns",
+        "EE": "ettekandja restoran",
+        "GR": "σερβιτόρος εστιατόριο",
+        "FI": "tarjoilija ravintola",
+        "SE": "servitör restaurang",
+        "NO": "servitør restaurant",
+        "DK": "tjener restaurant"
+      },
+      "programador": {
+        "ES": "programador desarrollador software",
+        "DE": "programmierer entwickler software",
+        "FR": "programmeur développeur",
+        "IT": "programmatore sviluppatore",
+        "PT": "programador desenvolvedor",
+        "GB": "programmer developer software",
+        "PL": "programista developer",
+        "NL": "programmeur ontwikkelaar",
+        "CZ": "programátor vývojář",
+        "HU": "programozó fejlesztő",
+        "RO": "programator dezvoltator",
+        "BG": "програмист разработчик",
+        "HR": "programer developer",
+        "SK": "programátor vývojár",
+        "SI": "programer razvijalec",
+        "LT": "programuotojas",
+        "LV": "programmētājs",
+        "EE": "programmeerija",
+        "GR": "προγραμματιστής",
+        "FI": "ohjelmoija kehittäjä",
+        "SE": "programmerare utvecklare",
+        "NO": "programmerer utvikler",
+        "DK": "programmør udvikler"
+      },
+      "cocinero": {
+        "ES": "cocinero chef cocina",
+        "DE": "koch küchenchef gastro",
+        "CH": "koch küchenchef gastro restaurant",
+        "FR": "cuisinier chef cuisine",
+        "IT": "cuoco chef cucina",
+        "PT": "cozinheiro chef",
+        "GB": "cook chef kitchen",
+        "PL": "kucharz restauracja",
+        "NL": "kok keuken restaurant",
+        "CZ": "kuchař kuchyně",
+        "HU": "szakács konyha",
+        "RO": "bucătar chef",
+        "BG": "готвач кухня",
+        "HR": "kuhar kuhinja",
+        "SK": "kuchár kuchyňa",
+        "SI": "kuhar kuhinja",
+        "LT": "virėjas virtuvė",
+        "LV": "pavārs virtuve",
+        "EE": "kokk köök",
+        "GR": "μάγειρας κουζίνα",
+        "FI": "kokki keittiö",
+        "SE": "kock kök",
+        "NO": "kokk kjøkken",
+        "DK": "kok køkken"
+      }
+    }
+  }
+}

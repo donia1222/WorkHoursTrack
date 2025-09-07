@@ -1197,6 +1197,38 @@
       "october": "Ottobre",
       "november": "Novembre",
       "december": "Dicembre"
+    },
+    "modal": {
+      "title": "Come posso aiutarti?",
+      "loading": "Caricamento domande...",
+      "loading_desc": "Preparazione delle opzioni disponibili",
+      "questions": "domande"
+    },
+    "sections": {
+      "work_plans": "Piani di Lavoro",
+      "labor_queries": "Consulti Lavorativi",
+      "my_work": "Il Mio Lavoro",
+      "app_features": "Funzionalità dell'App"
+    },
+    "questions": {
+      "analyze_pdf_schedule": "Puoi analizzare il mio programma di lavoro in PDF?",
+      "detect_multiple_people": "Puoi rilevare più persone in un piano di lavoro?",
+      "identify_free_days": "Come identifichi giorni liberi e vacanze nei documenti?",
+      "analyze_multiple_employees": "Come analizzi documenti con più dipendenti?",
+      "minimum_wage_france": "Come posso verificare il salario minimo in Francia?",
+      "labor_information_search": "Quali informazioni lavorative puoi cercare su internet?",
+      "legal_queries_work": "Quali domande legali puoi risolvere sul lavoro?",
+      "labor_legislation_italy": "Puoi cercare la legislazione del lavoro aggiornata in Italia?",
+      "official_sources_labor": "Quali fonti ufficiali consulti per informazioni lavorative?",
+      "countries_labor_rights": "Quali paesi copri per domande sui diritti del lavoro?",
+      "maximum_work_hours_spain": "Quali sono le ore massime di lavoro consentite in Spagna?",
+      "collective_agreements": "Quali accordi collettivi si applicano nel mio settore?",
+      "find_work_country": "Dove posso trovare lavoro nel mio paese?",
+      "labor_laws_countries": "Quali leggi del lavoro conosci di diversi paesi?",
+      "infer_intentions": "Puoi dedurre le mie intenzioni senza parole specifiche?",
+      "sync_native_calendar": "Come sincronizo i miei dati con il calendario nativo?",
+      "export_app_calendar": "Come esporto le mie informazioni nel calendario dell'app?",
+      "remember_context": "Puoi ricordare il contesto delle nostre conversazioni?"
     }
   },
   "onboarding": {

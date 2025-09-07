@@ -1367,6 +1367,38 @@
       "october": "Oktober",
       "november": "November",
       "december": "December"
+    },
+    "modal": {
+      "title": "Waarmee kan ik je helpen?",
+      "loading": "Vragen laden...",
+      "loading_desc": "Beschikbare opties voorbereiden",
+      "questions": "vragen"
+    },
+    "sections": {
+      "work_plans": "Werkplannen",
+      "labor_queries": "Arbeidsrechtelijke Vragen",
+      "my_work": "Over Mijn Werk",
+      "app_features": "App-functies"
+    },
+    "questions": {
+      "analyze_pdf_schedule": "Kun je mijn werkrooster PDF analyseren?",
+      "detect_multiple_people": "Kun je meerdere personen detecteren in een werkplan?",
+      "identify_free_days": "Hoe identificeer je vrije dagen en vakanties in documenten?",
+      "analyze_multiple_employees": "Hoe analyseer je documenten met meerdere werknemers?",
+      "minimum_wage_france": "Hoe kan ik het minimumloon in Frankrijk controleren?",
+      "labor_information_search": "Welke arbeidsinformatie kun je opzoeken op internet?",
+      "legal_queries_work": "Welke juridische vragen kun je beantwoorden over werk?",
+      "labor_legislation_italy": "Kun je zoeken naar actuele arbeidswetgeving in Italië?",
+      "official_sources_labor": "Welke officiële bronnen raadpleeg je voor arbeidsinformatie?",
+      "countries_labor_rights": "Welke landen dek je af voor arbeidsrechtenvragen?",
+      "maximum_work_hours_spain": "Wat zijn de maximaal toegestane werkuren in Spanje?",
+      "collective_agreements": "Welke collectieve arbeidsovereenkomsten gelden in mijn sector?",
+      "find_work_country": "Waar kan ik werk vinden in mijn land?",
+      "labor_laws_countries": "Welke arbeidswetten ken je van verschillende landen?",
+      "infer_intentions": "Kun je mijn bedoelingen afleiden zonder specifieke woorden?",
+      "sync_native_calendar": "Hoe synchroniseer ik mijn gegevens met de standaard kalender?",
+      "export_app_calendar": "Hoe exporteer ik mijn informatie naar de app-kalender?",
+      "remember_context": "Kun je de context van onze gesprekken onthouden?"
     }
   },
   "privacy_policy": {

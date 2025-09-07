@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, ToastAndroid, Platform } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, ToastAndroid, Platform, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import Animated, { 
@@ -166,6 +166,16 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   copyButtonBot: {
     backgroundColor: isDark ? colors.primary + '15' : colors.primary + '08',
   },
+  linkText: {
+    color: colors.primary,
+    textDecorationLine: 'underline',
+    fontWeight: '500',
+  },
+  userLinkText: {
+    color: '#FFFFFF',
+    textDecorationLine: 'underline',
+    fontWeight: '500',
+  },
 });
 
 export default function ChatMessage({ message, jobs = [], onExportToCalendar, onSelectPerson }: ChatMessageProps) {
@@ -175,6 +185,55 @@ export default function ChatMessage({ message, jobs = [], onExportToCalendar, on
   const styles = getStyles(colors, isDark);
   const [showExportModal, setShowExportModal] = useState(false);
   const [parsedData, setParsedData] = useState<any>(null);
+  
+  // Function to handle URL opening
+  const handleLinkPress = async (url: string) => {
+    try {
+      console.log('🔗 [CHAT-LINK] Opening URL:', url);
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Error', `No se puede abrir la URL: ${url}`);
+      }
+    } catch (error) {
+      console.error('Error opening link:', error);
+      Alert.alert('Error', 'No se pudo abrir el enlace');
+    }
+  };
+  
+  // Function to render text with clickable links
+  const renderTextWithLinks = (text: string, isUser: boolean) => {
+    // Regex to match URLs
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        return (
+          <Text
+            key={index}
+            style={isUser ? styles.userLinkText : styles.linkText}
+            onPress={() => handleLinkPress(part)}
+          >
+            {part}
+          </Text>
+        );
+      } else {
+        return (
+          <Text
+            key={index}
+            style={[
+              styles.messageText,
+              isUser ? styles.userText : styles.botText
+            ]}
+          >
+            {part}
+          </Text>
+        );
+      }
+    });
+  };
   
   const messageTime = message.timestamp.toLocaleTimeString([], { 
     hour: '2-digit', 
@@ -420,12 +479,7 @@ export default function ChatMessage({ message, jobs = [], onExportToCalendar, on
       
       {message.text ? (
         <View style={styles.messageHeader}>
-          <Text style={[
-            styles.messageText,
-            message.isUser ? styles.userText : styles.botText
-          ]}>
-            {message.text}
-          </Text>
+          {renderTextWithLinks(message.text, message.isUser)}
         </View>
       ) : null}
       

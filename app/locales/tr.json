@@ -1367,6 +1367,38 @@
       "october": "Ekim",
       "november": "Kasım",
       "december": "Aralık"
+    },
+    "modal": {
+      "title": "Size nasıl yardımcı olabilirim?",
+      "loading": "Sorular yükleniyor...",
+      "loading_desc": "Mevcut seçenekler hazırlanıyor",
+      "questions": "sorular"
+    },
+    "sections": {
+      "work_plans": "Çalışma Planları",
+      "labor_queries": "İş Hukuku Sorguları",
+      "my_work": "İşim Hakkında",
+      "app_features": "Uygulama Özellikleri"
+    },
+    "questions": {
+      "analyze_pdf_schedule": "Çalışma programımı PDF olarak analiz edebilir misiniz?",
+      "detect_multiple_people": "Bir çalışma planında birden fazla kişiyi tespit edebilir misiniz?",
+      "identify_free_days": "Belgelerde serbest günleri ve tatilleri nasıl tanımlıyorsunuz?",
+      "analyze_multiple_employees": "Birden fazla çalışanı olan belgeleri nasıl analiz ediyorsunuz?",
+      "minimum_wage_france": "Fransa'da asgari ücreti nasıl kontrol edebilirim?",
+      "labor_information_search": "İnternette hangi iş bilgilerini arayabilirsiniz?",
+      "legal_queries_work": "İş hakkında hangi yasal soruları çözebilirsiniz?",
+      "labor_legislation_italy": "İtalya'nın güncel iş mevzuatını arayabilir misiniz?",
+      "official_sources_labor": "İş bilgileri için hangi resmi kaynakları kullanıyorsunuz?",
+      "countries_labor_rights": "İşçi hakları sorguları için hangi ülkeleri kapsıyorsunuz?",
+      "maximum_work_hours_spain": "İspanya'da izin verilen maksimum çalışma saatleri nelerdir?",
+      "collective_agreements": "Sektörümde hangi toplu iş sözleşmeleri geçerli?",
+      "find_work_country": "Ülkemde nerede iş bulabilirim?",
+      "labor_laws_countries": "Farklı ülkelerden hangi iş kanunlarını biliyorsunuz?",
+      "infer_intentions": "Belirli kelimeler olmadan niyetlerimi anlayabilir misiniz?",
+      "sync_native_calendar": "Verilerimi yerel takvimle nasıl senkronize ederim?",
+      "export_app_calendar": "Bilgilerimi uygulama takvimine nasıl aktarırım?",
+      "remember_context": "Konuşmalarımızın bağlamını hatırlayabilir misiniz?"
     }
   },
   "privacy_policy": {
