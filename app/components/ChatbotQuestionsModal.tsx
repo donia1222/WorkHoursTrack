@@ -298,7 +298,6 @@ export default function ChatbotQuestionsModal({
           questions: [
             t('chatbot.questions.find_work_country'),
             t('chatbot.questions.find_work_chef'),
-            t('chatbot.questions.find_work_programmer_ny'),
             t('chatbot.questions.labor_laws_countries'),
             t('chatbot.questions.infer_intentions'),
           ],

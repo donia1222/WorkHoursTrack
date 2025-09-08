@@ -4450,7 +4450,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                     fontWeight: '600',
                                     color: isDark ? 'white' : '#bc384cff',
                                     marginBottom: 8,
-                                      marginTop: isTablet ? 8 : 8,
+                                      marginTop: isTablet ? 8 : -4,
                                   }}>{t('maps.total_hours')}</Text>
                                   
                                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -4523,7 +4523,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                                   <Text style={{
                                     fontSize: 11,
                                     color: isDark ? 'rgba(255, 255, 255, 0.4)' : '#9ca3af',
-                                    marginTop: 6,
+                                  
                                   }}>{getMonthName(new Date())}</Text>
                                 </View>
                               </TouchableOpacity>
@@ -4552,7 +4552,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                             activeOpacity={0.8}
                           >
                             <View style={{ flex: 1 }}>
-                              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, marginTop: isTablet ? 8 : 8 }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, marginTop: isTablet ? 8 : -4 }}>
                                 <Text style={{
                                  fontSize: isTablet ? 18 : 16,
                                   fontWeight: '600',
@@ -4634,7 +4634,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                               <Text style={{
                                 fontSize: 11,
                                 color: isDark ? 'rgba(255, 255, 255, 0.4)' : '#9ca3af',
-                                marginTop: 6,
+                             
                               }}>{getMonthName(new Date())}</Text>
                             </View>
                           </TouchableOpacity>
