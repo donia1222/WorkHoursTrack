@@ -6,6 +6,7 @@ export interface SubscriptionState {
   isSubscribed: boolean;
   isLoading: boolean;
   offerings: PurchasesOffering | null;
+  allOfferings: { [key: string]: PurchasesOffering } | null;
   customerInfo: CustomerInfo | null;
   isInitialized: boolean;
 }
@@ -29,6 +30,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     isSubscribed: false,
     isLoading: true,
     offerings: null,
+    allOfferings: null,
     customerInfo: null,
     isInitialized: false,
   });
@@ -242,9 +244,75 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       const offerings = await Purchases.getOfferings();
       const currentOffering = offerings.current;
       
+      // 📋 LOGS DETALLADOS DE TODAS LAS OFFERINGS
+      console.log('🔍 === INFORMACIÓN COMPLETA DE OFFERINGS ===');
+      console.log('📊 Total de offerings disponibles:', Object.keys(offerings.all).length);
+      
+      // Mostrar todas las offerings disponibles
+      Object.entries(offerings.all).forEach(([offeringKey, offering]) => {
+        console.log(`\n🎯 OFFERING: "${offeringKey}"`);
+        console.log(`  └─ Descripción: ${offering.serverDescription || 'Sin descripción'}`);
+        console.log(`  └─ Productos disponibles: ${offering.availablePackages.length}`);
+        
+        // Mostrar cada paquete/producto
+        offering.availablePackages.forEach((pkg, index) => {
+          console.log(`    📦 PAQUETE ${index + 1}:`);
+          console.log(`      └─ ID: ${pkg.identifier}`);
+          console.log(`      └─ Producto ID: ${pkg.product.identifier}`);
+          console.log(`      └─ Título: ${pkg.product.title}`);
+          console.log(`      └─ Precio: ${pkg.product.priceString}`);
+          console.log(`      └─ Descripción: ${pkg.product.description || 'Sin descripción'}`);
+          console.log(`      └─ Tipo: ${pkg.packageType}`);
+          if (pkg.product.subscriptionPeriod) {
+            console.log(`      └─ Período: ${pkg.product.subscriptionPeriod.periodNumber} ${pkg.product.subscriptionPeriod.periodUnit}`);
+          }
+        });
+      });
+      
+      // Mostrar la offering actual (seleccionada por defecto)
+      if (currentOffering) {
+        console.log(`\n⭐ OFFERING ACTUAL SELECCIONADA: "${currentOffering.identifier}"`);
+        console.log(`  └─ Descripción: ${currentOffering.serverDescription || 'Sin descripción'}`);
+        console.log(`  └─ Total productos: ${currentOffering.availablePackages.length}`);
+        
+        currentOffering.availablePackages.forEach((pkg, index) => {
+          console.log(`    🛍️ PRODUCTO ${index + 1} (ACTUAL):`);
+          console.log(`      └─ Package ID: ${pkg.identifier}`);
+          console.log(`      └─ Product ID: ${pkg.product.identifier}`);
+          console.log(`      └─ Título: ${pkg.product.title}`);
+          console.log(`      └─ Precio: ${pkg.product.priceString}`);
+          console.log(`      └─ Descripción: ${pkg.product.description || 'Sin descripción'}`);
+          
+          // Información adicional del producto
+          if (pkg.product.introPrice) {
+            console.log(`      └─ Precio introducción: ${pkg.product.introPrice.priceString}`);
+          }
+          
+          // Verificar si es ente1 o ente2
+          if (pkg.product.identifier === '1981') {
+            console.log(`      └─ ⚠️ ESTE ES ENTE1 (1981)`);
+          } else if (pkg.product.identifier === 'ente2') {
+            console.log(`      └─ ⚠️ ESTE ES ENTE2`);
+          } else {
+            console.log(`      └─ ℹ️ Producto no identificado como ente1 o ente2`);
+          }
+        });
+      } else {
+        console.log('\n❌ NO HAY OFFERING ACTUAL SELECCIONADA');
+        console.log('🔍 Verificando si hay offerings disponibles en "all":');
+        if (Object.keys(offerings.all).length > 0) {
+          console.log('✅ Hay offerings en "all", pero ninguna marcada como "current"');
+        } else {
+          console.log('❌ No hay offerings en "all" tampoco');
+        }
+      }
+      
+      console.log('\n🏁 === FIN DE INFORMACIÓN DE OFFERINGS ===\n');
+      
       setState(prev => ({
         ...prev,
         offerings: currentOffering,
+        allOfferings: offerings.all,
       }));
 
       if (currentOffering) {

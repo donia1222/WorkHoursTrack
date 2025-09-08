@@ -20,6 +20,7 @@ import { BlurView } from 'expo-blur';
 import Header from '../components/Header';
 import PrivacyPolicyScreen from './PrivacyPolicyScreen';
 import TermsOfServiceScreen from './TermsOfServiceScreen';
+import EULAScreen from './EULAScreen';
 
 interface SupportTermsScreenProps {
   onClose?: () => void;
@@ -141,6 +142,9 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   privacyIconBg: {
     backgroundColor: 'rgba(0, 122, 255, 0.15)',
   },
+  eulaIconBg: {
+    backgroundColor: 'rgba(255, 149, 0, 0.15)',
+  },
   screenTitle: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -163,6 +167,7 @@ export default function SupportTermsScreen({ onClose }: SupportTermsScreenProps)
   const { isSubscribed, customerInfo } = useSubscription();
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTermsOfService, setShowTermsOfService] = useState(false);
+  const [showEULA, setShowEULA] = useState(false);
   
   const styles = getStyles(colors, isDark);
 
@@ -233,6 +238,10 @@ Please describe your issue below:
 
   const openPrivacy = () => {
     setShowPrivacyPolicy(true);
+  };
+
+  const openEULA = () => {
+    setShowEULA(true);
   };
 
   const shareApp = async () => {
@@ -339,6 +348,17 @@ Please describe your issue below:
             <IconSymbol size={16} name="chevron.right" color={Theme.colors.textSecondary} />
           </TouchableOpacity>
           
+          <TouchableOpacity style={styles.legalItem} onPress={openEULA}>
+            <View style={[styles.legalIcon, styles.eulaIconBg]}>
+              <IconSymbol size={24} name="doc.badge.gearshape" color={colors.warning} />
+            </View>
+            <View style={styles.legalContent}>
+              <Text style={styles.legalTitle}>EULA</Text>
+              <Text style={styles.legalDescription}>End User License Agreement</Text>
+            </View>
+            <IconSymbol size={16} name="chevron.right" color={Theme.colors.textSecondary} />
+          </TouchableOpacity>
+          
           <View style={styles.versionInfo}>
             <Text style={styles.versionText}>{t('help_support.legal.version')}</Text>
             <Text style={styles.versionSubtext}>{t('help_support.legal.last_update')}</Text>
@@ -364,6 +384,16 @@ Please describe your issue below:
         onRequestClose={() => setShowTermsOfService(false)}
       >
         <TermsOfServiceScreen onClose={() => setShowTermsOfService(false)} />
+      </Modal>
+      
+      {/* EULA Modal */}
+      <Modal
+        visible={showEULA}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => setShowEULA(false)}
+      >
+        <EULAScreen onClose={() => setShowEULA(false)} />
       </Modal>
     </SafeAreaView>
   );

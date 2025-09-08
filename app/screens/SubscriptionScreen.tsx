@@ -24,6 +24,7 @@ import { BlurView } from 'expo-blur';
 // Removed animations to prevent freezing
 import PrivacyPolicyScreen from './PrivacyPolicyScreen';
 import TermsOfServiceScreen from './TermsOfServiceScreen';
+import EULAScreen from './EULAScreen';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -32,10 +33,59 @@ export default function SubscriptionScreen() {
   const { navigateTo } = useNavigation();
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
-  const { isSubscribed, isLoading, offerings, customerInfo, purchaseSubscription, restorePurchases, checkSubscriptionStatus } = useSubscription();
+  const { isSubscribed, isLoading, offerings, allOfferings, customerInfo, purchaseSubscription, restorePurchases, checkSubscriptionStatus } = useSubscription();
   const [purchasing, setPurchasing] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTermsOfService, setShowTermsOfService] = useState(false);
+  const [showEULA, setShowEULA] = useState(false);
+  
+  // Log detallado cuando se carga la pantalla
+  useEffect(() => {
+    console.log('🔍 === SUBSCRIPTION SCREEN CARGADA ===');
+    console.log('📊 Estado actual:');
+    console.log(`  └─ isLoading: ${isLoading}`);
+    console.log(`  └─ isSubscribed: ${isSubscribed}`);
+    console.log(`  └─ offerings disponibles: ${offerings ? 'SÍ' : 'NO'}`);
+    
+    if (allOfferings && Object.keys(allOfferings).length > 0) {
+      console.log(`📦 TODAS las Offerings en SubscriptionScreen:`);
+      console.log(`  └─ Total offerings disponibles: ${Object.keys(allOfferings).length}`);
+      
+      Object.entries(allOfferings).forEach(([key, offering]) => {
+        console.log(`    🎯 OFFERING "${key}":`);
+        console.log(`      └─ Descripción: ${offering.serverDescription || 'Sin descripción'}`);
+        console.log(`      └─ Productos: ${offering.availablePackages.length}`);
+        
+        offering.availablePackages.forEach((pkg, index) => {
+          console.log(`        🛍️ Producto ${index + 1}:`);
+          console.log(`          └─ Package ID: ${pkg.identifier}`);
+          console.log(`          └─ Product ID: ${pkg.product.identifier}`);
+          console.log(`          └─ Título: ${pkg.product.title}`);
+          console.log(`          └─ Precio: ${pkg.product.priceString}`);
+          
+          // Identificar específicamente cada producto
+          if (pkg.product.identifier === '1981') {
+            console.log(`          └─ 🎯 CONFIRMADO: ESTE ES ENTE1 (1981) - 3 MESES`);
+          } else if (pkg.product.identifier === 'ente2') {
+            console.log(`          └─ 🎯 CONFIRMADO: ESTE ES ENTE2 - 6 MESES`);
+          } else if (pkg.product.identifier === 'ente3') {
+            console.log(`          └─ 🎯 CONFIRMADO: ESTE ES ENTE3 - 1 AÑO`);
+          }
+        });
+      });
+    } else {
+      console.log('❌ No hay allOfferings disponibles en SubscriptionScreen');
+    }
+    
+    if (customerInfo) {
+      console.log(`👤 CustomerInfo en SubscriptionScreen:`);
+      console.log(`  └─ User ID: ${customerInfo.originalAppUserId}`);
+      console.log(`  └─ Suscripciones activas: ${Object.keys(customerInfo.activeSubscriptions || {}).length}`);
+      console.log(`  └─ Entitlements activos: ${Object.keys(customerInfo.entitlements?.active || {}).length}`);
+    }
+    
+    console.log('🏁 === FIN LOG SUBSCRIPTION SCREEN ===\n');
+  }, [isLoading, isSubscribed, offerings, allOfferings, customerInfo]);
   
   // Removed all animations to prevent freezing
 
@@ -220,6 +270,10 @@ Please describe your issue below:
 
   const openPrivacy = () => {
     setShowPrivacyPolicy(true);
+  };
+
+  const openEULA = () => {
+    setShowEULA(true);
   };
 
   if (isLoading) {
@@ -483,96 +537,123 @@ Please describe your issue below:
       >
         <View>
           {/* Enhanced Hero Section */}
-          <BlurView intensity={98} tint={isDark ? "dark" : "light"} style={styles.heroCard}>
-            <LinearGradient
-              colors={isDark 
-                ? ['rgba(255, 215, 0, 0.18)', 'rgba(255, 165, 0, 0.12)', 'rgba(255, 140, 0, 0.06)', 'transparent'] 
-                : ['rgba(255, 215, 0, 0.15)', 'rgba(255, 165, 0, 0.10)', 'rgba(255, 140, 0, 0.05)', 'transparent']
-              }
-              style={styles.heroGradientOverlay}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            />
-            <View style={styles.premiumIconContainer}>
-              <LinearGradient
-                colors={['#FFD700', '#FF8C00', '#FF6347']}
-                style={styles.premiumIconGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <View style={styles.iconShadow}>
-                  {/* Corona estática sin animación cuando no está suscrito */}
-                  <View>
-                    <IconSymbol size={52} name="crown.fill" color="#000" />
-                  </View>
-                </View>
-              </LinearGradient>
-              <View style={styles.premiumIconGlow} />
-            </View>
-          
-          <Text style={[styles.heroTitle, { color: colors.text }]}>{t('subscription.title')}</Text>
-          <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
+       
+          <Text style={[styles.heroTitle, { color: colors.textSecondary }]}>
             {t('subscription.subtitle')}
           </Text>
-        </BlurView>
 
-
-
-        {/* Subscription Packages */}
-        {offerings && offerings.availablePackages.length > 0 ? (
-          <View style={styles.packagesContainer}>
-            {offerings.availablePackages.map((pkg, index) => {
-              // Validar el paquete antes de renderizar
-              if (!pkg?.product?.identifier) {
-                console.warn('⚠️ Paquete sin identificador:', pkg);
-                return null;
-              }
-              
-              return (
-              <TouchableOpacity
-                key={index}
-                style={styles.packageCard}
-                onPress={() => handlePurchase(pkg)}
-                disabled={purchasing}
-                activeOpacity={0.8}
-              >
-                <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.packageCardInner}>
-                  <LinearGradient
-                    colors={isDark ? ['rgba(255, 215, 0, 0.2)', 'rgba(255, 165, 0, 0.1)'] : ['rgba(255, 215, 0, 0.15)', 'rgba(255, 165, 0, 0.05)']}
-                    style={styles.packageGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  />
+        {/* Subscription Packages - Horizontal Layout */}
+        {allOfferings && Object.keys(allOfferings).length > 0 ? (
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalScrollContent}
+            style={styles.horizontalScrollContainer}
+          >
+            {Object.entries(allOfferings)
+              .sort(([, offeringA], [, offeringB]) => {
+                // Ordenar por precio: 3 meses, 6 meses, 1 año
+                const priceA = offeringA.availablePackages[0]?.product?.price || 0;
+                const priceB = offeringB.availablePackages[0]?.product?.price || 0;
+                return priceA - priceB;
+              })
+              .map(([offeringKey, offering]) =>
+                offering.availablePackages.map((pkg, index) => {
+                  // Validar el paquete antes de renderizar
+                  if (!pkg?.product?.identifier) {
+                    console.warn('⚠️ Paquete sin identificador:', pkg);
+                    return null;
+                  }
                   
-                  <View style={styles.packageHeader}>
-                    <View style={styles.packageIconContainer}>
-                      <IconSymbol size={24} name="star.fill" color="#FFD700" />
-                    </View>
-                    <Text style={[styles.packageTitle, { color: colors.text }]}>{pkg.product.title}</Text>
-                  </View>
+                  // Determinar el diseño según el producto
+                  let iconColor = "#6366f1";
+                  let gradientColors: [string, string] = ['rgba(99, 102, 241, 0.08)', 'rgba(99, 102, 241, 0.04)'];
+                  let buttonGradient: [string, string] = ['rgba(99, 102, 241, 0.9)', 'rgba(79, 70, 229, 0.9)'];
+                  let duration = '';
+                  let isBestOption = false;
+                  let cardStyle = styles.packageCardHorizontal;
+                  let badgeText = '';
                   
-                    <Text style={[styles.packageDuration, { color: colors.textSecondary }]}>{t('subscription.duration')}</Text>
+                  if (pkg.product.identifier === '1981') {
+                    iconColor = "#10b981";
+                    gradientColors = ['rgba(16, 185, 129, 0.06)', 'rgba(16, 185, 129, 0.03)'];
+                    buttonGradient = ['rgba(16, 185, 129, 0.9)', 'rgba(5, 150, 105, 0.9)'];
+                    duration = '3 months';
+                    badgeText = 'Basic';
+                  } else if (pkg.product.identifier === 'ente2') {
+                    iconColor = "#f59e0b";
+                    gradientColors = ['rgba(245, 158, 11, 0.12)', 'rgba(245, 158, 11, 0.06)'];
+                    buttonGradient = ['rgba(245, 158, 11, 0.95)', 'rgba(217, 119, 6, 0.95)'];
+                    duration = '6 months';
+                    isBestOption = true;
+                    cardStyle = styles.packageCardBest;
+                    badgeText = 'Best Value';
+                  } else if (pkg.product.identifier === 'ente3') {
+                    iconColor = "#8b5cf6";
+                    gradientColors = ['rgba(139, 92, 246, 0.08)', 'rgba(139, 92, 246, 0.04)'];
+                    buttonGradient = ['rgba(139, 92, 246, 0.9)', 'rgba(124, 58, 237, 0.9)'];
+                    duration = '1 year';
+                    badgeText = 'Premium';
+                  }
                   
-                  <View style={styles.packagePriceContainer}>
-                    <Text style={[styles.packagePrice, { color: colors.text }]}>{pkg.product.priceString}</Text>
-          
-                    <View style={styles.subscribeButtonContainer}>
-                      <LinearGradient
-                        colors={['#FFD700', '#FFA500']}
-                        style={styles.subscribeButtonGradient}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
+                  const uniqueKey = `${offeringKey}_${pkg.product.identifier}_${index}`;
+                  
+                  return (
+                    <TouchableOpacity
+                      key={uniqueKey}
+                      style={[cardStyle, isBestOption && styles.bestOptionShadow]}
+                      onPress={() => handlePurchase(pkg)}
+                      disabled={purchasing}
+                      activeOpacity={0.8}
+                    >
+                      <BlurView 
+                        intensity={isBestOption ? 98 : 92} 
+                        tint={isDark ? "dark" : "light"} 
+                        style={styles.packageCardInnerHorizontal}
                       >
-                        <IconSymbol size={18} name="crown.fill" color="#000" />
-                        <Text style={styles.subscribeButtonText}>{t('subscription.buttons.subscribe')}</Text>
-                      </LinearGradient>
-                    </View>
-                  </View>
-                </BlurView>
-              </TouchableOpacity>
-              );
-            })}
-          </View>
+                        <LinearGradient
+                          colors={gradientColors}
+                          style={styles.packageGradientHorizontal}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        />
+                        
+                        
+                        {/* Badge de tipo */}
+                        <View style={[styles.typeBadge, { backgroundColor: iconColor + '20' }]}>
+                          <Text style={[styles.typeBadgeText, { color: iconColor }]}>{badgeText}</Text>
+                        </View>
+                        
+                        <Text style={[styles.packageTitleHorizontal, { color: colors.text, marginTop: 16 }]}>{duration}</Text>
+                     
+                        
+                        <View style={styles.packagePriceContainerHorizontal}>
+                          <Text style={[styles.packagePriceHorizontal, { color: colors.text }]}>{pkg.product.priceString}</Text>
+                          <Text style={[styles.packagePricePerMonth, { color: colors.textSecondary }]}>
+                            {pkg.product.identifier === '1981' && '/3 months'}
+                            {pkg.product.identifier === 'ente2' && '/6 months'}
+                            {pkg.product.identifier === 'ente3' && '/year'}
+                          </Text>
+                        </View>
+                        
+                        <View style={styles.subscribeButtonContainerHorizontal}>
+                          <LinearGradient
+                            colors={buttonGradient as [string, string, ...string[]]}
+                            style={styles.subscribeButtonGradientHorizontal}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                          >
+                            <Text style={styles.subscribeButtonTextHorizontal}>
+                              {isBestOption ? 'Choose Best' : 'Select Plan'}
+                            </Text>
+                          </LinearGradient>
+                        </View>
+                      </BlurView>
+                    </TouchableOpacity>
+                  );
+                })
+              )}
+          </ScrollView>
         ) : (
           <View style={styles.noProductsContainer}>
             <Text style={[styles.noProductsText, { color: colors.textSecondary }]}>
@@ -664,6 +745,17 @@ Please describe your issue below:
               {t('help_support.legal.terms')}
             </Text>
           </TouchableOpacity>
+
+          {/* Botón de EULA */}
+          <TouchableOpacity 
+            style={[styles.footerButton, { backgroundColor: colors.card }]} 
+            onPress={openEULA}
+          >
+            <IconSymbol name="doc.badge.gearshape" size={20} color={colors.primary} />
+            <Text style={[styles.footerButtonText, { color: colors.text }]}>
+              EULA
+            </Text>
+          </TouchableOpacity>
           
           {/* Botón de Email */}
           <TouchableOpacity 
@@ -709,6 +801,16 @@ Please describe your issue below:
         onRequestClose={() => setShowTermsOfService(false)}
       >
         <TermsOfServiceScreen onClose={() => setShowTermsOfService(false)} />
+    </Modal>
+    
+    {/* EULA Modal */}
+    <Modal
+        visible={showEULA}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => setShowEULA(false)}
+      >
+        <EULAScreen onClose={() => setShowEULA(false)} />
     </Modal>
   </SafeAreaView>
   );
@@ -1305,6 +1407,7 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 24,
+    marginTop: -20,
     fontWeight: '900',
     textAlign: 'center',
     marginBottom: 12,
@@ -1316,11 +1419,12 @@ const styles = StyleSheet.create({
     }),
   },
   heroSubtitle: {
-    fontSize: 17,
+    fontSize: 18,
     textAlign: 'center',
     lineHeight: 28,
     paddingHorizontal: 16,
-    fontWeight: '500',
+    fontWeight: '400',
+    marginTop: -20,
   },
   featuresCard: {
     borderRadius: 20,
@@ -1588,5 +1692,155 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginHorizontal: 4,
     opacity: 0.4,
+  },
+
+  // Horizontal Layout Styles
+  horizontalScrollContainer: {
+    marginVertical: 16,
+  },
+  horizontalScrollContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  packageCardHorizontal: {
+    width: screenWidth * 0.72,
+    marginRight: 16,
+    borderRadius: 28,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  packageCardBest: {
+    width: screenWidth * 0.78,
+    marginRight: 16,
+    borderRadius: 32,
+    overflow: 'hidden',
+    transform: [{ scale: 1.05 }],
+    ...Platform.select({
+      ios: {
+        shadowColor: '#f59e0b',
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.25,
+        shadowRadius: 24,
+      },
+      android: {
+        elevation: 16,
+      },
+    }),
+  },
+  bestOptionShadow: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#f59e0b',
+        shadowOffset: { width: 0, height: 16 },
+        shadowOpacity: 0.3,
+        shadowRadius: 32,
+      },
+      android: {
+        elevation: 20,
+      },
+    }),
+  },
+  packageCardInnerHorizontal: {
+    flex: 1,
+    padding: 24,
+    alignItems: 'center',
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  packageGradientHorizontal: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 28,
+  },
+  typeBadge: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+
+  },
+  typeBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  packageTitleHorizontal: {
+    fontSize: 22,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 6,
+    letterSpacing: -0.5,
+
+  },
+  packageSubtitleHorizontal: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+    opacity: 0.8,
+  },
+  packagePriceContainerHorizontal: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  packagePriceHorizontal: {
+    fontSize: 32,
+    fontWeight: '900',
+    textAlign: 'center',
+    letterSpacing: -1,
+  },
+  packagePricePerMonth: {
+    fontSize: 13,
+    marginTop: 2,
+    opacity: 0.7,
+  },
+  subscribeButtonContainerHorizontal: {
+    width: '100%',
+    borderRadius: 20,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
+  subscribeButtonGradientHorizontal: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 52,
+  },
+  subscribeButtonTextHorizontal: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
 });

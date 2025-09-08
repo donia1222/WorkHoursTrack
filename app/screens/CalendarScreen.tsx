@@ -710,7 +710,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontWeight: '700',
   },
   dayTypeLabel: {
-    fontSize: 13,
+    fontSize: 11,
     color: colors.textSecondary,
     textAlign: 'center',
     fontWeight: '500',
