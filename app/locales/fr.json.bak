@@ -593,10 +593,8 @@
     }
   },
   "jobs": {
-    "edit_salary": "Modifier Salaire/Heures",
-    "add_salary": "Ajouter Salaire/Heures",
-    "edit_overtime": "Modifier Salaire Heures Sup.",
-    "add_overtime": "Ajouter Salaire Heures Sup."
+    "edit_salary": "Editar Salario/Horas",
+    "add_salary": "Ajouter Salaire"
   },
   "job_form": {
     "title_edit": "Éditer l'emploi",

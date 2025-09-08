@@ -567,10 +567,8 @@
     }
   },
   "jobs": {
-    "edit_salary": "Gehalt/Stunden Bearbeiten",
-    "add_salary": "Gehalt/Stunden Hinzufügen",
-    "edit_overtime": "Überstunden-Gehalt Bearbeiten",
-    "add_overtime": "Überstunden-Gehalt Hinzufügen"
+    "edit_salary": "Editar Salario/Horas",
+    "add_salary": "Gehalt hinzufügen"
   },
   "job_form": {
     "title_edit": "Arbeit bearbeiten",

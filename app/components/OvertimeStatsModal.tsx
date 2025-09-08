@@ -518,20 +518,36 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
   };
 
   const getHourlyRate = () => {
-    // Get rate from selected job or average from all jobs
+    // Get OVERTIME rate from selected job only if hourly salary with overtime enabled
     if (selectedJobId !== 'all') {
       const selectedJob = jobs.find(j => j.id === selectedJobId);
-      return selectedJob?.salary?.amount || selectedJob?.hourlyRate || 0;
+      // Only return rate if salary is hourly AND overtime is enabled with a value
+      if (selectedJob?.salary?.enabled && 
+          selectedJob.salary.type === 'hourly' && 
+          selectedJob.salary.overtimeEnabled && 
+          selectedJob.salary.overtimeRate && 
+          selectedJob.salary.overtimeRate > 0) {
+        return selectedJob.salary.overtimeRate;
+      }
+      return 0;
     } else {
-      // Calculate average rate from all jobs
-      const rates = jobs.map(j => j.salary?.amount || j.hourlyRate || 0).filter(r => r > 0);
+      // Calculate average overtime rate from all jobs (only hourly with overtime)
+      const rates = jobs.map(j => {
+        if (j.salary?.enabled && 
+            j.salary.type === 'hourly' && 
+            j.salary.overtimeEnabled && 
+            j.salary.overtimeRate && 
+            j.salary.overtimeRate > 0) {
+          return j.salary.overtimeRate;
+        }
+        return 0;
+      }).filter(r => r > 0);
       return rates.length > 0 ? rates.reduce((a, b) => a + b, 0) / rates.length : 0;
     }
   };
 
   const calculateOvertimeEarnings = () => {
-    const regularRate = getHourlyRate();
-    const overtimeRate = regularRate * 1.5;
+    const overtimeRate = getHourlyRate();
     return calculatedOvertime * overtimeRate;
   };
 
@@ -935,9 +951,10 @@ export const OvertimeStatsModal: React.FC<OvertimeStatsModalProps> = ({
             >
 
               <Text style={styles.buttonTexte}>
-                {t('jobs.edit_salary')}
+                {calculateOvertimeEarnings() > 0 ? t('jobs.edit_overtime') : t('jobs.add_overtime')}
               </Text>
             </TouchableOpacity>
+     
             </LinearGradient>
 
             <View style={[
@@ -1349,6 +1366,7 @@ marginTop: 6,
     color: '#ffffff',
     fontSize: 12,
     fontWeight: '600',
+    textAlign: 'center',
     
   },
   compactJobSelector: {

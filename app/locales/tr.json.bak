@@ -765,10 +765,8 @@
     }
   },
   "jobs": {
-    "edit_salary": "Maaş/Saat Düzenle",
-    "add_salary": "Maaş/Saat Ekle",
-    "edit_overtime": "Fazla Mesai Maaşı Düzenle",
-    "add_overtime": "Fazla Mesai Maaşı Ekle"
+    "edit_salary": "Editar Salario/Horas",
+    "add_salary": "Maaş Ekle"
   },
   "job_form": {
     "title_edit": "İşi Düzenle",

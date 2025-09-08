@@ -764,10 +764,8 @@
     }
   },
   "jobs": {
-    "edit_salary": "Salaris/Uren Bewerken",
-    "add_salary": "Salaris/Uren Toevoegen",
-    "edit_overtime": "Overuren Salaris Bewerken",
-    "add_overtime": "Overuren Salaris Toevoegen"
+    "edit_salary": "Editar Salario/Horas",
+    "add_salary": "Salaris Toevoegen"
   },
   "job_form": {
     "title_edit": "Baan Bewerken",

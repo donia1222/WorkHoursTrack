@@ -1215,6 +1215,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showJobForm, setShowJobForm] = useState(false);
   const [lastLoggedElapsedTime, setLastLoggedElapsedTime] = useState<number>(-1);
+  const [isStoppingAutoTimer, setIsStoppingAutoTimer] = useState(false);
   
   // Responsive dimensions for mini calendar
   const windowDimensions = useWindowDimensions();
@@ -1246,6 +1247,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   }));
   
   const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [shouldScrollToOvertime, setShouldScrollToOvertime] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
   const [selectedJobForStats, setSelectedJobForStats] = useState<Job | null>(null);
   const [jobStatistics, setJobStatistics] = useState<Map<string, { thisMonthHours: number; thisMonthDays: number }>>(new Map());
@@ -1440,6 +1442,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const noJobsIconPulse = useSharedValue(1);
   const noJobsTextPulse = useSharedValue(1);
   
+  // Animación para el spinner del loader
+  const spinnerRotation = useSharedValue(0);
+  
+  
   const styles = getStyles(colors, isDark, isSmallScreen, daySize, dayFontSize, isTablet);
 
   // Gestión del arrastre para AutoTimer (funciona para ambos estados)
@@ -1539,6 +1545,15 @@ export default function MapLocation({ location, onNavigate }: Props) {
       ],
     };
   });
+
+  const animatedSpinnerStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { rotate: `${spinnerRotation.value}deg` },
+      ],
+    };
+  });
+
 
   // Efecto para la animación de pulso cuando está minimizado
   useEffect(() => {
@@ -1662,6 +1677,21 @@ export default function MapLocation({ location, onNavigate }: Props) {
       noLocationButtonsTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
     }
   }, [showJobCardsModal]);
+
+  // Animar spinner cuando se está parando el AutoTimer
+  useEffect(() => {
+    if (isStoppingAutoTimer) {
+      // Iniciar animación de rotación continua
+      spinnerRotation.value = withRepeat(
+        withTiming(360, { duration: 1000, easing: Easing.linear }),
+        -1,
+        false
+      );
+    } else {
+      // Detener animación y resetear
+      spinnerRotation.value = withTiming(0, { duration: 200 });
+    }
+  }, [isStoppingAutoTimer]);
 
   // Helper function to get month name from date
   const getMonthName = (date: Date) => {
@@ -2969,11 +2999,21 @@ export default function MapLocation({ location, onNavigate }: Props) {
         t('timer.auto_timer.manual_override'),
         t('timer.auto_timer.manual_override_message'),
         [
-          { text: t('common.cancel'), style: 'cancel' },
+          { 
+            text: t('common.cancel'), 
+            style: 'cancel',
+            onPress: () => {
+              // Asegurar que se oculte el loader si cancelan
+              setIsStoppingAutoTimer(false);
+            }
+          },
           { 
             text: t('timer.stop'), 
             style: 'destructive',
             onPress: async () => {
+              // Mostrar loader inmediatamente
+              setIsStoppingAutoTimer(true);
+              
               try {
                 // Primero verificar si hay una sesión activa para este trabajo
                 const activeSession = await JobService.getActiveSession();
@@ -3052,8 +3092,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
                 
                 // Navigate to ReportsScreen and open last session modal
                 navigateTo('reports', undefined, { openLastSession: true });
+                
+                // Ocultar loader después de navegar
+                setIsStoppingAutoTimer(false);
               } catch (error) {
                 console.error('Error stopping AutoTimer from widget:', error);
+                // Ocultar loader en caso de error también
+                setIsStoppingAutoTimer(false);
               }
             }
           }
@@ -4969,10 +5014,12 @@ export default function MapLocation({ location, onNavigate }: Props) {
         visible={showJobForm}
         editingJob={editingJob}
         initialTab={editingJob && selectedEditType ? getEditInfo(selectedEditType).tab : 'basic'}
+        scrollToOvertime={shouldScrollToOvertime}
         onClose={() => {
           console.log('🟡 MapLocation: JobFormModal closing');
           setShowJobForm(false);
           setEditingJob(null);
+          setShouldScrollToOvertime(false);
           // If the modal was open before editing, reopen it (but not if coming from settings button)
           if (wasJobCardsModalOpen && shouldReopenJobCardsModal) {
             setTimeout(() => {
@@ -5029,6 +5076,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
           onClose={() => setShowOvertimeStatsModal(false)}
           onEditSalary={() => {
             setShowOvertimeStatsModal(false);
+            setShouldScrollToOvertime(true);
             handleEditCategory('financial');
           }}
           job={jobs[0]}
@@ -5062,6 +5110,68 @@ export default function MapLocation({ location, onNavigate }: Props) {
         onNavigateToChatbot={() => onNavigate?.('chatbot')}
         userLocation={location}
       />
+
+      {/* AutoTimer Stop Loader */}
+      {isStoppingAutoTimer && (
+        <View style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 9999,
+        }}>
+          <BlurView 
+            intensity={20} 
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <View style={{
+              backgroundColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+              borderRadius: 16,
+              padding: 24,
+              alignItems: 'center',
+              minWidth: 200,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
+            }}>
+              <View style={{
+                width: 40,
+                height: 40,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 16,
+              }}>
+                <Animated.View 
+                  style={[{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    borderWidth: 3,
+                    borderColor: colors.primary,
+                    borderTopColor: 'transparent',
+                  }, animatedSpinnerStyle]} 
+                />
+              </View>
+              <Text style={{
+                fontSize: 16,
+                fontWeight: '600',
+                color: colors.text,
+                textAlign: 'center',
+              }}>
+                {t('reports.opening_session')}
+              </Text>
+            </View>
+          </BlurView>
+        </View>
+      )}
     </View>
   );
 }

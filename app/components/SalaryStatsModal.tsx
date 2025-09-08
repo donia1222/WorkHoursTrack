@@ -528,10 +528,19 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
     // Get rate from selected job or average from all jobs
     if (selectedJobId !== 'all') {
       const selectedJob = jobs.find(j => j.id === selectedJobId);
-      return selectedJob?.salary?.amount || selectedJob?.hourlyRate || 0;
+      // Only return hourly rate if salary is configured as hourly
+      if (selectedJob?.salary?.enabled && selectedJob.salary.type === 'hourly') {
+        return selectedJob.salary.amount || 0;
+      }
+      return 0;
     } else {
-      // Calculate average rate from all jobs
-      const rates = jobs.map(j => j.salary?.amount || j.hourlyRate || 0).filter(r => r > 0);
+      // Calculate average rate from all jobs (only hourly salaries)
+      const rates = jobs.map(j => {
+        if (j.salary?.enabled && j.salary.type === 'hourly') {
+          return j.salary.amount || 0;
+        }
+        return 0;
+      }).filter(r => r > 0);
       return rates.length > 0 ? rates.reduce((a, b) => a + b, 0) / rates.length : 0;
     }
   };
@@ -944,9 +953,12 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
               onPress={onEditSalary}
             >
               <Text style={styles.buttonTexte}>
-                {t('jobs.edit_salary')}
+                {calculateTotalEarnings() > 0 ? t('jobs.edit_salary') : t('jobs.add_salary') } 
+
               </Text>
+
             </TouchableOpacity>
+ 
             </LinearGradient>
 
             <View style={[
@@ -1383,8 +1395,19 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 12,
     fontWeight: '600',
+    marginRight: 4,
+    textAlign: 'center',
     
   },
+  buttonTextes: {
+    color: '#fffffff3',
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 4,
+
+    
+  },
+
   // Recent Activity Styles
   cardHeader: {
     flexDirection: 'row',

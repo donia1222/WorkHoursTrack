@@ -600,10 +600,8 @@
     }
   },
   "jobs": {
-    "edit_salary": "Modifica Stipendio/Ore",
-    "add_salary": "Aggiungi Stipendio/Ore",
-    "edit_overtime": "Modifica Salario Straordinario",
-    "add_overtime": "Aggiungi Salario Straordinario"
+    "edit_salary": "Editar Salario/Horas",
+    "add_salary": "Aggiungi Stipendio"
   },
   "job_form": {
     "title_edit": "Modifica lavoro",

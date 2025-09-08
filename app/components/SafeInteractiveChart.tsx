@@ -148,7 +148,7 @@ export default function SafeInteractiveChart({
         </View>
         <View style={styles.emptyContainer}>
           <IconSymbol size={48} name="chart.bar" color={colors.textSecondary} />
-          <Text style={styles.emptyText}>No hay datos disponibles</Text>
+
         </View>
       </View>
     );

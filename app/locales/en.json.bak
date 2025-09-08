@@ -756,10 +756,8 @@
     }
   },
   "jobs": {
-    "edit_salary": "Edit Salary/Hours",
-    "add_salary": "Add Salary/Hours",
-    "edit_overtime": "Edit Overtime Salary",
-    "add_overtime": "Add Overtime Salary"
+    "edit_salary": "Editar Salario/Horas",
+    "add_salary": "Add Salary"
   },
   "job_form": {
     "title_edit": "Edit Job",

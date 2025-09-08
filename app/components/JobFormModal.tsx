@@ -187,6 +187,7 @@ interface JobFormModalProps {
   onNavigateToSubscription?: () => void; // Callback to navigate to subscription screen
   isLocationEnabled?: boolean; // Para detectar si hay permisos de ubicación
   disableSubscriptionModal?: boolean; // Disable subscription modal when opened from JobsManagementScreen
+  scrollToOvertime?: boolean; // Auto-scroll to overtime section when opened
 }
 
 
@@ -1427,7 +1428,8 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
 });
 
-export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true, disableSubscriptionModal = false }: JobFormModalProps) {
+export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true, disableSubscriptionModal = false, scrollToOvertime = false }: JobFormModalProps) {
+  console.log('🚀 JobFormModal props:', { scrollToOvertime, visible, initialTab });
   const { colors, isDark } = useTheme();
   const { t, language } = useLanguage();
   const { isSubscribed } = useSubscription();
@@ -1532,16 +1534,19 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const monthScrollViewRef = useRef<ScrollView>(null);
   const nameInputRef = useRef<TextInput>(null);
   const currencyScrollRef = useRef<ScrollView>(null);
+  const financialScrollRef = useRef<ScrollView>(null);
+  const overtimeSectionRef = useRef<View>(null);
   
   const styles = getStyles(colors, isDark);
 
   useEffect(() => {
     if (visible) {
-      setCurrentTab(initialTab);
+      // If scrollToOvertime is true, set the tab to financial, otherwise use initialTab
+      setCurrentTab(scrollToOvertime ? 'financial' : initialTab);
       setHasUnsavedChanges(false); // Reset changes flag when opening modal
       setShowNameError(false); // Reset name error when opening modal
     }
-  }, [visible, initialTab]);
+  }, [visible, initialTab, scrollToOvertime]);
 
 
   // Check if it's the first time user opens the form
@@ -1627,6 +1632,26 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
     checkLocationPermission();
   }, [visible, detectedCurrency]);
+
+  // Handle scroll to overtime when requested
+  useEffect(() => {
+    console.log('🔍 Scroll Effect:', { visible, scrollToOvertime, currentTab });
+    if (visible && scrollToOvertime && currentTab === 'financial') {
+      console.log('✅ Conditions met for scroll!');
+      // Simple direct scroll to end after delay
+      const timer = setTimeout(() => {
+        console.log('⏰ Timer fired, checking ref...');
+        if (financialScrollRef.current) {
+          console.log('📜 SCROLLING NOW!');
+          financialScrollRef.current.scrollToEnd({ animated: true });
+        } else {
+          console.log('❌ No ref found!');
+        }
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [visible, scrollToOvertime, currentTab]);
 
   // Cargar configuración actual del modo AutoTimer
   useEffect(() => {
@@ -3210,12 +3235,21 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
   const renderFinancialTab = () => (
     <ScrollView 
+      ref={financialScrollRef}
       style={styles.tabContent} 
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
       automaticallyAdjustKeyboardInsets={true}
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={{ paddingBottom: 100 }}
+      contentContainerStyle={{ paddingBottom: 300 }}
+      onContentSizeChange={() => {
+        // Auto scroll when content loads if coming from overtime modal
+        if (scrollToOvertime && financialScrollRef.current) {
+          setTimeout(() => {
+            financialScrollRef.current?.scrollToEnd({ animated: true });
+          }, 100);
+        }
+      }}
     >
       <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.section}>
         <Text style={styles.sectionTitle}>{t('job_form.financial.title')}</Text>
@@ -3368,7 +3402,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
 
             {/* OVERTIME RATE - Only show for hourly rate */}
             {formData.salary?.type === 'hourly' && (
-              <View style={styles.financialCard}>
+              <View ref={overtimeSectionRef} style={styles.financialCard}>
                 <View style={styles.financialCardHeader}>
                   <IconSymbol size={20} name="clock.badge.exclamationmark" color={colors.primary} />
                   <Text style={styles.financialCardTitle}>{t('job_form.financial.overtime_rate')}</Text>
@@ -3550,9 +3584,9 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               {/* Company Logo Section */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>
-                  <IconSymbol size={16} name="photo" color={colors.primary} /> Logo de empresa (opcional)
+                  <IconSymbol size={16} name="photo" color={colors.primary} /> Company logo (optional)
                 </Text>
-                <Text style={styles.labelDescription}>Añadir logo para incluir en reportes PDF</Text>
+                <Text style={styles.labelDescription}>Add logo to include in PDF reports</Text>
                 
                 {formData.billing?.userData?.logoUrl ? (
                   <View style={styles.logoContainer}>
@@ -3567,7 +3601,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                         onPress={pickCompanyLogo}
                       >
                         <IconSymbol size={16} name="pencil" color={colors.primary} />
-                        <Text style={styles.logoActionText}>Cambiar</Text>
+                        <Text style={styles.logoActionText}>Change</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.logoActionButton, styles.logoRemoveButton]}
@@ -3577,7 +3611,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                         })}
                       >
                         <IconSymbol size={16} name="trash" color={colors.error} />
-                        <Text style={[styles.logoActionText, { color: colors.error }]}>Quitar</Text>
+                        <Text style={[styles.logoActionText, { color: colors.error }]}>Remove</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -3587,7 +3621,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                     onPress={pickCompanyLogo}
                   >
                     <IconSymbol size={24} name="photo.badge.plus" color={colors.textSecondary} />
-                    <Text style={styles.logoPickerText}>Seleccionar logo</Text>
+                    <Text style={styles.logoPickerText}>Select logo</Text>
                   </TouchableOpacity>
                 )}
               </View>

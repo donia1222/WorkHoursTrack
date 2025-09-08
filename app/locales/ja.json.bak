@@ -739,10 +739,8 @@
     }
   },
   "jobs": {
-    "edit_salary": "給与/時間を編集",
-    "add_salary": "給与/時間を追加",
-    "edit_overtime": "残業給与を編集",
-    "add_overtime": "残業給与を追加"
+    "edit_salary": "Editar Salario/Horas",
+    "add_salary": "給与を追加"
   },
   "job_form": {
     "title_edit": "仕事を編集",

@@ -169,6 +169,8 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
   const [skipAnimations, setSkipAnimations] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showOvertimeStatsModal, setShowOvertimeStatsModal] = useState(false);
+  const [isOpeningLastSession, setIsOpeningLastSession] = useState(false);
+  const [shouldScrollToOvertime, setShouldScrollToOvertime] = useState(false);
   
   const { handleBack } = useBackNavigation();
   const navigation = useNavigation();
@@ -1655,22 +1657,33 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
   // Handle navigation parameters - auto-open last session modal if requested
   useEffect(() => {
-    if (navigationParams?.openLastSession && workDays.length > 0) {
-      console.log('📊 Auto-opening last session modal');
+    if (navigationParams?.openLastSession) {
+      console.log('📊 Received openLastSession parameter');
+      setIsOpeningLastSession(true);
       
-      // Get the most recent work session
-      const recentWorkDays = getRecentWorkDays();
-      if (recentWorkDays.length > 0) {
-        const lastSession = recentWorkDays[0];
-        console.log('📊 Opening modal for last session:', lastSession);
+      if (workDays.length > 0) {
+        console.log('📊 Auto-opening last session modal');
         
-        // Open the modal with the last session
-        setSelectedWorkDay(lastSession);
-        setEditWorkDayModal(true);
+        // Get the most recent work session
+        const recentWorkDays = getRecentWorkDays();
+        if (recentWorkDays.length > 0) {
+          const lastSession = recentWorkDays[0];
+          console.log('📊 Opening modal for last session:', lastSession);
+          
+          // Small delay to show the loading state
+          setTimeout(() => {
+            // Open the modal with the last session
+            setSelectedWorkDay(lastSession);
+            setEditWorkDayModal(true);
+            setIsOpeningLastSession(false);
+          }, 300);
+        } else {
+          setIsOpeningLastSession(false);
+        }
+        
+        // Clear the navigation parameter after using it
+        clearNavigationParams();
       }
-      
-      // Clear the navigation parameter after using it
-      clearNavigationParams();
     }
   }, [navigationParams, workDays, getRecentWorkDays, clearNavigationParams, setSelectedWorkDay, setEditWorkDayModal]);
 
@@ -2295,13 +2308,16 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
       {/* Job Form Modal for Billing Configuration */}
       {showJobFormModal && editingJobForBilling && (
+        console.log('🔥 Rendering JobFormModal with scrollToOvertime:', shouldScrollToOvertime) ||
         <JobFormModal
           visible={showJobFormModal}
           onClose={() => {
             setShowJobFormModal(false);
             setEditingJobForBilling(null);
+            setShouldScrollToOvertime(false);
           }}
           editingJob={editingJobForBilling}
+          scrollToOvertime={shouldScrollToOvertime}
           onSave={() => {
             // Reload jobs to get updated billing data
             const loadJobs = async () => {
@@ -2351,13 +2367,35 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
         visible={showOvertimeStatsModal}
         onClose={() => setShowOvertimeStatsModal(false)}
         onEditSalary={() => {
+          console.log('🎯 OvertimeModal button clicked!');
           setShowOvertimeStatsModal(false);
+          const job = jobs.find(j => j.id === selectedJobId) || jobs[0];
+          setEditingJobForBilling(job);
+          setShouldScrollToOvertime(true);
+          console.log('✅ shouldScrollToOvertime set to TRUE, job:', job?.name);
           setShowJobFormModal(true);
         }}
         job={jobs.find(j => j.id === selectedJobId) || jobs[0]}
         monthlyOvertime={periodStats?.overtimeHours || 0}
         onDataChange={loadData}
       />
+
+      {/* Loader for opening last session modal */}
+      {isOpeningLastSession && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.blurOverlay}>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator 
+                size="large" 
+                color={colors.primary} 
+              />
+              <Text style={[styles.loadingText, { color: colors.text }]}>
+                {t('reports.opening_session')}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -3447,5 +3485,38 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   compactJobSelectore: {
 
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  blurOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingContainer: {
+    backgroundColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    minWidth: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

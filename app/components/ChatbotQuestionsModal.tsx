@@ -131,6 +131,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     opacity: 0.8,
+  
   },
   expandIcon: {
     transform: [{ rotate: '0deg' }],
@@ -393,7 +394,15 @@ export default function ChatbotQuestionsModal({
               <View style={styles.dragHandle} />
               
               <View style={styles.header}>
-                <Text style={styles.title}>{t('chatbot.modal.title')}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
+                  <Ionicons name="chatbubbles" size={24} color={colors.primary} style={{ marginTop: 2 }} />
+                  <View style={{ marginLeft: 8, flex: 1 }}>
+                    <Text style={[styles.title, { textAlign: 'left', fontSize: 18, }]}>Vix-Chat</Text>
+                    <Text style={[styles.sectionSubtitle, { textAlign: 'left', fontSize: 12,  }]}>
+                      {t('chatbot.modal.title')}
+                    </Text>
+                  </View>
+                </View>
                 <TouchableOpacity
                   style={styles.closeButton}
                   onPress={onClose}
