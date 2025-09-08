@@ -783,12 +783,33 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
         visible={showPreferences}
         animationType="slide"
         presentationStyle="formSheet"
-        onRequestClose={() => setShowPreferences(false)}
+        onRequestClose={() => {
+          setShowPreferences(false);
+          setShouldScrollToNotifications(false);
+          
+          // Si vino del MiniMapWidget, volver al mapa (igual que onClose)
+          if ((global as any).returnToPrevious === 'mapa') {
+            (global as any).returnToPrevious = null; // Limpiar flag
+            // Pequeño delay para asegurar que el estado se mantenga
+            setTimeout(() => {
+              onNavigate('mapa');
+            }, 100);
+          }
+        }}
       >
         <PreferencesScreen 
           onClose={() => {
             setShowPreferences(false);
             setShouldScrollToNotifications(false);
+            
+            // Si vino del MiniMapWidget, volver al mapa
+            if ((global as any).returnToPrevious === 'mapa') {
+              (global as any).returnToPrevious = null; // Limpiar flag
+              // Pequeño delay para asegurar que el estado se mantenga
+              setTimeout(() => {
+                onNavigate('mapa');
+              }, 100);
+            }
           }} 
           scrollToNotifications={shouldScrollToNotifications}
           onNavigateToSubscription={() => {

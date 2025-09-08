@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated as RNAnimated, Dimensions, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logMiniMapWidget } from '../config/logging';
 import { BlurView } from 'expo-blur';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSpring } from 'react-native-reanimated';
@@ -8,6 +9,7 @@ import { Platform } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useTheme, ThemeColors } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useNavigation } from '../context/NavigationContext';
 import { useTimeFormat } from '../hooks/useTimeFormat';
 import { Job } from '../types/WorkTypes';
 import StopAutoTimerModal from './StopAutoTimerModal';
@@ -144,24 +146,32 @@ marginTop: -10,
     backgroundColor: 'transparent',
     zIndex: 10,
   },
-  centerMapButton: {
+  controlButtonsContainer: {
     position: 'absolute',
-    top: 70,
-    left: 30,
-    backgroundColor: isDark ? 'rgba(139, 92, 246, 0.3)' : 'rgba(99, 102, 241, 0.2)',
-    borderRadius: 16,
+    top: 60,
+    left: 10,
+    flexDirection: 'column',
+    gap: 8,
+    backgroundColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(139, 92, 246, 0.3)' : 'rgba(99, 102, 241, 0.2)',
+    shadowColor: isDark ? '#8b5cf6' : '#6366f1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    zIndex: 998,
+  },
+  controlRoundButton: {
     width: 32,
     height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(139, 92, 246, 0.5)' : 'rgba(99, 102, 241, 0.4)',
-    shadowColor: isDark ? '#8b5cf6' : '#6366f1',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-    zIndex: 998,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    position: 'relative',
   },
   controlsContainer: {
     flexDirection: 'row',
@@ -400,6 +410,37 @@ marginTop: -10,
     fontWeight: '600',
     letterSpacing: 0.3,
   },
+  notificationIconContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: 4,
+    right: 0,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+    borderWidth: 1,
+    borderColor: isDark ? '#000000' : '#FFFFFF',
+  },
+  notificationDotSmall: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 10,
+    height: 10,
+    borderRadius: 20,
+    backgroundColor: '#EF4444',
+    borderWidth: 1,
+    borderColor: isDark ? '#000000' : '#FFFFFF',
+  },
 });
 };
 
@@ -431,6 +472,7 @@ export default function MiniMapWidget({
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
   const { formatTimeWithPreferences } = useTimeFormat();
+  const { navigateTo } = useNavigation();
   const styles = getStyles(colors, isDark);
   const mapRef = useRef<MapView>(null);
   
@@ -454,19 +496,22 @@ export default function MiniMapWidget({
   // Estado para el modo del AutoTimer
   const [autoTimerMode, setAutoTimerMode] = useState<AutoTimerMode>('foreground-only');
   
+  // Estado para las notificaciones
+  const [notificationSettings, setNotificationSettings] = useState({ enabled: false, autoTimer: false });
+  
   // Función para obtener datos del modo usando traducciones
   const getModeData = (mode: AutoTimerMode) => {
     const modeConfig = {
       'foreground-only': {
-        icon: '📱',
+        icon: '',
         titleKey: 'job_form.auto_timer.mode_foreground_title'
       },
       'background-allowed': {
-        icon: '🔄', 
+        icon: '', 
         titleKey: 'job_form.auto_timer.mode_background_title'
       },
       'full-background': {
-        icon: '🌍',
+        icon: '',
         titleKey: 'job_form.auto_timer.mode_full_background_title'
       }
     };
@@ -476,6 +521,15 @@ export default function MiniMapWidget({
       icon: config.icon,
       title: t(config.titleKey)
     };
+  };
+
+  // Función para manejar clic en icono de notificaciones
+  const handleNotificationPress = () => {
+    // Siempre navegar a preferencias (tanto verde como rojo)
+    (global as any).scrollToNotifications = true;
+    (global as any).returnToPrevious = 'mapa'; // Para volver al mapa al cerrar
+    navigateTo('settings');
+    logMiniMapWidget('Navigating to settings for notification configuration');
   };
 
   useEffect(() => {
@@ -493,7 +547,22 @@ export default function MiniMapWidget({
       }
     };
 
+    // Cargar configuración de notificaciones
+    const loadNotificationSettings = async () => {
+      try {
+        const settings = await AsyncStorage.getItem('notification_settings');
+        if (settings) {
+          const parsed = JSON.parse(settings);
+          setNotificationSettings(parsed);
+          logMiniMapWidget('Notification settings loaded:', parsed);
+        }
+      } catch (error) {
+        console.error('Error loading notification settings:', error);
+      }
+    };
+
     loadAutoTimerMode();
+    loadNotificationSettings();
 
     // Animación de entrada suave como ReportsScreen
     RNAnimated.parallel([
@@ -642,7 +711,7 @@ export default function MiniMapWidget({
             <Text style={styles.autoTimerText}>
               {getModeData(autoTimerMode).icon} AutoTimer
             </Text>
-            <View style={[styles.modeIndicator, { backgroundColor: colors.primary + '20', borderColor: colors.primary + '40' }]}>
+            <View style={[styles.modeIndicator, { backgroundColor: colors.primary + '40', borderColor: colors.primary + '40' }]}>
               <Text style={[styles.modeText, { color: colors.primary }]}>
                 {getModeData(autoTimerMode).title}
               </Text>
@@ -705,17 +774,35 @@ export default function MiniMapWidget({
         </MapView>
 
         {/* Botón de centrar mapa - esquina superior izquierda */}
-        <TouchableOpacity
-          style={styles.centerMapButton}
-          onPress={centerMap}
-          activeOpacity={0.8}
-        >
-          <IconSymbol 
-            size={16} 
-            name="location.fill" 
-            color={isDark ? '#a78bfa' : '#6366f1'} 
-          />
-        </TouchableOpacity>
+        {/* Contenedor de botones de control */}
+        <View style={styles.controlButtonsContainer}>
+          <TouchableOpacity
+            style={styles.controlRoundButton}
+            onPress={centerMap}
+            activeOpacity={0.8}
+          >
+            <IconSymbol 
+              size={16} 
+              name="location.fill" 
+              color={isDark ? '#a78bfa' : '#6366f1'} 
+            />
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.controlRoundButton}
+            onPress={handleNotificationPress}
+            activeOpacity={0.7}
+          >
+            <IconSymbol 
+              size={16} 
+              name="bell.fill" 
+              color={notificationSettings.enabled && notificationSettings.autoTimer ? '#22C55E' : '#6B7280'} 
+            />
+            {(!notificationSettings.enabled || !notificationSettings.autoTimer) && (
+              <View style={styles.notificationDotSmall} />
+            )}
+          </TouchableOpacity>
+        </View>
 
         {/* Mini mapa overlay */}
         <View style={styles.miniMapContainer}>

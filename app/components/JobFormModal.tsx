@@ -4690,6 +4690,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                       onPress={() => {
                         onClose();
                         (global as any).scrollToNotifications = true;
+                        (global as any).returnToPrevious = 'mapa'; // Para volver al mapa al cerrar
                         navigateTo('settings');
                       }}
                     >
