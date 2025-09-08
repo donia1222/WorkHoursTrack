@@ -4,6 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme, ThemeColors } from '@/app/contexts/ThemeContext';
 import { useLanguage } from '@/app/contexts/LanguageContext';
 import { BlurView } from 'expo-blur';
+import ChatbotQuestionsModal from './ChatbotQuestionsModal';
+
+interface WelcomeMessageProps {
+  onQuestionSelect?: (question: string) => void;
+}
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
@@ -112,19 +117,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontSize: 12,
     color: colors.text,
     textAlign: 'left',
-    marginTop: -12,
     opacity: 0.7,
-  },
-  infoButton: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    width: 32,
-    height: 32,
-    borderRadius: 14,
-    backgroundColor: colors.primary + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   modalOverlay: {
     flex: 1,
@@ -181,13 +174,31 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     flex: 1,
     lineHeight: 20,
   },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+  },
+  footerButton: {
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: colors.primary + '15',
+    minWidth: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
 
-export default function WelcomeMessage() {
+export default function WelcomeMessage({ onQuestionSelect }: WelcomeMessageProps = {}) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
   const styles = getStyles(colors, isDark);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showQuestionsModal, setShowQuestionsModal] = useState(false);
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -249,19 +260,7 @@ export default function WelcomeMessage() {
           <Text style={styles.featureText}>{t('chatbot.feature_identify')}</Text>
         </View>
 
-        <View style={styles.featureItem}>
-          <View style={styles.featureIcon}>
-            <Ionicons name="people" size={16} color={colors.primary} />
-          </View>
-          <Text style={styles.featureText}>{t('chatbot.feature_detect')}</Text>
-        </View>
-
-        <View style={styles.featureItem}>
-          <View style={styles.featureIcon}>
-            <Ionicons name="download" size={16} color={colors.primary} />
-          </View>
-          <Text style={styles.featureText}>{t('chatbot.feature_export')}</Text>
-        </View>
+  
 
         <View style={styles.featureItem}>
           <View style={styles.featureIcon}>
@@ -285,17 +284,32 @@ export default function WelcomeMessage() {
         </View>
       </View>
 
-      <Text style={styles.timestamp}>
-        {messageTime}
-      </Text>
-      
-      <TouchableOpacity
-        style={styles.infoButton}
-        onPress={() => setShowInfoModal(true)}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="information-circle" size={26} color={colors.textSecondary} />
-      </TouchableOpacity>
+      {/* Footer with timestamp and action buttons */}
+      <View style={styles.footer}>
+        <Text style={styles.timestamp}>
+          {messageTime}
+        </Text>
+        
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          {/* Questions button */}
+          <TouchableOpacity
+            style={styles.footerButton}
+            onPress={() => setShowQuestionsModal(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="help-circle" size={20} color={colors.primary} />
+          </TouchableOpacity>
+          
+          {/* Info button */}
+          <TouchableOpacity
+            style={styles.footerButton}
+            onPress={() => setShowInfoModal(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="information-circle" size={20} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
+      </View>
       </Animated.View>
 
       <Modal
@@ -341,6 +355,17 @@ export default function WelcomeMessage() {
           </BlurView>
         </View>
       </Modal>
+      
+      {/* ChatbotQuestionsModal */}
+      <ChatbotQuestionsModal
+        visible={showQuestionsModal}
+        onClose={() => setShowQuestionsModal(false)}
+        onNavigateToChatbot={() => {
+          // Este componente ya está en el chatbot screen, no necesita navegar
+          setShowQuestionsModal(false);
+        }}
+        onQuestionSelect={onQuestionSelect}
+      />
     </>
   );
 }

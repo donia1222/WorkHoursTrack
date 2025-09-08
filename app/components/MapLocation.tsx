@@ -1248,6 +1248,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [shouldScrollToOvertime, setShouldScrollToOvertime] = useState(false);
+  const [shouldHighlightSalary, setShouldHighlightSalary] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
   const [selectedJobForStats, setSelectedJobForStats] = useState<Job | null>(null);
   const [jobStatistics, setJobStatistics] = useState<Map<string, { thisMonthHours: number; thisMonthDays: number }>>(new Map());
@@ -5015,11 +5016,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
         editingJob={editingJob}
         initialTab={editingJob && selectedEditType ? getEditInfo(selectedEditType).tab : 'basic'}
         scrollToOvertime={shouldScrollToOvertime}
+        highlightSalary={shouldHighlightSalary}
         onClose={() => {
           console.log('🟡 MapLocation: JobFormModal closing');
           setShowJobForm(false);
           setEditingJob(null);
           setShouldScrollToOvertime(false);
+          setShouldHighlightSalary(false);
           // If the modal was open before editing, reopen it (but not if coming from settings button)
           if (wasJobCardsModalOpen && shouldReopenJobCardsModal) {
             setTimeout(() => {
@@ -5055,6 +5058,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
           onClose={() => setShowSalaryStatsModal(false)}
           onEditSalary={() => {
             setShowSalaryStatsModal(false);
+            setShouldHighlightSalary(true);
             handleEditCategory('financial');
           }}
           job={jobs[0]}

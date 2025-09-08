@@ -683,6 +683,12 @@ export default function ChatbotScreen() {
     );
   };
 
+  const handleQuestionSelection = (question: string) => {
+    console.log('❓ Pregunta seleccionada:', question);
+    // Poner la pregunta en el input
+    setInputText(question);
+  };
+
   const handlePersonSelection = async (personName: string) => {
     console.log('👤 [CHAT] Persona seleccionada mediante botón:', personName);
     
@@ -1087,7 +1093,7 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
   const renderMessage = ({ item, index }: { item: ChatMessageData; index: number }) => {
     // Mostrar el mensaje de bienvenida como primer elemento si no hay mensajes
     if (messages.length === 0 && index === 0) {
-      return <WelcomeMessage />;
+      return <WelcomeMessage onQuestionSelect={handleQuestionSelection} />;
     }
     return (
       <ChatMessage 
@@ -1100,7 +1106,7 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
 
   const renderWelcomeHeader = () => {
     if (messages.length === 0) {
-      return <WelcomeMessage />;
+      return <WelcomeMessage onQuestionSelect={handleQuestionSelection} />;
     }
     return null;
   };
@@ -1120,7 +1126,7 @@ Ahora analiza el plan de trabajo completo con esta información. IMPORTANTE: Usa
         data={messages.length === 0 ? [{ id: -1, text: '', isUser: false, timestamp: new Date() }] : messages}
         renderItem={({ item, index }) => {
           if (messages.length === 0) {
-            return <WelcomeMessage />;
+            return <WelcomeMessage onQuestionSelect={handleQuestionSelection} />;
           }
           return (
             <ChatMessage 

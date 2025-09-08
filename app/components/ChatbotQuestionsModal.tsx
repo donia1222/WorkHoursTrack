@@ -30,6 +30,7 @@ interface ChatbotQuestionsModalProps {
   visible: boolean;
   onClose: () => void;
   onNavigateToChatbot: () => void;
+  onQuestionSelect?: (question: string) => void;
   userLocation?: { latitude: number; longitude: number } | null;
 }
 
@@ -191,6 +192,7 @@ export default function ChatbotQuestionsModal({
   visible,
   onClose,
   onNavigateToChatbot,
+  onQuestionSelect,
   userLocation,
 }: ChatbotQuestionsModalProps) {
   const { colors, isDark } = useTheme();
@@ -332,6 +334,14 @@ export default function ChatbotQuestionsModal({
 
   const handleQuestionSelect = async (question: string) => {
     try {
+      // If we have a question callback (meaning we're already in chatbot), use it
+      if (onQuestionSelect) {
+        onQuestionSelect(question);
+        onClose();
+        return;
+      }
+
+      // Otherwise, store for navigation (original behavior)
       // Store the selected question
       await AsyncStorage.setItem('chatbot_initial_question', question);
 

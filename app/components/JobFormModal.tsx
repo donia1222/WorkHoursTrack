@@ -188,6 +188,7 @@ interface JobFormModalProps {
   isLocationEnabled?: boolean; // Para detectar si hay permisos de ubicación
   disableSubscriptionModal?: boolean; // Disable subscription modal when opened from JobsManagementScreen
   scrollToOvertime?: boolean; // Auto-scroll to overtime section when opened
+  highlightSalary?: boolean; // Highlight hourly salary input with red border
 }
 
 
@@ -1428,7 +1429,7 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
 });
 
-export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true, disableSubscriptionModal = false, scrollToOvertime = false }: JobFormModalProps) {
+export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true, disableSubscriptionModal = false, scrollToOvertime = false, highlightSalary = false }: JobFormModalProps) {
   console.log('🚀 JobFormModal props:', { scrollToOvertime, visible, initialTab });
   const { colors, isDark } = useTheme();
   const { t, language } = useLanguage();
@@ -3370,7 +3371,18 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
                    formData.salary?.type === 'monthly' ? t('job_form.financial.amount_per_month') : t('job_form.financial.amount_per_year')}
                 </Text>
               </View>
-              <View style={styles.amountInputContainer}>
+              <View style={[
+                styles.amountInputContainer,
+                highlightSalary && formData.salary?.type === 'hourly' && {
+                  borderColor: (formData.salary?.amount && formData.salary.amount > 0) ? '#4CAF50' : '#FF3B3B',
+                  borderWidth: 2,
+                  shadowColor: (formData.salary?.amount && formData.salary.amount > 0) ? '#4CAF50' : '#FF3B3B',
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 4,
+                  elevation: 4,
+                }
+              ]}>
                 <View style={styles.currencySymbol}>
                   <Text style={styles.currencySymbolText}>{formData.salary?.currency || 'EUR'}</Text>
                 </View>
