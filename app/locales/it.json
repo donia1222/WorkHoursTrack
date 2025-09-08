@@ -1071,6 +1071,25 @@
       "continue": "Continua"
     },
     "cancellation_text": "Puoi cancellare il tuo abbonamento in qualsiasi momento",
+    "packages": {
+      "three_months": "3 mesi",
+      "six_months": "6 mesi", 
+      "one_year": "1 anno",
+      "duration_suffix": {
+        "three_months": "/3 mesi",
+        "six_months": "/6 mesi",
+        "one_year": "/anno"
+      },
+      "badges": {
+        "basic": "Base",
+        "best_value": "Miglior Valore",
+        "premium": "Premium"
+      },
+      "action_buttons": {
+        "select_plan": "Seleziona Piano",
+        "choose_best": "Scegli Migliore"
+      }
+    },
     "duration": "Abbonamento di 3 mesi",
     "active": {
       "account_status": {

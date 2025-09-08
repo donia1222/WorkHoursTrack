@@ -1245,6 +1245,25 @@
       "continue": "Continue"
     },
     "cancellation_text": "You can cancel your subscription at any time",
+    "packages": {
+      "three_months": "3 months",
+      "six_months": "6 months", 
+      "one_year": "1 year",
+      "duration_suffix": {
+        "three_months": "/3 months",
+        "six_months": "/6 months",
+        "one_year": "/year"
+      },
+      "badges": {
+        "basic": "Basic",
+        "best_value": "Best Value",
+        "premium": "Premium"
+      },
+      "action_buttons": {
+        "select_plan": "Select Plan",
+        "choose_best": "Choose Best"
+      }
+    },
     "duration": "3 months subscription",
     "active": {
       "account_status": {

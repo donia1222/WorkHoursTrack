@@ -1254,6 +1254,25 @@
       "continue": "Devam Et"
     },
     "cancellation_text": "Aboneliğinizi istediğiniz zaman iptal edebilirsiniz",
+    "packages": {
+      "three_months": "3 ay",
+      "six_months": "6 ay", 
+      "one_year": "1 yıl",
+      "duration_suffix": {
+        "three_months": "/3 ay",
+        "six_months": "/6 ay",
+        "one_year": "/yıl"
+      },
+      "badges": {
+        "basic": "Temel",
+        "best_value": "En İyi Değer",
+        "premium": "Premium"
+      },
+      "action_buttons": {
+        "select_plan": "Plan Seç",
+        "choose_best": "En İyisini Seç"
+      }
+    },
     "duration": "3 aylık abonelik",
     "active": {
       "account_status": {

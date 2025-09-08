@@ -1254,6 +1254,25 @@
       "continue": "Doorgaan"
     },
     "cancellation_text": "Je kunt je abonnement op elk moment annuleren",
+    "packages": {
+      "three_months": "3 maanden",
+      "six_months": "6 maanden", 
+      "one_year": "1 jaar",
+      "duration_suffix": {
+        "three_months": "/3 maanden",
+        "six_months": "/6 maanden",
+        "one_year": "/jaar"
+      },
+      "badges": {
+        "basic": "Basis",
+        "best_value": "Beste Waarde",
+        "premium": "Premium"
+      },
+      "action_buttons": {
+        "select_plan": "Plan Selecteren",
+        "choose_best": "Beste Kiezen"
+      }
+    },
     "duration": "3 maanden abonnement",
     "active": {
       "account_status": {

@@ -1226,6 +1226,25 @@
       "continue": "続行"
     },
     "cancellation_text": "いつでも購読をキャンセルできます",
+    "packages": {
+      "three_months": "3ヶ月",
+      "six_months": "6ヶ月", 
+      "one_year": "1年",
+      "duration_suffix": {
+        "three_months": "/3ヶ月",
+        "six_months": "/6ヶ月",
+        "one_year": "/年"
+      },
+      "badges": {
+        "basic": "ベーシック",
+        "best_value": "最高価値",
+        "premium": "プレミアム"
+      },
+      "action_buttons": {
+        "select_plan": "プラン選択",
+        "choose_best": "最適を選択"
+      }
+    },
     "duration": "3ヶ月購読",
     "active": {
       "account_status": {

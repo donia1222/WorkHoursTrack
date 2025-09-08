@@ -515,7 +515,12 @@
     "sync_to_calendar": "Mit Kalender synchronisieren",
     "delete_workday": "Eintrag löschen",
     "quick_presets": "Schnelle Presets:",
+    "standard_hours": "Standard Arbeitszeit",
+    "full_workday": "Voller Arbeitstag",
+    "hours_extra": "{{hours}}h Überstunden",
+    "hours_remaining": "{{hours}}h verbleibend",
     "calendar_sync_error": "Nur Arbeitstage können synchronisiert werden",
+    "paid_by_hour": "Stundenlohn (keine Überstunden)",
     "short_shift": "Kurze Schicht",
     "overtime_hours": "Überstunden",
     "monthly": "Monatlich",
@@ -1027,6 +1032,26 @@
       "restore": "Käufe Wiederherstellen",
       "cancel": "Abbrechen",
       "continue": "Weiter"
+    },
+    "cancellation_text": "Sie können Ihr Abonnement jederzeit kündigen",
+    "packages": {
+      "three_months": "3 Monate",
+      "six_months": "6 Monate", 
+      "one_year": "1 Jahr",
+      "duration_suffix": {
+        "three_months": "/3 Monate",
+        "six_months": "/6 Monate",
+        "one_year": "/Jahr"
+      },
+      "badges": {
+        "basic": "Basis",
+        "best_value": "Bestes Angebot",
+        "premium": "Premium"
+      },
+      "action_buttons": {
+        "select_plan": "Plan Wählen",
+        "choose_best": "Beste Wählen"
+      }
     },
     "active": {
       "account_status": {

@@ -1092,6 +1092,25 @@
       "continue": "Continuer"
     },
     "cancellation_text": "Vous pouvez annuler votre abonnement à tout moment",
+    "packages": {
+      "three_months": "3 mois",
+      "six_months": "6 mois", 
+      "one_year": "1 an",
+      "duration_suffix": {
+        "three_months": "/3 mois",
+        "six_months": "/6 mois",
+        "one_year": "/an"
+      },
+      "badges": {
+        "basic": "Basique",
+        "best_value": "Meilleure Valeur",
+        "premium": "Premium"
+      },
+      "action_buttons": {
+        "select_plan": "Sélectionner Plan",
+        "choose_best": "Choisir Meilleur"
+      }
+    },
     "duration": "Abonnement de 3 mois",
     "active": {
       "account_status": {

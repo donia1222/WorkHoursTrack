@@ -1226,6 +1226,25 @@
       "continue": "Продолжить"
     },
     "cancellation_text": "Вы можете отменить подписку в любое время",
+    "packages": {
+      "three_months": "3 месяца",
+      "six_months": "6 месяцев", 
+      "one_year": "1 год",
+      "duration_suffix": {
+        "three_months": "/3 месяца",
+        "six_months": "/6 месяцев",
+        "one_year": "/год"
+      },
+      "badges": {
+        "basic": "Базовый",
+        "best_value": "Лучшая Цена",
+        "premium": "Премиум"
+      },
+      "action_buttons": {
+        "select_plan": "Выбрать План",
+        "choose_best": "Выбрать Лучший"
+      }
+    },
     "duration": "3-месячная подписка",
     "active": {
       "account_status": {

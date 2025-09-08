@@ -1278,6 +1278,25 @@
       "continue": "Continuar"
     },
     "cancellation_text": "Puedes cancelar tu suscripción en cualquier momento",
+    "packages": {
+      "three_months": "3 meses",
+      "six_months": "6 meses", 
+      "one_year": "1 año",
+      "duration_suffix": {
+        "three_months": "/3 meses",
+        "six_months": "/6 meses",
+        "one_year": "/año"
+      },
+      "badges": {
+        "basic": "Básico",
+        "best_value": "Mejor Valor",
+        "premium": "Premium"
+      },
+      "action_buttons": {
+        "select_plan": "Seleccionar Plan",
+        "choose_best": "Elegir Mejor"
+      }
+    },
     "duration": "3 meses de suscripción",
     "active": {
       "account_status": {

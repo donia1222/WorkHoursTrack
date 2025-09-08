@@ -578,22 +578,22 @@ Please describe your issue below:
                     iconColor = "#10b981";
                     gradientColors = ['rgba(16, 185, 129, 0.06)', 'rgba(16, 185, 129, 0.03)'];
                     buttonGradient = ['rgba(16, 185, 129, 0.9)', 'rgba(5, 150, 105, 0.9)'];
-                    duration = '3 months';
-                    badgeText = 'Basic';
+                    duration = t('subscription.packages.three_months');
+                    badgeText = t('subscription.packages.badges.basic');
                   } else if (pkg.product.identifier === 'ente2') {
                     iconColor = "#f59e0b";
                     gradientColors = ['rgba(245, 158, 11, 0.12)', 'rgba(245, 158, 11, 0.06)'];
                     buttonGradient = ['rgba(245, 158, 11, 0.95)', 'rgba(217, 119, 6, 0.95)'];
-                    duration = '6 months';
+                    duration = t('subscription.packages.six_months');
                     isBestOption = true;
                     cardStyle = styles.packageCardBest;
-                    badgeText = 'Best Value';
+                    badgeText = t('subscription.packages.badges.best_value');
                   } else if (pkg.product.identifier === 'ente3') {
                     iconColor = "#8b5cf6";
                     gradientColors = ['rgba(139, 92, 246, 0.08)', 'rgba(139, 92, 246, 0.04)'];
                     buttonGradient = ['rgba(139, 92, 246, 0.9)', 'rgba(124, 58, 237, 0.9)'];
-                    duration = '1 year';
-                    badgeText = 'Premium';
+                    duration = t('subscription.packages.one_year');
+                    badgeText = t('subscription.packages.badges.premium');
                   }
                   
                   const uniqueKey = `${offeringKey}_${pkg.product.identifier}_${index}`;
@@ -630,9 +630,9 @@ Please describe your issue below:
                         <View style={styles.packagePriceContainerHorizontal}>
                           <Text style={[styles.packagePriceHorizontal, { color: colors.text }]}>{pkg.product.priceString}</Text>
                           <Text style={[styles.packagePricePerMonth, { color: colors.textSecondary }]}>
-                            {pkg.product.identifier === '1981' && '/3 months'}
-                            {pkg.product.identifier === 'ente2' && '/6 months'}
-                            {pkg.product.identifier === 'ente3' && '/year'}
+                            {pkg.product.identifier === '1981' && t('subscription.packages.duration_suffix.three_months')}
+                            {pkg.product.identifier === 'ente2' && t('subscription.packages.duration_suffix.six_months')}
+                            {pkg.product.identifier === 'ente3' && t('subscription.packages.duration_suffix.one_year')}
                           </Text>
                         </View>
                         
@@ -644,7 +644,7 @@ Please describe your issue below:
                             end={{ x: 1, y: 1 }}
                           >
                             <Text style={styles.subscribeButtonTextHorizontal}>
-                              {isBestOption ? 'Choose Best' : 'Select Plan'}
+                              {isBestOption ? t('subscription.packages.action_buttons.choose_best') : t('subscription.packages.action_buttons.select_plan')}
                             </Text>
                           </LinearGradient>
                         </View>
