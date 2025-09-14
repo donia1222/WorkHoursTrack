@@ -19,6 +19,7 @@ struct WorktrackEntry: TimelineEntry {
     let title: String
     let location: String?
     let jobs: [JobInfo]
+    
 }
 
 // MARK: - Provider
