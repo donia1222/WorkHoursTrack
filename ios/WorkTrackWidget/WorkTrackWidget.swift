@@ -279,8 +279,11 @@ struct WorkTrackSmall: View {
                     Text("Time")
                         .font(.system(size: 16, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Purple
+                    Image(systemName: "clock.fill")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Same color as Time
+                        .padding(.leading, 4)  // Small space before clock icon
                 }
-                .padding(.leading, 25)  // Move VixTime more to the right
                 Spacer()
             }
             
@@ -344,8 +347,12 @@ struct WorkTrackMedium: View {
                     Text("Time")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Purple
+                    Image(systemName: "clock.fill")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Same color as Time
+                        .padding(.leading, 4)  // Small space before clock icon
                 }
-                .padding(.leading, 25)  // Move VixTime more to the right
+                .padding(.leading, 17)  // Moved 3px more to the left
                 
                 Spacer()
                 
@@ -557,8 +564,13 @@ struct WorkTrackLarge: View {
                     Text("Time")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Purple
+                    Image(systemName: "clock.fill")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Same color as Time
+                        .padding(.leading, 4)  // Small space before clock icon
                 }
-                .padding(.leading, 25)  // Move VixTime more to the right
+                .padding(.leading, 18)  // Moved 7px more to the left
+                .padding(.top, 2)  // Lower the title 2px
                 
                 Spacer()
                 
@@ -640,11 +652,6 @@ struct WorkTrackLarge: View {
                         daysCount: 21  // Always 3 weeks = 21 days
                     )
                 }
-                .padding(10)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(red: 0.85, green: 0.88, blue: 0.95).opacity(0.3))
-                )
             }
             
             Spacer(minLength: 2)

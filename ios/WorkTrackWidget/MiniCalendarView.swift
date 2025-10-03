@@ -497,7 +497,7 @@ struct CompactMediumDayView: View {
                 
                 // Day number - dark blue
                 Text(dayNumber)
-                    .font(.system(size: 10, weight: isToday ? .bold : .semibold, design: .rounded))
+                    .font(.system(size: 14, weight: isToday ? .bold : .semibold, design: .rounded))
                     .foregroundColor(Color(red: 0.15, green: 0.25, blue: 0.45))
             }
             
