@@ -86,7 +86,7 @@ export function checkPreciseLocationNeeded(radius: number, accuracy: number | un
   if (radius < 80 && acc > 65) {
     return {
       needsPrecise: true,
-      message: `Radio ${radius}m requiere ubicación precisa (actual: ${Math.round(acc)}m). Actívala en Ajustes > Privacidad > Ubicación > VixTime > Ubicación precisa.`
+      message: `Radio ${radius}m requiere ubicación precisa (actual: ${Math.round(acc)}m). Actívala en Ajustes > Privacidad > Ubicación > WorkTime > Ubicación precisa.`
     };
   }
   

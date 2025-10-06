@@ -144,7 +144,7 @@ export default function DebugScreen({ onBack }: { onBack?: () => void }) {
       const now = new Date();
       const report = `=== AUTOTIMER DEBUG REPORT ===
 Fecha: ${now.toLocaleString('es-ES')}
-App: VixTime v1.0
+App: WorkTime v1.0
 
 === ESTADO ACTUAL ===
 Modo AutoTimer: ${autoTimerMode?.mode || 'No configurado'}
@@ -192,7 +192,7 @@ ${logs.map((log, i) => {
             text: t('debug.send_by_email'),
             onPress: async () => {
               try {
-                const subject = encodeURIComponent('AutoTimer Debug Report - VixTime');
+                const subject = encodeURIComponent('AutoTimer Debug Report - WorkTime');
                 const body = encodeURIComponent(report);
                 const mailUrl = `mailto:report@vixtime.com?subject=${subject}&body=${body}`;
                 

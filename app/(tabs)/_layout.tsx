@@ -53,7 +53,7 @@ function LayoutContent() {
       globalThis.calendarViewToggleHandler = undefined;
     };
   }, [calendarViewMode]);
-  const [headerTitle, setHeaderTitle] = useState('VixTime');
+  const [headerTitle, setHeaderTitle] = useState('WorkTime');
   const { triggerHaptic } = useHapticFeedback();
   const { isSubscribed } = useSubscription();
   const navigation = useExpoNavigation();
@@ -160,16 +160,17 @@ function LayoutContent() {
                              currentScreen === 'calendar' ? (t('calendar.title') || 'Calendario') :
                              currentScreen === 'settings' ? (t('settings.title') || 'Configuración') :
                              currentScreen === 'subscription' ? (t('subscription.title') || 'Premium') :
-                             currentScreen === 'chatbot' ? ( 'Vix-Chat' ) :
-                             'VixTime';
+                             currentScreen === 'chatbot' ? ( 'Work-Chat' ) :
+                             'WorkTime';
                 
                 if (currentScreen === 'mapa') {
                   return (
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-start' }}>
                     
                       <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
-                        <Text style={{ fontSize: 22, fontWeight: '700', color: '#007AFF' }}>Vix</Text>
-                        <Text style={{ fontSize: 22, fontWeight: '700', color: '#5856D6' }}>Time</Text>
+                        <Text style={{ fontSize: 22, fontWeight: '700', color: '#007AFF' }}>Work</Text>
+                        <Text style={{ fontSize: 22, fontWeight: '700', color: '#5856D6' }}>Ti</Text>
+                        <IconSymbol size={22} name="clock.fill" color="#5856D6" style={{ marginLeft: 2 }} />
                       </View>
                     </View>
                   );

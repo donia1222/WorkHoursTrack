@@ -684,7 +684,7 @@
     "steps": {
       "location": {
         "title": "Tu Privacidad es Importante",
-        "description": "VixTime usa tu ubicación únicamente para detectar cuando llegas y sales del trabajo. Todos los datos se almacenan localmente en tu dispositivo. No tenemos servidores, no recopilamos datos y nunca compartimos tu información. Puedes cambiar este permiso en cualquier momento desde los Ajustes del sistema."
+        "description": "WorkTime usa tu ubicación únicamente para detectar cuando llegas y sales del trabajo. Todos los datos se almacenan localmente en tu dispositivo. No tenemos servidores, no recopilamos datos y nunca compartimos tu información. Puedes cambiar este permiso en cualquier momento desde los Ajustes del sistema."
       },
       "jobs": {
         "title": "Trabajos",
@@ -1176,8 +1176,8 @@
       "schedule": "Horario de Atención",
       "schedule_hours": "Lun - Vie: 9:00 - 18:00",
       "share_app": "Recomendar App",
-      "share_app_desc": "Comparte VixTime con amigos",
-      "share_message": "¡Descubre VixTime! La mejor app para controlar tus horas de trabajo. Descarga: https://vixtime.com"
+      "share_app_desc": "Comparte WorkTime con amigos",
+      "share_message": "¡Descubre WorkTime! La mejor app para controlar tus horas de trabajo. Descarga: https://vixtime.com"
     },
     "legal": {
       "title": "Legal y Privacidad",
@@ -1473,7 +1473,7 @@
     "title": "Política de Privacidad",
     "subtitle": "Última actualización: Agosto 2025",
     "your_privacy_title": "Tu Privacidad es Nuestra Prioridad",
-    "your_privacy_text": "En VixTime, nos tomamos tu privacidad en serio. Esta Política de Privacidad explica cómo recopilamos, usamos y protegemos tu información cuando usas nuestra aplicación de seguimiento de tiempo de trabajo.",
+    "your_privacy_text": "En WorkTime, nos tomamos tu privacidad en serio. Esta Política de Privacidad explica cómo recopilamos, usamos y protegemos tu información cuando usas nuestra aplicación de seguimiento de tiempo de trabajo.",
     "data_storage_title": "Almacenamiento de Datos",
     "local_storage_text": "100% Almacenamiento Local: Todos tus datos de trabajo, incluyendo información de empleos, registros de tiempo, horarios y configuraciones se almacenan exclusivamente en tu dispositivo. No tenemos acceso a esta información.",
     "no_cloud_text": "Sin Servidores en la Nube: No tenemos bases de datos ni servidores en la nube que almacenen tu información personal. Tus datos nunca salen de tu dispositivo a menos que elijas explícitamente exportarlos o compartirlos.",
@@ -1503,11 +1503,11 @@
     "title": "Términos de Servicio",
     "subtitle": "Última actualización: Agosto 2025",
     "acceptance_title": "Aceptación de Términos",
-    "acceptance_text": "Al descargar, instalar o usar VixTime, aceptas estar sujeto a estos Términos de Servicio. Si no estás de acuerdo con estos términos, por favor no uses la app.",
+    "acceptance_text": "Al descargar, instalar o usar WorkTime, aceptas estar sujeto a estos Términos de Servicio. Si no estás de acuerdo con estos términos, por favor no uses la app.",
     "description_title": "Descripción de la App",
-    "description_text": "VixTime es una aplicación de seguimiento de tiempo de trabajo que te ayuda a monitorear y gestionar tus horas de trabajo, crear horarios y generar reportes. Todos los datos se almacenan localmente en tu dispositivo.",
+    "description_text": "WorkTime es una aplicación de seguimiento de tiempo de trabajo que te ayuda a monitorear y gestionar tus horas de trabajo, crear horarios y generar reportes. Todos los datos se almacenan localmente en tu dispositivo.",
     "license_title": "Licencia",
-    "license_text": "Te otorgamos una licencia limitada, no exclusiva, no transferible para usar VixTime con fines personales o comerciales de acuerdo con estos términos.",
+    "license_text": "Te otorgamos una licencia limitada, no exclusiva, no transferible para usar WorkTime con fines personales o comerciales de acuerdo con estos términos.",
     "user_responsibilities_title": "Responsabilidades del Usuario",
     "user_responsibilities_text": "Eres responsable de: (a) mantener la seguridad de tu dispositivo y datos de la app, (b) crear respaldos regulares de tus datos, (c) usar la app en cumplimiento con las leyes aplicables.",
     "data_ownership_title": "Propiedad de Datos",

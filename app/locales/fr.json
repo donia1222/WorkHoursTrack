@@ -963,8 +963,8 @@
       "schedule": "Heures de Support",
       "schedule_hours": "Lun - Ven : 9h00 - 18h00",
       "share_app": "Partager l'app",
-      "share_app_desc": "Partager VixTime avec des amis",
-      "share_message": "Découvrez VixTime ! La meilleure app pour suivre vos heures de travail. Télécharger : https://vixtime.com"
+      "share_app_desc": "Partager WorkTime avec des amis",
+      "share_message": "Découvrez WorkTime ! La meilleure app pour suivre vos heures de travail. Télécharger : https://vixtime.com"
     },
     "legal": {
       "title": "Légal & Confidentialité",
@@ -1294,7 +1294,7 @@
     "steps": {
       "location": {
         "title": "Votre Vie Privée est Importante",
-        "description": "VixTime utilise votre localisation uniquement pour détecter quand vous arrivez et partez du travail. Toutes les données sont stockées localement sur votre appareil. Nous n'avons pas de serveurs, ne collectons aucune donnée et ne partageons jamais vos informations. Vous pouvez modifier cette autorisation à tout moment dans les Paramètres du système."
+        "description": "WorkTime utilise votre localisation uniquement pour détecter quand vous arrivez et partez du travail. Toutes les données sont stockées localement sur votre appareil. Nous n'avons pas de serveurs, ne collectons aucune donnée et ne partageons jamais vos informations. Vous pouvez modifier cette autorisation à tout moment dans les Paramètres du système."
       },
       "jobs": {
         "title": "Travaux",
@@ -1354,7 +1354,7 @@
     "title": "Politique de Confidentialité",
     "subtitle": "Dernière mise à jour : Août 2025",
     "your_privacy_title": "Votre Confidentialité est Notre Priorité",
-    "your_privacy_text": "Chez VixTime, nous prenons votre confidentialité au sérieux. Cette Politique de Confidentialité explique comment nous collectons, utilisons et protégeons vos informations lorsque vous utilisez notre application de suivi du temps de travail.",
+    "your_privacy_text": "Chez WorkTime, nous prenons votre confidentialité au sérieux. Cette Politique de Confidentialité explique comment nous collectons, utilisons et protégeons vos informations lorsque vous utilisez notre application de suivi du temps de travail.",
     "data_storage_title": "Stockage des Données",
     "local_storage_text": "100% Stockage Local : Toutes vos données de travail, y compris les informations d'emploi, les enregistrements de temps, les horaires et les paramètres sont stockés exclusivement sur votre appareil. Nous n'avons pas accès à ces informations.",
     "no_cloud_text": "Pas de Serveurs Cloud : Nous n'avons aucune base de données ou serveur cloud qui stockent vos informations personnelles. Vos données ne quittent jamais votre appareil sauf si vous choisissez explicitement de les exporter ou de les partager.",
@@ -1384,11 +1384,11 @@
     "title": "Conditions de Service",
     "subtitle": "Dernière mise à jour : Août 2025",
     "acceptance_title": "Acceptation des Conditions",
-    "acceptance_text": "En téléchargeant, installant ou utilisant VixTime, vous acceptez d'être lié par ces Conditions de Service. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser l'application.",
+    "acceptance_text": "En téléchargeant, installant ou utilisant WorkTime, vous acceptez d'être lié par ces Conditions de Service. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser l'application.",
     "description_title": "Description de l'Application",
-    "description_text": "VixTime est une application de suivi du temps de travail qui vous aide à surveiller et gérer vos heures de travail, créer des horaires et générer des rapports. Toutes les données sont stockées localement sur votre appareil.",
+    "description_text": "WorkTime est une application de suivi du temps de travail qui vous aide à surveiller et gérer vos heures de travail, créer des horaires et générer des rapports. Toutes les données sont stockées localement sur votre appareil.",
     "license_title": "Licence",
-    "license_text": "Nous vous accordons une licence limitée, non exclusive, non transférable pour utiliser VixTime à des fins personnelles ou professionnelles conformément à ces conditions.",
+    "license_text": "Nous vous accordons une licence limitée, non exclusive, non transférable pour utiliser WorkTime à des fins personnelles ou professionnelles conformément à ces conditions.",
     "user_responsibilities_title": "Responsabilités de l'Utilisateur",
     "user_responsibilities_text": "Vous êtes responsable de : (a) maintenir la sécurité de votre appareil et des données de l'application, (b) créer des sauvegardes régulières de vos données, (c) utiliser l'application en conformité avec les lois applicables.",
     "data_ownership_title": "Propriété des Données",

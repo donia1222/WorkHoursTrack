@@ -399,7 +399,7 @@ export const SalaryStatsModal: React.FC<SalaryStatsModalProps> = ({
         
         <div class="footer">
           <div>${t('reports.generated_on')} ${new Date().toLocaleDateString(t('locale_code') || 'es-ES')}</div>
-          <div style="color: #1e3a8a; font-weight: 500; margin-top: 5px;">VixTime</div>
+          <div style="color: #1e3a8a; font-weight: 500; margin-top: 5px;">WorkTime</div>
         </div>
       </body>
       </html>

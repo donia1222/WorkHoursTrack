@@ -2308,7 +2308,7 @@ export default function ReportsScreen({ onNavigate }: ReportsScreenProps) {
 
       {/* Job Form Modal for Billing Configuration */}
       {showJobFormModal && editingJobForBilling && (
-        console.log('🔥 Rendering JobFormModal with scrollToOvertime:', shouldScrollToOvertime) ||
+
         <JobFormModal
           visible={showJobFormModal}
           onClose={() => {

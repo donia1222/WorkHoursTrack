@@ -338,7 +338,7 @@ struct WorkTrackMedium: View {
         let timer = timerData
         
         VStack(spacing: 10) {
-            // Header with colorful VixTime
+            // Header with colorful WorkTime
             HStack(alignment: .center) {
                 HStack(spacing: 0) {
                     Text("Vix")
@@ -688,7 +688,7 @@ struct LargeWidgetHeader: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("VixTime")
+                    Text("WorkTime")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
                     Text("Work Tracker")
@@ -904,7 +904,7 @@ struct WorkTrackWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             WorkTrackSwitcher(entry: entry)
         }
-        .configurationDisplayName("VixTime")
+        .configurationDisplayName("WorkTime")
         .description("View your work time at a glance")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }

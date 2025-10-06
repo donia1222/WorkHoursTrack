@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "geolocalizacion-app",
+    "name": "WorkTi",
     "slug": "geolocalizacion-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,6 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
+      "buildNumber": "32",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Esta app necesita acceso a tu ubicación para detectar automáticamente cuando entras y sales del trabajo.",
         "NSLocationAlwaysUsageDescription": "Esta app necesita acceso a tu ubicación en segundo plano para detectar automáticamente cuando entras y sales del trabajo, incluso con la app cerrada.",
@@ -19,7 +20,10 @@
         "NSUserNotificationsUsageDescription": "Esta app necesita permisos de notificación para avisarte cuando el timer automático se inicie o pause.",
         "NSPhotoLibraryUsageDescription": "Esta app necesita acceso a tus fotos para que puedas seleccionar imágenes y analizarlas con el chatbot IA.",
         "NSCameraUsageDescription": "Esta app necesita acceso a la cámara para que puedas tomar fotos y analizarlas con el chatbot IA.",
-        "UIBackgroundModes": ["location", "remote-notification"],
+        "UIBackgroundModes": [
+          "location",
+          "remote-notification"
+        ],
         "NSSupportsLiveActivities": true,
         "NSSupportsLiveActivitiesFrequentUpdates": true,
         "UIApplicationShortcutItems": [
@@ -51,14 +55,22 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION",
-        "READ_CALENDAR",
-        "WRITE_CALENDAR",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "CAMERA"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION",
+        "android.permission.RECORD_AUDIO"
       ],
       "package": "com.tuusuario.geolocalizacionapp"
     },
@@ -112,6 +124,21 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "updates": {
+      "url": "https://u.expo.dev/0998f387-91d5-4fc5-92fe-1716eb9f6b0e",
+      "enabled": true,
+      "checkAutomatically": "ON_ERROR_RECOVERY",
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": "1.0.0",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "0998f387-91d5-4fc5-92fe-1716eb9f6b0e"
+      }
     }
   }
 }

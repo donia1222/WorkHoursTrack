@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppState } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import * as Updates from 'expo-updates';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
@@ -69,6 +70,25 @@ export default function RootLayout() {
       verifyLiveActivityModule();
       // Initialize Quick Actions (language will be set by LanguageContext)
       SimpleQuickActionsManager.initialize();
+    }
+  }, [loaded]);
+
+  // Check for OTA updates on app start
+  useEffect(() => {
+    async function checkForUpdates() {
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();
+        }
+      } catch (e) {
+        console.log('Error checking for updates:', e);
+      }
+    }
+
+    if (loaded) {
+      checkForUpdates();
     }
   }, [loaded]);
 

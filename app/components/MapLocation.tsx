@@ -1360,11 +1360,11 @@ export default function MapLocation({ location, onNavigate }: Props) {
     const loadDynamicQuestion = async () => {
       try {
         // Get current location coordinates if available
-        const coordinates = location ? { 
-          latitude: location.latitude, 
-          longitude: location.longitude 
+        const coordinates = location ? {
+          latitude: location.latitude,
+          longitude: location.longitude
         } : undefined;
-        
+
         const randomQuestion = await getRandomQuestion(language, coordinates);
         if (randomQuestion) {
           setDynamicChatbotQuestion(randomQuestion);
@@ -4643,8 +4643,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     }
                   })()}
 
-                {/* AI ASSISTANT WIDGET - NEW - Hide on iPad landscape and when auto-timer is active */}
-                {(!isTablet || (isTablet && isPortrait)) && shouldShowNormalWidgets && (
+                {/* AI ASSISTANT WIDGET - COMENTADO TEMPORALMENTE */}
+                {/* {(!isTablet || (isTablet && isPortrait)) && shouldShowNormalWidgets && (
                 <TouchableOpacity
                   style={{
                     marginTop: isTablet ? 28 : (isSmallScreen ? 6 : 20),
@@ -4691,9 +4691,9 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         <IconSymbol size={24} name="sparkles" color={isDark ? '#93c5fd' : '#3b82f6'} />
                       </View>
                       <View style={{ flex: 1 }}>
-            
 
-                        <Animated.Text 
+
+                        <Animated.Text
                           numberOfLines={2}
                           style={[
                           {
@@ -4706,13 +4706,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         ]}>
                           {dynamicChatbotQuestion || t('chatbot.welcome_title')}
                         </Animated.Text>
-           
+
                       </View>
                     </View>
-           
+
                   </View>
                 </TouchableOpacity>
-                )}
+                )} */}
                 
                 {/* STATISTICS WIDGET - Only for iPad in Portrait */}
                 {isTablet && isPortrait && (
@@ -5107,13 +5107,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
         />
       )}
 
-      {/* Chatbot Questions Modal */}
-      <ChatbotQuestionsModal
+      {/* Chatbot Questions Modal - COMENTADO TEMPORALMENTE */}
+      {/* <ChatbotQuestionsModal
         visible={showChatbotQuestionsModal}
         onClose={() => setShowChatbotQuestionsModal(false)}
         onNavigateToChatbot={() => onNavigate?.('chatbot')}
         userLocation={location}
-      />
+      /> */}
 
       {/* AutoTimer Stop Loader */}
       {isStoppingAutoTimer && (

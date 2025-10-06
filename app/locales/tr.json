@@ -664,7 +664,7 @@
     "steps": {
       "location": {
         "title": "Gizliliğiniz Önemlidir",
-        "description": "VixTime konumunuzu yalnızca işe geldiğinizde ve çıktığınızda algılamak için kullanır. Tüm veriler cihazınızda yerel olarak saklanır. Sunucularımız yok, veri toplamıyoruz ve bilgilerinizi asla paylaşmıyoruz. Bu izni istediğiniz zaman Sistem Ayarları'ndan değiştirebilirsiniz."
+        "description": "WorkTime konumunuzu yalnızca işe geldiğinizde ve çıktığınızda algılamak için kullanır. Tüm veriler cihazınızda yerel olarak saklanır. Sunucularımız yok, veri toplamıyoruz ve bilgilerinizi asla paylaşmıyoruz. Bu izni istediğiniz zaman Sistem Ayarları'ndan değiştirebilirsiniz."
       },
       "jobs": {
         "title": "İşler",
@@ -1153,8 +1153,8 @@
       "schedule": "Destek Saatleri",
       "schedule_hours": "Pzt - Cum: 09:00 - 18:00",
       "share_app": "Uygulamayı Öner",
-      "share_app_desc": "VixTime'ı arkadaşlarınızla paylaşın",
-      "share_message": "VixTime'ı keşfedin! Çalışma saatlerinizi kontrol etmek için en iyi uygulama. İndirin: https://vixtime.com"
+      "share_app_desc": "WorkTime'ı arkadaşlarınızla paylaşın",
+      "share_message": "WorkTime'ı keşfedin! Çalışma saatlerinizi kontrol etmek için en iyi uygulama. İndirin: https://vixtime.com"
     },
     "legal": {
       "title": "Yasal ve Gizlilik",
@@ -1444,7 +1444,7 @@
     "title": "Gizlilik Politikası",
     "subtitle": "Son güncelleme: Ağustos 2025",
     "your_privacy_title": "Gizliliğiniz Önceliğimizdir",
-    "your_privacy_text": "VixTime'da gizliliğinizi ciddiye alıyoruz. Bu Gizlilik Politikası, çalışma zamanı takip uygulamamızı kullandığınızda bilgilerinizi nasıl topladığımızı, kullandığımızı ve koruduğumuzu açıklar.",
+    "your_privacy_text": "WorkTime'da gizliliğinizi ciddiye alıyoruz. Bu Gizlilik Politikası, çalışma zamanı takip uygulamamızı kullandığınızda bilgilerinizi nasıl topladığımızı, kullandığımızı ve koruduğumuzu açıklar.",
     "data_storage_title": "Veri Depolama",
     "local_storage_text": "%100 Yerel Depolama: İş bilgileri, zaman kayıtları, programlar ve ayarlar dahil tüm çalışma verileriniz yalnızca cihazınızda saklanır. Bu bilgilere erişimimiz yoktur.",
     "no_cloud_text": "Bulut Sunucular Yok: Kişisel bilgilerinizi saklayan bulut veritabanlarımız veya sunucularımız yoktur. Verileriniz açıkça dışa aktarmayı veya paylaşmayı seçmediğiniz sürece cihazınızdan çıkmaz.",
@@ -1474,11 +1474,11 @@
     "title": "Hizmet Koşulları",
     "subtitle": "Son güncelleme: Ağustos 2025",
     "acceptance_title": "Koşulların Kabulü",
-    "acceptance_text": "VixTime'ı indirerek, kurarak veya kullanarak bu Hizmet Koşullarına bağlı olmayı kabul edersiniz. Bu koşullara katılmıyorsanız, lütfen uygulamayı kullanmayın.",
+    "acceptance_text": "WorkTime'ı indirerek, kurarak veya kullanarak bu Hizmet Koşullarına bağlı olmayı kabul edersiniz. Bu koşullara katılmıyorsanız, lütfen uygulamayı kullanmayın.",
     "description_title": "Uygulama Açıklaması",
-    "description_text": "VixTime, çalışma saatlerinizi izlemenize ve yönetmenize, programlar oluşturmanıza ve raporlar üretmenize yardımcı olan bir çalışma zamanı takip uygulamasıdır. Tüm veriler cihazınızda yerel olarak saklanır.",
+    "description_text": "WorkTime, çalışma saatlerinizi izlemenize ve yönetmenize, programlar oluşturmanıza ve raporlar üretmenize yardımcı olan bir çalışma zamanı takip uygulamasıdır. Tüm veriler cihazınızda yerel olarak saklanır.",
     "license_title": "Lisans",
-    "license_text": "Size VixTime'ı bu koşullara uygun olarak kişisel veya ticari amaçlarla kullanmak için sınırlı, münhasır olmayan, devredilemez bir lisans veriyoruz.",
+    "license_text": "Size WorkTime'ı bu koşullara uygun olarak kişisel veya ticari amaçlarla kullanmak için sınırlı, münhasır olmayan, devredilemez bir lisans veriyoruz.",
     "user_responsibilities_title": "Kullanıcı Sorumlulukları",
     "user_responsibilities_text": "Şunlardan sorumlusunuz: (a) cihazınızın ve uygulama verilerinizin güvenliğini korumak, (b) verilerinizin düzenli yedeklemelerini oluşturmak, (c) uygulamayı yürürlükteki yasalara uygun şekilde kullanmak.",
     "data_ownership_title": "Veri Sahipliği",

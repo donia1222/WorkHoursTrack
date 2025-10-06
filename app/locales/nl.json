@@ -663,7 +663,7 @@
     "steps": {
       "location": {
         "title": "Je Privacy is Belangrijk",
-        "description": "VixTime gebruikt je locatie uitsluitend om te detecteren wanneer je aankomt en vertrekt van het werk. Alle gegevens worden lokaal opgeslagen op je apparaat. We hebben geen servers, verzamelen geen data en delen nooit je informatie. Je kunt deze toestemming altijd wijzigen in de Systeeminstellingen."
+        "description": "WorkTime gebruikt je locatie uitsluitend om te detecteren wanneer je aankomt en vertrekt van het werk. Alle gegevens worden lokaal opgeslagen op je apparaat. We hebben geen servers, verzamelen geen data en delen nooit je informatie. Je kunt deze toestemming altijd wijzigen in de Systeeminstellingen."
       },
       "jobs": {
         "title": "Banen",
@@ -1153,8 +1153,8 @@
       "schedule": "Openingstijden",
       "schedule_hours": "Ma - Vr: 9:00 - 18:00",
       "share_app": "App Aanbevelen",
-      "share_app_desc": "Deel VixTime met vrienden",
-      "share_message": "Ontdek VixTime! De beste app om je werkuren te controleren. Download: https://vixtime.com"
+      "share_app_desc": "Deel WorkTime met vrienden",
+      "share_message": "Ontdek WorkTime! De beste app om je werkuren te controleren. Download: https://vixtime.com"
     },
     "legal": {
       "title": "Juridisch en Privacy",
@@ -1444,7 +1444,7 @@
     "title": "Privacybeleid",
     "subtitle": "Laatste update: Augustus 2025",
     "your_privacy_title": "Jouw Privacy is Onze Prioriteit",
-    "your_privacy_text": "Bij VixTime nemen we je privacy serieus. Dit Privacybeleid legt uit hoe we informatie verzamelen, gebruiken en beschermen wanneer je onze tijdvolg-app gebruikt.",
+    "your_privacy_text": "Bij WorkTime nemen we je privacy serieus. Dit Privacybeleid legt uit hoe we informatie verzamelen, gebruiken en beschermen wanneer je onze tijdvolg-app gebruikt.",
     "data_storage_title": "Gegevensopslag",
     "local_storage_text": "100% Lokale Opslag: Al je werkgegevens, inclusief baninformatie, tijdregistraties, schema's en instellingen worden uitsluitend op je apparaat opgeslagen. We hebben geen toegang tot deze informatie.",
     "no_cloud_text": "Geen Cloud Servers: We hebben geen databases of cloud servers die je persoonlijke informatie opslaan. Je gegevens verlaten nooit je apparaat tenzij je expliciet kiest om ze te exporteren of delen.",
@@ -1474,11 +1474,11 @@
     "title": "Servicevoorwaarden",
     "subtitle": "Laatste update: Augustus 2025",
     "acceptance_title": "Acceptatie van Voorwaarden",
-    "acceptance_text": "Door VixTime te downloaden, installeren of gebruiken, stem je ermee in gebonden te zijn aan deze Servicevoorwaarden. Als je niet akkoord gaat met deze voorwaarden, gebruik de app dan niet.",
+    "acceptance_text": "Door WorkTime te downloaden, installeren of gebruiken, stem je ermee in gebonden te zijn aan deze Servicevoorwaarden. Als je niet akkoord gaat met deze voorwaarden, gebruik de app dan niet.",
     "description_title": "App Beschrijving",
-    "description_text": "VixTime is een tijdvolg-app die je helpt je werkuren te monitoren en beheren, schema's te maken en rapporten te genereren. Alle gegevens worden lokaal opgeslagen op je apparaat.",
+    "description_text": "WorkTime is een tijdvolg-app die je helpt je werkuren te monitoren en beheren, schema's te maken en rapporten te genereren. Alle gegevens worden lokaal opgeslagen op je apparaat.",
     "license_title": "Licentie",
-    "license_text": "We verlenen je een beperkte, niet-exclusieve, niet-overdraagbare licentie om VixTime te gebruiken voor persoonlijke of commerciële doeleinden in overeenstemming met deze voorwaarden.",
+    "license_text": "We verlenen je een beperkte, niet-exclusieve, niet-overdraagbare licentie om WorkTime te gebruiken voor persoonlijke of commerciële doeleinden in overeenstemming met deze voorwaarden.",
     "user_responsibilities_title": "Gebruikersverantwoordelijkheden",
     "user_responsibilities_text": "Je bent verantwoordelijk voor: (a) het onderhouden van de beveiliging van je apparaat en app-gegevens, (b) het maken van regelmatige back-ups van je gegevens, (c) het gebruiken van de app in overeenstemming met toepasselijke wetten.",
     "data_ownership_title": "Gegevenseigendom",

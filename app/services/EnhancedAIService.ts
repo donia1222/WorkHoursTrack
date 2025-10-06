@@ -1,5 +1,5 @@
 /*
- * VixTime - Geolocation Work Tracking Application
+ * WorkTime - Geolocation Work Tracking Application
  * Copyright © 2025 Roberto Salvador. All rights reserved.
  * 
  * PROPRIETARY CODE - COPYING OR DISTRIBUTION PROHIBITED
@@ -1748,7 +1748,7 @@ export class EnhancedAIService {
         const response = await fetch(url, {
           headers: {
             'Host': 'data.usajobs.gov',
-            'User-Agent': 'VixTimeApp',
+            'User-Agent': 'WorkTimeApp',
             'Authorization-Key': 'DEMO_KEY' // Replace with actual key if available
           }
         });

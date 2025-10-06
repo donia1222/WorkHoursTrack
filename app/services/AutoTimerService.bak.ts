@@ -1,5 +1,5 @@
 /*
- * VixTime - Geolocation Work Tracking Application
+ * WorkTime - Geolocation Work Tracking Application
  * Copyright © 2025 Roberto Salvador. All rights reserved.
  * 
  * PROPRIETARY CODE - COPYING OR DISTRIBUTION PROHIBITED

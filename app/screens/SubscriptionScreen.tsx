@@ -257,7 +257,7 @@ Please describe your issue below:
 `;
     
     // Crear el URL del email con la información
-    const subject = encodeURIComponent('VixTime Support Request');
+    const subject = encodeURIComponent('WorkTime Support Request');
     const body = encodeURIComponent(emailBody);
     const emailUrl = `mailto:info@lweb.ch?subject=${subject}&body=${body}`;
     

@@ -484,7 +484,7 @@ export default function WelcomeModal({ visible, onClose, onDone, isOnboarding = 
 
   const openEmail = async () => {
     const email = 'info@lweb.ch';
-    const subject = 'VixTime App - Contact';
+    const subject = 'WorkTime App - Contact';
     const url = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
     
     const canOpen = await Linking.canOpenURL(url);
