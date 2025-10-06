@@ -16,8 +16,10 @@ export interface ImageAnalysisResult {
 }
 
 export class GoogleVisionService {
-  // Proxy URL desde variables de entorno (debe definirse en .env)
-  private static readonly PROXY_URL = process.env.EXPO_PUBLIC_LOGIN_URL!;
+  // API Keys de Google desde variables de entorno
+  private static readonly GEMINI_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_GEMINI_API_KEY;
+  private static readonly GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+  private static readonly VISION_API_URL = 'https://vision.googleapis.com/v1/images:annotate';
 
   // Helper method to detect if the message is asking for specific person analysis
   private static isSpecificPersonAnalysis(userMessage: string): boolean {
@@ -100,16 +102,17 @@ export class GoogleVisionService {
         ],
       };
 
-      const response = await fetch(this.PROXY_URL, {
+      if (!this.GEMINI_API_KEY) {
+        throw new Error('API key de Google no configurada');
+      }
+
+      const apiUrl = `${this.VISION_API_URL}?key=${this.GEMINI_API_KEY}`;
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          service: 'vision',
-          action: 'annotate',
-          data: requestBody
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -259,21 +262,20 @@ Usuario: ${message}`
         ]
       };
 
-      console.log('📤 [GEMINI] Enviando request a través del proxy...');
-      console.log('🔗 [GEMINI] Proxy URL:', this.PROXY_URL);
+      if (!this.GEMINI_API_KEY) {
+        throw new Error('API key de Google Gemini no configurada');
+      }
+
+      const apiUrl = `${this.GEMINI_API_URL}/gemini-2.0-flash:generateContent?key=${this.GEMINI_API_KEY}`;
+      console.log('📤 [GEMINI] Enviando request directo a Google Gemini API...');
       console.log('📦 [GEMINI] Request body:', JSON.stringify(requestBody, null, 2));
 
-      const response = await fetch(this.PROXY_URL, {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          service: 'gemini',
-          action: 'generateContent',
-          model: 'gemini-1.5-pro',
-          data: requestBody
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       console.log('📡 [GEMINI] Response status:', response.status);
@@ -352,18 +354,18 @@ Usuario: ${message}`
         }
       };
 
-      console.log('📤 [GEMINI-VISION] Enviando request...');
-      const response = await fetch(this.PROXY_URL, {
+      if (!this.GEMINI_API_KEY) {
+        throw new Error('API key de Google Gemini no configurada');
+      }
+
+      const apiUrl = `${this.GEMINI_API_URL}/gemini-2.0-flash:generateContent?key=${this.GEMINI_API_KEY}`;
+      console.log('📤 [GEMINI-VISION] Enviando request directo a Google Gemini API...');
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          service: 'gemini',
-          action: 'generateContent',
-          model: 'gemini-1.5-pro',
-          data: requestBody
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       console.log('📡 [GEMINI-VISION] Response status:', response.status);
@@ -448,18 +450,18 @@ Usuario: ${message}`
         ]
       };
 
-      console.log('📤 [CONTEXTO] Enviando request con contexto...');
-      const response = await fetch(this.PROXY_URL, {
+      if (!this.GEMINI_API_KEY) {
+        throw new Error('API key de Google Gemini no configurada');
+      }
+
+      const apiUrl = `${this.GEMINI_API_URL}/gemini-2.0-flash:generateContent?key=${this.GEMINI_API_KEY}`;
+      console.log('📤 [CONTEXTO] Enviando request directo a Google Gemini API...');
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          service: 'gemini',
-          action: 'generateContent',
-          model: 'gemini-1.5-pro',
-          data: requestBody
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -529,18 +531,18 @@ Usuario: ${message}`
         }
       };
 
-      console.log('📤 [PDF] Enviando request...');
-      const response = await fetch(this.PROXY_URL, {
+      if (!this.GEMINI_API_KEY) {
+        throw new Error('API key de Google Gemini no configurada');
+      }
+
+      const apiUrl = `${this.GEMINI_API_URL}/gemini-2.0-flash:generateContent?key=${this.GEMINI_API_KEY}`;
+      console.log('📤 [PDF] Enviando request directo a Google Gemini API...');
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          service: 'gemini',
-          action: 'generateContent',
-          model: 'gemini-1.5-pro',
-          data: requestBody
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       console.log('📡 [PDF] Response status:', response.status);
@@ -709,18 +711,18 @@ ${VisionPrompts.getPrompt('responseFormat', language)}`;
         }
       };
 
-      console.log('📤 [INTERACTIVO] Enviando request para detección de ambigüedades...');
-      const response = await fetch(this.PROXY_URL, {
+      if (!this.GEMINI_API_KEY) {
+        throw new Error('API key de Google Gemini no configurada');
+      }
+
+      const apiUrl = `${this.GEMINI_API_URL}/gemini-2.0-flash:generateContent?key=${this.GEMINI_API_KEY}`;
+      console.log('📤 [INTERACTIVO] Enviando request directo a Google Gemini API...');
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          service: 'gemini',
-          action: 'generateContent',
-          model: 'gemini-2.0-flash-exp',
-          data: requestBody
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {

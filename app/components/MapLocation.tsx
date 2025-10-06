@@ -1360,11 +1360,11 @@ export default function MapLocation({ location, onNavigate }: Props) {
     const loadDynamicQuestion = async () => {
       try {
         // Get current location coordinates if available
-        const coordinates = location ? {
-          latitude: location.latitude,
-          longitude: location.longitude
+        const coordinates = location ? { 
+          latitude: location.latitude, 
+          longitude: location.longitude 
         } : undefined;
-
+        
         const randomQuestion = await getRandomQuestion(language, coordinates);
         if (randomQuestion) {
           setDynamicChatbotQuestion(randomQuestion);
@@ -4643,8 +4643,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     }
                   })()}
 
-                {/* AI ASSISTANT WIDGET - COMENTADO TEMPORALMENTE */}
-                {/* {(!isTablet || (isTablet && isPortrait)) && shouldShowNormalWidgets && (
+            
+             {(!isTablet || (isTablet && isPortrait)) && shouldShowNormalWidgets && (
                 <TouchableOpacity
                   style={{
                     marginTop: isTablet ? 28 : (isSmallScreen ? 6 : 20),
@@ -4712,7 +4712,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
                   </View>
                 </TouchableOpacity>
-                )} */}
+                )} 
+
                 
                 {/* STATISTICS WIDGET - Only for iPad in Portrait */}
                 {isTablet && isPortrait && (
@@ -5107,13 +5108,13 @@ export default function MapLocation({ location, onNavigate }: Props) {
         />
       )}
 
-      {/* Chatbot Questions Modal - COMENTADO TEMPORALMENTE */}
-      {/* <ChatbotQuestionsModal
+      {/* Chatbot Questions Modal */}
+      <ChatbotQuestionsModal
         visible={showChatbotQuestionsModal}
         onClose={() => setShowChatbotQuestionsModal(false)}
         onNavigateToChatbot={() => onNavigate?.('chatbot')}
         userLocation={location}
-      /> */}
+      />
 
       {/* AutoTimer Stop Loader */}
       {isStoppingAutoTimer && (

@@ -196,8 +196,8 @@ export default function SplashLoader({ isExiting = false }: SplashLoaderProps) {
       <Animated.View entering={FadeIn.delay(300).duration(600)}>
         <View style={styles.textContainer}>
           <Text style={styles.workText}>
-            <Text style={{ color: '#007AFF', fontWeight: '800' }}>Vix</Text>
-            <Text style={{ color: '#5856D6', fontWeight: '700' }}>Time</Text>
+            <Text style={{ color: '#007AFF', fontWeight: '800' }}>Work</Text>
+            <Text style={{ color: '#5856D6', fontWeight: '700' }}>Ti</Text>
 
           </Text>
           <Text style={[styles.tagline, { color: isDark ? '#999' : '#666' }]}>

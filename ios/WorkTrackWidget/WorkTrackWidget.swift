@@ -273,10 +273,10 @@ struct WorkTrackSmall: View {
             // App name header - colorful title without icon
             HStack {
                 HStack(spacing: 0) {
-                    Text("Vix")
+                    Text("Work")
                         .font(.system(size: 16, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.2, green: 0.5, blue: 1.0))  // Blue
-                    Text("Time")
+                    Text("Ti")
                         .font(.system(size: 16, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Purple
                     Image(systemName: "clock.fill")
@@ -341,10 +341,10 @@ struct WorkTrackMedium: View {
             // Header with colorful WorkTime
             HStack(alignment: .center) {
                 HStack(spacing: 0) {
-                    Text("Vix")
+                    Text("Work")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.2, green: 0.5, blue: 1.0))  // Blue
-                    Text("Time")
+                    Text("Ti")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Purple
                     Image(systemName: "clock.fill")
@@ -558,15 +558,15 @@ struct WorkTrackLarge: View {
             // Simple Header with colorful title
             HStack {
                 HStack(spacing: 0) {
-                    Text("Vix")
+                    Text("Work")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.2, green: 0.5, blue: 1.0))  // Blue
-                    Text("Time")
+                    Text("Ti")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Purple
                     Image(systemName: "clock.fill")
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Same color as Time
+                        .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Same color as Ti
                         .padding(.leading, 4)  // Small space before clock icon
                 }
                 .padding(.leading, 18)  // Moved 7px more to the left

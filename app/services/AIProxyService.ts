@@ -95,9 +95,9 @@ export class AIProxyService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'User-Agent': 'GeolocalizacionApp/1.0.0',
-          // Add authorization header if using API keys for your backend
-          // 'Authorization': `Bearer ${userToken}`,
+          'User-Agent': 'WorkTrack/1.0.0',
+          'X-Bundle-ID': process.env.EXPO_PUBLIC_BUNDLE_ID || 'com.roberto.worktrack',
+          'X-App-Token': process.env.EXPO_PUBLIC_APP_TOKEN || '',
         },
         body: JSON.stringify(body),
         signal: controller.signal,

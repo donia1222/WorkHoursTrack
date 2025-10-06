@@ -1430,7 +1430,6 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
 });
 
 export default function JobFormModal({ visible, onClose, editingJob, onSave, initialTab = 'basic', onNavigateToCalendar, onNavigateToSubscription, isLocationEnabled = true, disableSubscriptionModal = false, scrollToOvertime = false, highlightSalary = false }: JobFormModalProps) {
-  console.log('🚀 JobFormModal props:', { scrollToOvertime, visible, initialTab });
   const { colors, isDark } = useTheme();
   const { t, language } = useLanguage();
   const { isSubscribed } = useSubscription();

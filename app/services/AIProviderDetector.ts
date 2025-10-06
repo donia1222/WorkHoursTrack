@@ -38,9 +38,9 @@ export class AIProviderDetector {
     }
 
     // Verificar qué API keys están disponibles
-    const openAIKey = Constants.expoConfig?.extra?.openaiApiKey || 
+    const openAIKey = Constants.expoConfig?.extra?.openaiApiKey ||
                       process.env.EXPO_PUBLIC_OPENAI_API_KEY;
-    const geminiKey = Constants.expoConfig?.extra?.googleGeminiApiKey || 
+    const geminiKey = Constants.expoConfig?.extra?.googleGeminiApiKey ||
                       process.env.EXPO_PUBLIC_GOOGLE_GEMINI_API_KEY;
 
     const hasOpenAI = !!openAIKey && openAIKey.length > 0 && openAIKey !== 'your-openai-api-key';

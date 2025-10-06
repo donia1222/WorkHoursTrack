@@ -141,14 +141,13 @@ export default function BottomNavigation() {
       color: '#34C759',
     },
 
-    // CHATBOT - Comentado temporalmente
-    // {
-    //   id: 'chatbot',
-    //   icon: 'chatbubble-ellipses-outline',
-    //   activeIcon: 'chatbubble-ellipses',
-    //   label: t('side_menu.menu_items.chatbot.title'),
-    //   color: '#FF6B35',
-    // },
+    {
+      id: 'chatbot',
+      icon: 'chatbubble-ellipses-outline',
+      activeIcon: 'chatbubble-ellipses',
+      label: t('side_menu.menu_items.chatbot.title'),
+      color: '#FF6B35',
+    },
     {
       id: 'settings',
       icon: 'settings-outline',
