@@ -43,16 +43,16 @@ const detectLanguageFromText = (text: string): SupportedLanguage => {
   
   // Palabras clave por idioma para detección básica
   const languageKeywords = {
-    'es': ['trabajo', 'empleo', 'buscar', 'donde', 'país', 'salario', 'laboral', 'sueldo', 'empresa', 'jefe', 'horario'],
-    'en': ['work', 'job', 'employment', 'where', 'country', 'salary', 'labor', 'company', 'boss', 'schedule', 'how', 'can', 'check', 'minimum', 'wage', 'france', 'spain', 'germany', 'find', 'search', 'looking', 'what', 'when', 'why', 'which', 'hours', 'pay', 'rate', 'contract', 'employee', 'employer', 'workplace', 'office', 'career', 'position'],
-    'de': ['arbeit', 'job', 'beschäftigung', 'wo', 'land', 'gehalt', 'arbeits', 'unternehmen', 'chef', 'zeitplan', 'kann', 'ich', 'mein', 'meinem'],
-    'fr': ['travail', 'emploi', 'où', 'pays', 'salaire', 'entreprise', 'patron', 'horaire'],
-    'it': ['lavoro', 'impiego', 'dove', 'paese', 'stipendio', 'azienda', 'capo', 'orario'],
-    'pt': ['trabalho', 'emprego', 'onde', 'país', 'salário', 'empresa', 'chefe', 'horário'],
-    'nl': ['werk', 'baan', 'waar', 'land', 'salaris', 'bedrijf', 'baas', 'schema'],
-    'tr': ['iş', 'çalışma', 'nerede', 'ülke', 'maaş', 'şirket', 'patron', 'program'],
-    'ja': ['仕事', '就職', 'どこ', '国', '給料', '会社', '上司', 'スケジュール'],
-    'ru': ['работа', 'работу', 'где', 'страна', 'зарплата', 'компания', 'начальник', 'график']
+    'es': ['trabajo', 'empleo', 'buscar', 'donde', 'país', 'salario', 'laboral', 'sueldo', 'empresa', 'jefe', 'horario', 'hola', 'buenos', 'días', 'gracias', 'por', 'favor'],
+    'en': ['work', 'job', 'employment', 'where', 'country', 'salary', 'labor', 'company', 'boss', 'schedule', 'how', 'can', 'check', 'minimum', 'wage', 'france', 'spain', 'germany', 'find', 'search', 'looking', 'what', 'when', 'why', 'which', 'hours', 'pay', 'rate', 'contract', 'employee', 'employer', 'workplace', 'office', 'career', 'position', 'hello', 'hi', 'hey', 'thanks', 'please', 'good', 'morning', 'afternoon', 'evening'],
+    'de': ['arbeit', 'job', 'beschäftigung', 'wo', 'land', 'gehalt', 'arbeits', 'unternehmen', 'chef', 'zeitplan', 'kann', 'ich', 'mein', 'meinem', 'hallo', 'guten', 'tag', 'danke', 'bitte'],
+    'fr': ['travail', 'emploi', 'où', 'pays', 'salaire', 'entreprise', 'patron', 'horaire', 'bonjour', 'salut', 'merci', 's\'il', 'vous', 'plaît'],
+    'it': ['lavoro', 'impiego', 'dove', 'paese', 'stipendio', 'azienda', 'capo', 'orario', 'ciao', 'buongiorno', 'grazie', 'per', 'favore'],
+    'pt': ['trabalho', 'emprego', 'onde', 'país', 'salário', 'empresa', 'chefe', 'horário', 'olá', 'oi', 'bom', 'dia', 'obrigado', 'por', 'favor'],
+    'nl': ['werk', 'baan', 'waar', 'land', 'salaris', 'bedrijf', 'baas', 'schema', 'hallo', 'goedemiddag', 'dank', 'je', 'alsjeblieft'],
+    'tr': ['iş', 'çalışma', 'nerede', 'ülke', 'maaş', 'şirket', 'patron', 'program', 'merhaba', 'selam', 'teşekkür', 'lütfen'],
+    'ja': ['仕事', '就職', 'どこ', '国', '給料', '会社', '上司', 'スケジュール', 'こんにちは', 'ありがとう', 'お願い'],
+    'ru': ['работа', 'работу', 'где', 'страна', 'зарплата', 'компания', 'начальник', 'график', 'привет', 'здравствуйте', 'спасибо', 'пожалуйста']
   };
   
   const scores: Record<SupportedLanguage, number> = {

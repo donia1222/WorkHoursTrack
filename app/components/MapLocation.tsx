@@ -1177,10 +1177,37 @@ marginTop:10
     lineHeight: 18,
     fontWeight: '500',
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  autoTimerWelcomeModal: {
+    width: '85%',
+    maxWidth: 400,
+    borderRadius: 24,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
 });
 
 
-export default function MapLocation({ location, onNavigate }: Props) {
+export default function MapLocation({ location
+  , onNavigate }: Props) {
   const { colors, isDark } = useTheme();
   const autoTimer = useAutoTimer();
   const { navigateTo } = useNavigation();
@@ -1277,6 +1304,8 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [forceMapUpdate, setForceMapUpdate] = useState(0);
   const [hasShownPrivacyNotice, setHasShownPrivacyNotice] = useState(false);
   const [miniCalendarData, setMiniCalendarData] = useState<any[]>([]);
+  const [showAutoTimerWelcome, setShowAutoTimerWelcome] = useState(false);
+  const [hasSeenAutoTimerWelcome, setHasSeenAutoTimerWelcome] = useState(false);
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
   const [showJobCardsModal, setShowJobCardsModal] = useState(false);
   const [showSalaryStatsModal, setShowSalaryStatsModal] = useState(false);
@@ -1291,6 +1320,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
   const [monthlyOvertime, setMonthlyOvertime] = useState<number>(0);
   const [dynamicChatbotQuestion, setDynamicChatbotQuestion] = useState<string>('');
   const [showChatbotQuestionsModal, setShowChatbotQuestionsModal] = useState(false);
+  const [currentFeatureIndex, setCurrentFeatureIndex] = useState(0);
   const mapRef = useRef<MapView>(null);
     const [monthlyTotalHours, setMonthlyTotalHours] = useState<number>(0);
     const [monthlyTotalEarnings, setMonthlyTotalEarnings] = useState<number>(0);
@@ -1954,6 +1984,38 @@ export default function MapLocation({ location, onNavigate }: Props) {
     }
   };
 
+  const handleAutoTimerWidgetPress = async (e?: any) => {
+    // Stop event propagation to prevent parent TouchableOpacity from firing
+    if (e && e.stopPropagation) {
+      e.stopPropagation();
+    }
+
+    if (!hasSeenAutoTimerWelcome) {
+      triggerHaptic('medium');
+      setShowAutoTimerWelcome(true);
+      try {
+        await AsyncStorage.setItem('hasSeenAutoTimerWelcome', 'true');
+        setHasSeenAutoTimerWelcome(true);
+      } catch (error) {
+        console.warn('Failed to save AutoTimer welcome status:', error);
+      }
+      return; // Don't open JobFormModal
+    }
+
+    // If already seen welcome, open JobFormModal
+    handleEditCategory('location');
+  };
+
+  const handleCloseAutoTimerWelcome = () => {
+    triggerHaptic('light');
+    setShowAutoTimerWelcome(false);
+
+    // Open JobFormModal to configure AutoTimer
+    setTimeout(() => {
+      handleEditCategory('location');
+    }, 300); // Small delay to allow modal close animation
+  };
+
   // Update selectedJob when jobs change to keep it in sync
   useEffect(() => {
     if (selectedJob && jobs.length > 0) {
@@ -2044,6 +2106,21 @@ export default function MapLocation({ location, onNavigate }: Props) {
       autoTimerService.removePauseListener(handleAutoTimerPauseChange);
     };
   }, []); // Empty dependency array - runs only once
+
+  // Check if user has seen AutoTimer welcome modal
+  useEffect(() => {
+    const checkAutoTimerWelcome = async () => {
+      try {
+        const hasSeenWelcome = await AsyncStorage.getItem('hasSeenAutoTimerWelcome');
+        if (hasSeenWelcome === 'true') {
+          setHasSeenAutoTimerWelcome(true);
+        }
+      } catch (error) {
+        console.warn('Failed to check AutoTimer welcome status:', error);
+      }
+    };
+    checkAutoTimerWelcome();
+  }, []);
 
   // Force update AutoTimer status when screen gains focus
   useFocusEffect(
@@ -3177,10 +3254,10 @@ export default function MapLocation({ location, onNavigate }: Props) {
             <View style={{
                 position: 'absolute',
                 top: (jobs.length === 0 && isAutoTimerInitialized && autoTimerStatus?.state === 'inactive') 
-                  ? 100 // Add 100px margin from top when no jobs
-                  : (isTablet ? 40 : (isSmallScreen ? 30 : 35)),
-                left: isTablet ? 20 : (isSmallScreen ? 8 : 12),
-                right: isTablet ? 20 : (isSmallScreen ? 8 : 12),
+                  ? 40 // Add 100px margin from top when no jobs
+                  : (isTablet ? 4 : (isSmallScreen ? 30 : 35)),
+                left: isTablet ? 8 : (isSmallScreen ? 4 : 8),
+                right: isTablet ? 8 : (isSmallScreen ? 4 : 8),
                 bottom: (jobs.length === 0 && isAutoTimerInitialized && autoTimerStatus?.state === 'inactive') 
                   ? undefined // Remove bottom constraint when no jobs
                   : (isTablet ? 100 : (isSmallScreen ? 80 : 90)),
@@ -3190,6 +3267,481 @@ export default function MapLocation({ location, onNavigate }: Props) {
                 gap: isTablet ? 32 : (isSmallScreen ? 12 : 24),
                 paddingHorizontal: isTablet ? 12 : (isSmallScreen ? 4 : 6),
               }}>
+                {/* FEATURES BANNER - Show only when no jobs - MOVED TO TOP */}
+                {!isTablet && jobs.length === 0 && isAutoTimerInitialized && autoTimerStatus?.state === 'inactive' && (
+                  <View style={{
+                    width: '100%',
+                    marginBottom: isTablet ? 20 : (isSmallScreen ? 24 : 40),
+                  }}>
+                    <ScrollView
+                      horizontal
+                      pagingEnabled
+                      showsHorizontalScrollIndicator={false}
+                      decelerationRate="fast"
+                      snapToAlignment="center"
+                      snapToInterval={Dimensions.get('window').width * 0.92}
+                      onScroll={(event) => {
+                        const scrollX = event.nativeEvent.contentOffset.x;
+                        const index = Math.round(scrollX / (Dimensions.get('window').width * 0.92));
+                        setCurrentFeatureIndex(index);
+                      }}
+                      scrollEventThrottle={16}
+                      contentContainerStyle={{
+                        paddingHorizontal: Dimensions.get('window').width * 0.04,
+                        gap: isTablet ? 16 : (isSmallScreen ? 12 : 16),
+                      }}
+                    >
+                      {/* Feature 1: Auto Timer */}
+                      <View style={{
+                        width: Dimensions.get('window').width * 0.88,
+                        borderRadius: isTablet ? 20 : (isSmallScreen ? 14 : 16),
+                        padding: isTablet ? 18 : (isSmallScreen ? 10 : 12),
+                        backgroundColor: isDark ? 'rgba(96, 165, 250, 0.15)' : 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 1,
+                        borderColor: isDark ? 'rgba(96, 165, 250, 0.3)' : 'rgba(59, 130, 246, 0.25)',
+                        shadowColor: '#3b82f6',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 8,
+                        elevation: 4,
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        gap: isTablet ? 14 : (isSmallScreen ? 10 : 12),
+                      }}>
+                        <View style={{
+                          backgroundColor: isDark ? 'rgba(96, 165, 250, 0.25)' : 'rgba(59, 130, 246, 0.15)',
+                          borderRadius: isTablet ? 14 : 10,
+                          padding: isTablet ? 12 : 8,
+                        }}>
+                          <IconSymbol size={isTablet ? 24 : (isSmallScreen ? 18 : 20)} name="location.fill" color={isDark ? '#93c5fd' : '#3b82f6'} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{
+                            fontSize: isTablet ? 15 : (isSmallScreen ? 14 : 15),
+                            fontWeight: '700',
+                            color: isDark ? 'rgba(255, 255, 255, 0.95)' : '#1f2937',
+                            marginBottom: isTablet ? 4 : 3,
+                          }}>{t('maps.features_banner.auto_timer')}</Text>
+                          <Text style={{
+                            fontSize: isTablet ? 13 : (isSmallScreen ? 12 : 13),
+                            fontWeight: '400',
+                            color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
+                            lineHeight: isTablet ? 18 : (isSmallScreen ? 16 : 18),
+                          }}>{t('maps.features_banner.auto_timer_desc')}</Text>
+                        </View>
+                      </View>
+
+                      {/* Feature 2: Notifications */}
+                      <View style={{
+                        width: Dimensions.get('window').width * 0.88,
+                        borderRadius: isTablet ? 20 : (isSmallScreen ? 14 : 16),
+                        padding: isTablet ? 18 : (isSmallScreen ? 10 : 12),
+                        backgroundColor: isDark ? 'rgba(34, 197, 94, 0.15)' : 'rgba(34, 197, 94, 0.1)',
+                        borderWidth: 1,
+                        borderColor: isDark ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.25)',
+                        shadowColor: '#22c55e',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 8,
+                        elevation: 4,
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        gap: isTablet ? 14 : (isSmallScreen ? 10 : 12),
+                      }}>
+                        <View style={{
+                          backgroundColor: isDark ? 'rgba(34, 197, 94, 0.25)' : 'rgba(34, 197, 94, 0.15)',
+                          borderRadius: isTablet ? 14 : 10,
+                          padding: isTablet ? 12 : 8,
+                        }}>
+                          <IconSymbol size={isTablet ? 24 : (isSmallScreen ? 18 : 20)} name="bell.badge.fill" color={isDark ? '#86efac' : '#22c55e'} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{
+                            fontSize: isTablet ? 15 : (isSmallScreen ? 14 : 15),
+                            fontWeight: '700',
+                            color: isDark ? 'rgba(255, 255, 255, 0.95)' : '#1f2937',
+                            marginBottom: isTablet ? 4 : 3,
+                          }}>{t('maps.features_banner.notifications')}</Text>
+                          <Text style={{
+                            fontSize: isTablet ? 13 : (isSmallScreen ? 12 : 13),
+                            fontWeight: '400',
+                            color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
+                            lineHeight: isTablet ? 18 : (isSmallScreen ? 16 : 18),
+                          }}>{t('maps.features_banner.notifications_desc')}</Text>
+                        </View>
+                      </View>
+
+                      {/* Feature 3: PDF Reports */}
+                      <View style={{
+                        width: Dimensions.get('window').width * 0.88,
+                        borderRadius: isTablet ? 20 : (isSmallScreen ? 14 : 16),
+                        padding: isTablet ? 18 : (isSmallScreen ? 10 : 12),
+                        backgroundColor: isDark ? 'rgba(249, 115, 22, 0.15)' : 'rgba(249, 115, 22, 0.1)',
+                        borderWidth: 1,
+                        borderColor: isDark ? 'rgba(249, 115, 22, 0.3)' : 'rgba(249, 115, 22, 0.25)',
+                        shadowColor: '#f97316',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 8,
+                        elevation: 4,
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        gap: isTablet ? 14 : (isSmallScreen ? 10 : 12),
+                      }}>
+                        <View style={{
+                          backgroundColor: isDark ? 'rgba(249, 115, 22, 0.25)' : 'rgba(249, 115, 22, 0.15)',
+                          borderRadius: isTablet ? 14 : 10,
+                          padding: isTablet ? 12 : 8,
+                        }}>
+                          <IconSymbol size={isTablet ? 24 : (isSmallScreen ? 18 : 20)} name="doc.text.fill" color={isDark ? '#fdba74' : '#f97316'} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{
+                            fontSize: isTablet ? 15 : (isSmallScreen ? 14 : 15),
+                            fontWeight: '700',
+                            color: isDark ? 'rgba(255, 255, 255, 0.95)' : '#1f2937',
+                            marginBottom: isTablet ? 4 : 3,
+                          }}>{t('maps.features_banner.pdf_reports')}</Text>
+                          <Text style={{
+                            fontSize: isTablet ? 13 : (isSmallScreen ? 12 : 13),
+                            fontWeight: '400',
+                            color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
+                            lineHeight: isTablet ? 18 : (isSmallScreen ? 16 : 18),
+                          }}>{t('maps.features_banner.pdf_reports_desc')}</Text>
+                        </View>
+                      </View>
+
+                      {/* Feature 4: Statistics */}
+                      <View style={{
+                        width: Dimensions.get('window').width * 0.88,
+                        borderRadius: isTablet ? 20 : (isSmallScreen ? 14 : 16),
+                        padding: isTablet ? 18 : (isSmallScreen ? 10 : 12),
+                        backgroundColor: isDark ? 'rgba(168, 85, 247, 0.15)' : 'rgba(168, 85, 247, 0.1)',
+                        borderWidth: 1,
+                        borderColor: isDark ? 'rgba(168, 85, 247, 0.3)' : 'rgba(168, 85, 247, 0.25)',
+                        shadowColor: '#a855f7',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 8,
+                        elevation: 4,
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        gap: isTablet ? 14 : (isSmallScreen ? 10 : 12),
+                      }}>
+                        <View style={{
+                          backgroundColor: isDark ? 'rgba(168, 85, 247, 0.25)' : 'rgba(168, 85, 247, 0.15)',
+                          borderRadius: isTablet ? 14 : 10,
+                          padding: isTablet ? 12 : 8,
+                        }}>
+                          <IconSymbol size={isTablet ? 24 : (isSmallScreen ? 18 : 20)} name="chart.bar.fill" color={isDark ? '#d8b4fe' : '#a855f7'} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{
+                            fontSize: isTablet ? 15 : (isSmallScreen ? 14 : 15),
+                            fontWeight: '700',
+                            color: isDark ? 'rgba(255, 255, 255, 0.95)' : '#1f2937',
+                            marginBottom: isTablet ? 4 : 3,
+                          }}>{t('maps.features_banner.statistics')}</Text>
+                          <Text style={{
+                            fontSize: isTablet ? 13 : (isSmallScreen ? 12 : 13),
+                            fontWeight: '400',
+                            color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
+                            lineHeight: isTablet ? 18 : (isSmallScreen ? 16 : 18),
+                          }}>{t('maps.features_banner.statistics_desc')}</Text>
+                        </View>
+                      </View>
+
+                      {/* Feature 5: AI Assistant */}
+                      <View style={{
+                        width: Dimensions.get('window').width * 0.88,
+                        borderRadius: isTablet ? 20 : (isSmallScreen ? 14 : 16),
+                        padding: isTablet ? 18 : (isSmallScreen ? 10 : 12),
+                        backgroundColor: isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.1)',
+                        borderWidth: 1,
+                        borderColor: isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.25)',
+                        shadowColor: '#ef4444',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 8,
+                        elevation: 4,
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        gap: isTablet ? 14 : (isSmallScreen ? 10 : 12),
+                      }}>
+                        <View style={{
+                          backgroundColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.15)',
+                          borderRadius: isTablet ? 14 : 10,
+                          padding: isTablet ? 12 : 8,
+                        }}>
+                          <IconSymbol size={isTablet ? 24 : (isSmallScreen ? 18 : 20)} name="sparkles" color={isDark ? '#fca5a5' : '#ef4444'} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{
+                            fontSize: isTablet ? 15 : (isSmallScreen ? 14 : 15),
+                            fontWeight: '700',
+                            color: isDark ? 'rgba(255, 255, 255, 0.95)' : '#1f2937',
+                            marginBottom: isTablet ? 4 : 3,
+                          }}>{t('maps.features_banner.ai_assistant')}</Text>
+                          <Text style={{
+                            fontSize: isTablet ? 13 : (isSmallScreen ? 12 : 13),
+                            fontWeight: '400',
+                            color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
+                            lineHeight: isTablet ? 18 : (isSmallScreen ? 16 : 18),
+                          }}>{t('maps.features_banner.ai_assistant_desc')}</Text>
+                        </View>
+                      </View>
+                    </ScrollView>
+
+                    {/* Dots Indicator */}
+                    <View style={{
+                      flexDirection: 'row',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      marginTop: isSmallScreen ? 8 : 10,
+                      gap: 6,
+                    }}>
+                      {[0, 1, 2, 3, 4].map((index) => {
+                        // Colores para cada feature
+                        const featureColors = [
+                          { dark: '#93c5fd', light: '#3b82f6' },     // 0: Auto Timer - Azul
+                          { dark: '#86efac', light: '#22c55e' },     // 1: Notifications - Verde
+                          { dark: '#fdba74', light: '#f97316' },     // 2: PDF Reports - Naranja
+                          { dark: '#d8b4fe', light: '#a855f7' },     // 3: Statistics - Lila
+                          { dark: '#fca5a5', light: '#ef4444' },     // 4: AI Assistant - Rojo
+                        ];
+
+                        const isActive = currentFeatureIndex === index;
+                        const activeColor = isDark ? featureColors[currentFeatureIndex].dark : featureColors[currentFeatureIndex].light;
+
+                        return (
+                          <View
+                            key={index}
+                            style={{
+                              width: isActive ? 8 : 6,
+                              height: isActive ? 8 : 6,
+                              borderRadius: 4,
+                              backgroundColor: isActive
+                                ? activeColor
+                                : isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)',
+                              opacity: isActive ? 1 : 0.5,
+                            }}
+                          />
+                        );
+                      })}
+                    </View>
+                  </View>
+                )}
+
+                {/* FEATURES BANNER - iPad only - Compact tabs */}
+                {isIPadPortrait && jobs.length === 0 && isAutoTimerInitialized && autoTimerStatus?.state === 'inactive' && (
+                  <View style={{
+                    width: 380,
+                    marginBottom: 16,
+                    alignSelf: 'center',
+                    gap: 10,
+                  }}>
+                    {/* Feature 1: Auto Timer */}
+                    <View style={{
+                      flexDirection: 'row',
+                      width: '100%',
+                      borderRadius: 14,
+                      padding: 12,
+                      backgroundColor: isDark ? 'rgba(96, 165, 250, 0.15)' : 'rgba(59, 130, 246, 0.1)',
+                      borderWidth: 1,
+                      borderColor: isDark ? 'rgba(96, 165, 250, 0.3)' : 'rgba(59, 130, 246, 0.25)',
+                      shadowColor: '#3b82f6',
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.08,
+                      shadowRadius: 6,
+                      elevation: 3,
+                      alignItems: 'center',
+                    }}>
+                      <View style={{
+                        backgroundColor: isDark ? 'rgba(96, 165, 250, 0.25)' : 'rgba(59, 130, 246, 0.15)',
+                        borderRadius: 10,
+                        padding: 10,
+                        marginRight: 12,
+                      }}>
+                        <IconSymbol size={20} name="location.fill" color={isDark ? '#93c5fd' : '#3b82f6'} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{
+                          fontSize: 14,
+                          fontWeight: '700',
+                          color: isDark ? 'rgba(255, 255, 255, 0.95)' : '#1f2937',
+                          marginBottom: 3,
+                        }}>{t('maps.features_banner.auto_timer')}</Text>
+                        <Text style={{
+                          fontSize: 12,
+                          fontWeight: '400',
+                          color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
+                          lineHeight: 16,
+                        }}>{t('maps.features_banner.auto_timer_desc')}</Text>
+                      </View>
+                    </View>
+
+                    {/* Feature 2: Notifications */}
+                    <View style={{
+                      flexDirection: 'row',
+                      width: '100%',
+                      borderRadius: 14,
+                      padding: 12,
+                      backgroundColor: isDark ? 'rgba(34, 197, 94, 0.15)' : 'rgba(34, 197, 94, 0.1)',
+                      borderWidth: 1,
+                      borderColor: isDark ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.25)',
+                      shadowColor: '#22c55e',
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.08,
+                      shadowRadius: 6,
+                      elevation: 3,
+                      alignItems: 'center',
+                    }}>
+                      <View style={{
+                        backgroundColor: isDark ? 'rgba(34, 197, 94, 0.25)' : 'rgba(34, 197, 94, 0.15)',
+                        borderRadius: 10,
+                        padding: 10,
+                        marginRight: 12,
+                      }}>
+                        <IconSymbol size={20} name="bell.badge.fill" color={isDark ? '#86efac' : '#22c55e'} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{
+                          fontSize: 14,
+                          fontWeight: '700',
+                          color: isDark ? 'rgba(255, 255, 255, 0.95)' : '#1f2937',
+                          marginBottom: 3,
+                        }}>{t('maps.features_banner.notifications')}</Text>
+                        <Text style={{
+                          fontSize: 12,
+                          fontWeight: '400',
+                          color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
+                          lineHeight: 16,
+                        }}>{t('maps.features_banner.notifications_desc')}</Text>
+                      </View>
+                    </View>
+
+                    {/* Feature 3: PDF Reports */}
+                    <View style={{
+                      flexDirection: 'row',
+                      width: '100%',
+                      borderRadius: 14,
+                      padding: 12,
+                      backgroundColor: isDark ? 'rgba(249, 115, 22, 0.15)' : 'rgba(249, 115, 22, 0.1)',
+                      borderWidth: 1,
+                      borderColor: isDark ? 'rgba(249, 115, 22, 0.3)' : 'rgba(249, 115, 22, 0.25)',
+                      shadowColor: '#f97316',
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.08,
+                      shadowRadius: 6,
+                      elevation: 3,
+                      alignItems: 'center',
+                    }}>
+                      <View style={{
+                        backgroundColor: isDark ? 'rgba(249, 115, 22, 0.25)' : 'rgba(249, 115, 22, 0.15)',
+                        borderRadius: 10,
+                        padding: 10,
+                        marginRight: 12,
+                      }}>
+                        <IconSymbol size={20} name="doc.text.fill" color={isDark ? '#fdba74' : '#f97316'} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{
+                          fontSize: 14,
+                          fontWeight: '700',
+                          color: isDark ? 'rgba(255, 255, 255, 0.95)' : '#1f2937',
+                          marginBottom: 3,
+                        }}>{t('maps.features_banner.pdf_reports')}</Text>
+                        <Text style={{
+                          fontSize: 12,
+                          fontWeight: '400',
+                          color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
+                          lineHeight: 16,
+                        }}>{t('maps.features_banner.pdf_reports_desc')}</Text>
+                      </View>
+                    </View>
+
+                    {/* Feature 4: Statistics */}
+                    <View style={{
+                      flexDirection: 'row',
+                      width: '100%',
+                      borderRadius: 14,
+                      padding: 12,
+                      backgroundColor: isDark ? 'rgba(168, 85, 247, 0.15)' : 'rgba(168, 85, 247, 0.1)',
+                      borderWidth: 1,
+                      borderColor: isDark ? 'rgba(168, 85, 247, 0.3)' : 'rgba(168, 85, 247, 0.25)',
+                      shadowColor: '#a855f7',
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.08,
+                      shadowRadius: 6,
+                      elevation: 3,
+                      alignItems: 'center',
+                    }}>
+                      <View style={{
+                        backgroundColor: isDark ? 'rgba(168, 85, 247, 0.25)' : 'rgba(168, 85, 247, 0.15)',
+                        borderRadius: 10,
+                        padding: 10,
+                        marginRight: 12,
+                      }}>
+                        <IconSymbol size={20} name="chart.bar.fill" color={isDark ? '#d8b4fe' : '#a855f7'} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{
+                          fontSize: 14,
+                          fontWeight: '700',
+                          color: isDark ? 'rgba(255, 255, 255, 0.95)' : '#1f2937',
+                          marginBottom: 3,
+                        }}>{t('maps.features_banner.statistics')}</Text>
+                        <Text style={{
+                          fontSize: 12,
+                          fontWeight: '400',
+                          color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
+                          lineHeight: 16,
+                        }}>{t('maps.features_banner.statistics_desc')}</Text>
+                      </View>
+                    </View>
+
+                    {/* Feature 5: AI Assistant */}
+                    <View style={{
+                      flexDirection: 'row',
+                      width: '100%',
+                      borderRadius: 14,
+                      padding: 12,
+                      backgroundColor: isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.1)',
+                      borderWidth: 1,
+                      borderColor: isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.25)',
+                      shadowColor: '#ef4444',
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.08,
+                      shadowRadius: 6,
+                      elevation: 3,
+                      alignItems: 'center',
+                    }}>
+                      <View style={{
+                        backgroundColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.15)',
+                        borderRadius: 10,
+                        padding: 10,
+                        marginRight: 12,
+                      }}>
+                        <IconSymbol size={20} name="sparkles" color={isDark ? '#fca5a5' : '#ef4444'} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{
+                          fontSize: 14,
+                          fontWeight: '700',
+                          color: isDark ? 'rgba(255, 255, 255, 0.95)' : '#1f2937',
+                          marginBottom: 3,
+                        }}>{t('maps.features_banner.ai_assistant')}</Text>
+                        <Text style={{
+                          fontSize: 12,
+                          fontWeight: '400',
+                          color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
+                          lineHeight: 16,
+                        }}>{t('maps.features_banner.ai_assistant_desc')}</Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
                 {/* TOP ROW - 2 WIDGETS */}
                 <View style={{
                   flexDirection: 'row',
@@ -3379,7 +3931,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                     </View>
                   </TouchableOpacity>
                   )}
-                  
+
                   {/* TIMER WIDGET - Hide when auto-timer is active */}
                   {shouldShowNormalWidgets && (
                    <TouchableOpacity
@@ -3397,7 +3949,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
                       shadowRadius: 20,
                       elevation: 5,
                     }}
-                    onPress={() => handleEditCategory('location')}
+                    onPress={handleAutoTimerWidgetPress}
                     activeOpacity={0.9}
                   >
                     <View style={{ 
@@ -3417,19 +3969,28 @@ export default function MapLocation({ location, onNavigate }: Props) {
                         alignItems: 'center',
                         gap: isTablet ? 8 : 6,
                       }]}>
-                        <View style={{
-                          width: isTablet ? 12 : 8,
-                          height: isTablet ? 12 : 8,
-                          borderRadius: isTablet ? 6 : 4,
-                          backgroundColor: autoTimer.state.isWaiting ? '#34C759' : (jobs.some(job => job.autoTimer?.enabled) ? '#34C759' : '#FF3B30'),
-                        }} />
-                        <Text style={{
-                          fontSize: isTablet ? 14 : (isSmallScreen ? 10 : 12),
-                          fontWeight: '700',
-                          color: isDark ? '#6ee7b7' : '#059669',
-                        }}>
-                          AutoTimer
-                        </Text>
+                        <IconSymbol
+                          size={isTablet ? 20 : 16}
+                          name="location.fill"
+                          color={autoTimer.state.isWaiting ? '#34C759' : (jobs.some(job => job.autoTimer?.enabled) ? '#34C759' : '#FF3B30')}
+                        />
+                        <View style={{ flexDirection: 'column' }}>
+                          <Text style={{
+                            fontSize: isTablet ? 14 : (isSmallScreen ? 10 : 12),
+                            fontWeight: '700',
+                            color: isDark ? '#6ee7b7' : '#059669',
+                          }}>
+                            {t('timer.autoTimer')}
+                          </Text>
+                          <Text style={{
+                            fontSize: isTablet ? 10 : (isSmallScreen ? 8 : 9),
+                            fontWeight: '500',
+                            color: isDark ? 'rgba(110, 231, 183, 0.7)' : 'rgba(5, 150, 105, 0.7)',
+                            marginTop: 1,
+                          }}>
+                            {t('timer.locationBased')}
+                          </Text>
+                        </View>
                       </Animated.View>
           )}
 
@@ -4716,7 +5277,7 @@ export default function MapLocation({ location, onNavigate }: Props) {
 
                 
                 {/* STATISTICS WIDGET - Only for iPad in Portrait */}
-                {isTablet && isPortrait && (
+                {!isTablet && !isPortrait && (
                   <TouchableOpacity
                     style={{
                       marginTop: isPortrait ? 20 : 16,
@@ -5177,6 +5738,185 @@ export default function MapLocation({ location, onNavigate }: Props) {
           </BlurView>
         </View>
       )}
+
+      {/* AutoTimer Welcome Modal */}
+      <Modal
+        visible={showAutoTimerWelcome}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCloseAutoTimerWelcome}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={handleCloseAutoTimerWelcome}
+          />
+          <View style={[styles.autoTimerWelcomeModal, {
+            backgroundColor: isDark ? '#1c1c1e' : '#ffffff',
+          }]}>
+            <View style={{ padding: 24 }}>
+              {/* Header */}
+              <View style={{ alignItems: 'center', marginBottom: 24 }}>
+                <View style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: 40,
+                  backgroundColor: isDark ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.15)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 16,
+                }}>
+                  <IconSymbol size={40} name="location.fill" color="#10b981" />
+                </View>
+                <Text style={{
+                  fontSize: 24,
+                  fontWeight: '700',
+                  color: colors.text,
+                  textAlign: 'center',
+                  marginBottom: 8,
+                }}>
+                  {t('timer.autoTimerWelcome')}
+                </Text>
+                <Text style={{
+                  fontSize: 15,
+                  color: colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: 22,
+                }}>
+                  {t('timer.autoTimerWelcomeDesc')}
+                </Text>
+              </View>
+
+              {/* Steps */}
+              <View style={{ marginBottom: 24, gap: 16 }}>
+                {/* Step 1 */}
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                  <View style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.15)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <Text style={{
+                      fontSize: 16,
+                      fontWeight: '700',
+                      color: '#3b82f6',
+                    }}>1</Text>
+                  </View>
+                  <Text style={{
+                    flex: 1,
+                    fontSize: 15,
+                    color: colors.text,
+                    lineHeight: 22,
+                    paddingTop: 4,
+                  }}>
+                    {t('timer.autoTimerStep1')}
+                  </Text>
+                </View>
+
+                {/* Step 2 */}
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                  <View style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: isDark ? 'rgba(168, 85, 247, 0.2)' : 'rgba(168, 85, 247, 0.15)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <Text style={{
+                      fontSize: 16,
+                      fontWeight: '700',
+                      color: '#a855f7',
+                    }}>2</Text>
+                  </View>
+                  <Text style={{
+                    flex: 1,
+                    fontSize: 15,
+                    color: colors.text,
+                    lineHeight: 22,
+                    paddingTop: 4,
+                  }}>
+                    {t('timer.autoTimerStep2')}
+                  </Text>
+                </View>
+
+                {/* Step 3 */}
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                  <View style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: isDark ? 'rgba(52, 199, 89, 0.2)' : 'rgba(52, 199, 89, 0.15)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <Text style={{
+                      fontSize: 16,
+                      fontWeight: '700',
+                      color: '#34c759',
+                    }}>3</Text>
+                  </View>
+                  <Text style={{
+                    flex: 1,
+                    fontSize: 15,
+                    color: colors.text,
+                    lineHeight: 22,
+                    paddingTop: 4,
+                  }}>
+                    {t('timer.autoTimerStep3')}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Benefit */}
+              <View style={{
+                backgroundColor: isDark ? 'rgba(52, 211, 153, 0.1)' : 'rgba(16, 185, 129, 0.08)',
+                borderRadius: 16,
+                padding: 16,
+                marginBottom: 24,
+                borderWidth: 1,
+                borderColor: isDark ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                  <IconSymbol size={20} name="checkmark.circle.fill" color="#10b981" style={{ marginTop: 2 }} />
+                  <Text style={{
+                    flex: 1,
+                    fontSize: 14,
+                    color: colors.text,
+                    lineHeight: 20,
+                  }}>
+                    {t('timer.autoTimerBenefit')}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Button */}
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#10b981',
+                  borderRadius: 16,
+                  padding: 16,
+                  alignItems: 'center',
+                }}
+                onPress={handleCloseAutoTimerWelcome}
+                activeOpacity={0.8}
+              >
+                <Text style={{
+                  fontSize: 17,
+                  fontWeight: '600',
+                  color: '#ffffff',
+                }}>
+                  {t('timer.autoTimerGotIt')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

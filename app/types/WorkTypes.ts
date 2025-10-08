@@ -6,6 +6,7 @@ export interface Job {
   street?: string;
   city?: string;
   postalCode?: string;
+  country?: string;
   hourlyRate?: number;
   currency?: string;
   color: string;

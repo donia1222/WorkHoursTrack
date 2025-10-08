@@ -7,6 +7,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Theme } from '../constants/Theme';
@@ -27,7 +29,7 @@ interface FAQItem {
 }
 
 
-const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
+const getStyles = (colors: ThemeColors, isDark: boolean, isTablet: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -72,12 +74,13 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: Theme.spacing.md,
+    paddingHorizontal: isTablet ? 0 : Theme.spacing.md,
   },
   sectionCard: {
     marginVertical: Theme.spacing.md,
+    marginHorizontal: isTablet ? Theme.spacing.xl : 0,
     borderRadius: Theme.borderRadius.lg,
-    padding: Theme.spacing.lg,
+    padding: isTablet ? Theme.spacing.xl * 1.5 : Theme.spacing.lg,
     ...Theme.shadows.medium,
   },
   sectionTitle: {
@@ -251,11 +254,13 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
 export default function HelpSupportScreen({ onClose }: HelpSupportScreenProps) {
   const { colors, isDark } = useTheme();
   const { t } = useLanguage();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'general' | 'time' | 'billing' | 'technical'>('all');
   const [isClosing, setIsClosing] = useState(false);
-  
-  const styles = getStyles(colors, isDark);
+
+  const styles = getStyles(colors, isDark, isTablet);
 
   const FAQ_DATA: FAQItem[] = [
     {

@@ -17,7 +17,7 @@ export interface ImageAnalysisResult {
 
 export class GoogleVisionService {
   // API Keys de Google desde variables de entorno
-  private static readonly GEMINI_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_GEMINI_API_KEY;
+  private static readonly GEMINI_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_GEMINI_API_KEY || '';
   private static readonly GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
   private static readonly VISION_API_URL = 'https://vision.googleapis.com/v1/images:annotate';
 

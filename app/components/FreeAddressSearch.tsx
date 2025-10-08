@@ -39,6 +39,7 @@ interface FreeAddressSearchProps {
     street: string;
     city: string;
     postalCode: string;
+    country?: string;
     latitude?: number;
     longitude?: number;
   }) => void;
@@ -191,20 +192,28 @@ export const FreeAddressSearch: React.FC<FreeAddressSearchProps> = ({
   };
 
   const handleSelectAddress = (result: AddressResult) => {
+    console.log('🔍 [FREE-SEARCH] Result received:', result);
+    console.log('🔍 [FREE-SEARCH] Address object:', result.address);
     const address = result.address || {};
-    const street = address.road ? 
+    const street = address.road ?
       `${address.road}${address.house_number ? ' ' + address.house_number : ''}` : '';
     const city = address.city || address.town || address.village || '';
     const postalCode = address.postcode || '';
+    const country = address.country || '';
+    console.log('🌍 [FREE-SEARCH] Extracted country:', country);
 
-    onSelectAddress({
+    const addressData = {
       fullAddress: result.display_name,
       street,
       city,
       postalCode,
+      country,
       latitude: parseFloat(result.lat),
       longitude: parseFloat(result.lon),
-    });
+    };
+    console.log('📦 [FREE-SEARCH] Final address data:', addressData);
+
+    onSelectAddress(addressData);
     handleClose();
   };
 

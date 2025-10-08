@@ -91,6 +91,10 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     marginLeft: 6,
   },
   acceptButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     paddingVertical: 14,
     borderRadius: 14,
     backgroundColor: colors.primary,
@@ -104,7 +108,6 @@ const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
-    textAlign: 'center',
   },
   skipButton: {
     paddingVertical: 12,
@@ -243,23 +246,17 @@ export default function PrivacyLocationModal({ visible, onClose, onAccept }: Pri
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.acceptButton}
                 onPress={requestLocationPermission}
               >
                 <Text style={styles.acceptButtonText}>
                   {t('onboarding.navigation.allow_location') || 'Allow Location Access'}
                 </Text>
+                <IconSymbol size={20} name="arrow.right.circle.fill" color="#FFFFFF" />
               </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={styles.skipButton}
-                onPress={skipLocationPermission}
-              >
-                <Text style={styles.skipButtonText}>
-                  {t('onboarding.navigation.skip') || 'Continue without location'}
-                </Text>
-              </TouchableOpacity>
+     
             </View>
           </View>
         </SafeAreaView>

@@ -1465,6 +1465,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
     street: '',
     city: '',
     postalCode: '',
+    country: '',
     hourlyRate: 0,
     currency: detectedCurrency || 'EUR',
     color: DEFAULT_COLORS[0],
@@ -1530,6 +1531,7 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState(false);
   const [showNameError, setShowNameError] = useState(false);
+  const [highlightAddressField, setHighlightAddressField] = useState(false);
   const [selectedSyncMonths, setSelectedSyncMonths] = useState<number[]>([new Date().getMonth()]); // Current month as default
   const monthScrollViewRef = useRef<ScrollView>(null);
   const nameInputRef = useRef<TextInput>(null);
@@ -2359,7 +2361,8 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         updateFormData('street', streetAddress);
         updateFormData('city', addressData.city || '');
         updateFormData('postalCode', addressData.postalCode || '');
-        
+        updateFormData('country', addressData.country || '');
+
         updateNestedData('location', 'address', detectedAddress);
         updateNestedData('location', 'latitude', currentLocation.coords.latitude);
         updateNestedData('location', 'longitude', currentLocation.coords.longitude);
@@ -2690,7 +2693,16 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
             </View>
           </View>
           
-          <View style={styles.addressRow}>
+          <View style={[
+            styles.addressRow,
+            highlightAddressField && {
+              borderWidth: 2,
+              borderColor: colors.primary,
+              borderRadius: Theme.borderRadius.md,
+              padding: Theme.spacing.sm,
+              backgroundColor: isDark ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)',
+            }
+          ]}>
             <View style={[styles.addressField, { flex: 2 }]}>
               <Text style={styles.subLabel}>{t('job_form.basic.street')}</Text>
               <TextInput
@@ -2713,14 +2725,43 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
               />
             </View>
           </View>
-          
-          <View style={styles.addressField}>
+
+          <View style={[
+            styles.addressField,
+            highlightAddressField && {
+              borderWidth: 2,
+              borderColor: colors.primary,
+              borderRadius: Theme.borderRadius.md,
+              padding: Theme.spacing.sm,
+              backgroundColor: isDark ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)',
+            }
+          ]}>
             <Text style={styles.subLabel}>{t('job_form.basic.city')}</Text>
             <TextInput
               style={styles.input}
               value={formData.city}
               onChangeText={(value) => updateFormData('city', value)}
               placeholder={t('job_form.basic.city_placeholder')}
+              placeholderTextColor={colors.textTertiary}
+            />
+          </View>
+
+          <View style={[
+            styles.addressField,
+            highlightAddressField && {
+              borderWidth: 2,
+              borderColor: colors.primary,
+              borderRadius: Theme.borderRadius.md,
+              padding: Theme.spacing.sm,
+              backgroundColor: isDark ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)',
+            }
+          ]}>
+            <Text style={styles.subLabel}>{t('job_form.basic.country')}</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.country}
+              onChangeText={(value) => updateFormData('country', value)}
+              placeholder={t('job_form.basic.country_placeholder')}
               placeholderTextColor={colors.textTertiary}
             />
           </View>
@@ -2819,16 +2860,19 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       isOpen={showAddressDropdown}
       onClose={() => setShowAddressDropdown(false)}
       onSelectAddress={(addressData) => {
+        console.log('🏢 [AUTOCOMPLETE] Selected address data:', addressData);
+        console.log('🌍 [AUTOCOMPLETE] Country:', addressData.country);
         updateFormData('address', addressData.fullAddress);
         updateFormData('street', addressData.street);
         updateFormData('city', addressData.city);
         updateFormData('postalCode', addressData.postalCode);
-        
+        updateFormData('country', addressData.country || '');
+
         if (addressData.latitude && addressData.longitude) {
           updateNestedData('location', 'address', addressData.fullAddress);
           updateNestedData('location', 'latitude', addressData.latitude);
           updateNestedData('location', 'longitude', addressData.longitude);
-          
+
           setJobCoordinates({
             latitude: addressData.latitude,
             longitude: addressData.longitude,
@@ -3857,7 +3901,20 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
         Alert.alert(
           t('job_form.auto_timer.address_required_title'),
           t('job_form.auto_timer.address_required_message'),
-          [{ text: 'OK', style: 'default' }]
+          [{
+            text: 'OK',
+            style: 'default',
+            onPress: () => {
+              // Navegar a la pestaña basic
+              setCurrentTab('basic');
+              // Resaltar el campo de dirección
+              setHighlightAddressField(true);
+              // Quitar el resaltado después de 3 segundos
+              setTimeout(() => {
+                setHighlightAddressField(false);
+              }, 3000);
+            }
+          }]
         );
         return;
       }
@@ -5124,16 +5181,19 @@ export default function JobFormModal({ visible, onClose, editingJob, onSave, ini
       visible={showAddressSearch}
       onClose={() => setShowAddressSearch(false)}
       onSelectAddress={(addressData) => {
+        console.log('🏠 [ADDRESS] Selected address data:', addressData);
+        console.log('🌍 [ADDRESS] Country:', addressData.country);
         updateFormData('address', addressData.fullAddress);
         updateFormData('street', addressData.street);
         updateFormData('city', addressData.city);
         updateFormData('postalCode', addressData.postalCode);
-        
+        updateFormData('country', addressData.country || '');
+
         if (addressData.latitude && addressData.longitude) {
           updateNestedData('location', 'address', addressData.fullAddress);
           updateNestedData('location', 'latitude', addressData.latitude);
           updateNestedData('location', 'longitude', addressData.longitude);
-          
+
           setJobCoordinates({
             latitude: addressData.latitude,
             longitude: addressData.longitude,

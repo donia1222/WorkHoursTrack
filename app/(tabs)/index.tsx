@@ -411,7 +411,7 @@ function AppContent() {
       <Modal
         visible={showHelpSupport}
         animationType="slide"
-        presentationStyle="formSheet"
+        presentationStyle="fullScreen"
         onRequestClose={() => setShowHelpSupport(false)}
       >
         <HelpSupportScreen onClose={() => setShowHelpSupport(false)} />

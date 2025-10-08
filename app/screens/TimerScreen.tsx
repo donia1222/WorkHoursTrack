@@ -124,16 +124,8 @@ marginBottom: 50,
     borderRadius: 28,
     padding: 20,
     marginTop: 10,
-    shadowColor: isDark ? colors.primary : '#000',
-    shadowOffset: {
-      width: 0,
-      height: 12,
-    },
-    shadowOpacity: isDark ? 0.4 : 0.15,
-    shadowRadius: 24,
     elevation: 18,
-    borderWidth: 1.5,
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.8)',
+  
     overflow: 'hidden',
   },
   timerCardGradient: {
@@ -1060,6 +1052,57 @@ marginTop: -4,
     marginRight: 8,
 
   },
+  featuresContainer: {
+    marginVertical: 16,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  featuresGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 16,
+  },
+  featuresTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 16,
+    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  featuresList: {
+    gap: 12,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 8,
+  },
+  featureIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+  },
 
 
 });
@@ -1823,12 +1866,7 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
           tint={isDark ? "dark" : "light"} 
           style={styles.timerCard}
         >
-          <LinearGradient
-            colors={isDark ? ['rgba(0, 122, 255, 0.12)', 'rgba(0, 122, 255, 0.04)'] : ['rgba(0, 255, 76, 0.08)', 'rgba(0, 255, 76, 0.08)']}
-            style={styles.timerCardGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          />
+  
           <View style={styles.timerContent}>
       
             <Animated.View style={[styles.timerDisplay, animatedTimerStyle]}>
@@ -1973,10 +2011,77 @@ export default function TimerScreen({ onNavigate }: TimerScreenProps) {
               {t('timer.notes_hint')}
             </Text>
           </View>
- 
+
+        {/* Manual Timer Features */}
+        {!isRunning && !activeSession && (
+          <View style={[styles.featuresContainer, { backgroundColor: colors.surface }]}>
+            <LinearGradient
+              colors={isDark ?
+                ['rgba(59, 130, 246, 0.08)', 'rgba(59, 130, 246, 0.03)'] :
+                ['rgba(59, 130, 246, 0.06)', 'rgba(59, 130, 246, 0.02)']
+              }
+              style={styles.featuresGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
+            <Text style={[styles.featuresTitle, { color: colors.text }]}>
+              {t('timer.manual_timer_features')}
+            </Text>
+
+            <View style={styles.featuresList}>
+              {/* Feature 1: Start/Stop */}
+              <View style={styles.featureItem}>
+                <View style={[styles.featureIconContainer, {
+                  backgroundColor: isDark ? 'rgba(52, 199, 89, 0.15)' : 'rgba(52, 199, 89, 0.1)'
+                }]}>
+                  <IconSymbol size={18} name="play.circle.fill" color="#34C759" />
+                </View>
+                <Text style={[styles.featureText, { color: colors.textSecondary }]}>
+                  {t('timer.feature_start_stop')}
+                </Text>
+              </View>
+
+              {/* Feature 2: Add Notes */}
+              <View style={styles.featureItem}>
+                <View style={[styles.featureIconContainer, {
+                  backgroundColor: isDark ? 'rgba(96, 165, 250, 0.15)' : 'rgba(96, 165, 250, 0.1)'
+                }]}>
+                  <IconSymbol size={18} name="note.text" color="#60a5fa" />
+                </View>
+                <Text style={[styles.featureText, { color: colors.textSecondary }]}>
+                  {t('timer.feature_add_notes')}
+                </Text>
+              </View>
+
+              {/* Feature 3: Auto Add to Calendar */}
+              <View style={styles.featureItem}>
+                <View style={[styles.featureIconContainer, {
+                  backgroundColor: isDark ? 'rgba(168, 85, 247, 0.15)' : 'rgba(168, 85, 247, 0.1)'
+                }]}>
+                  <IconSymbol size={18} name="calendar.badge.checkmark" color="#a855f7" />
+                </View>
+                <Text style={[styles.featureText, { color: colors.textSecondary }]}>
+                  {t('timer.feature_auto_add')}
+                </Text>
+              </View>
+
+              {/* Feature 4: Background Counting */}
+              <View style={styles.featureItem}>
+                <View style={[styles.featureIconContainer, {
+                  backgroundColor: isDark ? 'rgba(255, 159, 10, 0.15)' : 'rgba(255, 159, 10, 0.1)'
+                }]}>
+                  <IconSymbol size={18} name="arrow.clockwise" color="#FF9F0A" />
+                </View>
+                <Text style={[styles.featureText, { color: colors.textSecondary }]}>
+                  {t('timer.feature_background')}
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
 
 
-      
+
         {/* Quick Actions - Moved below recent sessions */}
          <RNAnimated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
         {!isRunning && !activeSession && (

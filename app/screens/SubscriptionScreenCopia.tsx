@@ -711,38 +711,17 @@ Please describe your issue below:
           </ScrollView>
         ) : (
           <View style={styles.noProductsContainer}>
-            <BlurView intensity={95} tint={isDark ? "dark" : "light"} style={styles.maintenanceCard}>
-              <LinearGradient
-                colors={isDark
-                  ? ['rgba(245, 158, 11, 0.12)', 'rgba(245, 158, 11, 0.06)', 'transparent']
-                  : ['rgba(245, 158, 11, 0.10)', 'rgba(245, 158, 11, 0.05)', 'transparent']
-                }
-                style={styles.maintenanceGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              />
-              <View style={[styles.maintenanceIconContainer, { backgroundColor: colors.warning + '20' }]}>
-                <IconSymbol size={32} name="wrench.and.screwdriver.fill" color={colors.warning} />
-              </View>
-              <Text style={[styles.maintenanceTitle, { color: colors.text }]}>
-                We're fixing a bug
-              </Text>
-              <Text style={[styles.maintenanceText, { color: colors.textSecondary }]}>
-                We're currently fixing an issue that prevents subscription plans from appearing. All subscription options will be available again within the next few hours.
-              </Text>
-              <Text style={[styles.maintenanceNote, { color: colors.textSecondary }]}>
-                Thank you for your patience!
-              </Text>
-              {!isLoading && (
-                <TouchableOpacity
-                  style={[styles.retryButton, { backgroundColor: colors.primary }]}
-                  onPress={() => checkSubscriptionStatus()}
-                >
-                  <IconSymbol size={18} name="arrow.clockwise" color="#fff" />
-                  <Text style={styles.retryButtonText}>Try Again</Text>
-                </TouchableOpacity>
-              )}
-            </BlurView>
+            <Text style={[styles.noProductsText, { color: colors.textSecondary }]}>
+              {isLoading ? 'Cargando productos...' : 'No hay productos disponibles en este momento'}
+            </Text>
+            {!isLoading && (
+              <TouchableOpacity
+                style={[styles.retryButton, { backgroundColor: colors.primary }]}
+                onPress={() => checkSubscriptionStatus()}
+              >
+                <Text style={styles.retryButtonText}>Reintentar</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
         
@@ -1539,98 +1518,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 15,
   },
-  maintenanceCard: {
-    borderRadius: 24,
-    padding: 32,
-    alignItems: 'center',
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.2)',
-    maxWidth: 400,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#f59e0b',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 16,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
-  },
-  maintenanceGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 24,
-  },
-  maintenanceIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#f59e0b',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
-  },
-  maintenanceTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 12,
-    letterSpacing: -0.5,
-  },
-  maintenanceText: {
-    fontSize: 15,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 12,
-    paddingHorizontal: 8,
-  },
-  maintenanceNote: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 24,
-    fontWeight: '600',
-    fontStyle: 'italic',
-  },
   retryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    borderRadius: 16,
-    marginTop: 4,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    marginTop: 10,
   },
   retryButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   packageCardInner: {
     borderRadius: 20,

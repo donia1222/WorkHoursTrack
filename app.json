@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "buildNumber": "34",
+      "buildNumber": "39",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Esta app necesita acceso a tu ubicación para detectar automáticamente cuando entras y sales del trabajo.",
         "NSLocationAlwaysUsageDescription": "Esta app necesita acceso a tu ubicación en segundo plano para detectar automáticamente cuando entras y sales del trabajo, incluso con la app cerrada.",

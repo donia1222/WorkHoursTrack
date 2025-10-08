@@ -12,7 +12,7 @@
     <key>NSSupportsLiveActivitiesFrequentUpdates</key>
     <true/>
     <key>CFBundleVersion</key>
-    <string>34</string>
+    <string>39</string>
     <key>CFBundleShortVersionString</key>
     <string>1.0.0</string>
   </dict>

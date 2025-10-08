@@ -22,6 +22,7 @@ interface AddressResult {
   street: string;
   city: string;
   postalCode: string;
+  country?: string;
   fullAddress: string;
   latitude?: number;
   longitude?: number;
@@ -112,12 +113,13 @@ export default function AddressAutocompleteDropdown({
                   const street = `${addr.street || ''} ${addr.streetNumber || ''}`.trim();
                   const city = addr.city || '';
                   const postalCode = addr.postalCode || '';
-                  
+                  const country = addr.country || '';
+
                   const fullAddress = [
                     street,
                     city,
                     postalCode,
-                    addr.country,
+                    country,
                   ].filter(Boolean).join(', ');
 
                   return {
@@ -125,6 +127,7 @@ export default function AddressAutocompleteDropdown({
                     street,
                     city,
                     postalCode,
+                    country,
                     fullAddress,
                     latitude: result.latitude,
                     longitude: result.longitude,

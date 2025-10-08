@@ -12,7 +12,7 @@ interface WelcomeMessageProps {
 
 const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
-
+marginTop: 36,
     borderRadius: 16,
     padding: 20,
     marginVertical: 4,

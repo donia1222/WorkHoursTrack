@@ -155,7 +155,7 @@ function LayoutContent() {
             name="index" 
             options={{
               headerTitle: () => {
-                const title = currentScreen === 'timer' ? (t('timer.title') || 'Timer') :
+                const title = currentScreen === 'timer' ? (t('timer.manualTimer') || 'Timer Manual') :
                              currentScreen === 'reports' ? (t('reports.title') || 'Reportes') :
                              currentScreen === 'calendar' ? (t('calendar.title') || 'Calendario') :
                              currentScreen === 'settings' ? (t('settings.title') || 'Configuración') :

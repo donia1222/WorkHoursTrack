@@ -867,7 +867,7 @@ export default function SettingsScreen({ onNavigate, navigationOptions, onNaviga
       <Modal
         visible={showHelpSupport}
         animationType="slide"
-        presentationStyle="formSheet"
+        presentationStyle="fullScreen"
         onRequestClose={() => setShowHelpSupport(false)}
       >
         <HelpSupportScreen onClose={() => setShowHelpSupport(false)} />
