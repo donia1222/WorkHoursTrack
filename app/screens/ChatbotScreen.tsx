@@ -665,11 +665,11 @@ export default function ChatbotScreen() {
   };
 
   const showFileOptions = () => {
-    // Verificar si está suscrito
-    if (!isSubscribed) {
-      setShowPremiumModal(true);
-      return;
-    }
+    // TEMP: bypass de suscripción para pruebas — revertir antes de publicar
+    // if (!isSubscribed) {
+    //   setShowPremiumModal(true);
+    //   return;
+    // }
 
     Alert.alert(
       t('chatbot.select_file'),
@@ -768,10 +768,11 @@ export default function ChatbotScreen() {
 
   const sendMessage = async () => {
 
-        if (!isSubscribed) {
-      setShowPremiumModal(true);
-      return;
-    }
+    // TEMP: bypass de suscripción para pruebas — revertir antes de publicar
+    //     if (!isSubscribed) {
+    //   setShowPremiumModal(true);
+    //   return;
+    // }
     console.log('💬 [CHAT] Iniciando sendMessage...');
     console.log('📝 [CHAT] Input text:', inputText);
     console.log('🖼️ [CHAT] Selected image:', selectedImage ? 'Sí' : 'No');
@@ -782,12 +783,12 @@ export default function ChatbotScreen() {
       return;
     }
 
-    // Verificar si está suscrito y tiene archivos adjuntos
-    if (!isSubscribed && (selectedImage || selectedDocument)) {
-      console.log('🔒 [CHAT] Usuario no suscrito intentando enviar archivo, mostrando modal premium');
-      setShowPremiumModal(true);
-      return;
-    }
+    // TEMP: bypass de suscripción para pruebas — revertir antes de publicar
+    // if (!isSubscribed && (selectedImage || selectedDocument)) {
+    //   console.log('🔒 [CHAT] Usuario no suscrito intentando enviar archivo, mostrando modal premium');
+    //   setShowPremiumModal(true);
+    //   return;
+    // }
 
     // Guardar el texto antes de limpiarlo
     const messageText = inputText;

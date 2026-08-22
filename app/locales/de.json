@@ -1,5 +1,6 @@
 {
   "locale_code": "de-DE",
+  "app_title": "Zeitkontrolle",
   "common": {
     "no_jobs_title": "Keine Jobs Konfiguriert",
     "no_jobs_message": "Sie müssen mindestens einen Job erstellen, bevor Sie den Timer, Kalender oder Berichte verwenden können. Beginnen Sie mit der Einrichtung Ihres ersten Jobs.",
@@ -21,7 +22,7 @@
     "appearance": {
       "title": "Erscheinungsbild",
       "description": "Passen Sie das visuelle Thema der Anwendung an",
-       "auto": "Auto",
+      "auto": "Auto",
       "light": "Hell",
       "dark": "Dunkel"
     },
@@ -56,7 +57,7 @@
       "auto_timer_desc": "Benachrichtigungen wenn Auto-Timer startet oder pausiert",
       "timer_started_title": "✅ AutoTimer Aktiviert",
       "timer_started_body": "AutoTimer aktiviert für \"{{jobName}}\"",
-      "timer_stopped_title": "❌ AutoTimer Deaktiviert", 
+      "timer_stopped_title": "❌ AutoTimer Deaktiviert",
       "timer_stopped_body": "AutoTimer deaktiviert für \"{{jobName}}\"",
       "timer_will_start_title": "🚀 AutoTimer Wird Aktiviert",
       "timer_will_start_body": "AutoTimer wird in {{minutes}} Minuten für \"{{jobName}}\" aktiviert",
@@ -96,11 +97,11 @@
       "frequency_desc": "Wie oft automatische Sicherungen erstellt werden sollen",
       "frequencies": {
         "daily": "Täglich",
-        "weekly": "Wöchentlich", 
+        "weekly": "Wöchentlich",
         "monthly": "Monatlich"
       },
       "daily": "Täglich",
-      "weekly": "Wöchentlich", 
+      "weekly": "Wöchentlich",
       "monthly": "Monatlich",
       "status": "Status",
       "available_backups": "Verfügbare Sicherungen",
@@ -192,6 +193,7 @@
     "add_job_desc": "Richten Sie Ihre erste Arbeit ein, um zu beginnen",
     "no_jobs": "Keine Arbeiten",
     "features_banner": {
+      "hero_title": "Ihre Arbeit, Ihre Stunden, Ihre Kontrolle!",
       "auto_timer": "GPS Auto-Timer",
       "auto_timer_desc": "Erkennt automatisch, wenn Sie zur Arbeit kommen und gehen",
       "notifications": "Intelligente Benachrichtigungen",
@@ -241,16 +243,22 @@
     "with_location": "Mit Standort",
     "no_job_selected": "Keine Arbeit ausgewählt",
     "working_now": "Arbeitet jetzt",
-    "next_shift": "Nächste Schicht", 
-    "days": ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+    "next_shift": "Nächste Schicht",
+    "days": [
+      "So",
+      "Mo",
+      "Di",
+      "Mi",
+      "Do",
+      "Fr",
+      "Sa"
+    ],
     "success": "Erfolg",
     "auto_timer_pin": "{{jobName}} (Auto)",
     "in_range": "Im Arbeitsbereich",
     "out_of_range": "Außerhalb des Bereichs",
     "auto_timer_status": "Automatischer Timer: {{status}}",
     "view_options": "Tippen für Optionen",
-    "active_jobs": "Aktive Arbeitsplätze",
-    "configure_rates": "Tarife konfigurieren",
     "overtime": "Extra",
     "total_hours": "Gesamt"
   },
@@ -304,7 +312,6 @@
     "session_saved": "Sitzung gespeichert: {{hours}} Stunden",
     "session_hours": "Sitzung",
     "hours_worked": "Arbeitsstunden",
-    "total_hours": "Gesamtstunden",
     "session_added_successfully": "Zeit erfolgreich zum Tag hinzugefügt",
     "session_saved_successfully": "Arbeitssitzung erfolgreich gespeichert",
     "view_reports": "Berichte Anzeigen",
@@ -408,7 +415,7 @@
     "edit_record": "Eintrag bearbeiten",
     "schedule": "Zeitplan",
     "entry": "Eingang",
-    "exit": "Ausgang", 
+    "exit": "Ausgang",
     "recorded_hours": "Erfasste Stunden",
     "total_hours_label": "Gesamtstunden",
     "hours": "Stunden",
@@ -456,7 +463,7 @@
     "subtitle_filtered": "Arbeitstage in {{jobName}}",
     "days_short": {
       "monday": "M",
-      "tuesday": "D", 
+      "tuesday": "D",
       "wednesday": "M",
       "thursday": "D",
       "friday": "F",
@@ -481,7 +488,7 @@
     "use_job_schedule": "Arbeitsplan verwenden",
     "custom_schedule": "Benutzerdefinierter Zeitplan",
     "start_time": "Startzeit",
-    "end_time": "Endzeit", 
+    "end_time": "Endzeit",
     "or_manual_hours": "oder Stunden manuell angeben",
     "split_shift": "Geteilte Schicht",
     "split_shift_desc": "Schicht in zwei Perioden teilen",
@@ -553,7 +560,8 @@
     "monthly": "Monatlich",
     "annual": "Jährlich",
     "days_per_week": "Tage/Woche",
-    "per_day": "pro Tag"
+    "per_day": "pro Tag",
+    "save": "Speichern"
   },
   "job_statistics": {
     "title": "Statistiken für {{jobName}}",
@@ -577,7 +585,6 @@
     "company": "Unternehmen",
     "generated_on": "Erstellt am"
   },
-  
   "navigation": {
     "back_to": "Zurück zu {{screen}}",
     "screens": {
@@ -593,7 +600,7 @@
   "job_cards": {
     "buttons": {
       "timer": "Timer",
-      "calendar": "Kalender", 
+      "calendar": "Kalender",
       "statistics": "Statistiken",
       "settings": "Einstellungen"
     }
@@ -613,7 +620,7 @@
     "simplified_create_first": "Erstelle deine erste Arbeit",
     "tabs": {
       "basic": "Grundlagen",
-      "schedule": "Zeitplan", 
+      "schedule": "Zeitplan",
       "financial": "Finanziell",
       "billing": "Abrechnung",
       "auto": "Auto",
@@ -647,7 +654,7 @@
       "title": "Kontakt",
       "person": "Kontaktperson",
       "person_placeholder": "Z.B: Anna Schmidt",
-      "email": "E-Mail", 
+      "email": "E-Mail",
       "email_placeholder": "anna.schmidt@firma.de",
       "phone": "Telefon",
       "phone_placeholder": "+49 30 123 456"
@@ -669,7 +676,15 @@
       "second_end_time": "Zweite Endzeit",
       "second_end_time_placeholder": "19:00",
       "work_days": "Arbeitstage",
-      "days": ["S", "M", "D", "M", "D", "F", "S"],
+      "days": [
+        "S",
+        "M",
+        "D",
+        "M",
+        "D",
+        "F",
+        "S"
+      ],
       "enable_schedule": "Zeitplan aktivieren",
       "enable_schedule_desc": "Arbeitszeiten und Kalendersynchronisation für diesen Job aktivieren",
       "auto_schedule": "Automatische Terminplanung",
@@ -819,7 +834,7 @@
       "warning_message": "Das Löschen dieser Arbeit wird alle zugehörigen Daten dauerhaft entfernen, einschließlich:",
       "warning_items": [
         "• Alle aufgezeichneten Arbeitstage",
-        "• Zeitplan- und Gehaltskonfiguration", 
+        "• Zeitplan- und Gehaltskonfiguration",
         "• Automatische Timer-Konfiguration",
         "• Abrechnungs- und Berichtsdaten"
       ],
@@ -856,7 +871,7 @@
     "add_job": "Arbeitsplatz hinzufügen",
     "default_hours": "{{hours}}h Standard",
     "per_hour": "h",
-    "per_month": "Monat", 
+    "per_month": "Monat",
     "per_year": "Jahr",
     "billing_enabled": "Abrechnung aktiviert",
     "billing_rate": "{{rate}} {{currency}}/h (Abrechnung)",
@@ -1041,9 +1056,11 @@
       "subscribe_button": "Premium erhalten"
     },
     "buttons": {
+      "subscribe": "Jetzt Abonnieren",
       "restore": "Käufe Wiederherstellen",
       "cancel": "Abbrechen",
-      "continue": "Zur App Fortfahren"
+      "continue": "Weiter",
+      "try_again": "Erneut versuchen"
     },
     "processing": "Kauf wird verarbeitet...",
     "success": {
@@ -1059,18 +1076,22 @@
     },
     "errors": {
       "purchase_failed": "Abonnement konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
-      "restore_failed": "Keine vorherigen Käufe zum Wiederherstellen gefunden."
+      "restore_failed": "Keine vorherigen Käufe zum Wiederherstellen gefunden.",
+      "connection_failed": "Verbindung zum Store fehlgeschlagen. Bitte versuchen Sie es später erneut."
     },
-    "buttons": {
-      "subscribe": "Jetzt Abonnieren",
-      "restore": "Käufe Wiederherstellen",
-      "cancel": "Abbrechen",
-      "continue": "Weiter"
+    "already_premium": {
+      "title": "Bereits Premium",
+      "message": "Du hast bereits ein aktives Abonnement. Genieße alle Premium-Funktionen!"
+    },
+    "maintenance": {
+      "title": "Wir beheben einen Fehler",
+      "message": "Wir beheben derzeit ein Problem, das verhindert, dass Abonnementpläne angezeigt werden. Alle Abonnementoptionen werden innerhalb der nächsten Stunden wieder verfügbar sein.",
+      "thanks": "Vielen Dank für Ihre Geduld!"
     },
     "cancellation_text": "Sie können Ihr Abonnement jederzeit kündigen",
     "packages": {
       "three_months": "3 Monate",
-      "six_months": "6 Monate", 
+      "six_months": "6 Monate",
       "one_year": "1 Jahr",
       "duration_suffix": {
         "three_months": "/3 Monate",
@@ -1083,8 +1104,8 @@
         "premium": "Premium"
       },
       "action_buttons": {
-        "select_plan": "Plan Wählen",
-        "choose_best": "Beste Wählen"
+        "select_plan": "Kostenlos Testen",
+        "choose_best": "Kostenlos Testen"
       }
     },
     "active": {
@@ -1173,7 +1194,11 @@
     "image_analysis_default": "Analysieren Sie diesen Arbeitsplan und extrahieren Sie Arbeitstage, freie Tage und Urlaub",
     "extract_specific_person": "Extrahieren Sie die Arbeitszeiten speziell von \"{{personName}}\". {{personName}}",
     "pdf_context_message": "\n\nKontext: Es gibt ein aktives PDF-Dokument namens \"{{documentName}}\", das zuvor analysiert wurde.",
-    "reset_commands": ["kontext löschen", "reset", "neues bild"],
+    "reset_commands": [
+      "kontext löschen",
+      "reset",
+      "neues bild"
+    ],
     "detection_patterns": {
       "person_selection_question": "Von welcher Person soll ich die Arbeitszeiten extrahieren?",
       "multiple_names": "mehrere Namen"
@@ -1218,7 +1243,7 @@
     },
     "months": {
       "january": "Januar",
-      "february": "Februar", 
+      "february": "Februar",
       "march": "März",
       "april": "April",
       "may": "Mai",

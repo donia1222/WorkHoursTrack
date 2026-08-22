@@ -153,8 +153,8 @@ export default function SubscriptionScreen() {
     // Si ya está suscrito, mostrar mensaje diferente
     if (isSubscribed) {
       Alert.alert(
-        'Already Premium',
-        'You already have an active subscription. Enjoy all premium features!',
+        t('subscription.already_premium.title'),
+        t('subscription.already_premium.message'),
         [
           {
             text: 'OK',
@@ -204,7 +204,7 @@ export default function SubscriptionScreen() {
         );
       }
     } else {
-      Alert.alert('Error', 'Failed to connect to the store. Please try again later.');
+      Alert.alert(t('subscription.error.title') || 'Error', t('subscription.errors.connection_failed'));
     }
   };
 
@@ -257,7 +257,7 @@ Please describe your issue below:
 `;
     
     // Crear el URL del email con la información
-    const subject = encodeURIComponent('WorkTime Support Request');
+    const subject = encodeURIComponent('Working Time Control Support Request');
     const body = encodeURIComponent(emailBody);
     const emailUrl = `mailto:info@lweb.ch?subject=${subject}&body=${body}`;
     
@@ -725,13 +725,13 @@ Please describe your issue below:
                 <IconSymbol size={32} name="wrench.and.screwdriver.fill" color={colors.warning} />
               </View>
               <Text style={[styles.maintenanceTitle, { color: colors.text }]}>
-                We're fixing a bug
+                {t('subscription.maintenance.title')}
               </Text>
               <Text style={[styles.maintenanceText, { color: colors.textSecondary }]}>
-                We're currently fixing an issue that prevents subscription plans from appearing. All subscription options will be available again within the next few hours.
+                {t('subscription.maintenance.message')}
               </Text>
               <Text style={[styles.maintenanceNote, { color: colors.textSecondary }]}>
-                Thank you for your patience!
+                {t('subscription.maintenance.thanks')}
               </Text>
               {!isLoading && (
                 <TouchableOpacity
@@ -739,7 +739,7 @@ Please describe your issue below:
                   onPress={() => checkSubscriptionStatus()}
                 >
                   <IconSymbol size={18} name="arrow.clockwise" color="#fff" />
-                  <Text style={styles.retryButtonText}>Try Again</Text>
+                  <Text style={styles.retryButtonText}>{t('subscription.buttons.try_again')}</Text>
                 </TouchableOpacity>
               )}
             </BlurView>
@@ -779,7 +779,7 @@ Please describe your issue below:
               <View style={styles.restoreIconContainer}>
                 <IconSymbol size={18} name="arrow.clockwise" color={colors.primary} />
               </View>
-              <Text style={[styles.restoreButtonText, { color: colors.primary }]}>Restore</Text>
+              <Text style={[styles.restoreButtonText, { color: colors.primary }]}>{t('subscription.buttons.restore')}</Text>
             </BlurView>
           </TouchableOpacity>
 

@@ -1,5 +1,6 @@
 {
   "locale_code": "it-IT",
+  "app_title": "Controllo del Tempo",
   "common": {
     "no_jobs_title": "Nessun Lavoro Configurato",
     "no_jobs_message": "Devi creare almeno un lavoro prima di poter utilizzare il timer, il calendario o i report. Inizia configurando il tuo primo lavoro.",
@@ -13,14 +14,15 @@
     "meters": "metri",
     "today": "Oggi",
     "yesterday": "Ieri",
-    "more": "più"  },
+    "more": "più"
+  },
   "preferences": {
     "title": "Preferenze",
     "subtitle": "Personalizza la tua esperienza",
     "appearance": {
       "title": "Aspetto",
       "description": "Personalizza il tema visivo dell'applicazione",
-       "auto": "Auto",
+      "auto": "Auto",
       "light": "Chiaro",
       "dark": "Scuro"
     },
@@ -98,11 +100,11 @@
       "frequency_desc": "Quanto spesso creare backup automatici",
       "frequencies": {
         "daily": "Giornaliero",
-        "weekly": "Settimanale", 
+        "weekly": "Settimanale",
         "monthly": "Mensile"
       },
       "daily": "Giornaliero",
-      "weekly": "Settimanale", 
+      "weekly": "Settimanale",
       "monthly": "Mensile",
       "status": "Stato",
       "available_backups": "Backup disponibili",
@@ -194,6 +196,7 @@
     "add_job_desc": "Configura il tuo primo lavoro per iniziare",
     "no_jobs": "Nessun lavoro",
     "features_banner": {
+      "hero_title": "Il tuo lavoro, le tue ore, il tuo controllo!",
       "auto_timer": "AutoTimer GPS",
       "auto_timer_desc": "Rileva automaticamente quando entri ed esci dal lavoro",
       "notifications": "Notifiche intelligenti",
@@ -384,7 +387,7 @@
     "monthly_comparison": "Confronto Mensile",
     "hours_breakdown": "Ripartizione Ore",
     "regular_hours": "Ore Regolari",
-    "overtime": "Straordinario", 
+    "overtime": "Straordinario",
     "export_report": "Esporta Rapporto",
     "delete_work_day": {
       "title": "Elimina giornata lavorativa",
@@ -477,7 +480,7 @@
     "subtitle_filtered": "Giorni lavorativi in {{jobName}}",
     "days_short": {
       "monday": "L",
-      "tuesday": "M", 
+      "tuesday": "M",
       "wednesday": "M",
       "thursday": "G",
       "friday": "V",
@@ -498,7 +501,7 @@
     "annual": "Annuale",
     "days_per_week": "giorni/settimana",
     "per_day": "al giorno",
-    "days": "giorni", 
+    "days": "giorni",
     "day": "giorno",
     "edit_record": "Modifica Record",
     "schedule": "Orario",
@@ -522,7 +525,7 @@
     "use_job_schedule": "Usa orario del lavoro",
     "custom_schedule": "Orario personalizzato",
     "start_time": "Ora di inizio",
-    "end_time": "Ora di fine", 
+    "end_time": "Ora di fine",
     "or_manual_hours": "o specificare ore manualmente",
     "split_shift": "Turno diviso",
     "split_shift_desc": "Dividere il turno in due periodi",
@@ -566,13 +569,14 @@
     "calendar_sync_error": "Solo i giorni lavorativi possono essere sincronizzati",
     "short_shift": "Turno breve",
     "overtime_hours": "Lavoro straordinario",
-    "work_event_title": "Lavoro"
+    "work_event_title": "Lavoro",
+    "save": "Salva"
   },
   "job_statistics": {
     "title": "Statistiche per {{jobName}}",
     "general_summary": "Riassunto generale",
     "total_hours": "Totale lavorato",
-    "days_worked": "Giorni lavorati", 
+    "days_worked": "Giorni lavorati",
     "average_per_day": "Media/giorno",
     "this_month": "Questo mese",
     "hours_worked": "Ore lavorate",
@@ -583,7 +587,7 @@
     "vacation_days": "Giorni di vacanza",
     "sick_days": "Giorni di malattia",
     "free_days": "Giorni liberi",
-    "last_work_day": "Ultimo giorno di lavoro", 
+    "last_work_day": "Ultimo giorno di lavoro",
     "export_error": "Impossibile esportare i dati",
     "share_error": "Impossibile condividere le statistiche",
     "detailed_stats": "STATISTICHE DETTAGLIATE",
@@ -621,7 +625,7 @@
   "job_cards": {
     "buttons": {
       "timer": "Timer",
-      "calendar": "Calendario", 
+      "calendar": "Calendario",
       "statistics": "Statistiche",
       "settings": "Impostazioni"
     }
@@ -641,7 +645,7 @@
     "simplified_create_first": "Crea il tuo primo lavoro",
     "tabs": {
       "basic": "Base",
-      "schedule": "Orario", 
+      "schedule": "Orario",
       "financial": "Finanziario",
       "billing": "Fatturazione",
       "auto": "Auto",
@@ -676,7 +680,7 @@
       "title": "Contatto",
       "person": "Persona di contatto",
       "person_placeholder": "Es: Anna Rossi",
-      "email": "Email", 
+      "email": "Email",
       "email_placeholder": "anna.rossi@azienda.it",
       "phone": "Telefono",
       "phone_placeholder": "+39 06 123 456"
@@ -698,7 +702,15 @@
       "second_end_time": "Seconda ora di fine",
       "second_end_time_placeholder": "19:00",
       "work_days": "Giorni lavorativi",
-      "days": ["D", "L", "M", "M", "G", "V", "S"],
+      "days": [
+        "D",
+        "L",
+        "M",
+        "M",
+        "G",
+        "V",
+        "S"
+      ],
       "enable_schedule": "Attiva orario",
       "enable_schedule_desc": "Attiva l'orario di lavoro e la sincronizzazione del calendario per questo lavoro",
       "auto_schedule": "Programmazione automatica",
@@ -867,7 +879,7 @@
       "warning_message": "Eliminare questo lavoro rimuoverà permanentemente tutti i dati associati, inclusi:",
       "warning_items": [
         "• Tutti i giorni lavorativi registrati",
-        "• Configurazione di orari e stipendi", 
+        "• Configurazione di orari e stipendi",
         "• Configurazione del timer automatico",
         "• Dati di fatturazione e report"
       ],
@@ -904,7 +916,7 @@
     "add_job": "Aggiungi lavoro",
     "default_hours": "{{hours}}h predefinite",
     "per_hour": "h",
-    "per_month": "mese", 
+    "per_month": "mese",
     "per_year": "anno",
     "billing_enabled": "Fatturazione abilitata",
     "billing_rate": "{{rate}} {{currency}}/h (fatturazione)",
@@ -999,8 +1011,8 @@
       "schedule": "Orari di Supporto",
       "schedule_hours": "Lun - Ven: 9:00 - 18:00",
       "share_app": "Condividi app",
-      "share_app_desc": "Condividi WorkTime con gli amici",
-      "share_message": "Scopri WorkTime! La migliore app per tracciare le tue ore di lavoro. Scarica: https://vixtime.com"
+      "share_app_desc": "Condividi Working Time Control con gli amici",
+      "share_message": "Scopri Working Time Control! La migliore app per tracciare le tue ore di lavoro. Scarica: https://vixtime.com"
     },
     "legal": {
       "title": "Legale & Privacy",
@@ -1096,18 +1108,29 @@
     },
     "errors": {
       "purchase_failed": "Impossibile completare l'abbonamento. Riprova.",
-      "restore_failed": "Nessun acquisto precedente trovato da ripristinare."
+      "restore_failed": "Nessun acquisto precedente trovato da ripristinare.",
+      "connection_failed": "Impossibile connettersi allo store. Riprova più tardi."
     },
     "buttons": {
       "subscribe": "Abbonati Ora",
       "restore": "Ripristina Acquisti",
       "cancel": "Annulla",
-      "continue": "Continua"
+      "continue": "Continua",
+      "try_again": "Riprova"
+    },
+    "already_premium": {
+      "title": "Già Premium",
+      "message": "Hai già un abbonamento attivo. Goditi tutte le funzionalità premium!"
+    },
+    "maintenance": {
+      "title": "Stiamo risolvendo un bug",
+      "message": "Stiamo attualmente risolvendo un problema che impedisce la visualizzazione dei piani di abbonamento. Tutte le opzioni di abbonamento saranno nuovamente disponibili entro poche ore.",
+      "thanks": "Grazie per la pazienza!"
     },
     "cancellation_text": "Puoi cancellare il tuo abbonamento in qualsiasi momento",
     "packages": {
       "three_months": "3 mesi",
-      "six_months": "6 mesi", 
+      "six_months": "6 mesi",
       "one_year": "1 anno",
       "duration_suffix": {
         "three_months": "/3 mesi",
@@ -1120,8 +1143,8 @@
         "premium": "Premium"
       },
       "action_buttons": {
-        "select_plan": "Seleziona Piano",
-        "choose_best": "Scegli Migliore"
+        "select_plan": "Prova Gratis",
+        "choose_best": "Prova Gratis"
       }
     },
     "duration": "Abbonamento di 3 mesi",
@@ -1212,7 +1235,11 @@
     "image_analysis_default": "Analizza questo piano di lavoro ed estrai giorni lavorativi, giorni liberi e vacanze",
     "extract_specific_person": "Estrai gli orari specificamente da \"{{personName}}\". {{personName}}",
     "pdf_context_message": "\n\nContesto: C'è un documento PDF attivo chiamato \"{{documentName}}\" che è stato analizzato precedentemente.",
-    "reset_commands": ["cancella contesto", "reset", "nuova immagine"],
+    "reset_commands": [
+      "cancella contesto",
+      "reset",
+      "nuova immagine"
+    ],
     "detection_patterns": {
       "person_selection_question": "Di quale persona vuoi che estragga gli orari?",
       "multiple_names": "diversi nomi"
@@ -1257,7 +1284,7 @@
     },
     "months": {
       "january": "Gennaio",
-      "february": "Febbraio", 
+      "february": "Febbraio",
       "march": "Marzo",
       "april": "Aprile",
       "may": "Maggio",
@@ -1308,7 +1335,7 @@
     "steps": {
       "location": {
         "title": "La Tua Privacy è Importante",
-        "description": "WorkTime usa la tua posizione solo per rilevare quando arrivi e lasci il lavoro. Tutti i dati sono memorizzati localmente sul tuo dispositivo. Non abbiamo server, non raccogliamo dati e non condividiamo mai le tue informazioni. Puoi modificare questa autorizzazione in qualsiasi momento dalle Impostazioni di sistema."
+        "description": "Working Time Control usa la tua posizione solo per rilevare quando arrivi e lasci il lavoro. Tutti i dati sono memorizzati localmente sul tuo dispositivo. Non abbiamo server, non raccogliamo dati e non condividiamo mai le tue informazioni. Puoi modificare questa autorizzazione in qualsiasi momento dalle Impostazioni di sistema."
       },
       "jobs": {
         "title": "Lavori",
@@ -1368,7 +1395,7 @@
     "title": "Informativa sulla Privacy",
     "subtitle": "Ultimo aggiornamento: Agosto 2025",
     "your_privacy_title": "La Tua Privacy è la Nostra Priorità",
-    "your_privacy_text": "In WorkTime, prendiamo sul serio la tua privacy. Questa Informativa sulla Privacy spiega come raccogliamo, utilizziamo e proteggiamo le tue informazioni quando usi la nostra applicazione di tracciamento del tempo di lavoro.",
+    "your_privacy_text": "In Working Time Control, prendiamo sul serio la tua privacy. Questa Informativa sulla Privacy spiega come raccogliamo, utilizziamo e proteggiamo le tue informazioni quando usi la nostra applicazione di tracciamento del tempo di lavoro.",
     "data_storage_title": "Archiviazione dei Dati",
     "local_storage_text": "100% Archiviazione Locale: Tutti i tuoi dati di lavoro, incluse informazioni sul lavoro, registrazioni del tempo, orari e impostazioni sono archiviati esclusivamente sul tuo dispositivo. Non abbiamo accesso a queste informazioni.",
     "no_cloud_text": "Nessun Server Cloud: Non abbiamo database o server cloud che memorizzano le tue informazioni personali. I tuoi dati non lasciano mai il tuo dispositivo a meno che tu non scelga esplicitamente di esportarli o condividerli.",
@@ -1398,11 +1425,11 @@
     "title": "Termini di Servizio",
     "subtitle": "Ultimo aggiornamento: Agosto 2025",
     "acceptance_title": "Accettazione dei Termini",
-    "acceptance_text": "Scaricando, installando o utilizzando WorkTime, accetti di essere vincolato da questi Termini di Servizio. Se non accetti questi termini, ti preghiamo di non utilizzare l'app.",
+    "acceptance_text": "Scaricando, installando o utilizzando Working Time Control, accetti di essere vincolato da questi Termini di Servizio. Se non accetti questi termini, ti preghiamo di non utilizzare l'app.",
     "description_title": "Descrizione dell'App",
-    "description_text": "WorkTime è un'applicazione di tracciamento del tempo di lavoro che ti aiuta a monitorare e gestire le tue ore di lavoro, creare orari e generare report. Tutti i dati sono memorizzati localmente sul tuo dispositivo.",
+    "description_text": "Working Time Control è un'applicazione di tracciamento del tempo di lavoro che ti aiuta a monitorare e gestire le tue ore di lavoro, creare orari e generare report. Tutti i dati sono memorizzati localmente sul tuo dispositivo.",
     "license_title": "Licenza",
-    "license_text": "Ti concediamo una licenza limitata, non esclusiva, non trasferibile per utilizzare WorkTime per scopi personali o aziendali in conformità a questi termini.",
+    "license_text": "Ti concediamo una licenza limitata, non esclusiva, non trasferibile per utilizzare Working Time Control per scopi personali o aziendali in conformità a questi termini.",
     "user_responsibilities_title": "Responsabilità dell'Utente",
     "user_responsibilities_text": "Sei responsabile di: (a) mantenere la sicurezza del tuo dispositivo e dei dati dell'app, (b) creare backup regolari dei tuoi dati, (c) utilizzare l'app in conformità alle leggi applicabili.",
     "data_ownership_title": "Proprietà dei Dati",

@@ -1,5 +1,6 @@
 {
   "locale_code": "nl-NL",
+  "app_title": "Tijdcontrole",
   "common": {
     "no_jobs_title": "Geen Banen Geconfigureerd",
     "no_jobs_message": "Je moet ten minste één baan aanmaken voordat je de stopwatch, kalender of rapporten kunt gebruiken. Begin met het configureren van je eerste baan.",
@@ -96,11 +97,11 @@
       "frequency_desc": "Hoe vaak automatische back-ups maken",
       "frequencies": {
         "daily": "Dagelijks",
-        "weekly": "Wekelijks", 
+        "weekly": "Wekelijks",
         "monthly": "Maandelijks"
       },
       "daily": "Dagelijks",
-      "weekly": "Wekelijks", 
+      "weekly": "Wekelijks",
       "monthly": "Maandelijks",
       "status": "Status",
       "available_backups": "Beschikbare back-ups",
@@ -192,6 +193,7 @@
     "add_job_desc": "Configureer je eerste baan om te beginnen",
     "no_jobs": "Geen banen",
     "features_banner": {
+      "hero_title": "Jouw werk, jouw uren, jouw controle!",
       "auto_timer": "GPS AutoTimer",
       "auto_timer_desc": "Detecteert automatisch wanneer je op het werk komt en vertrekt",
       "notifications": "Slimme notificaties",
@@ -208,7 +210,7 @@
     "location_open_settings": "Instellingen Openen",
     "location_continue_without": "Doorgaan zonder locatie",
     "start_timer": "  Timer",
-    "view_calendar": "  Kalender Bekijken", 
+    "view_calendar": "  Kalender Bekijken",
     "view_statistics": "  Statistieken Bekijken",
     "view_map": "Bekijken op kaart",
     "edit_job": "Bewerken",
@@ -247,7 +249,15 @@
     "next_shift": "Volgende dienst",
     "in_range": "Binnen werkbereik",
     "out_of_range": "Buiten bereik",
-    "days": ["Zo", "Ma", "Di", "Wo", "Do", "Vr", "Za"],
+    "days": [
+      "Zo",
+      "Ma",
+      "Di",
+      "Wo",
+      "Do",
+      "Vr",
+      "Za"
+    ],
     "success": "Succes",
     "auto_timer_pin": "{{jobName}} (Auto)",
     "auto_timer_status": "Automatische timer: {{status}}",
@@ -285,7 +295,7 @@
     "autoTimerStep3": "Activeer AutoTimer",
     "autoTimerBenefit": "Elke keer dat je je werkplek binnenkomt, begint het automatisch met het tellen van uren. Als je vertrekt, stopt het. Je hoeft je uren niet meer handmatig bij te houden!",
     "autoTimerGotIt": "Begrepen!",
-    "active_session": "Actieve sessie", 
+    "active_session": "Actieve sessie",
     "ready_to_work": "Klaar om te werken",
     "session_notes": "Sessienotities",
     "notes_placeholder": "Voeg notities toe over het uitgevoerde werk...",
@@ -325,7 +335,7 @@
     "delete_note_title": "Notitie verwijderen",
     "delete_note_message": "Weet je zeker dat je deze notitie wilt verwijderen?",
     "last_session": "Laatste sessie",
-    "view_stats": "Statistieken Bekijken", 
+    "view_stats": "Statistieken Bekijken",
     "no_recent_sessions": "Je hebt nog geen tijdsessies geregistreerd met de timer",
     "all_jobs": "Alle",
     "confirm_delete_session": "Weet je zeker dat je deze sessie wilt verwijderen?",
@@ -339,7 +349,7 @@
       "started_auto": "Timer automatisch gestart",
       "leaving": "Vertrek van werk...",
       "will_stop": "Timer stopt over {{minutes}} minuten",
-      "countdown_leaving": "De timer stopt automatisch wanneer de aftelling afgelopen is", 
+      "countdown_leaving": "De timer stopt automatisch wanneer de aftelling afgelopen is",
       "stopped_auto": "Timer automatisch gestopt - {{hours}}u geregistreerd",
       "cancelled_start": "Automatische start geannuleerd",
       "cancelled_stop": "Automatische stop geannuleerd",
@@ -369,7 +379,7 @@
     "all_jobs": "Alle",
     "analysis_period": "Analyseperiode",
     "week": "Week",
-    "month": "Maand", 
+    "month": "Maand",
     "year": "Jaar",
     "last_7_days": "Laatste 7 dagen",
     "this_month": "Deze maand",
@@ -493,12 +503,12 @@
   },
   "calendar": {
     "title": "Mijn Kalender",
-    "title_filtered": "{{jobName}} - Kalender", 
+    "title_filtered": "{{jobName}} - Kalender",
     "subtitle": "Gewerkte dagen en statistieken",
     "subtitle_filtered": "Gewerkte dagen bij {{jobName}}",
     "days_short": {
       "monday": "M",
-      "tuesday": "D", 
+      "tuesday": "D",
       "wednesday": "W",
       "thursday": "D",
       "friday": "V",
@@ -523,7 +533,7 @@
     "overtime_days": "Overurendagen",
     "other_days": "Andere dagen",
     "free_days": "Vrij",
-    "vacation_days": "Vakantie", 
+    "vacation_days": "Vakantie",
     "sick_days": "Ziek",
     "monthly": "Maandelijks",
     "annual": "Jaarlijks",
@@ -535,7 +545,7 @@
     "badge_work": "✓",
     "schedule_mode": "Schema",
     "use_job_schedule": "Baan schema gebruiken",
-    "custom_schedule": "Aangepast schema", 
+    "custom_schedule": "Aangepast schema",
     "start_time": "Starttijd",
     "end_time": "Eindtijd",
     "or_manual_hours": "of uren handmatig specificeren",
@@ -646,7 +656,8 @@
     "events_added": "Evenementen toegevoegd",
     "events_added_message": "{{count}} werkgebeurtenis(sen) zijn toegevoegd aan de kalender.",
     "perfect": "Perfect",
-    "no_events_added": "Geen evenementen kunnen toevoegen aan kalender"
+    "no_events_added": "Geen evenementen kunnen toevoegen aan kalender",
+    "save": "Opslaan"
   },
   "job_statistics": {
     "title": "Statistieken van {{jobName}}",
@@ -689,8 +700,8 @@
   "onboarding": {
     "steps": {
       "location": {
-        "title": "Je Privacy is Belangrijk",
-        "description": "WorkTime gebruikt je locatie uitsluitend om te detecteren wanneer je aankomt en vertrekt van het werk. Alle gegevens worden lokaal opgeslagen op je apparaat. We hebben geen servers, verzamelen geen data en delen nooit je informatie. Je kunt deze toestemming altijd wijzigen in de Systeeminstellingen."
+        "title": "Locatie",
+        "description": "Sta toegang tot je locatie toe om functies zoals de automatische timer en geolocatie van banen te gebruiken."
       },
       "jobs": {
         "title": "Banen",
@@ -712,10 +723,6 @@
         "title": "Analyse Chat",
         "description": "Analyseer afbeeldingen en PDF's om werkuren te extraheren en synchroniseren met de standaard kalender."
       },
-      "location": {
-        "title": "Locatie",
-        "description": "Sta toegang tot je locatie toe om functies zoals de automatische timer en geolocatie van banen te gebruiken."
-      },
       "reports": {
         "title": "Rapporten",
         "description": "Genereer gedetailleerde rapporten van je gewerkte uren, exporteer statistieken en maak professionele documenten voor je werkbeheer."
@@ -724,7 +731,7 @@
     "step_counter": "{{current}} van {{total}}",
     "navigation": {
       "previous": "Vorige",
-      "next": "Volgende", 
+      "next": "Volgende",
       "start": "Beginnen",
       "allow_location": "Binnenkomen",
       "skip": "Overslaan"
@@ -775,7 +782,7 @@
     "screens": {
       "mapa": "Kaart",
       "timer": "Timer",
-      "reports": "Rapporten", 
+      "reports": "Rapporten",
       "calendar": "Kalender",
       "settings": "Instellingen"
     },
@@ -785,7 +792,7 @@
   "job_cards": {
     "buttons": {
       "timer": "Stopwatch",
-      "calendar": "Kalender", 
+      "calendar": "Kalender",
       "statistics": "Statistieken",
       "settings": "Instellingen"
     }
@@ -798,14 +805,14 @@
   },
   "job_form": {
     "title_edit": "Baan Bewerken",
-    "title_new": "Nieuwe Baan", 
+    "title_new": "Nieuwe Baan",
     "save": "Opslaan",
     "simplified_subtitle": "Begin met alleen een naam. Je kunt later meer details toevoegen.",
     "simplified_welcome": "Welkom!",
     "simplified_create_first": "Maak je eerste baan",
     "tabs": {
       "basic": "Basis",
-      "schedule": "Schema", 
+      "schedule": "Schema",
       "financial": "Financieel",
       "billing": "Facturering",
       "auto": "Auto",
@@ -839,7 +846,7 @@
       "title": "Contact",
       "person": "Contactpersoon",
       "person_placeholder": "Bijv: Anna de Vries",
-      "email": "Email", 
+      "email": "Email",
       "email_placeholder": "anna.devries@bedrijf.nl",
       "phone": "Telefoon",
       "phone_placeholder": "+31 6 12345678"
@@ -861,7 +868,15 @@
       "break_time": "Pauzetijd (minuten)",
       "break_time_placeholder": "60",
       "work_days": "Werkdagen",
-      "days": ["Z", "M", "D", "W", "D", "V", "Z"],
+      "days": [
+        "Z",
+        "M",
+        "D",
+        "W",
+        "D",
+        "V",
+        "Z"
+      ],
       "enable_schedule": "Schema inschakelen",
       "enable_schedule_desc": "Werkschema en kalender synchronisatie inschakelen voor deze baan",
       "auto_schedule": "Automatische planning",
@@ -883,7 +898,7 @@
       "enabled": "Salaris configuratie ingeschakeld",
       "salary_type": "Salaris type",
       "hourly": "Per uur",
-      "monthly": "Maandelijks", 
+      "monthly": "Maandelijks",
       "annual": "Jaarlijks",
       "amount": "Bedrag",
       "amount_placeholder": "0",
@@ -1001,7 +1016,7 @@
       "geofence_radius_desc": "Afstand vanaf werklocatie om timer te activeren",
       "delay_start": "Vertraging voor starten (minuten)",
       "delay_start_desc": "Wachttijd voordat timer automatisch start",
-      "delay_stop": "Vertraging voor stoppen (minuten)", 
+      "delay_stop": "Vertraging voor stoppen (minuten)",
       "delay_stop_desc": "Wachttijd voordat timer stopt bij vertrek",
       "notifications": "Meldingen tonen",
       "notifications_desc": "Waarschuwen wanneer automatische timer van status verandert",
@@ -1047,7 +1062,7 @@
       "warning_message": "Het verwijderen van deze baan zal permanent alle bijbehorende gegevens wissen, inclusief:",
       "warning_items": [
         "• Alle geregistreerde werkdagen",
-        "• Schema en salaris configuratie", 
+        "• Schema en salaris configuratie",
         "• Automatische timer configuratie",
         "• Facturering gegevens en rapporten"
       ],
@@ -1084,7 +1099,7 @@
     "add_job": "Baan toevoegen",
     "default_hours": "{{hours}}u standaard",
     "per_hour": "u",
-    "per_month": "maand", 
+    "per_month": "maand",
     "per_year": "jaar",
     "billing_enabled": "Facturering ingeschakeld",
     "billing_rate": "€{{rate}}/u (facturering)",
@@ -1099,12 +1114,11 @@
     "update_error": "Kon baanstatus niet bijwerken",
     "add_new_job_button": "Nieuwe baan toevoegen"
   },
-
   "help_support": {
     "title": "FAQ en Ondersteuning",
     "subtitle": "FAQ, contact en bronnen",
     "faq": {
-      "title": "Veelgestelde Vragen", 
+      "title": "Veelgestelde Vragen",
       "description": "Vind antwoorden op de meest voorkomende vragen",
       "section_title": "Veelgestelde vragen",
       "section_description": "Vind snelle antwoorden op de meest voorkomende vragen over de applicatie",
@@ -1112,7 +1126,7 @@
         "all": "Alle",
         "general": "Algemeen",
         "time": "Tijd",
-        "billing": "Facturering", 
+        "billing": "Facturering",
         "technical": "Technisch"
       },
       "questions": {
@@ -1180,14 +1194,14 @@
       "schedule": "Openingstijden",
       "schedule_hours": "Ma - Vr: 9:00 - 18:00",
       "share_app": "App Aanbevelen",
-      "share_app_desc": "Deel WorkTime met vrienden",
-      "share_message": "Ontdek WorkTime! De beste app om je werkuren te controleren. Download: https://vixtime.com"
+      "share_app_desc": "Deel Working Time Control met vrienden",
+      "share_message": "Ontdek Working Time Control! De beste app om je werkuren te controleren. Download: https://vixtime.com"
     },
     "legal": {
       "title": "Juridisch en Privacy",
       "terms": "Servicevoorwaarden",
       "terms_description": "Gebruiksvoorwaarden van de applicatie",
-      "privacy": "Privacybeleid", 
+      "privacy": "Privacybeleid",
       "privacy_description": "Hoe we je gegevens behandelen",
       "version": "Versie 1.0.0",
       "last_update": "Laatste update: Juli 2025"
@@ -1277,18 +1291,29 @@
     },
     "errors": {
       "purchase_failed": "Kon abonnement niet voltooien. Probeer opnieuw.",
-      "restore_failed": "Geen eerdere aankopen gevonden om te herstellen."
+      "restore_failed": "Geen eerdere aankopen gevonden om te herstellen.",
+      "connection_failed": "Kon geen verbinding maken met de winkel. Probeer het later opnieuw."
     },
     "buttons": {
       "subscribe": "Nu Abonneren",
       "restore": "Aankopen Herstellen",
       "cancel": "Annuleren",
-      "continue": "Doorgaan"
+      "continue": "Doorgaan",
+      "try_again": "Opnieuw proberen"
+    },
+    "already_premium": {
+      "title": "Al Premium",
+      "message": "Je hebt al een actief abonnement. Geniet van alle premium functies!"
+    },
+    "maintenance": {
+      "title": "We lossen een bug op",
+      "message": "We lossen momenteel een probleem op waardoor abonnementsplannen niet worden weergegeven. Alle abonnementsopties zijn binnen enkele uren weer beschikbaar.",
+      "thanks": "Bedankt voor je geduld!"
     },
     "cancellation_text": "Je kunt je abonnement op elk moment annuleren",
     "packages": {
       "three_months": "3 maanden",
-      "six_months": "6 maanden", 
+      "six_months": "6 maanden",
       "one_year": "1 jaar",
       "duration_suffix": {
         "three_months": "/3 maanden",
@@ -1301,8 +1326,8 @@
         "premium": "Premium"
       },
       "action_buttons": {
-        "select_plan": "Plan Selecteren",
-        "choose_best": "Beste Kiezen"
+        "select_plan": "Gratis Proberen",
+        "choose_best": "Gratis Proberen"
       }
     },
     "duration": "3 maanden abonnement",
@@ -1378,7 +1403,11 @@
     "image_analysis_default": "Analyseer dit werkplan en extraheer werkdagen, vrije dagen en vakanties",
     "extract_specific_person": "Analyseer het document en extraheer ALLEEN de schema's en werkdagen van de persoon: {{personName}}. Reageer alleen met informatie van deze specifieke persoon.",
     "pdf_context_message": "\n\nContext: Er is een actief PDF document genaamd \"{{documentName}}\" dat eerder geanalyseerd werd.",
-    "reset_commands": ["context wissen", "reset", "nieuwe afbeelding"],
+    "reset_commands": [
+      "context wissen",
+      "reset",
+      "nieuwe afbeelding"
+    ],
     "detection_patterns": {
       "person_selection_question": "Van welke persoon wil je dat ik de schema's extraheer?",
       "multiple_names": "verschillende namen"
@@ -1425,7 +1454,7 @@
     },
     "months": {
       "january": "Januari",
-      "february": "Februari", 
+      "february": "Februari",
       "march": "Maart",
       "april": "April",
       "may": "Mei",
@@ -1476,7 +1505,7 @@
     "title": "Privacybeleid",
     "subtitle": "Laatste update: Augustus 2025",
     "your_privacy_title": "Jouw Privacy is Onze Prioriteit",
-    "your_privacy_text": "Bij WorkTime nemen we je privacy serieus. Dit Privacybeleid legt uit hoe we informatie verzamelen, gebruiken en beschermen wanneer je onze tijdvolg-app gebruikt.",
+    "your_privacy_text": "Bij Working Time Control nemen we je privacy serieus. Dit Privacybeleid legt uit hoe we informatie verzamelen, gebruiken en beschermen wanneer je onze tijdvolg-app gebruikt.",
     "data_storage_title": "Gegevensopslag",
     "local_storage_text": "100% Lokale Opslag: Al je werkgegevens, inclusief baninformatie, tijdregistraties, schema's en instellingen worden uitsluitend op je apparaat opgeslagen. We hebben geen toegang tot deze informatie.",
     "no_cloud_text": "Geen Cloud Servers: We hebben geen databases of cloud servers die je persoonlijke informatie opslaan. Je gegevens verlaten nooit je apparaat tenzij je expliciet kiest om ze te exporteren of delen.",
@@ -1506,11 +1535,11 @@
     "title": "Servicevoorwaarden",
     "subtitle": "Laatste update: Augustus 2025",
     "acceptance_title": "Acceptatie van Voorwaarden",
-    "acceptance_text": "Door WorkTime te downloaden, installeren of gebruiken, stem je ermee in gebonden te zijn aan deze Servicevoorwaarden. Als je niet akkoord gaat met deze voorwaarden, gebruik de app dan niet.",
+    "acceptance_text": "Door Working Time Control te downloaden, installeren of gebruiken, stem je ermee in gebonden te zijn aan deze Servicevoorwaarden. Als je niet akkoord gaat met deze voorwaarden, gebruik de app dan niet.",
     "description_title": "App Beschrijving",
-    "description_text": "WorkTime is een tijdvolg-app die je helpt je werkuren te monitoren en beheren, schema's te maken en rapporten te genereren. Alle gegevens worden lokaal opgeslagen op je apparaat.",
+    "description_text": "Working Time Control is een tijdvolg-app die je helpt je werkuren te monitoren en beheren, schema's te maken en rapporten te genereren. Alle gegevens worden lokaal opgeslagen op je apparaat.",
     "license_title": "Licentie",
-    "license_text": "We verlenen je een beperkte, niet-exclusieve, niet-overdraagbare licentie om WorkTime te gebruiken voor persoonlijke of commerciële doeleinden in overeenstemming met deze voorwaarden.",
+    "license_text": "We verlenen je een beperkte, niet-exclusieve, niet-overdraagbare licentie om Working Time Control te gebruiken voor persoonlijke of commerciële doeleinden in overeenstemming met deze voorwaarden.",
     "user_responsibilities_title": "Gebruikersverantwoordelijkheden",
     "user_responsibilities_text": "Je bent verantwoordelijk voor: (a) het onderhouden van de beveiliging van je apparaat en app-gegevens, (b) het maken van regelmatige back-ups van je gegevens, (c) het gebruiken van de app in overeenstemming met toepasselijke wetten.",
     "data_ownership_title": "Gegevenseigendom",

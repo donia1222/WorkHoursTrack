@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useLayoutEffect } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Image } from 'react-native';
 import { Stack, useNavigation as useExpoNavigation } from 'expo-router';
 import { SubscriptionProvider } from '@/app/hooks/useSubscription';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -53,7 +53,7 @@ function LayoutContent() {
       globalThis.calendarViewToggleHandler = undefined;
     };
   }, [calendarViewMode]);
-  const [headerTitle, setHeaderTitle] = useState('WorkTime');
+  const [headerTitle, setHeaderTitle] = useState('Working Time Control');
   const { triggerHaptic } = useHapticFeedback();
   const { isSubscribed } = useSubscription();
   const navigation = useExpoNavigation();
@@ -144,7 +144,7 @@ function LayoutContent() {
         <Stack screenOptions={{ 
           headerShown: true,
           headerStyle: { 
-            backgroundColor: isDark ? 'rgba(0, 0, 0, 1)' : 'hsla(239, 98%, 80%, 0.05)',
+            backgroundColor: isDark ? 'rgba(0, 0, 0, 1)' : 'hsla(206, 100%, 99%, 0.55)',
           },
           headerTintColor: colors.text || '#000000ff',
           headerTitleStyle: { fontWeight: '700', fontSize: 20 },
@@ -161,16 +161,24 @@ function LayoutContent() {
                              currentScreen === 'settings' ? (t('settings.title') || 'Configuración') :
                              currentScreen === 'subscription' ? (t('subscription.title') || 'Premium') :
                              currentScreen === 'chatbot' ? ( 'Work-Chat' ) :
-                             'WorkTime';
+                             'Working Time Control';
                 
                 if (currentScreen === 'mapa') {
                   return (
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-start' }}>
                     
                       <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
-                        <Text style={{ fontSize: 22, fontWeight: '700', color: '#007AFF' }}>Work</Text>
-                        <Text style={{ fontSize: 22, fontWeight: '700', color: '#5856D6' }}>Ti</Text>
-                        <IconSymbol size={22} name="clock.fill" color="#5856D6" style={{ marginLeft: 2 }} />
+                        <Image source={require('@/assets/images/logo12.png')} style={{ width: 34, height: 34, marginRight: 6, borderRadius: 4 }} />
+                        {(() => {
+                          const title = t('app_title') || 'Time Control';
+                          const mid = Math.ceil(title.length / 2);
+                          return (
+                            <>
+                              <Text style={{ fontSize: 21, fontWeight: '600', color: '#007AFF' }}>{title.slice(0, mid)}</Text>
+                              <Text style={{ fontSize: 21, fontWeight: '600', color: '#5856D6' }}>{title.slice(mid)}</Text>
+                            </>
+                          );
+                        })()}
                       </View>
                     </View>
                   );
@@ -308,7 +316,7 @@ function LayoutContent() {
                     >
                       <View style={[styles.headerButtonInner, { backgroundColor: isDark ? 'rgba(142, 142, 147, 0.15)' : 'rgba(142, 142, 147, 0.1)' }]}>
                         <IconSymbol 
-                          size={20} 
+                          size={24} 
                           name={showInfoButton ? "info.circle.fill" : "arrow.counterclockwise.circle.fill"} 
                           color="#8E8E93" 
                         />

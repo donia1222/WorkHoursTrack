@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Platform, Image } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -180,14 +180,10 @@ export default function SplashLoader({ isExiting = false }: SplashLoaderProps) {
       <View style={styles.iconContainer}>
         <Animated.View style={animatedIconStyle}>
           <View style={styles.iconBackground}>
-            <LinearGradient
-              colors={['#007AFF', '#5856D6']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.iconGradient}
-            >
-              <IconSymbol size={40} name="clock.fill" color="#FFFFFF" />
-            </LinearGradient>
+            <Image
+              source={require('@/assets/images/logo12.png')}
+              style={{ width: 100, height: 100, borderRadius: 30 }}
+            />
           </View>
         </Animated.View>
       </View>
@@ -196,8 +192,8 @@ export default function SplashLoader({ isExiting = false }: SplashLoaderProps) {
       <Animated.View entering={FadeIn.delay(300).duration(600)}>
         <View style={styles.textContainer}>
           <Text style={styles.workText}>
-            <Text style={{ color: '#007AFF', fontWeight: '800' }}>Work</Text>
-            <Text style={{ color: '#5856D6', fontWeight: '700' }}>Ti</Text>
+            <Text style={{ color: '#007AFF', fontWeight: '800' }}>Work Time</Text>
+            <Text style={{ color: '#5856D6', fontWeight: '700' }}>Control</Text>
 
           </Text>
           <Text style={[styles.tagline, { color: isDark ? '#999' : '#666' }]}>
@@ -289,7 +285,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   workText: {
-    fontSize: 42,
+    fontSize: 32,
     letterSpacing: -1,
     marginBottom: 8,
   },

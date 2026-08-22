@@ -1,5 +1,6 @@
 {
   "locale_code": "ja-JP",
+  "app_title": "勤務時間管理",
   "common": {
     "no_jobs_title": "仕事が設定されていません",
     "no_jobs_message": "タイマー、カレンダー、レポートを使用するには、最低1つの仕事を作成する必要があります。最初の仕事を設定することから始めましょう。",
@@ -192,6 +193,7 @@
     "add_job_desc": "開始するために最初の仕事を設定",
     "no_jobs": "仕事なし",
     "features_banner": {
+      "hero_title": "あなたの仕事、あなたの時間、あなたのコントロール！",
       "auto_timer": "GPS自動タイマー",
       "auto_timer_desc": "職場への出入りを自動検出",
       "notifications": "スマート通知",
@@ -473,7 +475,7 @@
     "proportional_month": "月比例",
     "total_earnings": "総収入",
     "hours_worked": "勤務時間",
-    "extra_hours": "残業時間", 
+    "extra_hours": "残業時間",
     "work_days": "勤務日",
     "days_worked": "勤務日数",
     "extra_earnings": "追加収入",
@@ -585,7 +587,7 @@
     "hours_extra": "{{hours}}h残業",
     "hours_remaining": "{{hours}}h残り",
     "paid_by_hour": "時給（残業なし）",
-    "calendar_sync_error": "勤務日のみ同期可能",
+    "calendar_sync_error": "カレンダーと同期できませんでした",
     "short_shift": "短時間シフト",
     "overtime_hours": "残業",
     "permissions_required": "許可が必要です",
@@ -608,7 +610,6 @@
     "only_work_days_sync": "勤務日のみ同期可能",
     "calendar_permissions_needed": "イベントを同期するためにカレンダー許可が必要です",
     "event_added_success": "イベントがカレンダーに正常に追加されました",
-    "calendar_sync_error": "カレンダーと同期できませんでした",
     "calendar_opened": "カレンダーが開かれました",
     "calendar_opened_ios_message": "iOSカレンダーが開かれました。このデータでイベントを作成できます:",
     "calendar_opened_manual_message": "カレンダーアプリが開かれました。手動でイベントを作成できます:",
@@ -629,7 +630,8 @@
     "events_added": "イベントが追加されました",
     "events_added_message": "{{count}}の勤務イベントがカレンダーに追加されました。",
     "perfect": "完璧",
-    "no_events_added": "カレンダーにイベントを追加できませんでした"
+    "no_events_added": "カレンダーにイベントを追加できませんでした",
+    "save": "保存"
   },
   "job_statistics": {
     "title": "{{jobName}}の統計",
@@ -673,7 +675,7 @@
     "steps": {
       "location": {
         "title": "あなたのプライバシーを重視",
-        "description": "WorkTimeは職場への到着と退出を検出するためだけに位置情報を使用します。すべてのデータはデバイスにローカルで保存されます。サーバーはなく、データを収集せず、情報を共有することもありません。この許可はいつでもシステム設定で変更できます。"
+        "description": "Working Time Controlは職場への到着と退出を検出するためだけに位置情報を使用します。すべてのデータはデバイスにローカルで保存されます。サーバーはなく、データを収集せず、情報を共有することもありません。この許可はいつでもシステム設定で変更できます。"
       },
       "jobs": {
         "title": "仕事",
@@ -836,7 +838,15 @@
       "second_end_time": "2回目終了時間",
       "second_end_time_placeholder": "19:00",
       "work_days": "勤務日",
-      "days": ["日", "月", "火", "水", "木", "金", "土"],
+      "days": [
+        "日",
+        "月",
+        "火",
+        "水",
+        "木",
+        "金",
+        "土"
+      ],
       "enable_schedule": "スケジュールを有効化",
       "enable_schedule_desc": "この仕事の勤務スケジュールとカレンダー同期を有効化",
       "auto_schedule": "自動スケジューリング",
@@ -1152,8 +1162,8 @@
       "schedule": "サポート時間",
       "schedule_hours": "月 - 金: 午前9:00 - 午後6:00",
       "share_app": "アプリを共有",
-      "share_app_desc": "友達とWorkTimeを共有",
-      "share_message": "WorkTimeをチェックしてください！勤務時間を追跡するための最高のアプリです。ダウンロード: https://vixtime.com"
+      "share_app_desc": "友達とWorking Time Controlを共有",
+      "share_message": "Working Time Controlをチェックしてください！勤務時間を追跡するための最高のアプリです。ダウンロード: https://vixtime.com"
     },
     "legal": {
       "title": "法的・プライバシー",
@@ -1249,18 +1259,29 @@
     },
     "errors": {
       "purchase_failed": "購読を完了できませんでした。再度お試しください。",
-      "restore_failed": "復元する以前の購入が見つかりませんでした。"
+      "restore_failed": "復元する以前の購入が見つかりませんでした。",
+      "connection_failed": "ストアに接続できませんでした。後でもう一度お試しください。"
     },
     "buttons": {
       "subscribe": "今すぐ購読",
       "restore": "購入を復元",
       "cancel": "キャンセル",
-      "continue": "続行"
+      "continue": "続行",
+      "try_again": "再試行"
+    },
+    "already_premium": {
+      "title": "すでにプレミアム",
+      "message": "すでにアクティブなサブスクリプションがあります。すべてのプレミアム機能をお楽しみください！"
+    },
+    "maintenance": {
+      "title": "バグを修正中",
+      "message": "現在、サブスクリプションプランが表示されない問題を修正中です。すべてのサブスクリプションオプションは数時間以内に再び利用可能になります。",
+      "thanks": "ご理解いただきありがとうございます！"
     },
     "cancellation_text": "いつでも購読をキャンセルできます",
     "packages": {
       "three_months": "3ヶ月",
-      "six_months": "6ヶ月", 
+      "six_months": "6ヶ月",
       "one_year": "1年",
       "duration_suffix": {
         "three_months": "/3ヶ月",
@@ -1273,8 +1294,8 @@
         "premium": "プレミアム"
       },
       "action_buttons": {
-        "select_plan": "プラン選択",
-        "choose_best": "最適を選択"
+        "select_plan": "無料で試す",
+        "choose_best": "無料で試す"
       }
     },
     "duration": "3ヶ月購読",
@@ -1350,7 +1371,11 @@
     "image_analysis_default": "この勤務計画を分析し、勤務日、休日、休暇を抽出",
     "extract_specific_person": "文書を分析し、{{personName}}の人のスケジュールと勤務日のみを抽出してください。この特定の人の情報のみで応答してください。",
     "pdf_context_message": "\n\nコンテキスト: 「{{documentName}}」という名前のアクティブなPDF文書が以前に分析されました。",
-    "reset_commands": ["コンテキストをクリア", "リセット", "新しい画像"],
+    "reset_commands": [
+      "コンテキストをクリア",
+      "リセット",
+      "新しい画像"
+    ],
     "detection_patterns": {
       "person_selection_question": "誰のスケジュールを抽出しますか？",
       "multiple_names": "複数の名前"
@@ -1448,7 +1473,7 @@
     "title": "プライバシーポリシー",
     "subtitle": "最終更新: 2025年8月",
     "your_privacy_title": "あなたのプライバシーが最優先",
-    "your_privacy_text": "WorkTimeでは、あなたのプライバシーを真剣に考えています。このプライバシーポリシーは、勤務時間追跡アプリケーションを使用する際に、情報をどのように収集、使用、保護するかを説明します。",
+    "your_privacy_text": "Working Time Controlでは、あなたのプライバシーを真剣に考えています。このプライバシーポリシーは、勤務時間追跡アプリケーションを使用する際に、情報をどのように収集、使用、保護するかを説明します。",
     "data_storage_title": "データ保存",
     "local_storage_text": "100%ローカル保存: 仕事情報、時間記録、スケジュール、設定を含むすべての勤務データは、専らあなたのデバイスに保存されます。私たちはこの情報にアクセスできません。",
     "no_cloud_text": "クラウドサーバーなし: 個人情報を保存するデータベースやクラウドサーバーはありません。あなたが明示的にエクスポートまたは共有することを選択しない限り、データがデバイスから離れることはありません。",
@@ -1478,11 +1503,11 @@
     "title": "利用規約",
     "subtitle": "最終更新: 2025年8月",
     "acceptance_title": "利用規約の同意",
-    "acceptance_text": "WorkTimeをダウンロード、インストール、または使用することにより、本利用規約に拘束されることに同意します。本規約に同意しない場合は、アプリを使用しないでください。",
+    "acceptance_text": "Working Time Controlをダウンロード、インストール、または使用することにより、本利用規約に拘束されることに同意します。本規約に同意しない場合は、アプリを使用しないでください。",
     "description_title": "アプリの説明",
-    "description_text": "WorkTimeは、勤務時間の監視と管理、スケジュール作成、レポート生成を支援する勤務時間追跡アプリケーションです。すべてのデータはデバイスにローカルで保存されます。",
+    "description_text": "Working Time Controlは、勤務時間の監視と管理、スケジュール作成、レポート生成を支援する勤務時間追跡アプリケーションです。すべてのデータはデバイスにローカルで保存されます。",
     "license_title": "ライセンス",
-    "license_text": "本規約に従って、個人または業務目的でWorkTimeを使用するための限定的、非独占的、譲渡不可のライセンスを付与します。",
+    "license_text": "本規約に従って、個人または業務目的でWorking Time Controlを使用するための限定的、非独占的、譲渡不可のライセンスを付与します。",
     "user_responsibilities_title": "ユーザーの責任",
     "user_responsibilities_text": "以下について責任を負います: (a) デバイスとアプリデータのセキュリティ維持、(b) データの定期的なバックアップ作成、(c) 適用法に従ったアプリの使用。",
     "data_ownership_title": "データ所有権",

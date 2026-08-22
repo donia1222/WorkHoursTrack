@@ -390,7 +390,7 @@ export async function startBackgroundLocationTracking(jobs: any[]): Promise<bool
       mayShowUserSettingsDialog: false, // No pedir más permisos
       // Configuración crítica para Android foreground service
       foregroundService: {
-        notificationTitle: "WorkTime - AutoTimer Activo",
+        notificationTitle: "Working Time Control - AutoTimer Activo",
         notificationBody: "Detectando ubicación para iniciar/parar timer automáticamente",
         notificationColor: "#007AFF",
         killServiceOnDestroy: false, // No matar el servicio

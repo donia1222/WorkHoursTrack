@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "WorkTi",
+    "name": "Working Time",
     "slug": "geolocalizacion-app",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "worktrack",
@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "buildNumber": "39",
+      "buildNumber": "43",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Esta app necesita acceso a tu ubicación para detectar automáticamente cuando entras y sales del trabajo.",
         "NSLocationAlwaysUsageDescription": "Esta app necesita acceso a tu ubicación en segundo plano para detectar automáticamente cuando entras y sales del trabajo, incluso con la app cerrada.",
@@ -131,7 +131,7 @@
       "checkAutomatically": "ON_ERROR_RECOVERY",
       "fallbackToCacheTimeout": 0
     },
-    "runtimeVersion": "1.0.0",
+    "runtimeVersion": "1.0.2",
     "extra": {
       "router": {
         "origin": false

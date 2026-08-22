@@ -19,13 +19,7 @@ marginTop: 36,
     marginHorizontal: 12,
     maxWidth: '100%',
 
-    borderWidth: 1,
-    borderColor: isDark ? colors.border : colors.primary + '20',
-    shadowColor: isDark ? '#FFFFFF' : '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+
     shadowOpacity: isDark ? 0.05 : 0.1,
     shadowRadius: 8,
     elevation: 3,

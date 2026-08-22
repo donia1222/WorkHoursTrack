@@ -246,8 +246,8 @@ struct BackgroundMod: ViewModifier {
             content.containerBackground(
                 LinearGradient(
                     colors: [
-                        Color(red: 0.65, green: 0.75, blue: 0.95),  // Light blue
-                        Color(red: 0.85, green: 0.90, blue: 0.98)   // Very light blue
+                        Color(red: 0.92, green: 0.95, blue: 0.99),  // Very soft light blue
+                        Color(red: 0.96, green: 0.97, blue: 1.0)    // Almost white with hint of blue
                     ],
                     startPoint: .topLeading, endPoint: .bottomTrailing
                 ),
@@ -276,7 +276,7 @@ struct WorkTrackSmall: View {
                     Text("Work")
                         .font(.system(size: 16, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.2, green: 0.5, blue: 1.0))  // Blue
-                    Text("Ti")
+                    Text("Time")
                         .font(.system(size: 16, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Purple
                     Image(systemName: "clock.fill")
@@ -341,10 +341,10 @@ struct WorkTrackMedium: View {
             // Header with colorful WorkTime
             HStack(alignment: .center) {
                 HStack(spacing: 0) {
-                    Text("Work")
+                     Text("Working")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.2, green: 0.5, blue: 1.0))  // Blue
-                    Text("Ti")
+                 Text("Time Control")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Purple
                     Image(systemName: "clock.fill")
@@ -558,10 +558,10 @@ struct WorkTrackLarge: View {
             // Simple Header with colorful title
             HStack {
                 HStack(spacing: 0) {
-                    Text("Work")
+           Text("Working")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.2, green: 0.5, blue: 1.0))  // Blue
-                    Text("Ti")
+                     Text("Time Control")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.9))  // Purple
                     Image(systemName: "clock.fill")

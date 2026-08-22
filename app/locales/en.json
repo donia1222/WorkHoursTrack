@@ -1,5 +1,6 @@
 {
   "locale_code": "en-US",
+  "app_title": "Time Control",
   "common": {
     "no_jobs_title": "No Jobs Configured",
     "no_jobs_message": "You need to create at least one job before you can use the timer, calendar, or reports. Start by setting up your first job.",
@@ -21,7 +22,7 @@
     "appearance": {
       "title": "Appearance",
       "description": "Customize the visual theme of the application",
-       "auto": "Auto",
+      "auto": "Auto",
       "light": "Light",
       "dark": "Dark"
     },
@@ -99,11 +100,11 @@
       "frequency_desc": "How often to create automatic backups",
       "frequencies": {
         "daily": "Daily",
-        "weekly": "Weekly", 
+        "weekly": "Weekly",
         "monthly": "Monthly"
       },
       "daily": "Daily",
-      "weekly": "Weekly", 
+      "weekly": "Weekly",
       "monthly": "Monthly",
       "status": "Status",
       "available_backups": "Available backups",
@@ -200,7 +201,7 @@
     }
   },
   "maps": {
-    "you_are_here": "You are here", 
+    "you_are_here": "You are here",
     "add_job": "Add Job",
     "add_job_desc": "Set up your first job to get started",
     "no_jobs": "No jobs",
@@ -491,7 +492,7 @@
     "proportional_month": "proportional to month",
     "total_earnings": "Total earnings",
     "hours_worked": "Hours worked",
-    "extra_hours": "Extra hours", 
+    "extra_hours": "Extra hours",
     "work_days": "Work days",
     "days_worked": "Days worked",
     "extra_earnings": "Extra earnings",
@@ -508,7 +509,7 @@
     "subtitle_filtered": "Work days in {{jobName}}",
     "days_short": {
       "monday": "M",
-      "tuesday": "T", 
+      "tuesday": "T",
       "wednesday": "W",
       "thursday": "T",
       "friday": "F",
@@ -537,7 +538,7 @@
     "use_job_schedule": "Use job schedule",
     "custom_schedule": "Custom schedule",
     "start_time": "Start time",
-    "end_time": "End time", 
+    "end_time": "End time",
     "or_manual_hours": "or specify hours manually",
     "split_shift": "Split shift",
     "split_shift_desc": "Divide shift into two periods",
@@ -603,7 +604,7 @@
     "hours_extra": "{{hours}}h overtime",
     "hours_remaining": "{{hours}}h remaining",
     "paid_by_hour": "Paid by hour (no overtime)",
-    "calendar_sync_error": "Only work days can be synced",
+    "calendar_sync_error": "Could not sync with calendar",
     "short_shift": "Short shift",
     "overtime_hours": "Overtime",
     "permissions_required": "Permissions Required",
@@ -626,7 +627,6 @@
     "only_work_days_sync": "Only work days can be synced",
     "calendar_permissions_needed": "Calendar permissions are needed to sync events",
     "event_added_success": "Event added to calendar successfully",
-    "calendar_sync_error": "Could not sync with calendar",
     "calendar_opened": "Calendar opened",
     "calendar_opened_ios_message": "iOS calendar has been opened. You can create the event with this data:",
     "calendar_opened_manual_message": "Calendar app has been opened. You can manually create the event:",
@@ -647,11 +647,12 @@
     "events_added": "Events added",
     "events_added_message": "{{count}} work events have been added to the calendar.",
     "perfect": "Perfect",
-    "no_events_added": "Could not add any events to calendar"
+    "no_events_added": "Could not add any events to calendar",
+    "save": "Save"
   },
   "job_statistics": {
     "title": "Statistics for {{jobName}}",
-    "general_summary": "General Summary", 
+    "general_summary": "General Summary",
     "total_hours": "Total worked",
     "days_worked": "Days worked",
     "average_per_day": "Average/day",
@@ -662,7 +663,7 @@
     "total_earned": "Total earned",
     "earned_this_month": "Earned this month",
     "vacation_days": "Vacation days",
-    "sick_days": "Sick days", 
+    "sick_days": "Sick days",
     "free_days": "Free days",
     "last_work_day": "Last work day",
     "export_error": "Could not export data",
@@ -691,7 +692,7 @@
     "steps": {
       "location": {
         "title": "Your Privacy Matters",
-        "description": "WorkTime uses your location solely to detect when you arrive and leave work. All data is stored locally on your device. We have no servers, collect no data, and never share your information. You can change this permission anytime in System Settings."
+        "description": "Working Time Control uses your location solely to detect when you arrive and leave work. All data is stored locally on your device. We have no servers, collect no data, and never share your information. You can change this permission anytime in System Settings."
       },
       "jobs": {
         "title": "Jobs",
@@ -769,7 +770,7 @@
       "mapa": "Map",
       "timer": "Timer",
       "reports": "Reports",
-      "calendar": "Calendar", 
+      "calendar": "Calendar",
       "settings": "Settings"
     },
     "back": "Back",
@@ -778,7 +779,7 @@
   "job_cards": {
     "buttons": {
       "timer": "Timer",
-      "calendar": "Calendar", 
+      "calendar": "Calendar",
       "statistics": "Statistics",
       "settings": "Settings"
     }
@@ -798,7 +799,7 @@
     "simplified_create_first": "Create your first job",
     "tabs": {
       "basic": "Basic",
-      "schedule": "Schedule", 
+      "schedule": "Schedule",
       "financial": "Financial",
       "billing": "Billing",
       "auto": "Auto",
@@ -843,7 +844,7 @@
       "title": "Standard Schedule",
       "start_time": "Start time",
       "start_time_placeholder": "09:00",
-      "end_time": "End time", 
+      "end_time": "End time",
       "end_time_placeholder": "17:00",
       "default_hours": "Default hours",
       "default_hours_placeholder": "8",
@@ -856,7 +857,15 @@
       "second_end_time": "Second end time",
       "second_end_time_placeholder": "19:00",
       "work_days": "Work days",
-      "days": ["S", "M", "T", "W", "T", "F", "S"],
+      "days": [
+        "S",
+        "M",
+        "T",
+        "W",
+        "T",
+        "F",
+        "S"
+      ],
       "enable_schedule": "Enable schedule",
       "enable_schedule_desc": "Enable work schedule and calendar sync for this job",
       "auto_schedule": "Auto scheduling",
@@ -1041,7 +1050,7 @@
       "warning_message": "Deleting this job will permanently remove all associated data, including:",
       "warning_items": [
         "• All recorded work days",
-        "• Schedule and salary configuration", 
+        "• Schedule and salary configuration",
         "• Automatic timer configuration",
         "• Billing and report data"
       ],
@@ -1071,7 +1080,7 @@
   },
   "jobs_management": {
     "title": "My Jobs",
-    "subtitle": "Manage your jobs and projects", 
+    "subtitle": "Manage your jobs and projects",
     "active_jobs": "Active jobs ({{count}})",
     "inactive_jobs": "Inactive jobs ({{count}})",
     "no_active_jobs": "You have no active jobs",
@@ -1079,14 +1088,14 @@
     "default_hours": "{{hours}}h default",
     "per_hour": "h",
     "per_month": "month",
-    "per_year": "year", 
+    "per_year": "year",
     "billing_enabled": "Billing enabled",
     "billing_rate": "{{rate}} {{currency}}/h (billing)",
     "delete": {
       "title": "Delete job",
       "message": "Are you sure you want to delete \"{{jobName}}\"? This will also delete all associated time records.",
       "cancel": "Cancel",
-      "confirm": "Delete", 
+      "confirm": "Delete",
       "success": "Job deleted successfully",
       "error": "Could not delete job"
     },
@@ -1095,7 +1104,7 @@
   },
   "help_support": {
     "title": "FAQ & Support",
-    "subtitle": "FAQ, contact and resources", 
+    "subtitle": "FAQ, contact and resources",
     "faq": {
       "title": "Frequently Asked Questions",
       "description": "Find answers to the most common questions",
@@ -1167,21 +1176,21 @@
       "title": "Contact & Support",
       "description": "Can't find what you're looking for? Contact us",
       "email": "Send Email",
-      "email_address": "support@geolocalizacion-app.com", 
+      "email_address": "support@geolocalizacion-app.com",
       "whatsapp": "WhatsApp",
       "whatsapp_number": "+1 555 123 456",
       "schedule": "Support Hours",
       "schedule_hours": "Mon - Fri: 9:00 AM - 6:00 PM",
       "share_app": "Share App",
-      "share_app_desc": "Share WorkTime with friends",
-      "share_message": "Check out WorkTime! The best app for tracking your work hours. Download: https://vixtime.com"
+      "share_app_desc": "Share Working Time Control with friends",
+      "share_message": "Check out Working Time Control! The best app for tracking your work hours. Download: https://vixtime.com"
     },
     "legal": {
       "title": "Legal & Privacy",
       "terms": "Terms of Service",
       "terms_description": "Application usage conditions",
       "privacy": "Privacy Policy",
-      "privacy_description": "How we handle your data", 
+      "privacy_description": "How we handle your data",
       "version": "Version 1.0.0",
       "last_update": "Last update: July 2025"
     },
@@ -1271,18 +1280,29 @@
     },
     "errors": {
       "purchase_failed": "Could not complete subscription. Please try again.",
-      "restore_failed": "No previous purchases found to restore."
+      "restore_failed": "No previous purchases found to restore.",
+      "connection_failed": "Failed to connect to the store. Please try again later."
     },
     "buttons": {
       "subscribe": "Subscribe Now",
-      "restore": "Restore Purchases", 
+      "restore": "Restore Purchases",
       "cancel": "Cancel",
-      "continue": "Continue"
+      "continue": "Continue",
+      "try_again": "Try Again"
+    },
+    "already_premium": {
+      "title": "Already Premium",
+      "message": "You already have an active subscription. Enjoy all premium features!"
+    },
+    "maintenance": {
+      "title": "We're fixing a bug",
+      "message": "We're currently fixing an issue that prevents subscription plans from appearing. All subscription options will be available again within the next few hours.",
+      "thanks": "Thank you for your patience!"
     },
     "cancellation_text": "You can cancel your subscription at any time",
     "packages": {
       "three_months": "3 months",
-      "six_months": "6 months", 
+      "six_months": "6 months",
       "one_year": "1 year",
       "duration_suffix": {
         "three_months": "/3 months",
@@ -1295,8 +1315,8 @@
         "premium": "Premium"
       },
       "action_buttons": {
-        "select_plan": "Select Plan",
-        "choose_best": "Choose Best"
+        "select_plan": "Try Free",
+        "choose_best": "Try Free"
       }
     },
     "duration": "3 months subscription",
@@ -1372,7 +1392,11 @@
     "image_analysis_default": "Analyze this work plan and extract work days, free days and vacations",
     "extract_specific_person": "Analyze the document and extract ONLY the schedules and workdays for the person: {{personName}}. Please respond only with this specific person's information.",
     "pdf_context_message": "\n\nContext: There is an active PDF document named \"{{documentName}}\" that was previously analyzed.",
-    "reset_commands": ["clear context", "reset", "new image"],
+    "reset_commands": [
+      "clear context",
+      "reset",
+      "new image"
+    ],
     "detection_patterns": {
       "person_selection_question": "Which person's schedules do you want me to extract?",
       "multiple_names": "several names"
@@ -1424,7 +1448,7 @@
     },
     "months": {
       "january": "January",
-      "february": "February", 
+      "february": "February",
       "march": "March",
       "april": "April",
       "may": "May",
@@ -1444,7 +1468,7 @@
     },
     "sections": {
       "work_plans": "Work Plans",
-      "labor_queries": "Labor Queries", 
+      "labor_queries": "Labor Queries",
       "my_work": "About My Work",
       "app_features": "App Features"
     },
@@ -1475,7 +1499,7 @@
     "title": "Privacy Policy",
     "subtitle": "Last updated: August 2025",
     "your_privacy_title": "Your Privacy is Our Priority",
-    "your_privacy_text": "At WorkTime, we take your privacy seriously. This Privacy Policy explains how we collect, use, and protect your information when you use our work time tracking application.",
+    "your_privacy_text": "At Working Time Control, we take your privacy seriously. This Privacy Policy explains how we collect, use, and protect your information when you use our work time tracking application.",
     "data_storage_title": "Data Storage",
     "local_storage_text": "100% Local Storage: All your work data, including job information, time records, schedules, and settings are stored exclusively on your device. We do not have access to this information.",
     "no_cloud_text": "No Cloud Servers: We don't have any databases or cloud servers that store your personal information. Your data never leaves your device unless you explicitly choose to export or share it.",
@@ -1490,7 +1514,7 @@
     "subscription_text": "If you purchase a premium subscription, payment information is handled by Apple App Store or Google Play Store according to their respective privacy policies. We do not have access to your payment details.",
     "location_data_title": "Location Data",
     "location_text": "Location data is used only for automatic timer functionality and is stored locally on your device. Location information is never transmitted to our servers.",
-    "third_party_title": "Third-Party Services", 
+    "third_party_title": "Third-Party Services",
     "third_party_text": "We only use essential third-party services: Google Gemini API for AI chat functionality (anonymous), and platform-specific app stores for subscription management.",
     "data_security_title": "Data Security",
     "data_security_text": "Since all data is stored locally on your device, data security depends on your device's security measures. We recommend using device encryption and secure lock screens.",
@@ -1505,12 +1529,12 @@
     "title": "Terms of Service",
     "subtitle": "Last updated: August 2025",
     "acceptance_title": "Acceptance of Terms",
-    "acceptance_text": "By downloading, installing, or using WorkTime, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the app.",
+    "acceptance_text": "By downloading, installing, or using Working Time Control, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the app.",
     "description_title": "App Description",
-    "description_text": "WorkTime is a work time tracking application that helps you monitor and manage your work hours, create schedules, and generate reports. All data is stored locally on your device.",
+    "description_text": "Working Time Control is a work time tracking application that helps you monitor and manage your work hours, create schedules, and generate reports. All data is stored locally on your device.",
     "license_title": "License",
-    "license_text": "We grant you a limited, non-exclusive, non-transferable license to use WorkTime for personal or business purposes in accordance with these terms.",
-    "user_responsibilities_title": "User Responsibilities", 
+    "license_text": "We grant you a limited, non-exclusive, non-transferable license to use Working Time Control for personal or business purposes in accordance with these terms.",
+    "user_responsibilities_title": "User Responsibilities",
     "user_responsibilities_text": "You are responsible for: (a) maintaining the security of your device and app data, (b) creating regular backups of your data, (c) using the app in compliance with applicable laws.",
     "data_ownership_title": "Data Ownership",
     "data_ownership_text": "You retain full ownership of all data you create or store in the app. We do not claim any rights to your work data, schedules, or reports.",

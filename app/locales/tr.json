@@ -1,5 +1,6 @@
 {
   "locale_code": "tr-TR",
+  "app_title": "Zaman Kontrolü",
   "common": {
     "no_jobs_title": "Yapılandırılmış İş Yok",
     "no_jobs_message": "Kronometreyi, takvimi veya raporları kullanabilmek için en az bir iş oluşturmanız gerekiyor. İlk işinizi yapılandırarak başlayın.",
@@ -192,6 +193,7 @@
     "add_job_desc": "Başlamak için ilk işinizi yapılandırın",
     "no_jobs": "İş yok",
     "features_banner": {
+      "hero_title": "Senin işin, senin saatlerin, senin kontrolün!",
       "auto_timer": "GPS OtoKronometre",
       "auto_timer_desc": "İşe gelip gittiğinizde otomatik olarak algılar",
       "notifications": "Akıllı bildirimler",
@@ -247,7 +249,15 @@
     "next_shift": "Sonraki vardiya",
     "in_range": "İş aralığında",
     "out_of_range": "Aralık dışında",
-    "days": ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"],
+    "days": [
+      "Paz",
+      "Pzt",
+      "Sal",
+      "Çar",
+      "Per",
+      "Cum",
+      "Cmt"
+    ],
     "success": "Başarılı",
     "auto_timer_pin": "{{jobName}} (Otomatik)",
     "auto_timer_status": "Otomatik kronometrer: {{status}}",
@@ -327,7 +337,6 @@
     "last_session": "Son oturum",
     "view_stats": "İstatistikleri Görüntüle",
     "no_recent_sessions": "Henüz kronometreyle herhangi bir zaman oturumu kaydetmediniz",
-    "last_session": "Son oturum",
     "all_jobs": "Tümü",
     "confirm_delete_session": "Bu oturumu silmek istediğinizden emin misiniz?",
     "delete_session_error": "Oturum silinemedi",
@@ -647,7 +656,8 @@
     "events_added": "Olaylar eklendi",
     "events_added_message": "{{count}} çalışma olayı takvime eklendi.",
     "perfect": "Mükemmel",
-    "no_events_added": "Takvime hiçbir olay eklenemedi"
+    "no_events_added": "Takvime hiçbir olay eklenemedi",
+    "save": "Kaydet"
   },
   "job_statistics": {
     "title": "{{jobName}} İstatistikleri",
@@ -690,8 +700,8 @@
   "onboarding": {
     "steps": {
       "location": {
-        "title": "Gizliliğiniz Önemlidir",
-        "description": "WorkTime konumunuzu yalnızca işe geldiğinizde ve çıktığınızda algılamak için kullanır. Tüm veriler cihazınızda yerel olarak saklanır. Sunucularımız yok, veri toplamıyoruz ve bilgilerinizi asla paylaşmıyoruz. Bu izni istediğiniz zaman Sistem Ayarları'ndan değiştirebilirsiniz."
+        "title": "Konum",
+        "description": "Otomatik kronometrer ve iş jeolokasyonu gibi özellikleri kullanmak için konumunuza erişim izni verin."
       },
       "jobs": {
         "title": "İşler",
@@ -712,10 +722,6 @@
       "chatbot": {
         "title": "Analiz Sohbeti",
         "description": "Çalışma saatlerini çıkarmak ve yerel takvimle senkronize etmek için görselleri ve PDF'leri analiz edin."
-      },
-      "location": {
-        "title": "Konum",
-        "description": "Otomatik kronometrer ve iş jeolokasyonu gibi özellikleri kullanmak için konumunuza erişim izni verin."
       },
       "reports": {
         "title": "Raporlar",
@@ -862,7 +868,15 @@
       "break_time": "Mola süresi (dakika)",
       "break_time_placeholder": "60",
       "work_days": "Çalışma günleri",
-      "days": ["P", "P", "S", "Ç", "P", "C", "C"],
+      "days": [
+        "P",
+        "P",
+        "S",
+        "Ç",
+        "P",
+        "C",
+        "C"
+      ],
       "enable_schedule": "Programı etkinleştir",
       "enable_schedule_desc": "Bu iş için çalışma programını ve takvim senkronizasyonunu etkinleştir",
       "auto_schedule": "Otomatik programlama",
@@ -1180,8 +1194,8 @@
       "schedule": "Destek Saatleri",
       "schedule_hours": "Pzt - Cum: 09:00 - 18:00",
       "share_app": "Uygulamayı Öner",
-      "share_app_desc": "WorkTime'ı arkadaşlarınızla paylaşın",
-      "share_message": "WorkTime'ı keşfedin! Çalışma saatlerinizi kontrol etmek için en iyi uygulama. İndirin: https://vixtime.com"
+      "share_app_desc": "Working Time Control'ı arkadaşlarınızla paylaşın",
+      "share_message": "Working Time Control'ı keşfedin! Çalışma saatlerinizi kontrol etmek için en iyi uygulama. İndirin: https://vixtime.com"
     },
     "legal": {
       "title": "Yasal ve Gizlilik",
@@ -1277,18 +1291,29 @@
     },
     "errors": {
       "purchase_failed": "Abonelik tamamlanamadı. Tekrar deneyin.",
-      "restore_failed": "Geri yüklenecek önceki satın alma bulunamadı."
+      "restore_failed": "Geri yüklenecek önceki satın alma bulunamadı.",
+      "connection_failed": "Mağazaya bağlanılamadı. Lütfen daha sonra tekrar deneyin."
     },
     "buttons": {
       "subscribe": "Şimdi Abone Ol",
       "restore": "Satın Almaları Geri Yükle",
       "cancel": "İptal",
-      "continue": "Devam Et"
+      "continue": "Devam Et",
+      "try_again": "Tekrar Dene"
+    },
+    "already_premium": {
+      "title": "Zaten Premium",
+      "message": "Zaten aktif bir aboneliğiniz var. Tüm premium özelliklerden yararlanın!"
+    },
+    "maintenance": {
+      "title": "Bir hatayı düzeltiyoruz",
+      "message": "Şu anda abonelik planlarının görünmesini engelleyen bir sorunu düzeltiyoruz. Tüm abonelik seçenekleri önümüzdeki birkaç saat içinde tekrar kullanılabilir olacak.",
+      "thanks": "Sabrınız için teşekkürler!"
     },
     "cancellation_text": "Aboneliğinizi istediğiniz zaman iptal edebilirsiniz",
     "packages": {
       "three_months": "3 ay",
-      "six_months": "6 ay", 
+      "six_months": "6 ay",
       "one_year": "1 yıl",
       "duration_suffix": {
         "three_months": "/3 ay",
@@ -1301,8 +1326,8 @@
         "premium": "Premium"
       },
       "action_buttons": {
-        "select_plan": "Plan Seç",
-        "choose_best": "En İyisini Seç"
+        "select_plan": "Ücretsiz Dene",
+        "choose_best": "Ücretsiz Dene"
       }
     },
     "duration": "3 aylık abonelik",
@@ -1378,7 +1403,11 @@
     "image_analysis_default": "Bu çalışma planını analiz et ve çalışma günleri, serbest günler ve tatilleri çıkar",
     "extract_specific_person": "Belgeyi analiz et ve SADECE şu kişinin saatlerini ve çalışma günlerini çıkar: {{personName}}. Lütfen sadece bu özel kişinin bilgileriyle yanıt ver.",
     "pdf_context_message": "\n\nBağlam: Daha önce analiz edilmiş \"{{documentName}}\" adlı aktif bir PDF belgesi var.",
-    "reset_commands": ["bağlamı temizle", "reset", "yeni görsel"],
+    "reset_commands": [
+      "bağlamı temizle",
+      "reset",
+      "yeni görsel"
+    ],
     "detection_patterns": {
       "person_selection_question": "Hangi kişinin saatlerini çıkarmamı istiyorsunuz?",
       "multiple_names": "birden fazla isim"
@@ -1476,7 +1505,7 @@
     "title": "Gizlilik Politikası",
     "subtitle": "Son güncelleme: Ağustos 2025",
     "your_privacy_title": "Gizliliğiniz Önceliğimizdir",
-    "your_privacy_text": "WorkTime'da gizliliğinizi ciddiye alıyoruz. Bu Gizlilik Politikası, çalışma zamanı takip uygulamamızı kullandığınızda bilgilerinizi nasıl topladığımızı, kullandığımızı ve koruduğumuzu açıklar.",
+    "your_privacy_text": "Working Time Control'da gizliliğinizi ciddiye alıyoruz. Bu Gizlilik Politikası, çalışma zamanı takip uygulamamızı kullandığınızda bilgilerinizi nasıl topladığımızı, kullandığımızı ve koruduğumuzu açıklar.",
     "data_storage_title": "Veri Depolama",
     "local_storage_text": "%100 Yerel Depolama: İş bilgileri, zaman kayıtları, programlar ve ayarlar dahil tüm çalışma verileriniz yalnızca cihazınızda saklanır. Bu bilgilere erişimimiz yoktur.",
     "no_cloud_text": "Bulut Sunucular Yok: Kişisel bilgilerinizi saklayan bulut veritabanlarımız veya sunucularımız yoktur. Verileriniz açıkça dışa aktarmayı veya paylaşmayı seçmediğiniz sürece cihazınızdan çıkmaz.",
@@ -1506,11 +1535,11 @@
     "title": "Hizmet Koşulları",
     "subtitle": "Son güncelleme: Ağustos 2025",
     "acceptance_title": "Koşulların Kabulü",
-    "acceptance_text": "WorkTime'ı indirerek, kurarak veya kullanarak bu Hizmet Koşullarına bağlı olmayı kabul edersiniz. Bu koşullara katılmıyorsanız, lütfen uygulamayı kullanmayın.",
+    "acceptance_text": "Working Time Control'ı indirerek, kurarak veya kullanarak bu Hizmet Koşullarına bağlı olmayı kabul edersiniz. Bu koşullara katılmıyorsanız, lütfen uygulamayı kullanmayın.",
     "description_title": "Uygulama Açıklaması",
-    "description_text": "WorkTime, çalışma saatlerinizi izlemenize ve yönetmenize, programlar oluşturmanıza ve raporlar üretmenize yardımcı olan bir çalışma zamanı takip uygulamasıdır. Tüm veriler cihazınızda yerel olarak saklanır.",
+    "description_text": "Working Time Control, çalışma saatlerinizi izlemenize ve yönetmenize, programlar oluşturmanıza ve raporlar üretmenize yardımcı olan bir çalışma zamanı takip uygulamasıdır. Tüm veriler cihazınızda yerel olarak saklanır.",
     "license_title": "Lisans",
-    "license_text": "Size WorkTime'ı bu koşullara uygun olarak kişisel veya ticari amaçlarla kullanmak için sınırlı, münhasır olmayan, devredilemez bir lisans veriyoruz.",
+    "license_text": "Size Working Time Control'ı bu koşullara uygun olarak kişisel veya ticari amaçlarla kullanmak için sınırlı, münhasır olmayan, devredilemez bir lisans veriyoruz.",
     "user_responsibilities_title": "Kullanıcı Sorumlulukları",
     "user_responsibilities_text": "Şunlardan sorumlusunuz: (a) cihazınızın ve uygulama verilerinizin güvenliğini korumak, (b) verilerinizin düzenli yedeklemelerini oluşturmak, (c) uygulamayı yürürlükteki yasalara uygun şekilde kullanmak.",
     "data_ownership_title": "Veri Sahipliği",

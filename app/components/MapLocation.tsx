@@ -1321,6 +1321,24 @@ export default function MapLocation({ location
   const [dynamicChatbotQuestion, setDynamicChatbotQuestion] = useState<string>('');
   const [showChatbotQuestionsModal, setShowChatbotQuestionsModal] = useState(false);
   const [currentFeatureIndex, setCurrentFeatureIndex] = useState(0);
+  const [hasSeenHeroAnimation, setHasSeenHeroAnimation] = useState(false);
+  const hasAnimatedThisSession = useRef(false);
+  const heroWord1Opacity = useSharedValue(0);
+  const heroWord2Opacity = useSharedValue(0);
+  const heroWord3Opacity = useSharedValue(0);
+
+  const heroWord1Style = useAnimatedStyle(() => ({
+    opacity: heroWord1Opacity.value,
+  }));
+
+  const heroWord2Style = useAnimatedStyle(() => ({
+    opacity: heroWord2Opacity.value,
+  }));
+
+  const heroWord3Style = useAnimatedStyle(() => ({
+    opacity: heroWord3Opacity.value,
+  }));
+
   const mapRef = useRef<MapView>(null);
     const [monthlyTotalHours, setMonthlyTotalHours] = useState<number>(0);
     const [monthlyTotalEarnings, setMonthlyTotalEarnings] = useState<number>(0);
@@ -2229,6 +2247,51 @@ export default function MapLocation({ location
       loadMonthlyStats();
     }, [])
   );
+
+  // Hero title animation - only once per session
+  useEffect(() => {
+    const checkHeroAnimation = () => {
+      if (hasAnimatedThisSession.current) {
+        // Already animated this session, show all immediately
+        setHasSeenHeroAnimation(true);
+        heroWord1Opacity.value = 1;
+        heroWord2Opacity.value = 1;
+        heroWord3Opacity.value = 1;
+      } else {
+        // First time this session, animate
+        setHasSeenHeroAnimation(false);
+        hasAnimatedThisSession.current = true;
+        // Start from 0
+        heroWord1Opacity.value = 0;
+        heroWord2Opacity.value = 0;
+        heroWord3Opacity.value = 0;
+        // Delay animation start
+        setTimeout(() => {
+          // Word 1
+          heroWord1Opacity.value = withTiming(1, { duration: 400 });
+          // Word 2 after 500ms
+          setTimeout(() => {
+            heroWord2Opacity.value = withTiming(1, { duration: 400 });
+          }, 500);
+          // Word 3 after 1000ms
+          setTimeout(() => {
+            heroWord3Opacity.value = withTiming(1, { duration: 400 });
+            setHasSeenHeroAnimation(true);
+          }, 1000);
+        }, 300);
+      }
+    };
+
+    // Always check when component mounts or when showing the banner
+    if (jobs.length === 0 && isAutoTimerInitialized && autoTimerStatus?.state === 'inactive') {
+      checkHeroAnimation();
+    } else {
+      // If not showing banner, reset to visible for next time
+      heroWord1Opacity.value = 1;
+      heroWord2Opacity.value = 1;
+      heroWord3Opacity.value = 1;
+    }
+  }, [jobs.length, isAutoTimerInitialized, autoTimerStatus?.state]);
 
   // Calculate elapsed time for active AutoTimer
   useEffect(() => {
@@ -3271,8 +3334,60 @@ export default function MapLocation({ location
                 {!isTablet && jobs.length === 0 && isAutoTimerInitialized && autoTimerStatus?.state === 'inactive' && (
                   <View style={{
                     width: '100%',
-                    marginBottom: isTablet ? 20 : (isSmallScreen ? 24 : 40),
+                    marginBottom: isTablet ? 20 : (isSmallScreen ? 16 : 20),
                   }}>
+                    {/* Hero Title */}
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: isSmallScreen ? 16 : 20,
+                      paddingHorizontal: 16,
+                      gap: 10,
+                    }}>
+                      <View style={{
+                        width: isSmallScreen ? 36 : 40,
+                        height: isSmallScreen ? 36 : 40,
+                        borderRadius: isSmallScreen ? 18 : 20,
+                        backgroundColor: isDark ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.15)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        shadowColor: '#6366f1',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 8,
+                        elevation: 6,
+                      }}>
+                        <IconSymbol size={isSmallScreen ? 20 : 22} name="checkmark.shield.fill" color={isDark ? '#a5b4fc' : '#6366f1'} />
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <Animated.Text style={[{
+                          fontSize: isSmallScreen ? 17 : 19,
+                          fontWeight: '800',
+                          color: isDark ? '#a5b4fc' : '#6366f1',
+                          letterSpacing: -0.5,
+                        }, heroWord1Style]}>
+                          {t('maps.features_banner.hero_title').split(',')[0]},{' '}
+                        </Animated.Text>
+                        <Animated.Text style={[{
+                          fontSize: isSmallScreen ? 17 : 19,
+                          fontWeight: '800',
+                          color: '#3b82f6',
+                          letterSpacing: -0.5,
+                        }, heroWord2Style]}>
+                          {t('maps.features_banner.hero_title').split(',')[1]?.trim().split(' ')[0]} {t('maps.features_banner.hero_title').split(',')[1]?.trim().split(' ')[1]},{' '}
+                        </Animated.Text>
+                        <Animated.Text style={[{
+                          fontSize: isSmallScreen ? 17 : 19,
+                          fontWeight: '800',
+                          color: '#22c55e',
+                          letterSpacing: -0.5,
+                        }, heroWord3Style]}>
+                          {t('maps.features_banner.hero_title').split(',')[2]?.trim()}
+                        </Animated.Text>
+                      </View>
+                    </View>
+
                     <ScrollView
                       horizontal
                       pagingEnabled
@@ -3540,6 +3655,57 @@ export default function MapLocation({ location
                     alignSelf: 'center',
                     gap: 10,
                   }}>
+                    {/* Hero Title */}
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: 16,
+                      gap: 10,
+                    }}>
+                      <View style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: isDark ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.15)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        shadowColor: '#6366f1',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 8,
+                        elevation: 6,
+                      }}>
+                        <IconSymbol size={22} name="checkmark.shield.fill" color={isDark ? '#a5b4fc' : '#6366f1'} />
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <Animated.Text style={[{
+                          fontSize: 19,
+                          fontWeight: '800',
+                          color: isDark ? '#a5b4fc' : '#6366f1',
+                          letterSpacing: -0.5,
+                        }, heroWord1Style]}>
+                          {t('maps.features_banner.hero_title').split(',')[0]},{' '}
+                        </Animated.Text>
+                        <Animated.Text style={[{
+                          fontSize: 19,
+                          fontWeight: '800',
+                          color: '#3b82f6',
+                          letterSpacing: -0.5,
+                        }, heroWord2Style]}>
+                          {t('maps.features_banner.hero_title').split(',')[1]?.trim().split(' ')[0]} {t('maps.features_banner.hero_title').split(',')[1]?.trim().split(' ')[1]},{' '}
+                        </Animated.Text>
+                        <Animated.Text style={[{
+                          fontSize: 19,
+                          fontWeight: '800',
+                          color: '#22c55e',
+                          letterSpacing: -0.5,
+                        }, heroWord3Style]}>
+                          {t('maps.features_banner.hero_title').split(',')[2]?.trim()}
+                        </Animated.Text>
+                      </View>
+                    </View>
+
                     {/* Feature 1: Auto Timer */}
                     <View style={{
                       flexDirection: 'row',
@@ -3620,45 +3786,7 @@ export default function MapLocation({ location
                       </View>
                     </View>
 
-                    {/* Feature 3: PDF Reports */}
-                    <View style={{
-                      flexDirection: 'row',
-                      width: '100%',
-                      borderRadius: 14,
-                      padding: 12,
-                      backgroundColor: isDark ? 'rgba(249, 115, 22, 0.15)' : 'rgba(249, 115, 22, 0.1)',
-                      borderWidth: 1,
-                      borderColor: isDark ? 'rgba(249, 115, 22, 0.3)' : 'rgba(249, 115, 22, 0.25)',
-                      shadowColor: '#f97316',
-                      shadowOffset: { width: 0, height: 3 },
-                      shadowOpacity: 0.08,
-                      shadowRadius: 6,
-                      elevation: 3,
-                      alignItems: 'center',
-                    }}>
-                      <View style={{
-                        backgroundColor: isDark ? 'rgba(249, 115, 22, 0.25)' : 'rgba(249, 115, 22, 0.15)',
-                        borderRadius: 10,
-                        padding: 10,
-                        marginRight: 12,
-                      }}>
-                        <IconSymbol size={20} name="doc.text.fill" color={isDark ? '#fdba74' : '#f97316'} />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{
-                          fontSize: 14,
-                          fontWeight: '700',
-                          color: isDark ? 'rgba(255, 255, 255, 0.95)' : '#1f2937',
-                          marginBottom: 3,
-                        }}>{t('maps.features_banner.pdf_reports')}</Text>
-                        <Text style={{
-                          fontSize: 12,
-                          fontWeight: '400',
-                          color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6b7280',
-                          lineHeight: 16,
-                        }}>{t('maps.features_banner.pdf_reports_desc')}</Text>
-                      </View>
-                    </View>
+                    
 
                     {/* Feature 4: Statistics */}
                     <View style={{
@@ -4973,9 +5101,10 @@ export default function MapLocation({ location
                       // HAS HOURLY SALARY - Show only overtime and total hours widgets (BIG)
                       return (
                         <View style={{
-                          flexDirection: 'row',
+                          flexDirection: 'column',
                           gap: isTablet ? 28 : (isSmallScreen ? 12 : 20),
-                          height: isTablet ? 160 : (isSmallScreen ? 120 : 140),
+                          height: isTablet ? 340 : (isSmallScreen ? 260 : 300),
+                          paddingBottom: 30,
                         }}>
                           {/* TOTAL HOURS WIDGET - COMPACT */}
                           {(() => {
@@ -5005,22 +5134,22 @@ export default function MapLocation({ location
                                 }}
                                 activeOpacity={0.8}
                               >
-                                <View style={{ flex: 1 }}>
+                                <View style={{ flex: 1, justifyContent: 'space-between', paddingVertical: 2 }}>
                                   <Text style={{
-                                   fontSize: isTablet ? 18 : 16,
-                                    fontWeight: '600',
+                                   fontSize: isTablet ? 18 : 17,
+                                    fontWeight: '700',
                                     color: isDark ? 'white' : '#bc384cff',
-                                    marginBottom: 8,
-                                      marginTop: isTablet ? 8 : -4,
+                                    letterSpacing: -0.2,
                                   }}>{t('maps.total_hours')}</Text>
-                                  
+
                                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                     <View style={{ flex: 1 }}>
                                       <Text style={{
-                                        fontSize: isTablet ? 22 : 18,
-                                        fontWeight: '700',
+                                        fontSize: isTablet ? 30 : 26,
+                                        fontWeight: '800',
                                         color: isDark ? '#60a5fa' : '#791322ca',
                                         marginBottom: 2,
+                                        letterSpacing: -0.5,
                                       }}>
                                         {formatHoursForDisplay(monthlyTotalHours)}
                                       </Text>
@@ -5045,30 +5174,30 @@ export default function MapLocation({ location
                                     
                                     {/* Mini circular progress */}
                                     <View style={{
-                                      width: isTablet ? 60 : 55,
-                                      height: isTablet ? 60 : 55,
+                                      width: isTablet ? 72 : 64,
+                                      height: isTablet ? 72 : 64,
                                       alignItems: 'center',
                                       justifyContent: 'center',
                                     }}>
-                                      <Svg width={isTablet ? 60 : 55} height={isTablet ? 60 : 55} style={{ position: 'absolute' }}>
+                                      <Svg width={isTablet ? 72 : 64} height={isTablet ? 72 : 64} style={{ position: 'absolute' }}>
                                         <SvgCircle
-                                          cx={(isTablet ? 60 : 55) / 2}
-                                          cy={(isTablet ? 60 : 55) / 2}
-                                          r={(isTablet ? 60 : 55) / 2 - 4}
+                                          cx={(isTablet ? 72 : 64) / 2}
+                                          cy={(isTablet ? 72 : 64) / 2}
+                                          r={(isTablet ? 72 : 64) / 2 - 4}
                                           stroke={isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}
                                           strokeWidth={4}
                                           fill="none"
                                         />
                                         <SvgCircle
-                                          cx={(isTablet ? 60 : 55) / 2}
-                                          cy={(isTablet ? 60 : 55) / 2}
-                                          r={(isTablet ? 60 : 55) / 2 - 4}
+                                          cx={(isTablet ? 72 : 64) / 2}
+                                          cy={(isTablet ? 72 : 64) / 2}
+                                          r={(isTablet ? 72 : 64) / 2 - 4}
                                           stroke={isDark ? '#4ade80' : '#c21616ff'}
                                           strokeWidth={4}
                                           fill="none"
-                                          strokeDasharray={`${(progressPercentage / 100) * Math.PI * ((isTablet ? 60 : 55) - 8)} ${Math.PI * ((isTablet ? 60 : 55) - 8)}`}
+                                          strokeDasharray={`${(progressPercentage / 100) * Math.PI * ((isTablet ? 72 : 64) - 8)} ${Math.PI * ((isTablet ? 72 : 64) - 8)}`}
                                           strokeLinecap="round"
-                                          transform={`rotate(-90 ${(isTablet ? 60 : 55) / 2} ${(isTablet ? 60 : 55) / 2})`}
+                                          transform={`rotate(-90 ${(isTablet ? 72 : 64) / 2} ${(isTablet ? 72 : 64) / 2})`}
                                         />
                                       </Svg>
                                       <Text style={{
@@ -5112,25 +5241,25 @@ export default function MapLocation({ location
                             }}
                             activeOpacity={0.8}
                           >
-                            <View style={{ flex: 1 }}>
-                              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, marginTop: isTablet ? 8 : -4 }}>
+                            <View style={{ flex: 1, justifyContent: 'space-between', paddingVertical: 2 }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <Text style={{
-                                 fontSize: isTablet ? 18 : 16,
-                                  fontWeight: '600',
-                                  
+                                 fontSize: isTablet ? 18 : 17,
+                                  fontWeight: '700',
+                                  letterSpacing: -0.2,
                                    color: isDark ? 'white' : '#e18c1dff',
                                 }}>{t('maps.overtime')}</Text>
                                 <IconSymbol size={isTablet ? 23 : 20} name="clock.arrow.circlepath" color={isDark ? '#e18c1dff' : '#e18c1dff'} />
                               </View>
-                              
+
                               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <View style={{ flex: 1 }}>
                                   <Text style={{
-                                    fontSize: isTablet ? 22 : 18,
-                                    fontWeight: '700',
+                                    fontSize: isTablet ? 30 : 26,
+                                    fontWeight: '800',
                                    color: isDark ? '#60a5fa' : '#4f1016ac',
                                     marginBottom: 2,
-                               
+                                    letterSpacing: -0.5,
                                   }}>
                                     {monthlyOvertime.toFixed(1)} h
                                   </Text>
@@ -5159,8 +5288,8 @@ export default function MapLocation({ location
                                 
                                 {/* Mini bar chart for overtime */}
                                 <View style={{
-                                  width: isTablet ? 60 : 55,
-                                  height: isTablet ? 60 : 55,
+                                  width: isTablet ? 72 : 64,
+                                  height: isTablet ? 72 : 64,
                                   alignItems: 'center',
                                   justifyContent: 'flex-end',
                                   paddingBottom: 2,
@@ -5176,7 +5305,7 @@ export default function MapLocation({ location
                                       <View
                                         key={index}
                                         style={{
-                                          width: isTablet ? 8 : 6,
+                                          width: isTablet ? 10 : 8,
                                           height: `${(monthlyOvertime > 0 ? height : 0.1) * 100}%`,
                                           backgroundColor: index === 4 ? (isDark ? '#f6a53bff' : '#f6a53bff') : (isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'),
                                           borderRadius: 2,
@@ -5205,7 +5334,7 @@ export default function MapLocation({ location
                   })()}
 
             
-             {(!isTablet || (isTablet && isPortrait)) && shouldShowNormalWidgets && (
+             {/* TEMP: banner de IA chat desactivado para pruebas — revertir antes de publicar */ false && (!isTablet || (isTablet && isPortrait)) && shouldShowNormalWidgets && (
                 <TouchableOpacity
                   style={{
                     marginTop: isTablet ? 28 : (isSmallScreen ? 6 : 20),

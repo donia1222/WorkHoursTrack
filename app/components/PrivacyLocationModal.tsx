@@ -152,7 +152,7 @@ export default function PrivacyLocationModal({ visible, onClose, onAccept }: Pri
 
   const openEmail = async () => {
     const email = 'info@lweb.ch';
-    const subject = 'WorkTime App - Privacy Question';
+    const subject = 'Working Time Control - Privacy Question';
     const url = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
     
     const canOpen = await Linking.canOpenURL(url);
